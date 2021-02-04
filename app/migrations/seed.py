@@ -377,9 +377,9 @@ def create_master_organisation(app, reserve_token):
 # Creates float transfer accounts for any transfer account that doesn't have one already
 def create_float_transfer_account(app):
     print_section_title('Creating/Updating Float Transfer Accounts')
-    tokens = db.session.query(Token)
+    tokens = db.session.query(Token).execution_options(show_all=True)
     for t in tokens:
-        if t.float_account_id is None:
+        if t.float_account is None:
             print(f'Creating Float Account for {t.name}')
             chain_config = app.config['CHAINS'][app.config['DEFAULT_CHAIN']]
 
@@ -392,7 +392,8 @@ def create_float_transfer_account(app):
             db.session.add(float_transfer_account)
             db.session.flush()
             t.float_account = float_transfer_account
-            db.session.commit()
+        t.float_account.is_public = True
+        db.session.commit()
     print_section_conclusion('Done Creating/Updating Float Wallet')
         
 
