@@ -1,41 +1,54 @@
 import * as React from "react";
 import { connect } from "react-redux";
+import { Card, Space } from "antd";
 
 import { Organisation } from "../../../reducers/organisation/types";
-import { EditOrganisationAction } from "../../../reducers/organisation/actions";
-import * as styles from "../../styledElements";
-import OrganisationSettingForm, {
-  IOrganisationSettings
-} from "../../organisation/OrganisationSettingsForm";
+import {
+  CreateOrganisationAction,
+  EditOrganisationAction
+} from "../../../reducers/organisation/actions";
+import OrganisationForm, {
+  IOrganisation
+} from "../../organisation/OrganisationForm";
 import { generateQueryString, getToken, handleResponse } from "../../../utils";
-import LoadingSpinnger from "../../loadingSpinner";
+import LoadingSpinner from "../../loadingSpinner";
+import { LoadTokenAction } from "../../../reducers/token/actions";
+import { ReduxState } from "../../../reducers/rootReducer";
 
 interface DispatchProps {
   editOrganisation: (body: any, path: number) => EditOrganisationAction;
+  createOrganisation: (body: any) => CreateOrganisationAction;
+  loadTokens: () => LoadTokenAction;
 }
 
 interface StateProps {
-  organisations: any;
+  tokens: ReduxState["tokens"];
+  organisations: ReduxState["organisations"];
   activeOrganisation: Organisation;
 }
 
-interface IState {
-  isoCountries: null;
-  roles: null;
+interface OuterProps {
+  isNewOrg: boolean;
 }
 
-type IProps = DispatchProps & StateProps;
+interface IState {
+  isoCountries?: string[];
+  roles?: string[];
+}
+
+type IProps = DispatchProps & StateProps & OuterProps;
 
 class OrganisationPage extends React.Component<IProps, IState> {
   constructor(props: IProps) {
     super(props);
     this.state = {
-      isoCountries: null,
-      roles: null
+      isoCountries: undefined,
+      roles: undefined
     };
   }
 
   componentWillMount() {
+    this.props.loadTokens();
     this.getConstants();
   }
 
@@ -45,8 +58,8 @@ class OrganisationPage extends React.Component<IProps, IState> {
     var URL = `/api/v1/organisation/constants/${query_string}`;
 
     //todo: refactor this
-    //@ts-ignore
     return fetch(URL, {
+      //@ts-ignore
       headers: {
         Authorization: getToken()
       },
@@ -63,7 +76,6 @@ class OrganisationPage extends React.Component<IProps, IState> {
             return `${isoKey}: ${isoCountries[isoKey]}`;
           });
         }
-        //@ts-ignore
         this.setState({
           isoCountries: isoCountriesOptions,
           roles: handled.data.roles
@@ -74,7 +86,7 @@ class OrganisationPage extends React.Component<IProps, IState> {
       });
   }
 
-  onSubmit(form: IOrganisationSettings) {
+  onEdit(form: IOrganisation) {
     let orgId = this.props.activeOrganisation.id;
     this.props.editOrganisation(
       {
@@ -82,45 +94,62 @@ class OrganisationPage extends React.Component<IProps, IState> {
         default_disbursement: form.defaultDisbursement * 100,
         card_shard_distance: form.cardShardDistance,
         minimum_vendor_payout_withdrawal:
-          form.mimimumVendorPayoutWithdrawal * 100,
+          form.minimumVendorPayoutWithdrawal * 100,
         require_transfer_card: form.requireTransferCard,
         account_types: form.accountTypes
-        // default_lat: null,
-        // default_lng: null
       },
       orgId
     );
   }
 
+  onNew(form: IOrganisation) {
+    this.props.createOrganisation({
+      token_id: form.token,
+      organisation_name: form.organisationName,
+      country_code: form.countryCode,
+      default_disbursement: form.defaultDisbursement * 100,
+      card_shard_distance: form.cardShardDistance,
+      minimum_vendor_payout_withdrawal:
+        form.minimumVendorPayoutWithdrawal * 100,
+      require_transfer_card: form.requireTransferCard,
+      account_types: form.accountTypes
+    });
+  }
+
   render() {
+    const { isNewOrg } = this.props;
+
     return (
-      <styles.Wrapper>
-        <styles.PageWrapper>
-          <styles.ModuleBox>
-            <styles.ModuleHeader>
-              Default Organisation Settings
-            </styles.ModuleHeader>
-            {this.state.isoCountries ? (
-              <OrganisationSettingForm
-                activeOrganisation={this.props.activeOrganisation}
-                organisations={this.props.organisations}
-                isoCountries={this.state.isoCountries}
-                roles={this.state.roles}
-                onSubmit={(form: IOrganisationSettings) => this.onSubmit(form)}
-              />
-            ) : (
-              //@ts-ignore
-              <LoadingSpinnger />
-            )}
-          </styles.ModuleBox>
-        </styles.PageWrapper>
-      </styles.Wrapper>
+      <Space direction="vertical" style={{ width: "100%" }} size="middle">
+        <Card
+          title={isNewOrg ? "New Organisation" : "Edit Organisation"}
+          bodyStyle={{ maxWidth: "400px" }}
+        >
+          {this.state.isoCountries ? (
+            <OrganisationForm
+              isNewOrg={isNewOrg}
+              activeOrganisation={this.props.activeOrganisation}
+              organisations={this.props.organisations}
+              tokens={this.props.tokens}
+              isoCountries={this.state.isoCountries || []}
+              roles={this.state.roles || []}
+              onSubmit={(form: IOrganisation) =>
+                isNewOrg ? this.onNew(form) : this.onEdit(form)
+              }
+            />
+          ) : (
+            //@ts-ignore
+            <LoadingSpinner />
+          )}
+        </Card>
+      </Space>
     );
   }
 }
 
 const mapStateToProps = (state: any): StateProps => {
   return {
+    tokens: state.tokens,
     organisations: state.organisations,
     activeOrganisation: state.organisations.byId[state.login.organisationId]
   };
@@ -129,7 +158,10 @@ const mapStateToProps = (state: any): StateProps => {
 const mapDispatchToProps = (dispatch: any): DispatchProps => {
   return {
     editOrganisation: (body: any, path: number) =>
-      dispatch(EditOrganisationAction.editOrganisationRequest({ body, path }))
+      dispatch(EditOrganisationAction.editOrganisationRequest({ body, path })),
+    createOrganisation: (body: any) =>
+      dispatch(CreateOrganisationAction.createOrganisationRequest({ body })),
+    loadTokens: () => dispatch(LoadTokenAction.loadTokenRequest())
   };
 };
 export default connect(

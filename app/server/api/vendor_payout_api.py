@@ -31,7 +31,7 @@ class VendorPayoutAPI(MethodView):
             account_ids = post_data.get('accounts', [])
             relist_existing = post_data.get('relist_existing', True)
 
-        payout_withdrawal_limit = g.active_organisation._minimum_vendor_payout_withdrawal_wei
+        payout_withdrawal_limit = g.active_organisation._minimum_vendor_payout_withdrawal_wei or 0
 
         if not isinstance(account_ids, list):
 
