@@ -10,26 +10,18 @@ JOB_EXPIRATION_TIME = 604800
 def get_job_key(user_id, func_uuid):
     return f'JOB_{user_id}_{func_uuid}'
 
-def after_request_actions():
-    from server.utils import pusher_utils
-    for transaction, queue in g.pending_transactions:
-        transaction.send_blockchain_payload_to_worker(queue=queue)
-        # DB is modified, so commit changes
-        db.session.commit()
-    # Push only credit transfers, not exchanges
-    from server.models.credit_transfer import CreditTransfer
-    transactions = [t[0] for t in g.pending_transactions if isinstance(t[0], CreditTransfer)]
-    pusher_utils.push_admin_credit_transfer(transactions)
+def after_executor_jobs():
     db.session.close()
     db.engine.dispose()
-
+    # Push any transactions made by an async job to the worker
+    if g.pending_transactions:
+        prepare_transactions_async_job()
 
 def standard_executor_job(func):
     # Wrapper for executor.job which makes prevents a glut of unclosed sessions/threads
     def wrapper(*args, **kwargs):
         func(*args, **kwargs)
-        db.session.close()
-        db.engine.dispose()
+        after_executor_jobs()
         return True
     return executor.job(wrapper)
 
@@ -41,8 +33,7 @@ def status_checkable_executor_job(func):
         for line in func(*args, **kwargs):
             print(line)
             red.set(job_key, json.dumps(line), ex=JOB_EXPIRATION_TIME)
-        db.session.close()
-        db.engine.dispose()
+        after_executor_jobs()
         return True
     return executor.job(wrapper)
 
@@ -80,3 +71,22 @@ def add_after_request_checkable_executor_job(fn, args=None, kwargs=None):
     kwargs['func_uuid'] = func_uuid
     add_after_request_executor_job(fn, args, kwargs)
     return func_uuid
+
+def process_after_request_transactions(after_request_transactions):
+    for transaction_class, transaction_id, queue in after_request_transactions:
+        transaction = db.session.query(transaction_class)\
+            .filter(transaction_class.id == transaction_id)\
+            .execution_options(show_all=True)\
+            .first()
+        transaction.send_blockchain_payload_to_worker(queue=queue)
+        # DB is modified, so commit changes
+        db.session.commit()
+
+@standard_executor_job
+def bulk_process_transactions(transactions):
+    for transaction, queue in transactions:
+        transaction.send_blockchain_payload_to_worker(queue=queue)
+
+def prepare_transactions_async_job():
+    add_after_request_executor_job(bulk_process_transactions, args=[g.pending_transactions])
+    g.pending_transactions = []
