@@ -61,6 +61,7 @@ const columns: ColumnsType<TransferAccount> = [
   {
     title: "Name",
     key: "name",
+    ellipsis: true,
     render: (text: any, record: any) => (
       <Link
         to={"/accounts/" + record.key}
