@@ -82,7 +82,7 @@ class MakeDisbursementAPI(MethodView):
                 transfer_mode=TransferModeEnum.WEB,
                 automatically_resolve_complete=False,
             ))
-        db.session.flush()
+            db.session.flush()
         response_object = {
             'status': 'success',
             'disbursement_id': d.id,

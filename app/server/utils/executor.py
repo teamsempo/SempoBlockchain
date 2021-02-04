@@ -3,13 +3,16 @@ import json
 from server import executor, red, db
 from uuid import uuid4
 from flask import g
+import config
 
 # Only store for a week (604800 seconds)
 JOB_EXPIRATION_TIME = 604800
 
+# Generate redis key to store the results of a job
 def get_job_key(user_id, func_uuid):
     return f'JOB_{user_id}_{func_uuid}'
 
+# Run these after any job!
 def after_executor_jobs():
     db.session.close()
     db.engine.dispose()
@@ -17,24 +20,45 @@ def after_executor_jobs():
     if g.pending_transactions:
         prepare_transactions_async_job()
 
+# This is a phony executor job to be used in unthreaded environments (unit tests)
+class SynchronousFunction:
+    def __init__(self, func):
+        self.func = func
+
+    def submit(self, *args, **kwargs):
+        func_uuid = kwargs.pop('func_uuid', None)
+        if func_uuid:
+            _execute_function_with_status_checks(self.func, func_uuid, *args, **kwargs)
+        else:
+            self.func(*args, **kwargs)
+
+# Helper to run generators asynchronously, and store statuses in redis for the async status endpoint!
+def _execute_function_with_status_checks(func, func_uuid, *args, **kwargs):
+    job_key = get_job_key(g.user.id, func_uuid)
+    red.set(job_key, '', ex=JOB_EXPIRATION_TIME)
+    for line in func(*args, **kwargs):
+        red.set(job_key, json.dumps(line), ex=JOB_EXPIRATION_TIME)
+
+# Wrapper for executor.job
 def standard_executor_job(func):
-    # Wrapper for executor.job which makes prevents a glut of unclosed sessions/threads
     def wrapper(*args, **kwargs):
         func(*args, **kwargs)
         after_executor_jobs()
         return True
+    if config.IS_TEST:
+        return SynchronousFunction(func)
     return executor.job(wrapper)
 
+# Wrapper for executor.job meant to wrap generator functions with pollable statuses.
+# Automatically populates the status endpoint via _execute_function_with_status_checks!
 def status_checkable_executor_job(func):
     def wrapper(*args, **kwargs):
         func_uuid = kwargs.pop('func_uuid')
-        job_key = get_job_key(g.user.id, func_uuid)
-        red.set(job_key, '', ex=JOB_EXPIRATION_TIME)
-        for line in func(*args, **kwargs):
-            print(line)
-            red.set(job_key, json.dumps(line), ex=JOB_EXPIRATION_TIME)
+        _execute_function_with_status_checks(func, func_uuid, *args, **kwargs)
         after_executor_jobs()
         return True
+    if config.IS_TEST:
+        return SynchronousFunction(func)
     return executor.job(wrapper)
 
 
@@ -71,16 +95,6 @@ def add_after_request_checkable_executor_job(fn, args=None, kwargs=None):
     kwargs['func_uuid'] = func_uuid
     add_after_request_executor_job(fn, args, kwargs)
     return func_uuid
-
-def process_after_request_transactions(after_request_transactions):
-    for transaction_class, transaction_id, queue in after_request_transactions:
-        transaction = db.session.query(transaction_class)\
-            .filter(transaction_class.id == transaction_id)\
-            .execution_options(show_all=True)\
-            .first()
-        transaction.send_blockchain_payload_to_worker(queue=queue)
-        # DB is modified, so commit changes
-        db.session.commit()
 
 @standard_executor_job
 def bulk_process_transactions(transactions):
