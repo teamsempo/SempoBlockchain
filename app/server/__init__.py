@@ -144,11 +144,14 @@ def register_blueprints(app):
 
         # Adds version to response header
         response.headers['App-Version'] = config.VERSION
-        # Detaches all existing db objects from the old session
-        db.session.expunge_all()
-        # Closes and tosses out the old session and engine
-        db.session.close()
-        db.engine.dispose()
+
+        # Async tasks are synchronous in pytest, so no need to nuke
+        if not config.IS_TEST:
+            # Detaches all existing db objects from the old session
+            db.session.expunge_all()
+            # Closes and tosses out the old session and engine
+            db.session.close()
+            db.engine.dispose()
 
         g.is_after_request = True
         if g.executor_jobs:
