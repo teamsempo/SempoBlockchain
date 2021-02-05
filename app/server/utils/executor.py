@@ -42,8 +42,19 @@ def _execute_function_with_status_checks(func, func_uuid, *args, **kwargs):
 # Wrapper for executor.job
 def standard_executor_job(func):
     def wrapper(*args, **kwargs):
-        func(*args, **kwargs)
-        after_executor_jobs()
+        try:
+            # Get thread-local session variables! This is very ugly.
+            from server.models.organisation import Organisation
+            from server.models.user import User
+            if g and g.get('active_organisation'):
+                g.active_organisation = db.session.query(Organisation).filter(Organisation.id == g.active_organisation.id).first() 
+                db.session.merge(g.active_organisation)
+            if g and g.get('user'):
+                g.user = db.session.query(User).filter(User.id == g.user.id).first() 
+                db.session.merge(g.user)
+                func(*args, **kwargs)
+        finally:
+            after_executor_jobs()
         return True
     if config.IS_TEST:
         return SynchronousFunction(func)
@@ -53,9 +64,21 @@ def standard_executor_job(func):
 # Automatically populates the status endpoint via _execute_function_with_status_checks!
 def status_checkable_executor_job(func):
     def wrapper(*args, **kwargs):
-        func_uuid = kwargs.pop('func_uuid')
-        _execute_function_with_status_checks(func, func_uuid, *args, **kwargs)
-        after_executor_jobs()
+        try:
+            # Get thread-local session variables! This is very ugly.
+            from server.models.organisation import Organisation
+            from server.models.user import User
+            if g and g.get('active_organisation'):
+                g.active_organisation = db.session.query(Organisation).filter(Organisation.id == g.active_organisation.id).first() 
+                db.session.merge(g.active_organisation)
+            if g and g.get('user'):
+                g.user = db.session.query(User).filter(User.id == g.user.id).first() 
+                db.session.merge(g.user)
+
+            func_uuid = kwargs.pop('func_uuid')
+            _execute_function_with_status_checks(func, func_uuid, *args, **kwargs)
+        finally:
+            after_executor_jobs()
         return True
     if config.IS_TEST:
         return SynchronousFunction(func)
@@ -98,7 +121,15 @@ def add_after_request_checkable_executor_job(fn, args=None, kwargs=None):
 
 @standard_executor_job
 def bulk_process_transactions(transactions):
+    # This is very ugly, but required to get a thread-local CreditTransfer/Exchange instance
+    from server.models.credit_transfer import CreditTransfer
+    from server.models.exchange import Exchange
     for transaction, queue in transactions:
+        if isinstance(transaction, CreditTransfer):
+            transaction = db.session.query(CreditTransfer).filter(CreditTransfer.id == transaction.id).first()
+        else:
+            transaction = db.session.query(Exchange).filter(Exchange.id == transaction.id).first()
+        db.session.merge(transaction)
         transaction.send_blockchain_payload_to_worker(queue=queue)
 
 def prepare_transactions_async_job():

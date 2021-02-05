@@ -95,6 +95,7 @@ def execute_dataset_import(dataset, header_positions, is_vendor):
             else:
                 db.session.flush()
             percent_complete = ((idx+1)/len(dataset))*100
+
             yield {
                 'message': 'success' if percent_complete == 100 else 'pending',
                 'percent_complete': percent_complete,

@@ -142,16 +142,22 @@ def register_blueprints(app):
         if response.status_code < 300 and response.status_code >= 200:
             db.session.commit()
 
-        g.is_after_request = True
-        for job, args, kwargs in g.executor_jobs:
-            job.submit(*args, **kwargs)
-
-        from server.utils.executor import prepare_transactions_async_job
-        prepare_transactions_async_job()
-
-
         # Adds version to response header
         response.headers['App-Version'] = config.VERSION
+        # Detaches all existing db objects from the old session
+        db.session.expunge_all()
+        # Closes and tosses out the old session and engine
+        db.session.close()
+        db.engine.dispose()
+
+        g.is_after_request = True
+        if g.executor_jobs:
+            for job, args, kwargs in g.executor_jobs:
+                job.submit(*args, **kwargs)
+        else:
+            from server.utils.executor import prepare_transactions_async_job
+            prepare_transactions_async_job()
+
         return response
 
     from .views.index import index_view
