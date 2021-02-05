@@ -230,7 +230,7 @@ class CreditTransferAPI(MethodView):
             return make_response(jsonify(response_object)), 201
 
 
-        if transfer_amount <= 0 and not target_balance:
+        if transfer_amount <= 0 and not target_balance and not (transfer_amount == 0 and transfer_type == "BALANCE"):
             response_object = {
                 'message': 'Transfer amount must be positive',
             }
