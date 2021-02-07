@@ -9,7 +9,7 @@ from sqlalchemy import or_
 
 from server import db, bt
 from server.models.utils import ModelBase, OneOrgBase, user_transfer_account_association_table, \
-    get_authorising_user_id, SoftDelete
+    get_authorising_user_id, SoftDelete, disbursement_transfer_account_association_table
 from server.models.user import User
 from server.models.spend_approval import SpendApproval
 from server.models.exchange import ExchangeContract
@@ -78,6 +78,12 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
         lazy='joined'
     )
 
+    disbursements = db.relationship(
+        "Disbursement",
+        secondary=disbursement_transfer_account_association_table,
+        back_populates="transfer_accounts",
+        lazy='joined'
+    )
     credit_sends = db.relationship(
         'CreditTransfer',
         foreign_keys='CreditTransfer.sender_transfer_account_id',
