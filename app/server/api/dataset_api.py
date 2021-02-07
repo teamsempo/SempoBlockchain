@@ -3,6 +3,7 @@ from flask.views import MethodView
 from openpyxl import load_workbook
 import csv
 import codecs
+import math
 
 from server.constants import ALLOWED_SPREADSHEET_EXTENSIONS, SPREADSHEET_UPLOAD_REQUESTED_ATTRIBUTES
 from server import db
@@ -98,7 +99,7 @@ def execute_dataset_import(dataset, header_positions, is_vendor):
 
             yield {
                 'message': 'success' if percent_complete == 100 else 'pending',
-                'percent_complete': percent_complete,
+                'percent_complete': math.floor(percent_complete),
                 'diagnostics': diagnostics
             }
 

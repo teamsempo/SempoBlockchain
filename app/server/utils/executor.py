@@ -12,6 +12,11 @@ JOB_EXPIRATION_TIME = 604800
 def get_job_key(user_id, func_uuid):
     return f'JOB_{user_id}_{func_uuid}'
 
+# Get job based on user ID and func ID
+def get_job_result(user_id, func_uuid):
+    key = get_job_key(user_id, func_uuid)
+    return red.get(key)
+
 # Run these after any job!
 def after_executor_jobs():
     db.session.close()
@@ -129,7 +134,6 @@ def bulk_process_transactions(transactions):
             transaction = db.session.query(CreditTransfer).filter(CreditTransfer.id == transaction.id).first()
         else:
             transaction = db.session.query(Exchange).filter(Exchange.id == transaction.id).first()
-        db.session.merge(transaction)
         transaction.send_blockchain_payload_to_worker(queue=queue)
 
 def prepare_transactions_async_job():
