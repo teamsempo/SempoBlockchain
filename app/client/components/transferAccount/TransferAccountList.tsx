@@ -43,13 +43,13 @@ export interface TransferAccount {
   token_symbol: string;
 }
 
-interface ActionButton {
+export interface ActionButton {
   label: string;
   onClick: (keys: React.Key[]) => void;
   loading?: boolean;
 }
 
-interface NoneSelectedButton {
+export interface NoneSelectedButton {
   label: string;
   onClick: () => void;
   loading?: boolean;
@@ -194,6 +194,8 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
           token_symbol: token_symbol
         };
       });
+
+    console.log("data length is: ", data.length);
 
     const headerCheckbox = (
       <Checkbox

@@ -53,11 +53,12 @@ def generate_search_query(search_string, filters, order, sort_by_arg, include_us
     sort_by = sum_search if sort_by_arg == 'rank' else sort_types_to_database_types[sort_by_arg]
     # If there's no search string, the process is the same, just sort by account creation date
     sort_by = sort_types_to_database_types['date_account_created'] if sort_by == 'rank' and not search_string else sort_by
-    entities = [TransferAccount, sum_search, User] if include_user else [TransferAccount, sum_search]
+    entities = [TransferAccount, sum_search, User] if include_user else [TransferAccount]
+
     final_query = db.session.query(TransferAccount, User, sum_search)\
-        .with_entities(*entities)\
         .outerjoin(TransferAccount, User.default_transfer_account_id == TransferAccount.id)\
-        .filter(TransferAccount.is_ghost != True)\
+        .filter(TransferAccount.is_ghost != True) \
+        .with_entities(*entities)\
         .order_by(order(sort_by))
 
     # TODO: work out the difference between the above and

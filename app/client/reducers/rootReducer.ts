@@ -27,6 +27,7 @@ import { OrganisationReducer } from "./organisation/reducers";
 import { metrics } from "./metric/reducers";
 import { allowedFilters } from "./allowedFilters/reducers";
 import { tokens } from "./token/reducers";
+import { bulkTransfers } from "./bulkTransfer/reducers";
 
 //might be because of older version of react-redux that have to force like this...
 const form = <Reducer<FormStateMap, AnyAction>>FormReducer;
@@ -54,7 +55,8 @@ const appReducer = combineReducers({
   organisations: OrganisationReducer,
   allowedFilters,
   tokens,
-  form
+  form,
+  bulkTransfers
 });
 
 const rootReducer = (state: any, action: any) => {

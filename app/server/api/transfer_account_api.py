@@ -2,6 +2,7 @@ from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 import datetime
 import json
+from sqlalchemy import func, asc, desc
 
 from server import db
 from server.models.utils import paginate_query
@@ -10,7 +11,8 @@ from server.schemas import transfer_accounts_schema, transfer_account_schema, \
     view_transfer_account_schema, view_transfer_accounts_schema
 from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl
-from server.utils.search import generate_user_search_filter_query
+from server.utils.transfer_filter import process_transfer_filters
+from server.utils.search import generate_search_query
 
 transfer_account_blueprint = Blueprint('transfer_account', __name__)
 
@@ -45,7 +47,25 @@ class TransferAccountAPI(MethodView):
 
         else:
 
-            base_query = generate_user_search_filter_query().filter(TransferAccount.is_ghost != True)
+            search_string = request.args.get('search_string') or ''
+            # HANDLE PARAM : params - Standard filter object. Exact same as the ones Metrics uses!
+            encoded_filters = request.args.get('params')
+            filters = process_transfer_filters(encoded_filters)
+            # HANDLE PARAM : order
+            # Valid orders types are: `ASC` and `DESC`
+            # Default: DESC
+            order_arg = request.args.get('order') or 'DESC'
+            if order_arg.upper() not in ['ASC', 'DESC']:
+                return {'message': 'Invalid order value \'{}\'. Please use \'ASC\' or \'DESC\''.format(order_arg)}
+            order = asc if order_arg.upper() == 'ASC' else desc
+            # HANDLE PARAM: sort_by
+            # Valid orders types are: first_name, last_name, email, date_account_created, rank, balance, status
+            # Default: rank
+            sort_by_arg = request.args.get('sort_by') or 'rank'
+
+            base_query = generate_search_query(
+                search_string, filters, order, sort_by_arg
+            ).filter(TransferAccount.is_ghost != True)
 
             if account_type_filter == 'vendor':
                 transfer_accounts_query = base_query.filter_by(is_vendor=True)
