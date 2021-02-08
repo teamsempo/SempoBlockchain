@@ -15,6 +15,7 @@ class AsyncAPI(MethodView):
         else:
             return {'message': f'Async job with ID {func_uuid} for user {g.user.id} does not exist!'}
 
+
 async_blueprint.add_url_rule(
     '/async/<func_uuid>/',
     view_func=AsyncAPI.as_view('async_view'),
