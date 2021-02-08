@@ -10,6 +10,7 @@ from server.utils.transfer_filter import process_transfer_filters
 from server.utils.search import generate_search_query
 from server.schemas import transfer_accounts_schema
 from server.models.utils import paginate_query
+from server.utils.access_control import AccessControl
 
 search_blueprint = Blueprint('search', __name__)
 
