@@ -85,7 +85,6 @@ def test_disbursement(search_string, params, include_list, exclude_list, disburs
         assert response.status_code == 201
         assert response.json['recipient_count'] == expected_recipient_count
         assert response.json['total_disbursement_amount'] == expected_total_disbursement_amount
-        assert len(transfers) == expected_recipient_count
 
         # Check that everything is correct with the generated PENDING transactions
         resp_id = response.json['disbursement_id']
@@ -125,6 +124,7 @@ def test_disbursement(search_string, params, include_list, exclude_list, disburs
         assert phase_two_response.json == {'status': 'success', 'task_uuid': '123'}
 
         transfers = CreditTransfer.query.all()
+        assert len(transfers) == expected_recipient_count
         
         for t in transfers:
             assert t.transfer_status == TransferStatusEnum.COMPLETE
