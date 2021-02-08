@@ -6,7 +6,7 @@ import codecs
 import math
 
 from server.constants import ALLOWED_SPREADSHEET_EXTENSIONS, SPREADSHEET_UPLOAD_REQUESTED_ATTRIBUTES
-from server import db
+from server import db, executor
 from server.utils.auth import requires_auth
 from server.utils import user as UserUtils
 from server.utils.executor import add_after_request_checkable_executor_job, status_checkable_executor_job
