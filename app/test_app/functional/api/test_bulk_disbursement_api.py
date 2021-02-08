@@ -7,6 +7,7 @@ from server.utils.auth import get_complete_auth_token
 from server.utils.user import create_transfer_account_user, set_custom_attributes
 from server.utils.transfer_enums import TransferStatusEnum
 from server import db
+from server.utils.executor import get_job_result
 from server.models.credit_transfer import CreditTransfer
 
 def test_prep_bulk_disbursement_api(test_client, complete_admin_auth_token, create_organisation):
@@ -103,19 +104,28 @@ def test_disbursement(search_string, params, include_list, exclude_list, disburs
                 assert json_transfer['recipient_user']['first_name' ] in recipient_firstnames
                 assert json_transfer['transfer_amount'] == disbursement_amount
 
+            task_uuid = response.json['task_uuid']
+            async_result = json.loads(get_job_result(1, task_uuid))
+            assert len(async_result['data']['credit_transfers']) == expected_recipient_count
+            assert async_result['message'] == 'success'
+            assert async_result['percent_complete'] == 100
+
+
         # Check that the pending transactions are completed after EXECUTE!
         phase_two_response = test_client.put(f'/api/v1/disbursement/{resp_id}',
             headers=dict(
             Authorization=complete_admin_auth_token, Accept='application/json'),
             json={ "action": "EXECUTE" },
             follow_redirects=True)
+
+        task_uuid = phase_two_response.json['task_uuid']
+        assert json.loads(get_job_result(1, task_uuid)) == {"message": "success", "percent_complete": 100}
+
         phase_two_response.json['task_uuid'] = '123'
-        print(phase_two_response.json)
-        print(phase_two_response.json)
-        print(phase_two_response.json)
-        print(phase_two_response.json)
         assert phase_two_response.json == {'status': 'success', 'task_uuid': '123'}
+
         transfers = CreditTransfer.query.all()
+        
         for t in transfers:
             assert t.transfer_status == TransferStatusEnum.COMPLETE
 

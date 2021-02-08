@@ -98,17 +98,10 @@ def test_dataset_api(test_client, authed_sempo_admin_user):
         ),
         json=data
     )
-    # This is necessary because the session is now active in a different thread and pytest still needs DB access
-    db.session.close()
-    db.engine.dispose()
 
     redis_id = get_job_key(authed_sempo_admin_user.id, response.json['task_uuid']) 
     status = { 'percent_complete': 0 }
-    while not status['percent_complete'] == 100.0:
-        time.sleep(.01)
-        redis_status = red.get(redis_id)
-        if redis_status:
-            status = json.loads(redis_status)
+    status = json.loads(red.get(redis_id))
     assert status['message'] == 'success'
     assert status['percent_complete'] == 100.0
     assert status['diagnostics'] == [['User Created', 200], ['User Updated', 200], ['User Created', 200]]

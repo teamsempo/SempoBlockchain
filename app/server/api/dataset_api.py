@@ -75,7 +75,6 @@ def execute_dataset_import(dataset, header_positions, is_vendor):
     diagnostics = []
     for idx, datarow in enumerate(dataset):
         attribute_dict = {}
-
         contains_anything = False
         for key, header_label in header_positions.items():
 
