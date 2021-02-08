@@ -51,3 +51,52 @@ def test_create_filters(test_client, complete_admin_auth_token, create_filter,
     if status_code == 201:
         assert response.json['data']['filter']['name'] == filter_name
         assert response.json['data']['filter']['filter'] == filter
+
+def test_delete_filter(test_client, complete_admin_auth_token, create_filter):
+    # Check that you can delete
+    response = make_filter('Michiel\'s Great Test Filter!', 'rounded_transfer_amount(EQ)(1)', complete_admin_auth_token, test_client)
+    id = response.json['data']['filter']['id']
+    delete_resp = test_client.delete(
+        f'/api/v1/filter/{id}/',
+        headers=dict(
+            Authorization=complete_admin_auth_token,
+            Accept='application/json'
+        ))
+    assert delete_resp.json == {'message': 'success'}
+
+    # Check that deleted item is really deleted
+    # And that you can't delete something that doesn't exist!
+    delete_resp = test_client.delete(
+        f'/api/v1/filter/{id}/',
+        headers=dict(
+            Authorization=complete_admin_auth_token,
+            Accept='application/json'
+        ))
+    assert delete_resp.json == {'message': 'Filter "1" does not exist!'}
+
+def test_get_filter(test_client, complete_admin_auth_token, create_filter):
+    # Check that you can delete
+    response = make_filter('Michiel\'s Great Test Filter!', 'rounded_transfer_amount(EQ)(1)', complete_admin_auth_token, test_client)
+    id = response.json['data']['filter']['id']
+    get_resp = test_client.get(
+        f'/api/v1/filter/{id}/',
+        headers=dict(
+            Authorization=complete_admin_auth_token,
+            Accept='application/json'
+        ))
+        
+    get_resp.json['data']['filter']['created'] = 'This doesn\'t matter'
+    get_resp.json['data']['filter']['updated'] = 'This doesn\'t matter'
+
+    assert get_resp.json == {'data': 
+        {
+            'filter': {
+                'created': 'This doesn\'t matter', 
+                'filter': 'rounded_transfer_amount(EQ)(1)', 
+                'id': id, 
+                'name': "Michiel's Great Test Filter!", 
+                'updated': 'This doesn\'t matter'
+            }
+        }, 
+        'message': 'success'
+    }

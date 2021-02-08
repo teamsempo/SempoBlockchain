@@ -8,8 +8,7 @@ from server.utils.transfer_filter import process_transfer_filters
 
 new_filter_blueprint = Blueprint('filter', __name__)
 
-
-class SavedFilterAPI(MethodView):
+class SavedFiltersAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def get(self):
         return {
@@ -53,9 +52,35 @@ class SavedFilterAPI(MethodView):
         }
         return response_object, 201
 
+class SavedFilterAPI(MethodView):
+    @requires_auth(allowed_roles={'ADMIN': 'admin'})
+    def get(self, filter_id):
+        f = Filter.query.filter(Filter.id == filter_id).first()
+        if not f:
+            return { 'message': f'Filter "{filter_id}" does not exist!' }, 404
+        else:
+            return {
+                'message': 'success',
+                'data': {'filter': new_filter_schema.dump(f).data}
+            }
+        
+    @requires_auth(allowed_roles={'ADMIN': 'admin'})
+    def delete(self, filter_id):
+        f = Filter.query.filter(Filter.id == filter_id).first()
+        if not f:
+            return { 'message': f'Filter "{filter_id}" does not exist!' }, 404
+        else:
+            db.session.delete(f)
+            return {'message': 'success'}
 
 new_filter_blueprint.add_url_rule(
     '/filter/',
-    view_func=SavedFilterAPI.as_view('filter_view'),
+    view_func=SavedFiltersAPI.as_view('filters_view'),
     methods=['GET', 'POST']
+)
+
+new_filter_blueprint.add_url_rule(
+    '/filter/<int:filter_id>/',
+    view_func=SavedFilterAPI.as_view('filter_view'),
+    methods=['GET', 'DELETE']
 )
