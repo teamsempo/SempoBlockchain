@@ -109,8 +109,12 @@ def test_disbursement(search_string, params, include_list, exclude_list, disburs
             Authorization=complete_admin_auth_token, Accept='application/json'),
             json={ "action": "EXECUTE" },
             follow_redirects=True)
-
-        assert phase_two_response.json == {'status': 'success'}
+        phase_two_response.json['task_uuid'] = '123'
+        print(phase_two_response.json)
+        print(phase_two_response.json)
+        print(phase_two_response.json)
+        print(phase_two_response.json)
+        assert phase_two_response.json == {'status': 'success', 'task_uuid': '123'}
         transfers = CreditTransfer.query.all()
         for t in transfers:
             assert t.transfer_status == TransferStatusEnum.COMPLETE
