@@ -15,7 +15,6 @@ export enum SpreadsheetActionTypes {
 }
 
 export interface SaveDatasetSuccessPayload {
-  diagnostics: object;
   message: string;
   status?: string;
 }
