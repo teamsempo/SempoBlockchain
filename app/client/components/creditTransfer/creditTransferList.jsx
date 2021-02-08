@@ -18,7 +18,8 @@ const mapStateToProps = state => {
     login: state.login,
     transferAccounts: state.transferAccounts,
     creditTransfers: state.creditTransfers,
-    users: state.users
+    users: state.users,
+    tokens: state.tokens
   };
 };
 
@@ -452,7 +453,9 @@ class CreditTransferList extends React.Component {
                   headerClassName: "react-table-header",
                   Cell: cellInfo => {
                     let currency =
-                      cellInfo.original.token && cellInfo.original.token.symbol;
+                      cellInfo.original.token &&
+                      this.props.tokens.byId[cellInfo.original.token] &&
+                      this.props.tokens.byId[cellInfo.original.token].symbol;
                     const money = formatMoney(
                       cellInfo.value / 100,
                       undefined,
