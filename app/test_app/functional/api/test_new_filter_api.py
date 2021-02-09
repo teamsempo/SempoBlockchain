@@ -73,7 +73,7 @@ def test_delete_filter(test_client, complete_admin_auth_token, create_filter):
             Authorization=complete_admin_auth_token,
             Accept='application/json'
         ))
-    assert delete_resp.json == {f'message': 'Filter "{id}" does not exist!'}
+    assert delete_resp.json == {'message': f'Filter "{id}" does not exist!'}
 
 def test_get_filter(test_client, complete_admin_auth_token, create_filter):
     # Check that you can delete
