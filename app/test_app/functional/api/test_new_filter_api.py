@@ -1,5 +1,6 @@
 import pytest
 from server.utils.auth import get_complete_auth_token
+import re 
 
 def make_filter(filter_name, filter, auth_token, client):
     return client.post(
@@ -72,7 +73,9 @@ def test_delete_filter(test_client, complete_admin_auth_token, create_filter):
             Authorization=complete_admin_auth_token,
             Accept='application/json'
         ))
-    assert delete_resp.json == {'message': 'Filter "1" does not exist!'}
+    # Delete number since it'll be filter 1 or filter 3 depending on if the full test suite is run
+    delete_resp.json['message'] = ''.join([i for i in delete_resp.json['message'] if not i.isdigit()])
+    assert delete_resp.json == {'message': 'Filter "" does not exist!'}
 
 def test_get_filter(test_client, complete_admin_auth_token, create_filter):
     # Check that you can delete
