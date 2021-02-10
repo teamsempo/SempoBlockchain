@@ -5,9 +5,10 @@ import csv
 import codecs
 
 from server.constants import ALLOWED_SPREADSHEET_EXTENSIONS, SPREADSHEET_UPLOAD_REQUESTED_ATTRIBUTES
-from server import db
+from server import db, executor
 from server.utils.auth import requires_auth
 from server.utils import user as UserUtils
+from server.utils.executor import add_after_request_executor_job
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -66,8 +67,34 @@ class SpreadsheetUploadAPI(MethodView):
             'column_firstrows': column_firstrows,
             'requested_attributes':  SPREADSHEET_UPLOAD_REQUESTED_ATTRIBUTES
         }
-
         return make_response(jsonify(reponse_object)), 200
+
+@executor.job
+def execute_dataset_import(dataset, header_positions, is_vendor):
+    diagnostics = []
+    for datarow in dataset:
+        attribute_dict = {}
+
+        contains_anything = False
+        for key, header_label in header_positions.items():
+
+            attribute = datarow.get(key)
+
+            if attribute:
+                contains_anything = True
+                attribute_dict[header_label] = attribute
+
+        if contains_anything:
+            item_response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
+                attribute_dict, allow_existing_user_modify=True
+            )
+
+            diagnostics.append((item_response_object.get('message'), response_code))
+        
+            if response_code == 200:
+                db.session.commit()
+            else:
+                db.session.flush()
 
 class DatasetAPI(MethodView):
 
@@ -82,40 +109,14 @@ class DatasetAPI(MethodView):
 
         is_vendor = post_data.get('isVendor', False)
 
-        header_postions = post_data.get('headerPositions')
+        header_positions = post_data.get('headerPositions')
 
-        self.diagnostics = []
-
-        for datarow in post_data.get('data'):
-
-
-            attribute_dict = {}
-
-            contains_anything = False
-            for key, header_label in header_postions.items():
-
-                attribute = datarow.get(key)
-
-                if attribute:
-                    contains_anything = True
-                    attribute_dict[header_label] = attribute
-
-            if contains_anything:
-                item_response_object, response_code = UserUtils.proccess_create_or_modify_user_request(
-                    attribute_dict, allow_existing_user_modify=True
-                )
-
-                self.diagnostics.append((item_response_object.get('message'), response_code))
-
-                if response_code == 200:
-                    db.session.commit()
-                else:
-                    db.session.flush()
+        dataset = post_data.get('data')
+        add_after_request_executor_job(execute_dataset_import, kwargs={ 'dataset': dataset, 'header_positions': header_positions, 'is_vendor':is_vendor })
 
         response_object = {
             'status': 'success',
             'message': 'Successfully Saved.',
-            'diagnostics': self.diagnostics
         }
 
         return make_response(jsonify(response_object)), 201
