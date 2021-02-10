@@ -2,7 +2,7 @@ alembic==1.4.2
 boto3==1.14.29
 celery==4.4.6
 celery-redbeat==1.0.0
-cryptography==3.2
+cryptography==3.3.2
 flower==0.9.3
 eventlet==0.26.1
 idna==2.10
