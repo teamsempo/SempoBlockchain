@@ -1,0 +1,9 @@
+Hello,
+
+You have been invited to join {{ organisation_name }} on Sempo.
+
+You've already got an account with Sempo, please sign in using the link below to get started!
+
+{{ host }}login
+
+If you are not expecting an invitation, please ignore this message.
