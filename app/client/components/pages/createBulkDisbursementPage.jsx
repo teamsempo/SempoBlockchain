@@ -12,6 +12,7 @@ import { LoadTransferAccountAction } from "../../reducers/transferAccount/action
 import organizationWrapper from "../organizationWrapper.jsx";
 import NoDataMessage from "../NoDataMessage";
 import QueryConstructor from "../filterModule/queryConstructor";
+import { actionFactory, sempoObjects } from "../../reducers/rootReducer";
 
 const mapStateToProps = state => {
   return {
@@ -27,13 +28,17 @@ const mapDispatchToProps = dispatch => {
     loadTransferAccountList: (query, path) =>
       dispatch(
         LoadTransferAccountAction.loadTransferAccountsRequest({ query, path })
-      )
+      ),
+
+    loadFoobar: (path, query) =>
+      dispatch(actionFactory.load(sempoObjects.CT, path, query))
   };
 };
 
 class CreateBulkDisbursementPage extends React.Component {
   componentDidMount() {
-    this.props.loadTransferAccountList({}, null);
+    // this.props.loadTransferAccountList({}, null);
+    this.props.loadFoobar(3, null);
   }
 
   render() {
@@ -54,7 +59,7 @@ class CreateBulkDisbursementPage extends React.Component {
       <WrapperDiv>
         <PageWrapper>
           <ThemeProvider theme={LightTheme}>
-            <BulkDisbursementTransferAccountList />
+            {/*<BulkDisbursementTransferAccountList />*/}
           </ThemeProvider>
         </PageWrapper>
       </WrapperDiv>

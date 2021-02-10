@@ -8,7 +8,7 @@ export type Method =
   | "delete"
   | "DELETE";
 
-interface Body {
+export interface Body {
   [key: string]: any;
 }
 

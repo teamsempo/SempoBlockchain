@@ -195,8 +195,6 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
         };
       });
 
-    console.log("data length is: ", data.length);
-
     const headerCheckbox = (
       <Checkbox
         checked={selectedRowKeys.length > 0}
