@@ -8,11 +8,9 @@ const { Option, OptGroup } = Select;
 
 import { DefaultTheme } from "../theme";
 
-import { StyledSelect, Input, StyledButton } from "../styledElements.js";
 import styled from "styled-components";
 import PropTypes from "prop-types";
 import { replaceUnderscores } from "../../utils.js";
-import { SingleDatePicker } from "react-dates";
 
 import moment from "moment";
 
@@ -81,6 +79,72 @@ class Filter extends React.Component {
     }
   };
 
+  partition = (array, isValid) =>
+    array.reduce(
+      ([pass, fail], elem) => {
+        return isValid(elem)
+          ? [[...pass, elem], fail]
+          : [pass, [...fail, elem]];
+      },
+      [[], []]
+    );
+
+  generateOptionSubList = (keys, possibleFilters, userGroup) => {
+    if (keys.length === 0) {
+      return null;
+    }
+
+    let subList = keys.map(key => {
+      //Here we show the label without the group in the dropdown, but with the group once selected
+      let label = replaceUnderscores(possibleFilters[key]["name"] || key);
+      return (
+        <Option key={key} label={label}>
+          {label.replace(userGroup, "")}
+        </Option>
+      );
+    });
+
+    if (userGroup) {
+      return <OptGroup label={userGroup}>{subList}</OptGroup>;
+    } else {
+      return subList;
+    }
+  };
+
+  optionListGenerator = (keys, possibleFilters) => {
+    if (typeof keys === "undefined") {
+      return null;
+    }
+
+    const [recipientKeys, senderAndOtherKeys] = this.partition(
+      keys,
+      el => possibleFilters[el]["sender_or_recipient"] === "recipient"
+    );
+
+    const [senderKeys, otherKeys] = this.partition(
+      senderAndOtherKeys,
+      el => possibleFilters[el]["sender_or_recipient"] === "sender"
+    );
+
+    return (
+      <Select
+        showSearch
+        defaultValue="Select Attribute"
+        onChange={this.handleAttributeSelectorChange}
+        style={{ width: "225px" }}
+        optionLabelProp="label"
+      >
+        {this.generateOptionSubList(otherKeys, possibleFilters)}
+        {this.generateOptionSubList(senderKeys, possibleFilters, "Sender")}
+        {this.generateOptionSubList(
+          recipientKeys,
+          possibleFilters,
+          "Recipient"
+        )}
+      </Select>
+    );
+  };
+
   attributeSelector = () => {
     let { possibleFilters } = this.props;
     const keys =
@@ -98,20 +162,7 @@ class Filter extends React.Component {
           flexFlow: "row wrap"
         }}
       >
-        <Select
-          showSearch
-          defaultValue="Select Attribute"
-          onChange={this.handleAttributeSelectorChange}
-          style={{ width: "225px" }}
-        >
-          {typeof keys !== "undefined"
-            ? keys.map((key, index) => (
-                <Option key={key}>
-                  {replaceUnderscores(possibleFilters[key]["name"] || key)}
-                </Option>
-              ))
-            : null}
-        </Select>
+        {this.optionListGenerator(keys, possibleFilters)}
       </div>
     );
   };
@@ -369,6 +420,7 @@ class Filter extends React.Component {
                       ? "/static/media/closePrimary.svg"
                       : "/static/media/closeAlt.svg"
                   }
+                  alt={"Remove filter " + attributeProperties.name}
                 />
               </FilterBubble>
             );

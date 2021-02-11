@@ -1,0 +1,139 @@
+{
+  "active_filters": ["chips,sender", "colour,sender"],
+  "active_group_by": "ungrouped",
+  "active_users": {
+    "aggregate": {
+      "percent_change": null,
+      "total": 1
+    },
+    "timeseries": {
+      "None": [
+        {
+          "date": "2021-02-07T00:00:00",
+          "value": 1
+        }
+      ]
+    },
+    "type": {
+      "display_decimals": 0,
+      "value_type": "count"
+    }
+  },
+  "all_payments_volume": {
+    "aggregate": {
+      "percent_change": null,
+      "total": 20
+    },
+    "timeseries": {
+      "None": [
+        {
+          "date": "2021-02-07T00:00:00",
+          "value": 20
+        }
+      ]
+    },
+    "type": {
+      "currency_name": "AUD Reserve Token",
+      "currency_symbol": "AUD",
+      "display_decimals": 2,
+      "value_type": "currency"
+    }
+  },
+  "daily_transaction_count": {
+    "aggregate": {
+      "percent_change": null,
+      "total": 1
+    },
+    "timeseries": {
+      "None": [
+        {
+          "date": "2021-02-07T00:00:00",
+          "value": 1
+        }
+      ]
+    },
+    "type": {
+      "display_decimals": 0,
+      "value_type": "count"
+    }
+  },
+  "mandatory_filter": {},
+  "master_wallet_balance": -1517,
+  "total_distributed": 1517,
+  "total_reclaimed": 0,
+  "total_withdrawn": 0,
+  "trades_per_user": {
+    "aggregate": {
+      "percent_change": null,
+      "total": 0.14285714285714285
+    },
+    "timeseries": {
+      "None": [
+        {
+          "date": "2021-02-07T00:00:00",
+          "value": 0.5
+        }
+      ]
+    },
+    "type": {
+      "display_decimals": 2,
+      "value_type": "count_average"
+    }
+  },
+  "transfer_amount_per_user": {
+    "aggregate": {
+      "percent_change": null,
+      "total": 2.857142857142857
+    },
+    "timeseries": {
+      "None": [
+        {
+          "date": "2021-02-07T00:00:00",
+          "value": 10
+        }
+      ]
+    },
+    "type": {
+      "currency_name": "AUD Reserve Token",
+      "currency_symbol": "AUD",
+      "display_decimals": 2,
+      "value_type": "currency"
+    }
+  },
+  "users_created": {
+    "aggregate": {
+      "percent_change": -100,
+      "total": 1
+    },
+    "timeseries": {
+      "None": [
+        {
+          "date": "2021-02-01T00:00:00",
+          "value": 1
+        }
+      ]
+    },
+    "type": {
+      "display_decimals": 0,
+      "value_type": "count"
+    }
+  },
+  "users_who_made_purchase": {
+    "aggregate": {
+      "percent_change": null,
+      "total": 1
+    },
+    "timeseries": {
+      "None": [
+        {
+          "date": "2021-02-07T00:00:00",
+          "value": 1
+        }
+      ]
+    },
+    "type": {
+      "display_decimals": 0,
+      "value_type": "count"
+    }
+  }
+}

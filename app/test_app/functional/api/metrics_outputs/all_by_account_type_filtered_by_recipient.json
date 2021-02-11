@@ -1,6 +1,6 @@
 {
   "active_filters": ["rounded_account_balance,recipient"],
-  "active_group_by": "account_type",
+  "active_group_by": "sender,account_type",
   "active_users": {
     "aggregate": {
       "USER": 4,
@@ -10,19 +10,19 @@
     "timeseries": {
       "USER": [
         {
-          "date": "2020-10-29T00:00:00",
+          "date": "2021-02-05T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-10-31T00:00:00",
+          "date": "2021-02-07T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-11-03T00:00:00",
+          "date": "2021-02-10T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-11-04T00:00:00",
+          "date": "2021-02-11T00:00:00",
           "value": 1
         }
       ]
@@ -35,42 +35,29 @@
   "all_payments_volume": {
     "aggregate": {
       "USER": 145,
-      "percent_change": 97.04433497536947,
+      "percent_change": 397.029702970297,
       "total": 1477
     },
     "timeseries": {
       "USER": [
         {
-          "date": "2020-10-29T00:00:00",
+          "date": "2021-02-05T00:00:00",
           "value": 20
         },
         {
-          "date": "2020-10-31T00:00:00",
+          "date": "2021-02-07T00:00:00",
           "value": 20
         },
         {
-          "date": "2020-11-03T00:00:00",
+          "date": "2021-02-10T00:00:00",
           "value": 5
         },
         {
-          "date": "2020-11-04T00:00:00",
+          "date": "2021-02-11T00:00:00",
           "value": 100
         }
       ]
     },
-    "type": {
-      "currency_name": "AUD Reserve Token",
-      "currency_symbol": "AUD",
-      "display_decimals": 2,
-      "value_type": "currency"
-    }
-  },
-  "daily_disbursement_volume": {
-    "aggregate": {
-      "percent_change": 72.41379310344827,
-      "total": 1307
-    },
-    "timeseries": {},
     "type": {
       "currency_name": "AUD Reserve Token",
       "currency_symbol": "AUD",
@@ -87,19 +74,19 @@
     "timeseries": {
       "USER": [
         {
-          "date": "2020-10-29T00:00:00",
+          "date": "2021-02-05T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-10-31T00:00:00",
+          "date": "2021-02-07T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-11-03T00:00:00",
+          "date": "2021-02-10T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-11-04T00:00:00",
+          "date": "2021-02-11T00:00:00",
           "value": 1
         }
       ]
@@ -109,50 +96,10 @@
       "value_type": "count"
     }
   },
-  "daily_transaction_volume": {
-    "aggregate": {
-      "USER": 145,
-      "percent_change": 97.04433497536947,
-      "total": 1477
-    },
-    "timeseries": {
-      "USER": [
-        {
-          "date": "2020-10-29T00:00:00",
-          "value": 20
-        },
-        {
-          "date": "2020-10-31T00:00:00",
-          "value": 20
-        },
-        {
-          "date": "2020-11-03T00:00:00",
-          "value": 5
-        },
-        {
-          "date": "2020-11-04T00:00:00",
-          "value": 100
-        }
-      ]
-    },
-    "type": {
-      "currency_name": "AUD Reserve Token",
-      "currency_symbol": "AUD",
-      "display_decimals": 2,
-      "value_type": "currency"
-    }
-  },
-  "exhausted_balance": 0,
-  "has_transferred_count": 5,
   "mandatory_filter": {},
   "master_wallet_balance": -1517,
-  "total_beneficiaries": 5,
   "total_distributed": 1517,
-  "total_exchanged": 0,
   "total_reclaimed": 0,
-  "total_spent": 170,
-  "total_users": 5,
-  "total_vendors": 0,
   "total_withdrawn": 0,
   "trades_per_user": {
     "aggregate": {
@@ -163,19 +110,19 @@
     "timeseries": {
       "USER": [
         {
-          "date": "2020-10-29T00:00:00",
+          "date": "2021-02-05T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-07T00:00:00",
           "value": 0.5
         },
         {
-          "date": "2020-10-31T00:00:00",
+          "date": "2021-02-10T00:00:00",
           "value": 0.3333333333333333
         },
         {
-          "date": "2020-11-03T00:00:00",
-          "value": 0.25
-        },
-        {
-          "date": "2020-11-04T00:00:00",
+          "date": "2021-02-11T00:00:00",
           "value": 0.14285714285714285
         }
       ]
@@ -194,19 +141,19 @@
     "timeseries": {
       "USER": [
         {
-          "date": "2020-10-29T00:00:00",
+          "date": "2021-02-05T00:00:00",
+          "value": 20
+        },
+        {
+          "date": "2021-02-07T00:00:00",
           "value": 10
         },
         {
-          "date": "2020-10-31T00:00:00",
-          "value": 6.666666666666667
+          "date": "2021-02-10T00:00:00",
+          "value": 1.6666666666666667
         },
         {
-          "date": "2020-11-03T00:00:00",
-          "value": 1.25
-        },
-        {
-          "date": "2020-11-04T00:00:00",
+          "date": "2021-02-11T00:00:00",
           "value": 14.285714285714286
         }
       ]
@@ -221,22 +168,22 @@
   "users_created": {
     "aggregate": {
       "USER": 5,
-      "percent_change": 50,
+      "percent_change": 300,
       "total": 35
     },
     "timeseries": {
       "USER": [
         {
-          "date": "2020-10-25T00:00:00",
-          "value": 2
-        },
-        {
-          "date": "2020-10-31T00:00:00",
+          "date": "2021-02-01T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-11-04T00:00:00",
-          "value": 2
+          "date": "2021-02-07T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-11T00:00:00",
+          "value": 3
         }
       ]
     },
@@ -254,19 +201,19 @@
     "timeseries": {
       "USER": [
         {
-          "date": "2020-10-29T00:00:00",
+          "date": "2021-02-05T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-10-31T00:00:00",
+          "date": "2021-02-07T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-11-03T00:00:00",
+          "date": "2021-02-10T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-11-04T00:00:00",
+          "date": "2021-02-11T00:00:00",
           "value": 1
         }
       ]

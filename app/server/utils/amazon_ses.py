@@ -71,6 +71,15 @@ def send_invite_email(invite, organisation):
 
     ses_email_handler.submit(invite.email, 'Sempo: Invite to Join!', body)
 
+def send_invite_email_to_existing_user(organisation, email_address):
+
+    TEMPLATE_FILE = 'invite_existing_user_email.txt'
+    template = get_email_template(TEMPLATE_FILE)
+    body = template.render(host=request.url_root,
+                           organisation_name=organisation.name)
+
+    ses_email_handler.submit(email_address, 'Sempo: Added to new Organisation!', body)
+
 def send_export_email(file_url, email_address):
 
     TEMPLATE_FILE = 'export_email.txt'

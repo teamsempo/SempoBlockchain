@@ -51,8 +51,8 @@ export class authPage extends React.Component {
     }
   }
 
-  componentDidUpdate(prevProps) {
-    if (this.props.loggedIn !== prevProps.loggedIn) {
+  componentDidUpdate() {
+    if (this.props.loggedIn) {
       this.setState({ redirectToReferrer: true });
     }
   }
@@ -61,7 +61,7 @@ export class authPage extends React.Component {
     let deploymentName = window.DEPLOYMENT_NAME;
     const { from } = this.props.location.state || { from: { pathname: "/" } };
 
-    if (this.state.redirectToReferrer) {
+    if (this.state.redirectToReferrer || this.props.loggedIn) {
       return <Redirect to={from} />;
     }
 
@@ -69,7 +69,10 @@ export class authPage extends React.Component {
       <WrapperDiv>
         <LoginModuleBox>
           <div>
-            <SempoLogoSVG src="/static/media/sempo_logo_teal.png" />
+            <SempoLogoSVG
+              src="/static/media/sempo_logo_teal.png"
+              alt={"Sempo Logo"}
+            />
           </div>
           <Switch>
             <Route
@@ -91,7 +94,7 @@ export class authPage extends React.Component {
         <TermsText
           target="_blank"
           href={
-            "https://docs.withsempo.com/sempo-platform/accessing-the-dashboard/common-login-errors"
+            "https://docs.withsempo.com/sempo-dashboard/common-login-errors#what-to-do-if-you-encounter-issues-logging-in"
           }
         >
           Get help logging in

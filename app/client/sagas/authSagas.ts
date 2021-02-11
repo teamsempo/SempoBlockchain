@@ -7,6 +7,7 @@ import {
   select
 } from "redux-saga/effects";
 import { normalize } from "normalizr";
+import { message } from "antd";
 
 import {
   handleError,
@@ -83,10 +84,10 @@ import {
 } from "../reducers/auth/actions";
 
 import { browserHistory } from "../createStore";
-import { MessageAction } from "../reducers/message/actions";
 import { OrganisationAction } from "../reducers/organisation/actions";
 import { ActionWithPayload } from "../reduxUtils";
 import { ReduxState } from "../reducers/rootReducer";
+import { TokenListAction } from "../reducers/token/actions";
 
 function* updateStateFromAdmin(data: AdminData) {
   //Schema expects a list of admin user objects
@@ -127,8 +128,13 @@ export function* updateOrganisationStateFromLoginData(
   }
 
   const normalizedData = normalize(organisation_list, organisationSchema);
-  const organisations = normalizedData.entities.organisations;
 
+  const tokens = normalizedData.entities.tokens;
+  if (tokens) {
+    yield put(TokenListAction.updateTokenList(tokens));
+  }
+
+  const organisations = normalizedData.entities.organisations;
   if (organisations) {
     yield put(OrganisationAction.updateOrganisationList(organisations));
   }
@@ -285,12 +291,7 @@ function* register(
     ) {
       // manual sign up, need to activate email
       yield put(RegisterAction.registerSuccess());
-      yield put(
-        MessageAction.addMessage({
-          error: false,
-          message: registered_account.message
-        })
-      );
+      message.success(registered_account.message);
       browserHistory.push("/login");
     } else if (registered_account.auth_token && !registered_account.tfa_url) {
       storeSessionToken(registered_account.auth_token);
@@ -471,13 +472,9 @@ function* updateUserRequest(
     }
 
     yield put(EditAdminUserAction.editAdminUserSuccess());
-
-    yield put(
-      MessageAction.addMessage({ error: false, message: result.message })
-    );
+    message.success(result.message);
   } catch (error) {
-    yield put(EditAdminUserAction.editAdminUserFailure(error));
-    yield put(MessageAction.addMessage({ error: true, message: error }));
+    message.error(error);
   }
 }
 
@@ -507,9 +504,7 @@ function* deleteInvite(
     delete invites[action.payload.body.invite_id];
 
     yield put(InviteUserListAction.updateInviteUsers(invites));
-    yield put(
-      MessageAction.addMessage({ error: false, message: result.message })
-    );
+    message.success(result.message);
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
     yield put(DeleteInviteAction.deleteInviteFailure(error.message));
@@ -529,9 +524,7 @@ function* inviteUserRequest(
   try {
     const result = yield call(inviteUserAPI, action.payload);
     yield put(InviteUserAction.inviteUserSuccess());
-    yield put(
-      MessageAction.addMessage({ error: false, message: result.message })
-    );
+    message.success(result.message);
     browserHistory.push("/settings");
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);

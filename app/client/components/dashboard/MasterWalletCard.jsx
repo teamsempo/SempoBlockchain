@@ -8,14 +8,14 @@ import styled from "styled-components";
 import { Card, Typography } from "antd";
 import { LinkOutlined } from "@ant-design/icons";
 import { HorizontalBar } from "react-chartjs-2";
-import { formatMoney } from "../../utils";
+import { formatMoney, getActiveToken } from "../../utils";
 
 const { Text } = Typography;
 
 const mapStateToProps = state => {
   return {
     creditTransferStats: state.metrics.metricsState,
-    activeOrganisation: state.organisations.byId[state.login.organisationId]
+    activeToken: getActiveToken(state)
   };
 };
 
@@ -26,24 +26,19 @@ class MasterWalletCard extends React.Component {
   }
 
   render() {
-    const { creditTransferStats, activeOrganisation } = this.props;
+    const { creditTransferStats, activeToken } = this.props;
     const masterWalletBalance = creditTransferStats.master_wallet_balance / 100;
     const amountDisbursed = creditTransferStats.total_distributed / 100;
     const amountWithdrawn = creditTransferStats.total_withdrawn / 100;
     const amountReclaimed = creditTransferStats.total_reclaimed / 100;
-    const symbol = activeOrganisation.token.symbol;
+    const symbol = activeToken.symbol;
 
     const amountInCirculation =
       amountDisbursed - amountWithdrawn - amountReclaimed;
 
     console.log("Master wallet balance is", masterWalletBalance);
 
-    const tracker_link =
-      window.ETH_EXPLORER_URL +
-      "/address/" +
-      (window.USING_EXTERNAL_ERC20
-        ? window.master_wallet_address
-        : window.ETH_CONTRACT_ADDRESS);
+    const tracker_link = `${window.ETH_EXPLORER_URL}/address/${window.master_wallet_address}`;
 
     var options = {
       animation: false,

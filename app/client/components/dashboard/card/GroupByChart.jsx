@@ -10,13 +10,15 @@ import {
   toTitleCase,
   replaceUnderscores,
   toCurrency,
-  formatMoney
+  formatMoney,
+  getActiveToken
 } from "../../../utils";
 import { VALUE_TYPES } from "../../../constants";
+import { ChartColors } from "../../theme";
 
 const mapStateToProps = state => {
   return {
-    activeOrganisation: state.organisations.byId[state.login.organisationId]
+    activeToken: getActiveToken(state)
   };
 };
 
@@ -30,10 +32,12 @@ class GroupByChart extends React.Component {
       aggregateData = aggregateData.map(a => toCurrency(a));
     }
 
+    let maxVal = Math.max(...aggregateData);
+
     const labelString = selected
       ? selected.includes("volume")
         ? `${toTitleCase(replaceUnderscores(selected))} (${
-            this.props.activeOrganisation.token.symbol
+            this.props.activeToken.symbol
           })`
         : `${toTitleCase(replaceUnderscores(selected))}`
       : null;
@@ -50,16 +54,24 @@ class GroupByChart extends React.Component {
         cornerRadius: 1,
         callbacks: {
           label: function(tooltipItem) {
+            let labelAbsoluteVal;
             if (data.type && data.type.value_type === VALUE_TYPES.CURRENCY) {
-              return formatMoney(
+              labelAbsoluteVal = formatMoney(
                 tooltipItem.xLabel,
                 data.type.display_decimals,
                 undefined,
                 undefined,
                 data.type.currency_symbol
               );
+            } else {
+              labelAbsoluteVal = tooltipItem.xLabel;
             }
-            return tooltipItem.xLabel;
+
+            let labelPercent = parseFloat(
+              (tooltipItem.xLabel / maxVal) * 100
+            ).toFixed(1);
+
+            return `${labelAbsoluteVal} (${labelPercent}%)`;
           }
         }
       },
@@ -112,20 +124,7 @@ class GroupByChart extends React.Component {
       datasets: [
         {
           label: `${toTitleCase(replaceUnderscores(selected))}`,
-          backgroundColor: [
-            "#003F5C",
-            "#FF764D",
-            "#CB5188",
-            "#62508E",
-            "#508E79",
-            "#2E4A7A",
-            "#F05B6F",
-            "#995194",
-            "#57AA65",
-            "#FF9C22",
-            "#42B1B1",
-            "#555555"
-          ],
+          backgroundColor: ChartColors,
           data: aggregateData
         }
       ]

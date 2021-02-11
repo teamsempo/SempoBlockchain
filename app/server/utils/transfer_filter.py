@@ -6,11 +6,11 @@ import enum
 from sqlalchemy.sql import text
 from sqlalchemy import or_, Column, String, Float
 from server import db
+from server.models.custom_attribute import CustomAttribute, MetricsVisibility
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
 from server.models.transfer_account import TransferAccount
 from server.models.credit_transfer import CreditTransfer
 from server.models.user import User
-from sqlalchemy.sql.expression import cast
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
 
 BENEFICIARY = "Beneficiary"
@@ -36,31 +36,36 @@ class TransferFilterEnum:
 
 def get_custom_attribute_filters(distinct_sender_and_recipient = False):
     # Get all custom attributes and options
-    attribute_options = CustomAttributeUserStorage.get_attributes_and_options()
+    attribute_options = db.session.query(CustomAttribute)\
+        .filter(CustomAttribute.filter_visibility != MetricsVisibility.HIDDEN)\
+        .all()
+
     # Build those into filters objects
     filters = {}
     for ao in attribute_options:
         if distinct_sender_and_recipient:
-            filters[ao + ',sender'] = {
-                'name': 'Sender ' + ao.capitalize(),
-                'table': CustomAttributeUserStorage.__tablename__,
-                'sender_or_recipient': SENDER,
-                'type': TransferFilterEnum.DISCRETE,
-                'values': attribute_options[ao]
-            }
-            filters[ao + ',recipient'] = {
-                'name': 'Recipient ' + ao.capitalize(),
-                'table': CustomAttributeUserStorage.__tablename__,
-                'sender_or_recipient': RECIPIENT,
-                'type': TransferFilterEnum.DISCRETE,
-                'values': attribute_options[ao]
-            }
+            if ao.filter_visibility in [MetricsVisibility.SENDER_AND_RECIPIENT, MetricsVisibility.SENDER]:
+                filters[ao.name + ',sender'] = {
+                    'name': 'Sender ' + ao.name.capitalize(),
+                    'table': CustomAttributeUserStorage.__tablename__,
+                    'sender_or_recipient': SENDER,
+                    'type': TransferFilterEnum.DISCRETE,
+                    'values': ao.existing_options
+                }
+            if ao.filter_visibility in [MetricsVisibility.SENDER_AND_RECIPIENT, MetricsVisibility.RECIPIENT]:
+                filters[ao.name + ',recipient'] = {
+                    'name': 'Recipient ' + ao.name.capitalize(),
+                    'table': CustomAttributeUserStorage.__tablename__,
+                    'sender_or_recipient': RECIPIENT,
+                    'type': TransferFilterEnum.DISCRETE,
+                    'values': ao.existing_options
+                }
         else:
-            filters[ao] = {
-                'name': ao.capitalize(),
+            filters[ao.name] = {
+                'name': ao.name.capitalize(),
                 'table': CustomAttributeUserStorage.__tablename__,
                 'type': TransferFilterEnum.DISCRETE,
-                'values': attribute_options[ao]
+                'values': ao.existing_options
             }
     return filters
 
@@ -77,7 +82,7 @@ class Filters(object):
                 'name': "Transfer Type",
                 'table': CreditTransfer.__tablename__,
                 'type': TransferFilterEnum.DISCRETE,
-                'values': ['PAYMENT', 'DEPOSIT', 'WITHDRAWAL', 'EXCHANGE', 'FEE', 'DISBURSEMENT', 'RECLAMATION', 'AGENT_IN', 'AGENT_OUT', 'FEE', 'INCENTIVE']
+                'values': ['PAYMENT', 'DEPOSIT', 'WITHDRAWAL', 'EXCHANGE', 'FEE', 'DISBURSEMENT', 'RECLAMATION', 'AGENT_IN', 'AGENT_OUT', 'INCENTIVE']
             },
         }
 
@@ -202,8 +207,7 @@ def process_transfer_filters(encoded_filters):
         sender_or_recipient = filters.ALL_FILTERS[unprocessed_attribute]['sender_or_recipient'] if 'sender_or_recipient' in filters.ALL_FILTERS[unprocessed_attribute] else False
 
         processed = handle_filter(**f)
-
-        if table not in filter_dict:
+        if (table, sender_or_recipient) not in filter_dict:
             filter_dict[(table, sender_or_recipient)] = []
         filter_dict[(table, sender_or_recipient)].append(processed)
 
@@ -215,13 +219,11 @@ def parse_filter_string(filter_string):
     Converts a filter string into a list of dictionary values
     """
     tokenized_filters = filter_string.split(":")
-
     filters = []
     for item in tokenized_filters:
         if item is not None and len(item) > 0:
             left_bracket_split = item.split('(')
             stripped_of_right_bracket = [s.strip(')') for s in left_bracket_split]
-
             attribute = stripped_of_right_bracket[0]
             comparator = stripped_of_right_bracket[1]
             value_list = stripped_of_right_bracket[2].split(',')
@@ -236,7 +238,6 @@ def parse_filter_string(filter_string):
                 'comparator': comparator,
                 'value': value
             })
-
     return filters
 
 
@@ -269,4 +270,3 @@ def handle_discrete(attribute, comparator, value):
 def handle_other_types(attribute, comparator, value, attribute_type):
     value = value if attribute_type == TransferFilterEnum.DATE_RANGE else float(value)
     return [(attribute, comparator, value)]
-

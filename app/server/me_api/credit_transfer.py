@@ -52,7 +52,7 @@ class MeCreditTransferAPI(MethodView):
                 or_(CreditTransfer.recipient_user_id == user.id,
                     CreditTransfer.sender_user_id == user.id))
 
-        transfers, total_items, total_pages = paginate_query(transfers_query, CreditTransfer)
+        transfers, total_items, total_pages, new_last_fetched = paginate_query(transfers_query)
 
         transfer_list = me_credit_transfers_schema.dump(transfers).data
 
@@ -60,6 +60,7 @@ class MeCreditTransferAPI(MethodView):
             'message': 'Successfully Loaded.',
             'items': total_items,
             'pages': total_pages,
+            'last_fetched': new_last_fetched,
             'data': {
                 'credit_transfers': transfer_list,
             }
@@ -103,6 +104,7 @@ class MeCreditTransferAPI(MethodView):
 
         is_sending = post_data.get('is_sending', False)
 
+        transfer_card = None
         my_transfer_account = None
         authorised = False
         if transfer_account_id:
@@ -194,7 +196,7 @@ class MeCreditTransferAPI(MethodView):
 
         else:
             try:
-                counterparty_user = find_user_with_transfer_account_from_identifiers(
+                counterparty_user, _ = find_user_with_transfer_account_from_identifiers(
                     user_id,
                     public_identifier,
                     transfer_account_id)
@@ -208,9 +210,18 @@ class MeCreditTransferAPI(MethodView):
                     }
                     return make_response(jsonify(response_object)), 400
 
+                my_transfer_account = TransferAccount.query.get(my_transfer_account_id)
+
+                if not my_transfer_account:
+                    response_object = {
+                        'message': 'Transfer Account not found for my_transfer_account_id {}'.format(
+                            my_transfer_account_id)
+                    }
+                    return make_response(jsonify(response_object)), 400
+
                 #We're sending directly to a blockchain address
                 return handle_transfer_to_blockchain_address(transfer_amount,
-                                                             g.user,
+                                                             my_transfer_account,
                                                              public_identifier.strip('ethereum:'),
                                                              transfer_use,
                                                              transfer_mode=TransferModeEnum.EXTERNAL,
@@ -292,7 +303,8 @@ class MeCreditTransferAPI(MethodView):
                                              receive_transfer_account=receive_transfer_account,
                                              transfer_use=transfer_use,
                                              transfer_mode=transfer_mode,
-                                             uuid=uuid)
+                                             uuid=uuid,
+                                             transfer_card=transfer_card)
 
         except AccountNotApprovedError as e:
             db.session.commit()

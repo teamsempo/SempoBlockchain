@@ -2,7 +2,7 @@ alembic==1.4.2
 boto3==1.14.29
 celery==4.4.6
 celery-redbeat==1.0.0
-cryptography==3.2
+cryptography==3.4.4
 flower==0.9.3
 eventlet==0.26.1
 idna==2.10
@@ -13,7 +13,7 @@ py-solc==3.2.0
 raven==6.10.0
 redis==3.5.3
 requests==2.24.0
-sentry-sdk==0.16.2
+sentry-sdk==0.19.2
 SQLAlchemy==1.3.18
 web3==5.12.0
 

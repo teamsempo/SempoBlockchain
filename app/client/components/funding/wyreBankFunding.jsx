@@ -206,6 +206,7 @@ class WyreBankFunding extends React.Component {
                 }
                 buttonText={<span>FUND ACCOUNT</span>}
                 isLoading={isLoading}
+                label={"Fund Account"}
               />
             </ButtonWrapper>
           </PreviewWrapper>

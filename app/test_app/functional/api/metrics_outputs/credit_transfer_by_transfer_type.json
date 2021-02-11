@@ -5,77 +5,44 @@
     "aggregate": {
       "DISBURSEMENT": 1517,
       "PAYMENT": 170,
-      "percent_change": 97.04433497536947,
+      "percent_change": 397.029702970297,
       "total": 1687
     },
     "timeseries": {
       "DISBURSEMENT": [
         {
-          "date": "2020-08-26T00:00:00",
-          "value": 406
+          "date": "2021-01-22T00:00:00",
+          "value": 202
         },
         {
-          "date": "2020-09-07T00:00:00",
+          "date": "2021-02-04T00:00:00",
           "value": 201
         },
         {
-          "date": "2020-09-13T00:00:00",
+          "date": "2021-02-09T00:00:00",
           "value": 210
         },
         {
-          "date": "2020-09-15T00:00:00",
-          "value": 700
+          "date": "2021-02-11T00:00:00",
+          "value": 904
         }
       ],
       "PAYMENT": [
         {
-          "date": "2020-09-09T00:00:00",
+          "date": "2021-02-05T00:00:00",
           "value": 20
         },
         {
-          "date": "2020-09-11T00:00:00",
+          "date": "2021-02-07T00:00:00",
           "value": 20
         },
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2021-02-10T00:00:00",
           "value": 30
         },
         {
-          "date": "2020-09-15T00:00:00",
+          "date": "2021-02-11T00:00:00",
           "value": 100
-        }
-      ]
-    },
-    "type": {
-      "currency_name": "AUD Reserve Token",
-      "currency_symbol": "AUD",
-      "display_decimals": 2,
-      "value_type": "currency"
-    }
-  },
-  "daily_disbursement_volume": {
-    "aggregate": {
-      "DISBURSEMENT": 1517,
-      "percent_change": 72.41379310344827,
-      "total": 1517
-    },
-    "timeseries": {
-      "DISBURSEMENT": [
-        {
-          "date": "2020-08-26T00:00:00",
-          "value": 406
-        },
-        {
-          "date": "2020-09-07T00:00:00",
-          "value": 201
-        },
-        {
-          "date": "2020-09-13T00:00:00",
-          "value": 210
-        },
-        {
-          "date": "2020-09-15T00:00:00",
-          "value": 700
         }
       ]
     },
@@ -95,19 +62,19 @@
     "timeseries": {
       "PAYMENT": [
         {
-          "date": "2020-09-09T00:00:00",
+          "date": "2021-02-05T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-11T00:00:00",
+          "date": "2021-02-07T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2021-02-10T00:00:00",
           "value": 2
         },
         {
-          "date": "2020-09-15T00:00:00",
+          "date": "2021-02-11T00:00:00",
           "value": 1
         }
       ]
@@ -117,65 +84,11 @@
       "value_type": "count"
     }
   },
-  "daily_transaction_volume": {
-    "aggregate": {
-      "DISBURSEMENT": 1517,
-      "PAYMENT": 170,
-      "percent_change": 97.04433497536947,
-      "total": 1687
-    },
-    "timeseries": {
-      "DISBURSEMENT": [
-        {
-          "date": "2020-08-26T00:00:00",
-          "value": 406
-        },
-        {
-          "date": "2020-09-07T00:00:00",
-          "value": 201
-        },
-        {
-          "date": "2020-09-13T00:00:00",
-          "value": 210
-        },
-        {
-          "date": "2020-09-15T00:00:00",
-          "value": 700
-        }
-      ],
-      "PAYMENT": [
-        {
-          "date": "2020-09-09T00:00:00",
-          "value": 20
-        },
-        {
-          "date": "2020-09-11T00:00:00",
-          "value": 20
-        },
-        {
-          "date": "2020-09-14T00:00:00",
-          "value": 30
-        },
-        {
-          "date": "2020-09-15T00:00:00",
-          "value": 100
-        }
-      ]
-    },
-    "type": {
-      "currency_name": "AUD Reserve Token",
-      "currency_symbol": "AUD",
-      "display_decimals": 2,
-      "value_type": "currency"
-    }
-  },
-  "exhausted_balance": 0,
-  "has_transferred_count": 5,
   "mandatory_filter": {},
-  "master_wallet_balance": -1517.0,
+  "master_wallet_balance": -1517,
   "total_distributed": 1517,
-  "total_exchanged": 0,
-  "total_spent": 170,
+  "total_reclaimed": 0,
+  "total_withdrawn": 0,
   "trades_per_user": {
     "aggregate": {
       "PAYMENT": 0.7142857142857143,
@@ -185,19 +98,19 @@
     "timeseries": {
       "PAYMENT": [
         {
-          "date": "2020-09-09T00:00:00",
+          "date": "2021-02-05T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-07T00:00:00",
           "value": 0.5
         },
         {
-          "date": "2020-09-11T00:00:00",
-          "value": 0.3333333333333333
+          "date": "2021-02-10T00:00:00",
+          "value": 0.6666666666666666
         },
         {
-          "date": "2020-09-14T00:00:00",
-          "value": 0.5
-        },
-        {
-          "date": "2020-09-15T00:00:00",
+          "date": "2021-02-11T00:00:00",
           "value": 0.14285714285714285
         }
       ]
@@ -216,19 +129,19 @@
     "timeseries": {
       "PAYMENT": [
         {
-          "date": "2020-09-09T00:00:00",
+          "date": "2021-02-05T00:00:00",
+          "value": 20
+        },
+        {
+          "date": "2021-02-07T00:00:00",
           "value": 10
         },
         {
-          "date": "2020-09-11T00:00:00",
-          "value": 6.666666666666667
+          "date": "2021-02-10T00:00:00",
+          "value": 10
         },
         {
-          "date": "2020-09-14T00:00:00",
-          "value": 7.5
-        },
-        {
-          "date": "2020-09-15T00:00:00",
+          "date": "2021-02-11T00:00:00",
           "value": 14.285714285714286
         }
       ]
@@ -250,37 +163,37 @@
     "timeseries": {
       "DISBURSEMENT": [
         {
-          "date": "2020-08-26T00:00:00",
+          "date": "2021-01-22T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-07T00:00:00",
+          "date": "2021-02-04T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-13T00:00:00",
+          "date": "2021-02-09T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-15T00:00:00",
+          "date": "2021-02-11T00:00:00",
           "value": 1
         }
       ],
       "PAYMENT": [
         {
-          "date": "2020-09-09T00:00:00",
+          "date": "2021-02-05T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-11T00:00:00",
+          "date": "2021-02-07T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2021-02-10T00:00:00",
           "value": 2
         },
         {
-          "date": "2020-09-15T00:00:00",
+          "date": "2021-02-11T00:00:00",
           "value": 1
         }
       ]

@@ -16,7 +16,6 @@ import {
   datasetList
 } from "./spreadsheet/reducers";
 import { ExportReducer } from "./export/reducers";
-import { message } from "./message/reducers";
 import { creditTransfers } from "./creditTransfer/reducers";
 import { transferAccounts } from "./transferAccount/reducers";
 import { users } from "./user/reducers";
@@ -27,6 +26,7 @@ import { TransferUsageReducer } from "./transferUsage/reducers";
 import { OrganisationReducer } from "./organisation/reducers";
 import { metrics } from "./metric/reducers";
 import { allowedFilters } from "./allowedFilters/reducers";
+import { tokens } from "./token/reducers";
 
 //might be because of older version of react-redux that have to force like this...
 const form = <Reducer<FormStateMap, AnyAction>>FormReducer;
@@ -43,7 +43,6 @@ const appReducer = combineReducers({
   datasetSave,
   datasetList,
   export: ExportReducer,
-  message,
   transferAccounts,
   users,
   creditTransfers,
@@ -54,6 +53,7 @@ const appReducer = combineReducers({
   transferUsages: TransferUsageReducer,
   organisations: OrganisationReducer,
   allowedFilters,
+  tokens,
   form
 });
 

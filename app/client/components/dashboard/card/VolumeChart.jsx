@@ -14,16 +14,18 @@ import {
   replaceUnderscores,
   get_zero_filled_values,
   toCurrency,
-  formatMoney
+  formatMoney,
+  getActiveToken
 } from "../../../utils";
 
 import { VALUE_TYPES } from "../../../constants";
 
 import LoadingSpinner from "../../loadingSpinner.jsx";
+import { ChartColors } from "../../theme";
 
 const mapStateToProps = state => {
   return {
-    activeOrganisation: state.organisations.byId[state.login.organisationId]
+    activeToken: getActiveToken(state)
   };
 };
 
@@ -46,7 +48,7 @@ class VolumeChart extends React.Component {
       pointHoverBackgroundColor: color,
       pointHoverBorderColor: color,
       pointHoverBorderWidth: 2,
-      borderWidth: 2,
+      borderWidth: 1,
       pointRadius: 1,
       pointHitRadius: 10,
       data: dataset
@@ -103,7 +105,7 @@ class VolumeChart extends React.Component {
     const labelString = selected
       ? selected.includes("volume")
         ? `${toTitleCase(replaceUnderscores(selected))} (${
-            this.props.activeOrganisation.token.symbol
+            this.props.activeToken.symbol
           })`
         : `${toTitleCase(replaceUnderscores(selected))}`
       : null;
@@ -120,16 +122,25 @@ class VolumeChart extends React.Component {
         cornerRadius: 1,
         callbacks: {
           label: function(tooltipItem) {
+            let seriesNames = Object.keys(data.timeseries);
+            let val;
             if (data.type && data.type.value_type === VALUE_TYPES.CURRENCY) {
-              return formatMoney(
+              val = formatMoney(
                 tooltipItem.yLabel,
                 data.type.display_decimals,
                 undefined,
                 undefined,
                 data.type.currency_symbol
               );
+            } else {
+              val = tooltipItem.yLabel;
             }
-            return tooltipItem.yLabel;
+            let categoryName = seriesNames[tooltipItem.datasetIndex];
+            if (categoryName === "None") {
+              return val;
+            } else {
+              return `${seriesNames[tooltipItem.datasetIndex]}: ${val}`;
+            }
           }
         }
       },
@@ -195,21 +206,6 @@ class VolumeChart extends React.Component {
       }
     };
 
-    const color_scheme = [
-      "#003F5C",
-      "#FF764D",
-      "#CB5188",
-      "#62508E",
-      "#508E79",
-      "#2E4A7A",
-      "#F05B6F",
-      "#995194",
-      "#57AA65",
-      "#FF9C22",
-      "#42B1B1",
-      "#555555"
-    ];
-
     let possibleTimeseriesKeys = Object.keys(data.timeseries); // ["taco", "spy"]
     const datasets = possibleTimeseriesKeys.map((key, index) => {
       const timeseries = data.timeseries[key].map(a => {
@@ -225,9 +221,9 @@ class VolumeChart extends React.Component {
         date_array
       );
 
-      let color = color_scheme[index]
-        ? color_scheme[index]
-        : color_scheme[color_scheme.length - 1];
+      let color = ChartColors[index]
+        ? ChartColors[index]
+        : ChartColors[ChartColors.length - 1];
 
       return this.construct_dataset_object(index, key, color, zero_filled_data);
     });

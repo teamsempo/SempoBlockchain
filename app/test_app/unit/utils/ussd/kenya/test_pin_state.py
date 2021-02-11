@@ -7,7 +7,6 @@ import json
 from helpers.model_factories import UserFactory, UssdSessionFactory, OrganisationFactory
 from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
 from server.models.user import User
-from server.utils import user as user_utils
 
 fake = Faker()
 fake.add_provider(phone_number)

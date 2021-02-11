@@ -31,6 +31,8 @@ class VendorPayoutAPI(MethodView):
             account_ids = post_data.get('accounts', [])
             relist_existing = post_data.get('relist_existing', True)
 
+        payout_withdrawal_limit = g.active_organisation._minimum_vendor_payout_withdrawal_wei or 0
+
         if not isinstance(account_ids, list):
 
             response_object = {
@@ -39,7 +41,11 @@ class VendorPayoutAPI(MethodView):
             return make_response(jsonify(response_object)), 400
 
         if account_ids:
-            vendors = db.session.query(TransferAccount).filter(TransferAccount.account_type == TransferAccountType.USER).filter(TransferAccount.id.in_(account_ids)).all()
+            vendors = db.session.query(TransferAccount)\
+                .filter(TransferAccount.account_type == TransferAccountType.USER)\
+                .filter(TransferAccount.id.in_(account_ids))\
+                .all()
+
             for vendor in vendors:
                 if not vendor.primary_user.has_vendor_role:
 
@@ -55,11 +61,11 @@ class VendorPayoutAPI(MethodView):
                     'message': f'Accounts {list_difference} were requested but do not exist',
                 }
                 return make_response(jsonify(response_object)), 400
-
         else:
             vendor_users = db.session.query(User)\
                 .filter(User.has_vendor_role)\
                 .all()
+
             vendors = [v.default_transfer_account for v in vendor_users]
             vendors = filter(lambda vendor: not vendor.is_ghost, vendors)
 
@@ -92,8 +98,7 @@ class VendorPayoutAPI(MethodView):
                 withdrawals = []
 
             withdrawal_amount = Decimal(v._balance_wei or 0) / Decimal(1e16)
-            if withdrawal_amount > 0:
-
+            if withdrawal_amount > 0 and (v._balance_wei or 0) >= payout_withdrawal_limit:
                 transfer = make_withdrawal_transfer(
                     withdrawal_amount,
                     token=v.token,

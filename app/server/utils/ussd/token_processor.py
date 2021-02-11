@@ -1,7 +1,6 @@
 import datetime
 import pendulum
 from typing import Optional, Tuple, Type
-from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.sql import func
 
 from server import db

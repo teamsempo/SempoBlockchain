@@ -4,6 +4,8 @@ import styled from "styled-components";
 import ReactTable from "react-table";
 import { browserHistory } from "../../createStore.js";
 
+import { Link } from "react-router-dom";
+
 import {
   ModuleBox,
   TopRow,
@@ -23,12 +25,14 @@ import {
   LoadTransferAccountAction
 } from "../../reducers/transferAccount/actions";
 import { TransferAccountTypes } from "../transferAccount/types";
+import ImportModal from "./importModal.jsx";
 
 const mapStateToProps = state => {
   return {
     login: state.login,
     transferAccounts: state.transferAccounts,
-    creditTransfers: state.creditTransfers
+    creditTransfers: state.creditTransfers,
+    tokens: state.tokens
   };
 };
 
@@ -60,7 +64,8 @@ class TransferAccountList extends React.Component {
       idSelectedStatus: {},
       allCheckedTransferAccounts: false,
       newTransfer: false,
-      account_type: "ALL"
+      account_type: "ALL",
+      modalVisible: false
     };
     this.handleChange = this.handleChange.bind(this);
     this.checkAllTransferAccounts = this.checkAllTransferAccounts.bind(this);
@@ -112,6 +117,7 @@ class TransferAccountList extends React.Component {
         type="checkbox"
         checked={checked}
         onChange={() => this.toggleSelectedTransferAccount(id)}
+        aria-label={`Select Account ${id}`}
       />
     );
   }
@@ -170,12 +176,20 @@ class TransferAccountList extends React.Component {
     this.setState({ [evt.target.name]: evt.target.value });
   }
 
+  toggleModal() {
+    this.setState({ modalVisible: !this.state.modalVisible });
+  }
+
   _customName(transferAccount) {
+    let viewTransferAccountName =
+      transferAccount && transferAccount.is_vendor
+        ? "Vendor "
+        : window.BENEFICIARY_TERM + " ";
     if (
       this.props.login.adminTier === "view" &&
       typeof transferAccount.blockchain_address !== "undefined"
     ) {
-      return transferAccount.blockchain_address;
+      return viewTransferAccountName + transferAccount.blockchain_address;
     }
     return (
       (transferAccount.first_name === null ? "" : transferAccount.first_name) +
@@ -186,20 +200,26 @@ class TransferAccountList extends React.Component {
 
   _customIcon(transferAccount) {
     let url = "/static/media/user.svg";
+    let alt = "User ";
     if (transferAccount.is_beneficiary) {
       url = "/static/media/user.svg";
+      alt = "User ";
     } else if (transferAccount.is_vendor) {
       url = "/static/media/store.svg";
+      alt = "Vendor ";
     } else if (transferAccount.is_groupaccount) {
       url = "/static/media/groupaccount.svg";
+      alt = "Group Account ";
     } else if (transferAccount.is_tokenagent) {
       url = "/static/media/tokenagent.svg";
+      alt = "Token Agent ";
     }
-    return <UserSVG src={url} />;
+    alt = alt + this._customName(transferAccount);
+    return <UserSVG src={url} alt={alt} />;
   }
 
   render() {
-    const { account_type } = this.state;
+    const { account_type, modalVisible } = this.state;
     const loadingStatus = this.props.transferAccounts.loadStatus.isRequesting;
     let accountTypes = Object.keys(TransferAccountTypes);
     accountTypes.push("ALL"); // filter should have all option
@@ -246,6 +266,7 @@ class TransferAccountList extends React.Component {
                   lineHeight: "25px",
                   height: "25px"
                 }}
+                label={"New Transfer"}
               >
                 NEW TRANSFER
               </StyledButton>
@@ -258,6 +279,7 @@ class TransferAccountList extends React.Component {
                   lineHeight: "25px",
                   height: "25px"
                 }}
+                label={"Approve"}
               >
                 APPROVE
               </StyledButton>
@@ -270,6 +292,7 @@ class TransferAccountList extends React.Component {
                   lineHeight: "25px",
                   height: "25px"
                 }}
+                label={"Unapprove"}
               >
                 UNAPPROVE
               </StyledButton>
@@ -283,6 +306,7 @@ class TransferAccountList extends React.Component {
                     lineHeight: "25px",
                     height: "25px"
                   }}
+                  label={"Export"}
                 >
                   Export
                 </StyledButton>
@@ -324,15 +348,16 @@ class TransferAccountList extends React.Component {
             <div style={{ display: "flex", flexDirection: "row" }}>
               <UploadButtonWrapper style={{ marginRight: 0, marginLeft: 0 }}>
                 <StyledButton
-                  onClick={() => browserHistory.push("/create")}
+                  onClick={() => this.toggleModal()}
                   style={{
                     fontWeight: "400",
                     margin: "0em 1em",
                     lineHeight: "25px",
                     height: "25px"
                   }}
+                  label={"Import"}
                 >
-                  + Add New
+                  Import
                 </StyledButton>
               </UploadButtonWrapper>
               <UploadButtonWrapper style={{ marginRight: 0, marginLeft: 0 }}>
@@ -344,6 +369,7 @@ class TransferAccountList extends React.Component {
                     lineHeight: "25px",
                     height: "25px"
                   }}
+                  label={"Export"}
                 >
                   Export
                 </StyledButton>
@@ -386,6 +412,12 @@ class TransferAccountList extends React.Component {
         <div style={{ display: "flex", flexDirection: "column" }}>
           {newTransfer}
 
+          <ImportModal
+            isModalVisible={modalVisible}
+            handleOk={() => this.toggleModal()}
+            handleCancel={() => this.toggleModal()}
+          />
+
           <ModuleBox style={{ width: "calc(100% - 2em)" }}>
             <Wrapper>
               <TopRow>{topBarContent}</TopRow>
@@ -403,10 +435,20 @@ class TransferAccountList extends React.Component {
                   {
                     Header: "Name",
                     id: "transferAccountName",
-                    accessor: transferAccount =>
-                      this._customName(transferAccount),
+                    accessor: "transferAccount",
                     headerClassName: "react-table-header",
-                    className: "react-table-first-cell"
+                    className: "react-table-first-cell",
+                    Cell: cellInfo => (
+                      <Link
+                        to={"/accounts/" + cellInfo.original.id}
+                        style={{
+                          textDecoration: "underline",
+                          color: "#000000a6"
+                        }}
+                      >
+                        {this._customName(cellInfo.original)}
+                      </Link>
+                    )
                   },
                   {
                     Header: "Created",
@@ -421,7 +463,8 @@ class TransferAccountList extends React.Component {
                     Cell: cellInfo => {
                       const token =
                         cellInfo.original.token &&
-                        cellInfo.original.token.symbol;
+                        this.props.tokens.byId[cellInfo.original.token] &&
+                        this.props.tokens.byId[cellInfo.original.token].symbol;
                       const money = formatMoney(
                         cellInfo.value / 100,
                         undefined,
@@ -450,6 +493,7 @@ class TransferAccountList extends React.Component {
                         onChange={() =>
                           this.checkAllTransferAccounts(filteredData)
                         }
+                        aria-label={"Select all accounts"}
                       />
                     ),
                     accessor: "id",
@@ -481,13 +525,9 @@ class TransferAccountList extends React.Component {
                   return {
                     onClick: (e, handleOriginal) => {
                       // handle click on checkbox
-                      if (column.id === "id") {
+                      if (column.id !== "transferAccountName") {
                         this.toggleSelectedTransferAccount(rowInfo.original.id);
                         return;
-                      }
-
-                      if (rowInfo && rowInfo.row) {
-                        browserHistory.push("/accounts/" + rowInfo.row.id);
                       }
 
                       if (handleOriginal) {

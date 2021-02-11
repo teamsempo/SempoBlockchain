@@ -1,6 +1,5 @@
 import React from "react";
 import { connect } from "react-redux";
-import { DateRangePicker } from "react-dates";
 import { Select } from "antd";
 const { Option } = Select;
 
@@ -32,7 +31,6 @@ class ExportManager extends React.Component {
       date_range: "all",
       includeTransfers: false,
       includeCustomAttributes: false,
-      customExportCycle: false,
       startDate: null,
       endDate: null,
       userType: "selected",
@@ -78,22 +76,14 @@ class ExportManager extends React.Component {
   }
 
   attemptNewExport() {
-    if (this.state.customExportCycle === true) {
-      var payable_period_start_date = this.state.startDate;
-      var payable_period_end_date = this.state.endDate;
-    } else {
-      payable_period_start_date = null;
-      payable_period_end_date = null;
-    }
-
     this.props.newExport({
       export_type: this.state.exportType,
       include_transfers: this.state.includeTransfers,
       include_custom_attributes: this.state.includeCustomAttributes,
       user_type: this.state.userType,
       date_range: this.state.date_range,
-      payable_period_start_date: payable_period_start_date,
-      payable_period_end_date: payable_period_end_date,
+      payable_period_start_date: null,
+      payable_period_end_date: null,
       selected: this.props.selectedTransferAccounts
     });
   }
@@ -130,42 +120,10 @@ class ExportManager extends React.Component {
       </div>
     );
 
-    if (this.state.customExportCycle) {
-      var customExportCycle = (
-        <div>
-          <DateRangePicker
-            startDate={this.state.startDate} // momentPropTypes.momentObj or null,
-            startDateId="your_unique_start_date_id" // PropTypes.string.isRequired,
-            endDate={this.state.endDate} // momentPropTypes.momentObj or null,
-            endDateId="your_unique_end_date_id" // PropTypes.string.isRequired,
-            onDatesChange={({ startDate, endDate }) =>
-              this.setState({ startDate, endDate })
-            } // PropTypes.func.isRequired,
-            focusedInput={this.state.focusedInput} // PropTypes.oneOf([START_DATE, END_DATE]) or null,
-            onFocusChange={focusedInput => this.setState({ focusedInput })} // PropTypes.func.isRequired,
-            withPortal
-            hideKeyboardShortcutsPanel
-            isOutsideRange={() => false}
-          />
-        </div>
-      );
-    } else {
-      customExportCycle = null;
-    }
-
     return (
       <div>
         <ModuleHeader>EXPORT ACCOUNTS</ModuleHeader>
         <div style={{ margin: "1em" }}>
-          {/*<div style={{display: 'flex', flexDirection: 'row', padding: '1em 0'}}>*/}
-          {/*<p style={{margin: '0 1em 0 0'}}>Date Range:</p>*/}
-          {/*<StyledSelect style={{fontWeight: '400', margin: '0', lineHeight: '25px', height: '25px'}} name="date_range" defaultValue="all"*/}
-          {/*onChange={this.handleChange}>*/}
-          {/*<option name="date_range" value="all">All</option>*/}
-          {/*<option name="date_range" value="day">Previous Day</option>*/}
-          {/*<option name="date_range" value="week">Previous Week</option>*/}
-          {/*</StyledSelect>*/}
-          {/*</div>*/}
           <div
             style={{ display: "flex", flexDirection: "row", padding: "1em 0" }}
           >
@@ -197,12 +155,6 @@ class ExportManager extends React.Component {
               <Option key={"vendor"}> Vendors </Option>
             </Select>
           </div>
-          {/*<div>*/}
-          {/*<div style={{display: 'flex', flexDirection: 'row', padding: '1em 0'}}>*/}
-          {/*<p style={{margin: '0 1em 0 0'}}>Custom Export Cycle?</p><input name='customExportCycle' type="checkbox" checked={this.state.customExportCycle} onChange={(evt) => this.handleToggle(evt, this.state.customExportCycle)}/>*/}
-          {/*</div>*/}
-          {/*{customExportCycle}*/}
-          {/*</div>*/}
 
           {this.state.exportType === "spreadsheet" ? transferToggle : null}
 
@@ -211,6 +163,7 @@ class ExportManager extends React.Component {
             isLoading={this.props.export.isRequesting}
             buttonStyle={{ display: "flex" }}
             buttonText={<span>Export</span>}
+            label={"Export"}
           />
           <ErrorMessage>{this.props.export.error}</ErrorMessage>
           <a

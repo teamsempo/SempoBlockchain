@@ -17,7 +17,8 @@ const mapStateToProps = state => {
     users: state.users,
     transferAccounts: state.transferAccounts,
     creditTransfers: state.creditTransfers,
-    login: state.login
+    login: state.login,
+    tokens: state.tokens
   };
 };
 
@@ -32,7 +33,8 @@ class BeneficiaryLiveFeed extends React.Component {
       users,
       transferAccounts,
       creditTransfers,
-      creditTransferList
+      creditTransferList,
+      tokens
     } = this.props;
 
     const collapsedCardStyle = {
@@ -101,6 +103,11 @@ class BeneficiaryLiveFeed extends React.Component {
                   (sender_transfer_account &&
                     sender_transfer_account.blockchain_address) ||
                   "";
+                let isRecipientVendor =
+                  recipient_transfer_account &&
+                  recipient_transfer_account.is_vendor;
+                let isSenderVendor =
+                  sender_transfer_account && sender_transfer_account.is_vendor;
 
                 if (
                   transfer.recipient_user !== null &&
@@ -119,6 +126,9 @@ class BeneficiaryLiveFeed extends React.Component {
                   typeof recipient_blockchain_address !== "undefined"
                 ) {
                   recipient_user_name =
+                    (isRecipientVendor
+                      ? "Vendor "
+                      : window.BENEFICIARY_TERM + " ") +
                     "Address " +
                     recipient_blockchain_address.slice(0, 8) +
                     "...";
@@ -141,7 +151,12 @@ class BeneficiaryLiveFeed extends React.Component {
                   }
                 } else if (typeof sender_blockchain_address !== "undefined") {
                   sender_user_name =
-                    "Address " + sender_blockchain_address.slice(0, 8) + "...";
+                    (isSenderVendor
+                      ? "Vendor "
+                      : window.BENEFICIARY_TERM + " ") +
+                    "Address " +
+                    sender_blockchain_address.slice(0, 8) +
+                    "...";
                 } else {
                   sender_user_name = null;
                 }
@@ -153,7 +168,10 @@ class BeneficiaryLiveFeed extends React.Component {
                 let showExchange = false;
 
                 const transferAccountId = transfer.sender_transfer_account_id;
-                currency = transfer.token && transfer.token.symbol;
+                currency =
+                  transfer.token &&
+                  tokens.byId[transfer.token] &&
+                  tokens.byId[transfer.token].symbol;
                 const transferFromMoney = formatMoney(
                   transfer.transfer_amount / 100,
                   undefined,
@@ -176,7 +194,8 @@ class BeneficiaryLiveFeed extends React.Component {
                     recipientCurrency =
                       transferAccount &&
                       transferAccount.token &&
-                      transferAccount.token.symbol;
+                      tokens.byId[transferAccount.token] &&
+                      tokens.byId[transferAccount.token].symbol;
                   }
                   transferToMoney = formatMoney(
                     exchangeToTransfer.transfer_amount / 100,
@@ -214,7 +233,10 @@ class BeneficiaryLiveFeed extends React.Component {
                         margin: expanded ? "margin: 2.4em 0" : "margin: 0.8em 0"
                       }}
                     >
-                      <UserSVG src="/static/media/exchange.svg" />
+                      <UserSVG
+                        src="/static/media/exchange.svg"
+                        alt={"Exchange Icon"}
+                      />
                       <UserGroup>
                         <ClickableTopText
                           onClick={() =>
@@ -234,7 +256,10 @@ class BeneficiaryLiveFeed extends React.Component {
                 } else if (transfer.transfer_type === "PAYMENT") {
                   return (
                     <UserWrapper key={transfer.id}>
-                      <UserSVG src="/static/media/transfer.svg" />
+                      <UserSVG
+                        src="/static/media/transfer.svg"
+                        alt={"Transfer Icon"}
+                      />
                       <UserGroup>
                         <TopText>
                           <ClickableTopText
@@ -268,7 +293,10 @@ class BeneficiaryLiveFeed extends React.Component {
                 } else if (transfer.transfer_type === "DISBURSEMENT") {
                   return (
                     <UserWrapper key={transfer.id}>
-                      <UserSVG src="/static/media/disbursement.svg" />
+                      <UserSVG
+                        src="/static/media/disbursement.svg"
+                        alt={"Disbursement Icon"}
+                      />
                       <UserGroup>
                         <TopText>
                           <NonClickableTopText>
@@ -299,6 +327,7 @@ class BeneficiaryLiveFeed extends React.Component {
                       <UserSVG
                         style={{ transform: "rotate(180deg)" }}
                         src="/static/media/disbursement.svg"
+                        alt={"Reclamation Icon"}
                       />
                       <UserGroup>
                         <TopText>

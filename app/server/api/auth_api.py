@@ -1,4 +1,5 @@
 from flask import Blueprint, request, make_response, jsonify, g, current_app
+import config
 from flask.views import MethodView
 import sentry_sdk
 from server import db
@@ -12,8 +13,10 @@ from server.utils.auth import requires_auth, tfa_logic, show_all, create_user_re
 from server.utils.access_control import AccessControl
 from server.utils import user as UserUtils
 from server.utils.phone import proccess_phone_number
-from server.utils.amazon_ses import send_reset_email, send_activation_email, send_invite_email
+from server.utils.amazon_ses import send_reset_email, send_activation_email, send_invite_email, \
+    send_invite_email_to_existing_user
 from server.utils.misc import decrypt_string, attach_host
+from server.utils.multi_chain import get_chain
 from sqlalchemy.sql import func
 
 import random
@@ -766,11 +769,30 @@ class PermissionsAPI(MethodView):
         if not organisation:
             response_object = {'message': 'Organisation Not Found'}
             return make_response(jsonify(response_object)), 404
-        email_exists = EmailWhitelist.query.filter(func.lower(EmailWhitelist.email)==email).first()
 
-        if email_exists:
-            response_object = {'message': 'Email already on whitelist.'}
+        email_exists_for_org = EmailWhitelist.query.filter(func.lower(EmailWhitelist.email)==email).first()
+        if email_exists_for_org:
+            response_object = {'message': 'Email already on organisation whitelist.'}
             return make_response(jsonify(response_object)), 400
+
+        email_exists = EmailWhitelist.query.filter(func.lower(EmailWhitelist.email)==email)\
+            .execution_options(show_all=True).first()
+        if email_exists and not email_exists.used:
+            response_object = {'message': 'Email already on another organisation whitelist. '
+                                          'Please ask user to create an account first. '
+                                          'Contact support if issue persists.'}
+            return make_response(jsonify(response_object)), 400
+
+        user = User.query.filter(func.lower(User.email)==email).execution_options(show_all=True).first()
+        if user:
+            user.add_user_to_organisation(organisation, is_admin=True)
+            send_invite_email_to_existing_user(organisation, user.email)
+            db.session.commit()
+            response_object = {
+                'message': 'An invite has been sent to an existing user!',
+            }
+
+            return make_response(jsonify(attach_host(response_object))), 201
 
         invite = EmailWhitelist(email=email,
                                 tier=tier,
@@ -876,11 +898,12 @@ class BlockchainKeyAPI(MethodView):
 
     @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def get(self):
+        chain = get_chain()
         response_object = {
             'status': 'success',
             'message': 'Key loaded',
-            'private_key': current_app.config['MASTER_WALLET_PRIVATE_KEY'],
-            'address': current_app.config['MASTER_WALLET_ADDRESS']
+            'private_key': current_app.config['CHAINS'][chain]['MASTER_WALLET_PRIVATE_KEY'],
+            'address': current_app.config['CHAINS'][chain]['MASTER_WALLET_ADDRESS']
         }
 
         return make_response(jsonify(attach_host(response_object))), 200

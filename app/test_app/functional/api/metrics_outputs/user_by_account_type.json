@@ -1,6 +1,6 @@
 {
   "active_filters": [],
-  "active_group_by": "account_type",
+  "active_group_by": "sender,account_type",
   "active_users": {
     "aggregate": {
       "ORGANISATION": 1,
@@ -11,37 +11,37 @@
     "timeseries": {
       "ORGANISATION": [
         {
-          "date": "2020-08-26T00:00:00",
+          "date": "2021-01-22T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-07T00:00:00",
+          "date": "2021-02-04T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-13T00:00:00",
+          "date": "2021-02-09T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-15T00:00:00",
+          "date": "2021-02-11T00:00:00",
           "value": 1
         }
       ],
       "USER": [
         {
-          "date": "2020-09-09T00:00:00",
+          "date": "2021-02-05T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-11T00:00:00",
+          "date": "2021-02-07T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2021-02-10T00:00:00",
           "value": 2
         },
         {
-          "date": "2020-09-15T00:00:00",
+          "date": "2021-02-11T00:00:00",
           "value": 1
         }
       ]
@@ -52,33 +52,30 @@
     }
   },
   "mandatory_filter": {},
-  "master_wallet_balance": -1517.0,
-  "total_beneficiaries": 1,
-  "total_users": 1,
-  "total_vendors": 0,
+  "master_wallet_balance": -1517,
   "users_created": {
     "aggregate": {
       "USER": 6,
-      "percent_change": 50,
+      "percent_change": 300,
       "total": 7
     },
     "timeseries": {
       "USER": [
         {
-          "date": "2020-09-05T00:00:00",
-          "value": 2
-        },
-        {
-          "date": "2020-09-11T00:00:00",
+          "date": "2021-02-01T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-14T00:00:00",
+          "date": "2021-02-07T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-09-15T00:00:00",
-          "value": 2
+          "date": "2021-02-10T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-11T00:00:00",
+          "value": 3
         }
       ]
     },
