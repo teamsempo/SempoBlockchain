@@ -1,11 +1,8 @@
-import {
-  genericGetAPI,
-  genericPostAPI,
-  genericPutAPI
-} from "../api/genericAPI";
 import { all, call, put, takeEvery } from "@redux-saga/core/effects";
 import { normalize } from "normalizr";
 import { message } from "antd";
+
+import { genericGetAPI, genericPostAPI, genericPutAPI } from "./api";
 
 import {
   APILifecycleActionTypesInterface,
