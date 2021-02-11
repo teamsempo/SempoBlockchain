@@ -17,10 +17,12 @@ export interface IOrganisation {
   requireTransferCard: boolean;
   countryCode: string;
   accountTypes: string[];
+  timezone: string;
 }
 
 interface OuterProps {
   isoCountries: string[];
+  timezones: string[];
   organisations: ReduxState["organisations"];
   tokens: ReduxState["tokens"];
   activeOrganisation: Organisation | any;
@@ -37,6 +39,7 @@ const NewOrganisationForm = (props: OuterProps) => {
     organisations,
     activeOrganisation,
     isoCountries,
+    timezones,
     roles,
     isNewOrg
   } = props;
@@ -55,7 +58,6 @@ const NewOrganisationForm = (props: OuterProps) => {
       (country: string) =>
         country.slice(0, 2) == activeOrganisation.country_code
     ) || "";
-
   const tokenSymbol =
     activeOrganisation.token &&
     tokens.byId[activeOrganisation.token] &&
@@ -81,6 +83,7 @@ const NewOrganisationForm = (props: OuterProps) => {
               requireTransferCard: activeOrganisation.require_transfer_card,
               cardShardDistance: activeOrganisation.card_shard_distance,
               countryCode: countryCode,
+              timezone: activeOrganisation.timezone,
               token: activeOrganisation.token
             }
       }
@@ -176,6 +179,35 @@ const NewOrganisationForm = (props: OuterProps) => {
       </Form.Item>
 
       <Form.Item
+        tooltip="The default time zone for this organisation."
+        name="timezone"
+        label="Default Time Zone"
+        required={isNewOrg}
+        rules={[
+          {
+            required: isNewOrg
+          }
+        ]}
+      >
+        <Select
+          showSearch
+          placeholder="Select a timezone"
+          optionFilterProp="children"
+          filterOption={(input, option: any) =>
+            option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+          }
+        >
+          {timezones.map((item, i) => {
+            return (
+              <Option key={i} value={item}>
+                {item}
+              </Option>
+            );
+          })}
+        </Select>
+      </Form.Item>
+
+      <Form.Item
         tooltip="The available account types for this organisation."
         name="accountTypes"
         label="Account Types"
@@ -240,4 +272,5 @@ const NewOrganisationForm = (props: OuterProps) => {
     </Form>
   );
 };
+
 export default NewOrganisationForm;
