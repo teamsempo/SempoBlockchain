@@ -12,13 +12,17 @@ export interface Body {
   [key: string]: any;
 }
 
+export interface Query {
+  [key: string]: any;
+}
+
 export interface ApiClientType {
   url: string;
   method: Method;
   isAuthed?: boolean;
   isTFA?: boolean;
   isForm?: boolean;
-  query?: null | object;
+  query?: null | Query;
   body?: null | Body;
   path?: null | number;
   errorHandling?: boolean;

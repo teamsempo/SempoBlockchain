@@ -1,10 +1,9 @@
-import { apiClient } from "./client/apiClient";
-import { ApiClientType } from "./client/types";
+import { apiClient } from "../api/client/apiClient";
+import { ApiClientType } from "../api/client/types";
 
 export type GetRequest = Pick<ApiClientType, "url" | "query" | "path">;
 export type PutRequest = Pick<ApiClientType, "url" | "query" | "path" | "body">;
 export type PostRequest = Pick<ApiClientType, "url" | "query" | "body">;
-
 export const genericGetAPI = ({ url, query, path }: GetRequest) =>
   apiClient({
     method: "GET",
@@ -12,7 +11,6 @@ export const genericGetAPI = ({ url, query, path }: GetRequest) =>
     query: query,
     path: path
   });
-
 export const genericPutAPI = ({ url, query, path, body }: PutRequest) =>
   apiClient({
     method: "PUT",
@@ -21,7 +19,6 @@ export const genericPutAPI = ({ url, query, path, body }: PutRequest) =>
     path: path,
     body: body
   });
-
 export const genericPostAPI = ({ url, query, body }: PostRequest) =>
   apiClient({
     method: "POST",

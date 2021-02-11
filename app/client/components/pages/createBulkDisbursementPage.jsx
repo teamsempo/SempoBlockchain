@@ -12,7 +12,8 @@ import { LoadTransferAccountAction } from "../../reducers/transferAccount/action
 import organizationWrapper from "../organizationWrapper.jsx";
 import NoDataMessage from "../NoDataMessage";
 import QueryConstructor from "../filterModule/queryConstructor";
-import { actionFactory, sempoObjects } from "../../reducers/rootReducer";
+import { sempoObjects } from "../../reducers/rootReducer";
+import { actionFactory } from "../../genericState";
 
 const mapStateToProps = state => {
   return {
