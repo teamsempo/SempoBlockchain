@@ -55,11 +55,6 @@ class OrganisationAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def put(self, organisation_id):
         put_data = request.get_json()
-        print(put_data)
-        print(put_data)
-        print(put_data)
-        print(put_data)
-        print(put_data)
         country_code = put_data.get('country_code')
         default_disbursement = put_data.get('default_disbursement')
         minimum_vendor_payout_withdrawal = put_data.get('minimum_vendor_payout_withdrawal')
