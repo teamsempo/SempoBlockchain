@@ -36,7 +36,7 @@ def test_request_api_token_golden_path_success(
 
     otp_response = test_client.post('/api/v1/auth/request_api_token/',
                                     data=json.dumps(
-                                        dict(phone=user_phone, password=code)),
+                                        dict(phone=user_phone, pin=code)),
                                     content_type='application/json', follow_redirects=True)
 
     assert otp_response.status_code == 200
