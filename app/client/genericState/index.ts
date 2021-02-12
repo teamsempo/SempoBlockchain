@@ -18,6 +18,8 @@ import {
 } from "./types";
 
 export { actionFactory } from "./actions";
+export { Registration } from "./types";
+export { Body } from "../api/client/types";
 
 function hasEndpoint(
   reg: Registration | HasEndpointRegistration

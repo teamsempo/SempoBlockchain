@@ -40,22 +40,26 @@ export const actionFactory = {
     payload: { path, query }
   }),
 
-  create: (
-    reg: Registration,
-    query?: Query,
-    body?: Body
-  ): CreateRequestAction => ({
-    type: createActionTypes.request(reg.name),
-    payload: { query, body }
-  }),
+  create: function<CB, MB>(
+    reg: Registration<CB, MB>,
+    body?: CB,
+    query?: Query
+  ): CreateRequestAction {
+    return {
+      type: createActionTypes.request(reg.name),
+      payload: { query, body }
+    };
+  },
 
-  modify: (
-    reg: Registration,
-    path?: number,
-    query?: Query,
-    body?: Body
-  ): ModifyRequestAction => ({
-    type: createActionTypes.request(reg.name),
-    payload: { path, query, body }
-  })
+  modify: function<CB, MB>(
+    reg: Registration<CB, MB>,
+    path: number,
+    body?: MB,
+    query?: Query
+  ): ModifyRequestAction {
+    return {
+      type: createActionTypes.request(reg.name),
+      payload: { path, query, body }
+    };
+  }
 };
