@@ -9,10 +9,10 @@ import {
   ApiRequest,
   ApiRequestAction,
   CreateRequestAction,
-  HasEndpointRegistration,
+  EndpointedRegistration,
+  EndpointedRegistrationMapping,
   LoadRequestAction,
   ModifyRequestAction,
-  RegistrationMapping,
   Result
 } from "./types";
 import { handleError } from "../utils";
@@ -25,8 +25,8 @@ import {
 } from "./actions";
 
 export const sagaFactory = (
-  reg: HasEndpointRegistration,
-  registrations: RegistrationMapping
+  reg: EndpointedRegistration,
+  registrations: EndpointedRegistrationMapping
 ): any => {
   function* loadRequest(action: LoadRequestAction) {
     const normalized = yield apiRequest(genericGetAPI, loadActionTypes, action);

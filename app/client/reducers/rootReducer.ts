@@ -30,19 +30,31 @@ import { tokens } from "./token/reducers";
 import { bulkTransfers } from "./bulkTransfer/reducers";
 import { all } from "redux-saga/effects";
 import { creditTransferSchema, transferAccountSchema } from "../schemas";
-import { createReducers, createSagas } from "../genericState";
+import {
+  createReducers,
+  createSagas,
+  NamedRegistration,
+  Body
+} from "../genericState";
+import { Registration, RegistrationMapping } from "../genericState/types";
 
 //might be because of older version of react-redux that have to force like this...
 const form = <Reducer<FormStateMap, AnyAction>>FormReducer;
 
-export const sempoObjects = {
+interface CTBody extends Body {
+  name: string;
+}
+
+interface SempoObjects extends RegistrationMapping {
+  CT: Registration<CTBody>;
+}
+
+export const sempoObjects: SempoObjects = {
   CT: {
-    name: "CT",
     endpoint: "credit_transfer",
     schema: creditTransferSchema
   },
   TA: {
-    name: "TA",
     endpoint: "transfer_account",
     schema: transferAccountSchema
   }

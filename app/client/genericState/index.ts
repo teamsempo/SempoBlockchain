@@ -12,19 +12,20 @@ import {
 } from "./reducers";
 import {
   BaseReducerMapping,
-  HasEndpointRegistration,
+  EndpointedRegistration,
   RegistrationMapping,
-  Registration
+  NamedRegistration,
+  EndpointedRegistrationMapping
 } from "./types";
 
-export { actionFactory } from "./actions";
-export { Registration } from "./types";
+export { apiActions } from "./actions";
+export { NamedRegistration } from "./types";
 export { Body } from "../api/client/types";
 
 function hasEndpoint(
-  reg: Registration | HasEndpointRegistration
-): reg is HasEndpointRegistration {
-  return (reg as HasEndpointRegistration).endpoint !== undefined;
+  reg: NamedRegistration | EndpointedRegistration
+): reg is EndpointedRegistration {
+  return (reg as EndpointedRegistration).endpoint !== undefined;
 }
 
 export const createReducers = (
@@ -33,7 +34,7 @@ export const createReducers = (
   const base: BaseReducerMapping = {};
 
   Object.keys(registrations).map(key => {
-    let reg = registrations[key];
+    let reg = { ...registrations[key], name: key };
 
     let reducers = {
       byId: byIdReducerFactory(reg),
@@ -60,11 +61,21 @@ export const createReducers = (
 export const createSagas = (registrations: RegistrationMapping) => {
   let sagaList: any[] = [];
 
+  let endpointedRegistrations: EndpointedRegistrationMapping = {};
+
+  //First ensure all registrations have a name and filter out all non-endpointed registrations
+  //Done in that order rather than using .filter for type safety
   Object.keys(registrations).map(key => {
-    let reg = registrations[key];
+    let reg = { ...registrations[key], name: key };
     if (hasEndpoint(reg)) {
-      sagaList.push(sagaFactory(reg, registrations)());
+      endpointedRegistrations[key] = reg;
     }
+  });
+
+  Object.keys(endpointedRegistrations).map(key => {
+    sagaList.push(
+      sagaFactory(endpointedRegistrations[key], endpointedRegistrations)()
+    );
   });
 
   return sagaList;

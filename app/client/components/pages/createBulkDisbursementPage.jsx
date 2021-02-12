@@ -13,7 +13,7 @@ import organizationWrapper from "../organizationWrapper.jsx";
 import NoDataMessage from "../NoDataMessage";
 import QueryConstructor from "../filterModule/queryConstructor";
 import { sempoObjects } from "../../reducers/rootReducer";
-import { actionFactory } from "../../genericState";
+import { apiActions } from "../../genericState";
 
 const mapStateToProps = state => {
   return {

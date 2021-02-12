@@ -3,7 +3,7 @@ import {
   APILifecycleActionTypesInterface,
   byIdState,
   IdListState,
-  Registration,
+  NamedRegistration,
   RequestingState
 } from "./types";
 import {
@@ -14,7 +14,7 @@ import {
 
 export const lifecycleReducerFactory = (
   actionType: APILifecycleActionTypesInterface,
-  reg: Registration
+  reg: NamedRegistration
 ): ((state: RequestingState | undefined, action: any) => RequestingState) => {
   const initialLoaderState = {
     isRequesting: false,
@@ -47,7 +47,7 @@ export const lifecycleReducerFactory = (
 };
 
 export const byIdReducerFactory = (
-  reg: Registration
+  reg: NamedRegistration
 ): ((state: byIdState | undefined, action: any) => byIdState) => {
   return (state: byIdState | undefined = {}, action: any): byIdState => {
     switch (action.type) {
@@ -64,7 +64,7 @@ export const byIdReducerFactory = (
 };
 
 export const IdListReducerFactory = (
-  reg: Registration
+  reg: NamedRegistration
 ): ((state: IdListState | undefined, action: any) => IdListState) => {
   return (state: IdListState | undefined = [], action: any): IdListState => {
     switch (action.type) {

@@ -5,7 +5,7 @@ import {
   CreateRequestAction,
   LoadRequestAction,
   ModifyRequestAction,
-  Registration
+  NamedRegistration
 } from "./types";
 
 class APILifeCycleActionType implements APILifecycleActionTypesInterface {
@@ -30,9 +30,9 @@ export const replaceUpdateObjectsActionType: ActionGenerator = name =>
 export const replaceIDListActionType: ActionGenerator = name =>
   `REPLACE_${name}_ID_LIST`;
 
-export const actionFactory = {
+export const apiActions = {
   load: (
-    reg: Registration,
+    reg: NamedRegistration,
     path?: number,
     query?: Query
   ): LoadRequestAction => ({
@@ -41,7 +41,7 @@ export const actionFactory = {
   }),
 
   create: function<CB, MB>(
-    reg: Registration<CB, MB>,
+    reg: NamedRegistration<CB, MB>,
     body?: CB,
     query?: Query
   ): CreateRequestAction {
@@ -52,7 +52,7 @@ export const actionFactory = {
   },
 
   modify: function<CB, MB>(
-    reg: Registration<CB, MB>,
+    reg: NamedRegistration<CB, MB>,
     path: number,
     body?: MB,
     query?: Query
