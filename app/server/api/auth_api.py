@@ -315,7 +315,6 @@ class LoginAPI(MethodView):
         g.active_organisation = Organisation.master_organisation()
 
         post_data = request.get_json()
-
         user = None
         phone = None
 
@@ -363,9 +362,9 @@ class LoginAPI(MethodView):
 
             return make_response(jsonify(response_object)), response_code
         no_password_or_pin_hash = user and not user.password_hash and not user.pin_hash
-        if post_data.get('phone') and user and user.one_time_code and (not user.is_activated or no_password_or_pin_hash):
+        if post_data.get('phone') and user and user.one_time_code and (not user.is_activated or not user.pin_hash):
             # vendor sign up with one time code or OTP verified
-            if user.one_time_code == password:
+            if user.one_time_code == pin:
                 response_object = {
                     'status': 'success',
                     'pin_must_be_set': True,
