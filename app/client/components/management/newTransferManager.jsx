@@ -57,7 +57,10 @@ class NewTransferManager extends React.Component {
     let transfer_amount = null;
     let target_balance = null;
 
-    if (this.state.transfer_amount > 0) {
+    if (
+      this.state.transfer_amount > 0 ||
+      (this.state.transfer_amount === "0" && transfer_type === "BALANCE")
+    ) {
       if (this.props.transfer_account_ids.length > 1) {
         // BULK TRANSFER
         is_bulk = true;

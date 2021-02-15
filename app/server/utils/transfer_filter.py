@@ -207,8 +207,7 @@ def process_transfer_filters(encoded_filters):
         sender_or_recipient = filters.ALL_FILTERS[unprocessed_attribute]['sender_or_recipient'] if 'sender_or_recipient' in filters.ALL_FILTERS[unprocessed_attribute] else False
 
         processed = handle_filter(**f)
-
-        if table not in filter_dict:
+        if (table, sender_or_recipient) not in filter_dict:
             filter_dict[(table, sender_or_recipient)] = []
         filter_dict[(table, sender_or_recipient)].append(processed)
 
@@ -220,13 +219,11 @@ def parse_filter_string(filter_string):
     Converts a filter string into a list of dictionary values
     """
     tokenized_filters = filter_string.split(":")
-
     filters = []
     for item in tokenized_filters:
         if item is not None and len(item) > 0:
             left_bracket_split = item.split('(')
             stripped_of_right_bracket = [s.strip(')') for s in left_bracket_split]
-
             attribute = stripped_of_right_bracket[0]
             comparator = stripped_of_right_bracket[1]
             value_list = stripped_of_right_bracket[2].split(',')
@@ -241,7 +238,6 @@ def parse_filter_string(filter_string):
                 'comparator': comparator,
                 'value': value
             })
-
     return filters
 
 
@@ -274,4 +270,3 @@ def handle_discrete(attribute, comparator, value):
 def handle_other_types(attribute, comparator, value, attribute_type):
     value = value if attribute_type == TransferFilterEnum.DATE_RANGE else float(value)
     return [(attribute, comparator, value)]
-
