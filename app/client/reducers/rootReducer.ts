@@ -29,7 +29,11 @@ import { allowedFilters } from "./allowedFilters/reducers";
 import { tokens } from "./token/reducers";
 import { bulkTransfers } from "./bulkTransfer/reducers";
 import { all } from "redux-saga/effects";
-import { creditTransferSchema, transferAccountSchema } from "../schemas";
+import {
+  creditTransferSchema,
+  transferAccountSchema,
+  bulkTransferSchema
+} from "../schemas";
 import {
   createReducers,
   createSagas,
@@ -37,26 +41,33 @@ import {
   Body
 } from "../genericState";
 import { Registration, RegistrationMapping } from "../genericState/types";
+import {
+  CreateBulkTransferBody,
+  ModifyBulkTransferBody
+} from "./bulkTransfer/types";
 
 //might be because of older version of react-redux that have to force like this...
 const form = <Reducer<FormStateMap, AnyAction>>FormReducer;
 
-interface CTBody extends Body {
-  name: string;
-}
-
 interface SempoObjects extends RegistrationMapping {
-  CT: Registration<CTBody>;
+  BULK: NamedRegistration<CreateBulkTransferBody, ModifyBulkTransferBody>;
 }
 
 export const sempoObjects: SempoObjects = {
   CT: {
+    name: "CT",
     endpoint: "credit_transfer",
     schema: creditTransferSchema
   },
   TA: {
+    name: "TA",
     endpoint: "transfer_account",
     schema: transferAccountSchema
+  },
+  BULK: {
+    name: "BULK",
+    endpoint: "disbursement",
+    schema: bulkTransferSchema
   }
 };
 

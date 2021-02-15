@@ -1,6 +1,6 @@
 import React from "react";
 import { connect } from "react-redux";
-import { ThemeProvider } from "styled-components";
+import { Button } from "antd";
 
 import { browserHistory } from "../../createStore.js";
 import { PageWrapper, WrapperDiv, StyledButton } from "../styledElements.js";
@@ -13,34 +13,49 @@ import organizationWrapper from "../organizationWrapper.jsx";
 import NoDataMessage from "../NoDataMessage";
 import QueryConstructor from "../filterModule/queryConstructor";
 import { LoadBulkTransfersAction } from "../../reducers/bulkTransfer/actions";
+import { CreateBulkTransferBody } from "../../reducers/bulkTransfer/types";
+import { apiActions } from "../../genericState";
+import { sempoObjects } from "../../reducers/rootReducer";
 
 const mapStateToProps = state => {
   return {
     login: state.login,
-    bulkTransfers: state.bulkTransfers.byId
+    bulkTransfers: state.BULK
   };
 };
 
 const mapDispatchToProps = dispatch => {
   return {
-    loadBulkDisbursement: (query, path) =>
-      dispatch(
-        LoadBulkTransfersAction.loadBulkTransfersRequest({ query, path })
-      )
+    loadBulkDisbursement: path =>
+      dispatch(apiActions.load(sempoObjects.BULK, path)),
+    modifyBulkDisbursement: (path, body) =>
+      dispatch(apiActions.modify(sempoObjects.BULK, path, body))
   };
 };
 
 class SingleBulkDisbursementPage extends React.Component {
   componentDidMount() {
-    console.log(this.props.match.params.bulkId);
-    this.props.loadBulkDisbursement({}, 7);
+    let bulkId = this.props.match.params.bulkId;
+    this.props.loadBulkDisbursement(bulkId);
+  }
+
+  onConfirm() {
+    let bulkId = this.props.match.params.bulkId;
+
+    this.props.modifyBulkDisbursement(bulkId, { action: "EXECUTE" });
   }
 
   render() {
+    let bulkId = this.props.match.params.bulkId;
+
+    let transfer = this.props.bulkTransfers.byId[bulkId];
+
     return (
       <WrapperDiv>
         <PageWrapper>
-          <ThemeProvider theme={LightTheme}></ThemeProvider>
+          <Button onClick={() => this.onConfirm()}>
+            {transfer && transfer.recipient_count}
+          </Button>
         </PageWrapper>
       </WrapperDiv>
     );

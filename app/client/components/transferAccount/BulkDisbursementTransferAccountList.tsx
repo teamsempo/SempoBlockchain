@@ -1,7 +1,7 @@
 import * as React from "react";
 import { connect } from "react-redux";
 
-import { ReduxState } from "../../reducers/rootReducer";
+import { ReduxState, sempoObjects } from "../../reducers/rootReducer";
 import { EditTransferAccountPayload } from "../../reducers/transferAccount/types";
 import { EditTransferAccountAction } from "../../reducers/transferAccount/actions";
 
@@ -11,8 +11,16 @@ import TransferAccountList, {
   NoneSelectedButton,
   TransferAccount
 } from "../transferAccount/transferAccountList";
-import { CreateBulkTransferPayload } from "../../reducers/bulkTransfer/types";
+import {
+  CreateBulkTransferBody,
+  CreateBulkTransferPayload
+} from "../../reducers/bulkTransfer/types";
 import { CreateBulkTransferAction } from "../../reducers/bulkTransfer/actions";
+import {
+  ApiRequestAction,
+  CreateRequestAction
+} from "../../genericState/types";
+import { apiActions } from "../../genericState";
 
 interface StateProps {
   transferAccounts: any;
@@ -21,8 +29,8 @@ interface StateProps {
 
 interface DispatchProps {
   createBulkTransferRequest: (
-    payload: CreateBulkTransferPayload
-  ) => CreateBulkTransferAction;
+    body: CreateBulkTransferBody
+  ) => CreateRequestAction;
 }
 
 interface OuterProps {}
@@ -42,8 +50,8 @@ const mapStateToProps = (state: ReduxState): StateProps => {
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => {
   return {
-    createBulkTransferRequest: (payload: CreateBulkTransferPayload) =>
-      dispatch(CreateBulkTransferAction.createBulkTransferRequest(payload))
+    createBulkTransferRequest: (body: CreateBulkTransferBody) =>
+      dispatch(apiActions.create(sempoObjects.BULK, body))
   };
 };
 
@@ -67,9 +75,7 @@ class BulkDisbursementTransferAccountList extends React.Component<
 
   createBulkTransfer(transfer_account_id_list: React.Key[]) {
     this.props.createBulkTransferRequest({
-      body: {
-        disbursement_amount: 100
-      }
+      disbursement_amount: 100
     });
   }
 

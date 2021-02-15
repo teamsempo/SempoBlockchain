@@ -31,14 +31,16 @@ export const replaceIDListActionType: ActionGenerator = name =>
   `REPLACE_${name}_ID_LIST`;
 
 export const apiActions = {
-  load: (
-    reg: NamedRegistration,
+  load: function<CB, MB>(
+    reg: NamedRegistration<CB, MB>,
     path?: number,
     query?: Query
-  ): LoadRequestAction => ({
-    type: loadActionTypes.request(reg.name),
-    payload: { path, query }
-  }),
+  ): LoadRequestAction {
+    return {
+      type: loadActionTypes.request(reg.name),
+      payload: { path, query }
+    };
+  },
 
   create: function<CB, MB>(
     reg: NamedRegistration<CB, MB>,
@@ -58,7 +60,7 @@ export const apiActions = {
     query?: Query
   ): ModifyRequestAction {
     return {
-      type: createActionTypes.request(reg.name),
+      type: modifyActionTypes.request(reg.name),
       payload: { path, query, body }
     };
   }

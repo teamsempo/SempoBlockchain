@@ -6,7 +6,7 @@ from sqlalchemy import desc, asc
 from uuid import uuid4
 
 from server import db
-from server.schemas import credit_transfers_schema
+from server.schemas import credit_transfers_schema, disbursement_schema
 from server.models.user import User
 from server.models.disbursement import Disbursement
 from server.models.transfer_account import TransferAccount
@@ -83,11 +83,13 @@ class MakeDisbursementAPI(MethodView):
                 automatically_resolve_complete=False,
             ))
         db.session.flush()
+
+        disbursement = disbursement_schema.dump(d).data
+
         response_object = {
-            'status': 'success',
-            'disbursement_id': d.id,
-            'recipient_count': len(d.credit_transfers),
-            'total_disbursement_amount': disbursement_amount*len(d.credit_transfers)
+            'data': {
+                'disbursement': disbursement
+            }
         }
         return make_response(jsonify(response_object)), 201
 
@@ -110,6 +112,9 @@ class DisbursementAPI(MethodView):
 
         transfer_list = credit_transfers_schema.dump(transfers).data
 
+        d = db.session.query(Disbursement).filter_by(id=disbursement_id).first()
+
+        disbursement = disbursement_schema.dump(d).data
 
         response_object = {
             'status': 'success',
@@ -119,6 +124,7 @@ class DisbursementAPI(MethodView):
             'last_fetched': new_last_fetched,
             'data': {
                 'credit_transfers': transfer_list,
+                'disbursement': disbursement
             }
         }
         return make_response(jsonify(response_object)), 200

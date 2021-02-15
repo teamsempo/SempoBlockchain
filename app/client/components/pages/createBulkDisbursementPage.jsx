@@ -30,16 +30,12 @@ const mapDispatchToProps = dispatch => {
       dispatch(
         LoadTransferAccountAction.loadTransferAccountsRequest({ query, path })
       )
-
-    // loadFoobar: (path, query) => dispatch(actionFactory.load(sempoObjects.CT, path, query)),
-    // createFoobar: (body) => dispatch(actionFactory.create(sempoObjects.CT,body))
   };
 };
 
 class CreateBulkDisbursementPage extends React.Component {
   componentDidMount() {
-    // this.props.loadTransferAccountList({}, null);
-    // this.props.loadFoobar(3, null);
+    this.props.loadTransferAccountList({}, null);
   }
 
   render() {

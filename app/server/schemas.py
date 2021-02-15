@@ -452,6 +452,11 @@ class AttributeMapSchema(Schema):
     output_name                 = fields.Str()
 
 
+class DisbursementSchema(SchemaBase):
+    recipient_count             = fields.Function(lambda obj: len(obj.credit_transfers))
+    total_disbursement_amount   = fields.Function(lambda obj: len(obj.credit_transfers)*obj.disbursement_amount)
+
+
 pdf_users_schema = UserSchema(many=True, only=("id", "qr", "first_name", "last_name"))
 
 user_schema = UserSchema(exclude=("qr",
@@ -566,3 +571,5 @@ me_credit_transfers_schema = CreditTransferSchema(many=True, exclude=("sender_tr
 me_exchange_schema = ExchangeSchema()
 me_exchanges_schema = ExchangeSchema(many=True)
 
+
+disbursement_schema = DisbursementSchema()

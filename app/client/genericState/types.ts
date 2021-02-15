@@ -77,7 +77,7 @@ export interface EndpointedRegistration<
 }
 
 export interface RegistrationMapping {
-  [key: string]: Registration;
+  [key: string]: NamedRegistration;
 }
 
 export interface EndpointedRegistrationMapping {
