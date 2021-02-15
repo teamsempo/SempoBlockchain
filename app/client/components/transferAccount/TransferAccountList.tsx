@@ -19,19 +19,26 @@ interface StateProps {
 
 interface DispatchProps {}
 
+export interface OnSelectChange {
+  (
+    selectedRowKeys: React.Key[],
+    unselectedRowKeys: React.Key[],
+    allSelected: boolean
+  ): void;
+}
+
 interface OuterProps {
   orderedTransferAccounts: number[];
   users: any;
   actionButtons: ActionButton[];
   noneSelectedbuttons: NoneSelectedButton[];
-  onSelectChange?: (
-    selectedRowKeys: React.Key[],
-    selectedRows: TransferAccount[]
-  ) => void;
+  onSelectChange?: OnSelectChange;
 }
 
 interface ComponentState {
   selectedRowKeys: React.Key[];
+  unselectedRowKeys: React.Key[];
+  allSelected: boolean;
 }
 
 export interface TransferAccount {
@@ -45,7 +52,7 @@ export interface TransferAccount {
 
 export interface ActionButton {
   label: string;
-  onClick: (keys: React.Key[]) => void;
+  onClick: OnSelectChange;
   loading?: boolean;
 }
 
@@ -136,31 +143,65 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
     super(props);
 
     this.state = {
-      selectedRowKeys: [] // Check here to configure the default column
+      selectedRowKeys: [],
+      unselectedRowKeys: [],
+      allSelected: false
     };
   }
 
   onSelectChange = (
-    selectedRowKeys: React.Key[],
-    selectedRows: TransferAccount[]
+    record: TransferAccount,
+    selected: boolean,
+    selectedRows: TransferAccount[],
+    nativeEvent: Event
   ) => {
+    console.log("selected", selected);
+    console.log("record", record);
+
+    let selectedRowKeys = selectedRows.map(r => r.key);
     this.setState({ selectedRowKeys });
+
+    let unselectedRowKeys: React.Key[] = [];
+    if (this.state.allSelected) {
+      // We only define the unselected rows when the "select all" box has been flagged as true (ie a "default selected" state),
+      // because unselected rows isn't specific enough when you start from a "default unselected" state
+      let selectedSet = new Set(selectedRowKeys);
+      unselectedRowKeys = this.props.orderedTransferAccounts.filter(
+        id => !selectedSet.has(id)
+      );
+    }
+
+    this.setState({ selectedRowKeys, unselectedRowKeys });
 
     if (this.props.onSelectChange) {
       // after setting the state
       // transparently pass through the callback to parent, in case it's needed there
-      this.props.onSelectChange(selectedRowKeys, selectedRows);
+      this.props.onSelectChange(
+        selectedRowKeys,
+        unselectedRowKeys,
+        this.state.allSelected
+      );
     }
   };
 
   toggleSelectAll = (keys: React.Key[], data: TransferAccount[]) => {
-    this.setState({
-      selectedRowKeys: keys.length === data.length ? [] : data.map(r => r.key)
-    });
+    if (keys.length === data.length) {
+      this.setState({
+        selectedRowKeys: [],
+        unselectedRowKeys: [],
+        allSelected: false
+      });
+    } else {
+      this.setState({
+        selectedRowKeys: data.map(r => r.key),
+        unselectedRowKeys: [],
+        allSelected: true
+      });
+    }
   };
 
   render() {
-    const { selectedRowKeys } = this.state;
+    const { selectedRowKeys, unselectedRowKeys, allSelected } = this.state;
     const {
       actionButtons,
       noneSelectedbuttons,
@@ -206,7 +247,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
     );
 
     const rowSelection = {
-      onChange: this.onSelectChange,
+      onSelect: this.onSelectChange,
       selectedRowKeys: selectedRowKeys,
       columnTitle: headerCheckbox
     };
@@ -214,7 +255,9 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
     let actionButtonElems = actionButtons.map((button: ActionButton) => (
       <Button
         key={button.label}
-        onClick={() => button.onClick(selectedRowKeys)}
+        onClick={() =>
+          button.onClick(selectedRowKeys, unselectedRowKeys, allSelected)
+        }
         loading={button.loading || false}
         disabled={selectedRowKeys.length === 0}
         type="default"
@@ -247,7 +290,9 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
             {hasSelected ? (
               <span style={{ marginRight: "10px" }}>
                 {" "}
-                {`${selectedRowKeys.length} Selected`}{" "}
+                {`${
+                  allSelected ? "All" : selectedRowKeys.length
+                } Selected`}{" "}
               </span>
             ) : (
               noneSelectedButtonElems
@@ -260,7 +305,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
           dataSource={data}
           rowSelection={rowSelection}
           style={{ marginLeft: "10px", marginRight: "10px" }}
-          pagination={{ pageSize: 50 }}
+          pagination={{ pageSize: 10 }}
         />
       </div>
     );

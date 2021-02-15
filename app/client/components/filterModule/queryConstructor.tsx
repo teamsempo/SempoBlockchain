@@ -28,8 +28,14 @@ interface DispatchProps {
   }: LoadTransferAccountListPayload) => LoadTransferAccountAction;
 }
 
+export interface Query {
+  params: string;
+  searchString: string;
+}
+
 interface OuterProps {
   filterObject: AllowedMetricsObjects;
+  onQueryChange?: (query: Query) => void;
 }
 
 interface ComponentState {
@@ -79,14 +85,25 @@ class QueryConstructor extends React.Component<Props, ComponentState> {
   onFiltersChanged = (filters: any[]) => {
     let encodedFilters = processFiltersForQuery(filters);
     this.setState({ encodedFilters }, () => {
-      this.loadData();
+      this.handleQueryChange();
     });
   };
 
   onSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({ searchString: e.target.value }, () => {
-      this.loadData();
+      this.handleQueryChange();
     });
+  };
+
+  handleQueryChange = () => {
+    if (this.props.onQueryChange) {
+      this.props.onQueryChange({
+        params: this.state.encodedFilters,
+        searchString: this.state.searchString
+      });
+    }
+
+    this.loadData();
   };
 
   loadData = () => {

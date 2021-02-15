@@ -42,7 +42,7 @@ class SingleBulkDisbursementPage extends React.Component {
   onConfirm() {
     let bulkId = this.props.match.params.bulkId;
 
-    this.props.modifyBulkDisbursement(bulkId, { action: "EXECUTE" });
+    this.props.modifyBulkDisbursement(bulkId, { action: "COMPLETE" });
   }
 
   render() {
