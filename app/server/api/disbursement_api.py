@@ -26,6 +26,9 @@ disbursement_blueprint = Blueprint('disbursement', __name__)
 
 @status_checkable_executor_job
 def make_transfers(disbursement_id, auto_resolve=False):
+    print('MAKE TRANSFERS')
+    print('MAKE TRANSFERS')
+    print('MAKE TRANSFERS')
     send_transfer_account = g.user.default_organisation.queried_org_level_transfer_account
     from server.models.user import User
     from server.models.transfer_account import TransferAccount
@@ -62,6 +65,10 @@ def make_transfers(disbursement_id, auto_resolve=False):
 
 @status_checkable_executor_job
 def trigger_jobs(transfers):
+    print('TRIGGER JOBS')
+    print('TRIGGER JOBS')
+    print('TRIGGER JOBS')
+
     from server.models.credit_transfer import CreditTransfer
     # Disabled batch_uuid, since executing two sequential bulk disbursements is unacceptably slow
     # Patch for this coming soon!
