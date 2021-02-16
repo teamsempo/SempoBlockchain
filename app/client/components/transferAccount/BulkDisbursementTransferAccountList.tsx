@@ -5,10 +5,9 @@ import { Card, Button, InputNumber, Space } from "antd";
 import { ReduxState, sempoObjects } from "../../reducers/rootReducer";
 
 import QueryConstructor, { Query } from "../filterModule/queryConstructor";
-import TransferAccountList, {
-  ActionButton,
-  NoneSelectedButton
-} from "./transferAccountList";
+import { ActionButton, NoneSelectedButton } from "./transferAccountList";
+import TransferAccountList from "./TransferAccountList";
+
 import { CreateBulkTransferBody } from "../../reducers/bulkTransfer/types";
 
 import { CreateRequestAction } from "../../genericState/types";

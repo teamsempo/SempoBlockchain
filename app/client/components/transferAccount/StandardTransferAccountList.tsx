@@ -6,7 +6,9 @@ import { EditTransferAccountPayload } from "../../reducers/transferAccount/types
 import { EditTransferAccountAction } from "../../reducers/transferAccount/actions";
 
 import QueryConstructor from "../filterModule/queryConstructor";
-import TransferAccountList, { TransferAccount } from "./transferAccountList";
+// import TransferAccountList, { TransferAccount } from "./transferAccountList";
+import { TransferAccount } from "./TransferAccountList";
+import TransferAccountList from "./TransferAccountList";
 import NewTransferManager from "../management/newTransferManager.jsx";
 import ImportModal from "./importModal.jsx";
 
