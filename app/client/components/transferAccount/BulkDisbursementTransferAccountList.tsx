@@ -7,10 +7,8 @@ import { ReduxState, sempoObjects } from "../../reducers/rootReducer";
 import QueryConstructor, { Query } from "../filterModule/queryConstructor";
 import TransferAccountList, {
   ActionButton,
-  NoneSelectedButton,
-  OnSelectChange,
-  TransferAccount
-} from "../transferAccount/transferAccountList";
+  NoneSelectedButton
+} from "./transferAccountList";
 import { CreateBulkTransferBody } from "../../reducers/bulkTransfer/types";
 
 import { CreateRequestAction } from "../../genericState/types";
