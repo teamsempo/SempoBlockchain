@@ -237,7 +237,7 @@ workflows:
             branches:
               only:
                 - master
-                - fix-external-tx
+                - bulk_disbursement_fe
 
           requires:
             - build
