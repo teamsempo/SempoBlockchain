@@ -1,28 +1,26 @@
 import * as React from "react";
 import { connect } from "react-redux";
+import { Card, Button, InputNumber, Space } from "antd";
 
 import { ReduxState, sempoObjects } from "../../reducers/rootReducer";
-import { EditTransferAccountPayload } from "../../reducers/transferAccount/types";
-import { EditTransferAccountAction } from "../../reducers/transferAccount/actions";
 
 import QueryConstructor, { Query } from "../filterModule/queryConstructor";
 import TransferAccountList, {
   ActionButton,
   NoneSelectedButton,
+  OnSelectChange,
   TransferAccount
 } from "../transferAccount/transferAccountList";
-import {
-  CreateBulkTransferBody,
-  CreateBulkTransferPayload
-} from "../../reducers/bulkTransfer/types";
-import { CreateBulkTransferAction } from "../../reducers/bulkTransfer/actions";
-import {
-  ApiRequestAction,
-  CreateRequestAction
-} from "../../genericState/types";
+import { CreateBulkTransferBody } from "../../reducers/bulkTransfer/types";
+
+import { CreateRequestAction } from "../../genericState/types";
 import { apiActions } from "../../genericState";
+import { getActiveToken } from "../../utils";
+
+type numberInput = string | number | null | undefined;
 
 interface StateProps {
+  activeToken: any;
   transferAccounts: any;
   bulkTransfers: any;
 }
@@ -36,7 +34,10 @@ interface DispatchProps {
 interface OuterProps {}
 
 interface ComponentState {
-  transfer_account_id_list: React.Key[];
+  amount: numberInput;
+  selectedRowKeys: React.Key[];
+  unselectedRowKeys: React.Key[];
+  allSelected: boolean;
   params: string;
   searchString: string;
 }
@@ -45,7 +46,10 @@ type Props = StateProps & DispatchProps & OuterProps;
 
 const mapStateToProps = (state: ReduxState): StateProps => {
   return {
+    activeToken: getActiveToken(state),
     transferAccounts: state.transferAccounts,
+    // TODO: need to construct the generic properly for this
+    // @ts-ignore
     bulkTransfers: state.bulkTransfers
   };
 };
@@ -53,7 +57,7 @@ const mapStateToProps = (state: ReduxState): StateProps => {
 const mapDispatchToProps = (dispatch: any): DispatchProps => {
   return {
     createBulkTransferRequest: (body: CreateBulkTransferBody) =>
-      dispatch(apiActions.create(sempoObjects.BULK, body))
+      dispatch(apiActions.create(sempoObjects.bulkTransfers, body))
   };
 };
 
@@ -64,17 +68,30 @@ class BulkDisbursementTransferAccountList extends React.Component<
   constructor(props: Props) {
     super(props);
     this.state = {
-      transfer_account_id_list: [],
+      amount: 0,
+      selectedRowKeys: [],
+      unselectedRowKeys: [],
+      allSelected: false,
       params: "",
       searchString: ""
     };
   }
 
-  onSelectChange(
+  onSelectChange = (
     selectedRowKeys: React.Key[],
-    selectedRows: TransferAccount[]
-  ) {
-    this.setState({ transfer_account_id_list: selectedRowKeys });
+    unselectedRowKeys: React.Key[],
+    allSelected: boolean
+  ) => {
+    this.setState({
+      selectedRowKeys,
+      unselectedRowKeys,
+      allSelected
+    });
+  };
+
+  createBulkTransferFromState() {
+    let { selectedRowKeys, unselectedRowKeys, allSelected } = this.state;
+    this.createBulkTransfer(selectedRowKeys, unselectedRowKeys, allSelected);
   }
 
   createBulkTransfer(
@@ -111,23 +128,44 @@ class BulkDisbursementTransferAccountList extends React.Component<
 
   render() {
     const { transferAccounts, bulkTransfers } = this.props;
+    const { amount } = this.state;
 
-    const actionButtons: ActionButton[] = [
-      {
-        label: "Create Bulk Transfer",
-        onClick: (
-          selected: React.Key[],
-          unSelected: React.Key[],
-          allSelected: boolean
-        ) => this.createBulkTransfer(selected, unSelected, allSelected),
-        loading: bulkTransfers.createStatus.isRequesting
-      }
-    ];
+    let numberSet = typeof amount === "number" && amount !== 0;
 
+    const actionButtons: ActionButton[] = [];
     const noneSelectedButtons: NoneSelectedButton[] = [];
 
     return (
-      <div style={{ margin: "10px" }}>
+      <Card title="Create Bulk Disbursement" style={{ margin: "10px" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-end"
+          }}
+        >
+          <h3>Disbursement Amount:</h3>
+
+          <Button
+            onClick={() => this.createBulkTransferFromState()}
+            disabled={this.state.selectedRowKeys.length === 0 || !numberSet}
+            loading={bulkTransfers.createStatus.isRequesting}
+            style={{ margin: "10px" }}
+          >
+            Create
+          </Button>
+        </div>
+
+        <Space style={{ margin: "10px", marginBottom: "30px" }}>
+          <InputNumber
+            min={0}
+            onChange={(amount: numberInput) => this.setState({ amount })}
+          />
+          {this.props.activeToken.symbol}
+        </Space>
+
+        <h3>Recipients:</h3>
+
         <QueryConstructor
           filterObject="user"
           onQueryChange={(query: Query) => this.updateQueryData(query)}
@@ -136,8 +174,11 @@ class BulkDisbursementTransferAccountList extends React.Component<
           orderedTransferAccounts={transferAccounts.IdList}
           actionButtons={actionButtons}
           noneSelectedbuttons={noneSelectedButtons}
+          onSelectChange={(s: React.Key[], u: React.Key[], a: boolean) =>
+            this.onSelectChange(s, u, a)
+          }
         />
-      </div>
+      </Card>
     );
   }
 }

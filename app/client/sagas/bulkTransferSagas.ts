@@ -21,6 +21,8 @@ import {
   LoadTransferAccountActionTypes,
   TransferAccountLoadApiResult
 } from "../reducers/transferAccount/types";
+import { createActionTypes } from "../genericState/actions";
+import { sempoObjects } from "../reducers/rootReducer";
 
 function* loadBulkTransfers({ payload }: BulkTransferLoadApiResult) {
   try {
@@ -77,6 +79,26 @@ function* watchCreateBulkTransfer() {
   );
 }
 
+interface SuccessAction {
+  type: string;
+  id: number;
+}
+
+function* navigateToBulkDetails({ id }: SuccessAction) {
+  browserHistory.push(`/bulk/${id}`);
+}
+
+function* watchCreateSuccess() {
+  yield takeEvery(
+    createActionTypes.success(sempoObjects.bulkTransfers.name),
+    navigateToBulkDetails
+  );
+}
+
 export default function* bulkTransferSagas() {
-  yield all([watchCreateBulkTransfer(), watchLoadBulkTransfers()]);
+  yield all([
+    watchCreateBulkTransfer(),
+    watchLoadBulkTransfers(),
+    watchCreateSuccess()
+  ]);
 }

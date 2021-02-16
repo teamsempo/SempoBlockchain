@@ -4,7 +4,7 @@ import {
   modifyActionTypes
 } from "./actions";
 import { sagaFactory } from "./sagas";
-import { combineReducers } from "redux";
+import { combineReducers, ReducersMapObject } from "redux";
 import {
   byIdReducerFactory,
   IdListReducerFactory,
@@ -30,8 +30,8 @@ function hasEndpoint(
 
 export const createReducers = (
   registrations: RegistrationMapping
-): BaseReducerMapping => {
-  const base: BaseReducerMapping = {};
+): ReducersMapObject => {
+  const base: ReducersMapObject = {};
 
   Object.keys(registrations).map(key => {
     let reg = { ...registrations[key], name: key };

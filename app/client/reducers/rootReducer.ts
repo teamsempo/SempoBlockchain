@@ -50,7 +50,10 @@ import {
 const form = <Reducer<FormStateMap, AnyAction>>FormReducer;
 
 interface SempoObjects extends RegistrationMapping {
-  BULK: NamedRegistration<CreateBulkTransferBody, ModifyBulkTransferBody>;
+  bulkTransfers: NamedRegistration<
+    CreateBulkTransferBody,
+    ModifyBulkTransferBody
+  >;
 }
 
 export const sempoObjects: SempoObjects = {
@@ -64,8 +67,8 @@ export const sempoObjects: SempoObjects = {
     endpoint: "transfer_account",
     schema: transferAccountSchema
   },
-  BULK: {
-    name: "BULK",
+  bulkTransfers: {
+    name: "bulkTransfers",
     endpoint: "disbursement",
     schema: bulkTransferSchema
   }
@@ -79,32 +82,29 @@ export function* generatedSagas() {
 }
 
 const appReducer = combineReducers({
-  ...{
-    login,
-    register,
-    activate,
-    requestResetEmailState,
-    resetPasswordState,
-    validateTFA,
-    adminUsers,
-    spreadsheetUpload,
-    datasetSave,
-    datasetList,
-    export: ExportReducer,
-    transferAccounts,
-    users,
-    creditTransfers,
-    metrics,
-    filters,
-    businessVerification,
-    wyre,
-    transferUsages: TransferUsageReducer,
-    organisations: OrganisationReducer,
-    allowedFilters,
-    tokens,
-    form,
-    bulkTransfers
-  },
+  login,
+  register,
+  activate,
+  requestResetEmailState,
+  resetPasswordState,
+  validateTFA,
+  adminUsers,
+  spreadsheetUpload,
+  datasetSave,
+  datasetList,
+  export: ExportReducer,
+  transferAccounts,
+  users,
+  creditTransfers,
+  metrics,
+  filters,
+  businessVerification,
+  wyre,
+  transferUsages: TransferUsageReducer,
+  organisations: OrganisationReducer,
+  allowedFilters,
+  tokens,
+  form,
   ...baseReducers
 });
 

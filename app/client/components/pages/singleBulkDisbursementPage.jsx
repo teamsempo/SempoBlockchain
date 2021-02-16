@@ -1,61 +1,168 @@
 import React from "react";
 import { connect } from "react-redux";
-import { Button } from "antd";
+import { Card, Button, Space, Tag, Alert } from "antd";
 
-import { browserHistory } from "../../createStore.js";
-import { PageWrapper, WrapperDiv, StyledButton } from "../styledElements.js";
-import { LightTheme } from "../theme.js";
+import { PageWrapper, WrapperDiv } from "../styledElements";
 
-import BulkDisbursementTransferAccountList from "../transferAccount/BulkDisbursementTransferAccountList";
-
-import { LoadTransferAccountAction } from "../../reducers/transferAccount/actions";
 import organizationWrapper from "../organizationWrapper.jsx";
-import NoDataMessage from "../NoDataMessage";
-import QueryConstructor from "../filterModule/queryConstructor";
-import { LoadBulkTransfersAction } from "../../reducers/bulkTransfer/actions";
-import { CreateBulkTransferBody } from "../../reducers/bulkTransfer/types";
 import { apiActions } from "../../genericState";
 import { sempoObjects } from "../../reducers/rootReducer";
+import { ModifyBulkTransferBody } from "../../reducers/bulkTransfer/types";
+import {
+  LoadRequestAction,
+  ModifyRequestAction
+} from "../../genericState/types";
+import { formatMoney, getActiveToken } from "../../utils";
 
-const mapStateToProps = state => {
-  return {
-    login: state.login,
-    bulkTransfers: state.BULK
-  };
-};
+// TODO: GET TYPESCRIPT TO PLAY NICE WITH NAV IMPORTS
+// interface StateProps {
+//   bulkTransfers: any;
+// }
+//
+// interface DispatchProps {
+//   loadBulkDisbursement: (path: number) => LoadRequestAction;
+//   modifyBulkDisbursement: (path: number, body: ModifyBulkTransferBody) => ModifyRequestAction;
+//
+// }
+//
+// interface OuterProps {
+//   match: any
+// }
+//
+// type Props = StateProps & DispatchProps & OuterProps;
+//
+
+const mapStateToProps = state => ({
+  // @ts-ignore
+  bulkTransfers: state.bulkTransfers,
+  activeToken: getActiveToken(state)
+});
 
 const mapDispatchToProps = dispatch => {
   return {
     loadBulkDisbursement: path =>
-      dispatch(apiActions.load(sempoObjects.BULK, path)),
+      dispatch(apiActions.load(sempoObjects.bulkTransfers, path)),
     modifyBulkDisbursement: (path, body) =>
-      dispatch(apiActions.modify(sempoObjects.BULK, path, body))
+      dispatch(apiActions.modify(sempoObjects.bulkTransfers, path, body))
   };
 };
 
 class SingleBulkDisbursementPage extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {};
+  }
+
   componentDidMount() {
     let bulkId = this.props.match.params.bulkId;
     this.props.loadBulkDisbursement(bulkId);
   }
 
-  onConfirm() {
+  onComplete() {
     let bulkId = this.props.match.params.bulkId;
 
-    this.props.modifyBulkDisbursement(bulkId, { action: "COMPLETE" });
+    this.props.modifyBulkDisbursement(bulkId, { action: "APPROVE" });
+  }
+
+  onReject() {
+    let bulkId = this.props.match.params.bulkId;
+
+    this.props.modifyBulkDisbursement(bulkId, { action: "REJECT" });
   }
 
   render() {
     let bulkId = this.props.match.params.bulkId;
 
-    let transfer = this.props.bulkTransfers.byId[bulkId];
+    let bulkItem = this.props.bulkTransfers.byId[bulkId];
+
+    let totalAmount;
+    if (bulkItem && bulkItem.total_disbursement_amount) {
+      totalAmount = formatMoney(
+        bulkItem.total_disbursement_amount / 100,
+        undefined,
+        undefined,
+        undefined,
+        this.props.activeToken.symbol
+      );
+    }
+
+    let individualAmount;
+    if (bulkItem && bulkItem.disbursement_amount) {
+      individualAmount = formatMoney(
+        bulkItem.disbursement_amount / 100,
+        undefined,
+        undefined,
+        undefined,
+        this.props.activeToken.symbol
+      );
+    }
+
+    let status = bulkItem && bulkItem.state;
+
+    let tag;
+    let info;
+    if (status === "APPROVED") {
+      tag = <Tag color="#9bdf56">Approved</Tag>;
+      info = (
+        <div style={{ maxWidth: "700px", marginTop: "20px" }}>
+          <Alert
+            message="If there are many disbursements, it can take a while for all of them to appear in the transfers list."
+            type="info"
+            showIcon
+          />
+        </div>
+      );
+    } else if (status === "PENDING") {
+      tag = <Tag color="#e2a963">Pending</Tag>;
+    } else {
+      tag = <Tag color="#f16853">Rejected</Tag>;
+    }
 
     return (
       <WrapperDiv>
         <PageWrapper>
-          <Button onClick={() => this.onConfirm()}>
-            {transfer && transfer.recipient_count}
-          </Button>
+          <Card
+            title={`Bulk Disbursement ${bulkId}`}
+            style={{ margin: "10px" }}
+          >
+            <p>
+              {" "}
+              <b>Current status:</b> {tag}
+            </p>
+            <p>
+              {" "}
+              <b>Number of recipients:</b>{" "}
+              {(bulkItem && bulkItem.recipient_count) || ""}{" "}
+            </p>
+            <p>
+              {" "}
+              <b>Amount per recipeint:</b> {individualAmount || ""}{" "}
+            </p>
+            <p>
+              {" "}
+              <b>Total amount to disburse:</b> {totalAmount || ""}{" "}
+            </p>
+
+            <Space>
+              <Button
+                onClick={() => this.onReject()}
+                disabled={status !== "PENDING"}
+                loading={this.props.bulkTransfers.modifyStatus.isRequesting}
+              >
+                Reject
+              </Button>
+
+              <Button
+                onClick={() => this.onComplete()}
+                disabled={status !== "PENDING"}
+                loading={this.props.bulkTransfers.modifyStatus.isRequesting}
+              >
+                Complete
+              </Button>
+            </Space>
+
+            {info}
+          </Card>
         </PageWrapper>
       </WrapperDiv>
     );

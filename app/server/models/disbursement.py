@@ -5,10 +5,10 @@ from sqlalchemy.types import ARRAY
 from sqlalchemy.ext.hybrid import hybrid_property
 
 
-ALLOWED_STATES = ['PENDING', 'COMPLETE', 'REJECTED']
+ALLOWED_STATES = ['PENDING', 'APPROVED', 'REJECTED']
 
 ALLOWED_STATE_TRANSITIONS = {
-    'PENDING': ['COMPLETE', 'REJECTED']
+    'PENDING': ['APPROVED', 'REJECTED']
 }
 
 
@@ -56,10 +56,10 @@ class Disbursement(ModelBase):
 
         self.state = new_state
 
-    def resolve_as_complete(self):
-        self._transition_state('COMPLETE')
+    def approve(self):
+        self._transition_state('APPROVED')
 
-    def resolve_as_rejected(self):
+    def reject(self):
         self._transition_state('REJECTED')
 
     def __init__(self, *args, **kwargs):

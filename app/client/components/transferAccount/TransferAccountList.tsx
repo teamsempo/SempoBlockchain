@@ -149,19 +149,12 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
     };
   }
 
-  onSelectChange = (
-    record: TransferAccount,
-    selected: boolean,
-    selectedRows: TransferAccount[],
-    nativeEvent: Event
+  onChange = (
+    selectedRowKeys: React.Key[],
+    selectedRows: TransferAccount[]
   ) => {
-    console.log("selected", selected);
-    console.log("record", record);
-
-    let selectedRowKeys = selectedRows.map(r => r.key);
-    this.setState({ selectedRowKeys });
-
     let unselectedRowKeys: React.Key[] = [];
+
     if (this.state.allSelected) {
       // We only define the unselected rows when the "select all" box has been flagged as true (ie a "default selected" state),
       // because unselected rows isn't specific enough when you start from a "default unselected" state
@@ -171,34 +164,45 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
       );
     }
 
-    this.setState({ selectedRowKeys, unselectedRowKeys });
-
-    if (this.props.onSelectChange) {
-      // after setting the state
-      // transparently pass through the callback to parent, in case it's needed there
-      this.props.onSelectChange(
-        selectedRowKeys,
-        unselectedRowKeys,
-        this.state.allSelected
-      );
-    }
+    this.setState(
+      { selectedRowKeys, unselectedRowKeys },
+      this.onSelectChangeCallback
+    );
   };
 
   toggleSelectAll = (keys: React.Key[], data: TransferAccount[]) => {
     if (keys.length === data.length) {
-      this.setState({
-        selectedRowKeys: [],
-        unselectedRowKeys: [],
-        allSelected: false
-      });
+      this.setState(
+        {
+          selectedRowKeys: [],
+          unselectedRowKeys: [],
+          allSelected: false
+        },
+        this.onSelectChangeCallback
+      );
     } else {
-      this.setState({
-        selectedRowKeys: data.map(r => r.key),
-        unselectedRowKeys: [],
-        allSelected: true
-      });
+      this.setState(
+        {
+          selectedRowKeys: data.map(r => r.key),
+          unselectedRowKeys: [],
+          allSelected: true
+        },
+        this.onSelectChangeCallback
+      );
     }
   };
+
+  onSelectChangeCallback() {
+    if (this.props.onSelectChange) {
+      // after setting the state
+      // transparently pass through the callback to parent, in case it's needed there
+      this.props.onSelectChange(
+        this.state.selectedRowKeys,
+        this.state.unselectedRowKeys,
+        this.state.allSelected
+      );
+    }
+  }
 
   render() {
     const { selectedRowKeys, unselectedRowKeys, allSelected } = this.state;
@@ -247,7 +251,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
     );
 
     const rowSelection = {
-      onSelect: this.onSelectChange,
+      onChange: this.onChange,
       selectedRowKeys: selectedRowKeys,
       columnTitle: headerCheckbox
     };
@@ -286,7 +290,9 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
       <div>
         <div style={{ display: "flex", justifyContent: "space-between" }}>
           <div style={{}}>{actionButtonElems}</div>
-          <div style={{ display: "flex", alignItems: "center" }}>
+          <div
+            style={{ display: "flex", alignItems: "center", minHeight: "25px" }}
+          >
             {hasSelected ? (
               <span style={{ marginRight: "10px" }}>
                 {" "}

@@ -42,7 +42,7 @@ export interface CreateBulkTransferBody {
 }
 
 export interface ModifyBulkTransferBody {
-  action?: "COMPLETE" | "REJECT";
+  action?: "APPROVE" | "REJECT";
 }
 
 export interface CreateBulkTransferPayload {

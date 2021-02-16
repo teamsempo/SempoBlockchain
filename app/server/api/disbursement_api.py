@@ -184,7 +184,7 @@ class DisbursementAPI(MethodView):
             return { 'message': 'Please provide a disbursement_id'}, 400
         if not action:
             return { 'message': 'Please provide an action'}, 400
-        if action not in ['COMPLETE', 'REJECT']: # We might want more actions later!
+        if action not in ['APPROVE', 'REJECT']: # We might want more actions later!
             return { 'message': f'{action} not a valid action' }, 400
 
         # Ensure it's impossible to have two threads operating on the same disbursement
@@ -197,11 +197,11 @@ class DisbursementAPI(MethodView):
             if not disbursement:
                 return { 'message': f'Disbursement with ID \'{disbursement_id}\' not found' }, 400
 
-            if disbursement.state in ['COMPLETE', 'REJECTED']:
+            if disbursement.state in ['APPROVED', 'REJECTED']:
                 return { 'message': f'Disbursement with ID \'{disbursement_id}\' has already been set to {disbursement.state.lower()}!'}, 400
 
-            if action == 'COMPLETE':
-                disbursement.resolve_as_complete()
+            if action == 'APPROVE':
+                disbursement.approve()
                 db.session.commit()
 
                 task_uuid = add_after_request_checkable_executor_job(
@@ -218,11 +218,16 @@ class DisbursementAPI(MethodView):
                 }, 200
 
             if action == 'REJECT':
-                disbursement.resolve_as_rejected()
+                disbursement.reject()
                 db.session.commit()
+
+                data = disbursement_schema.dump(disbursement).data
 
                 return {
                     'status': 'success',
+                    'data': {
+                       'disbursement': data
+                    },
                 }, 200
 
 disbursement_blueprint.add_url_rule(

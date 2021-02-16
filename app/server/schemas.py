@@ -456,6 +456,7 @@ class DisbursementSchema(SchemaBase):
     recipient_count             = fields.Function(lambda obj: len(obj.transfer_accounts))
     total_disbursement_amount   = fields.Method('_total_disbursement_amount')
     state                       = fields.Str()
+    disbursement_amount         = fields.Int()
 
     def _total_disbursement_amount(self, obj):
         return  len(obj.transfer_accounts)*obj.disbursement_amount

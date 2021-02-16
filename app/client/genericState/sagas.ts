@@ -57,6 +57,7 @@ export const sagaFactory = (
       const result = yield call(apiHandler, { ...action.payload, url });
 
       let normalizedData: any;
+      let id: number | undefined;
 
       if (result.data) {
         const singularData = reg.singularData || url;
@@ -65,6 +66,8 @@ export const sagaFactory = (
         let dataList = result.data[pluralData] || [result.data[singularData]];
 
         normalizedData = normalize(dataList, reg.schema);
+
+        id = normalizedData.result.length === 1 && normalizedData.result[0];
 
         yield* Object.keys(registrations).map(key => {
           let r = registrations[key];
@@ -76,7 +79,10 @@ export const sagaFactory = (
         });
       }
 
-      yield put({ type: actionType.success(reg.name) });
+      yield put({
+        type: actionType.success(reg.name),
+        id: id
+      });
 
       return normalizedData;
     } catch (fetch_error) {
