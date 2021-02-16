@@ -29,7 +29,11 @@ import { allowedFilters } from "./allowedFilters/reducers";
 import { tokens } from "./token/reducers";
 import { bulkTransfers } from "./bulkTransfer/reducers";
 import { all } from "redux-saga/effects";
-import { creditTransferSchema, transferAccountSchema } from "../schemas";
+import {
+  creditTransferSchema,
+  transferAccountSchema,
+  bulkTransferSchema
+} from "../schemas";
 import {
   createReducers,
   createSagas,
@@ -37,26 +41,36 @@ import {
   Body
 } from "../genericState";
 import { Registration, RegistrationMapping } from "../genericState/types";
+import {
+  CreateBulkTransferBody,
+  ModifyBulkTransferBody
+} from "./bulkTransfer/types";
 
 //might be because of older version of react-redux that have to force like this...
 const form = <Reducer<FormStateMap, AnyAction>>FormReducer;
 
-interface CTBody extends Body {
-  name: string;
-}
-
 interface SempoObjects extends RegistrationMapping {
-  CT: Registration<CTBody>;
+  bulkTransfers: NamedRegistration<
+    CreateBulkTransferBody,
+    ModifyBulkTransferBody
+  >;
 }
 
 export const sempoObjects: SempoObjects = {
   CT: {
+    name: "CT",
     endpoint: "credit_transfer",
     schema: creditTransferSchema
   },
   TA: {
+    name: "TA",
     endpoint: "transfer_account",
     schema: transferAccountSchema
+  },
+  bulkTransfers: {
+    name: "bulkTransfers",
+    endpoint: "disbursement",
+    schema: bulkTransferSchema
   }
 };
 
@@ -68,32 +82,29 @@ export function* generatedSagas() {
 }
 
 const appReducer = combineReducers({
-  ...{
-    login,
-    register,
-    activate,
-    requestResetEmailState,
-    resetPasswordState,
-    validateTFA,
-    adminUsers,
-    spreadsheetUpload,
-    datasetSave,
-    datasetList,
-    export: ExportReducer,
-    transferAccounts,
-    users,
-    creditTransfers,
-    metrics,
-    filters,
-    businessVerification,
-    wyre,
-    transferUsages: TransferUsageReducer,
-    organisations: OrganisationReducer,
-    allowedFilters,
-    tokens,
-    form,
-    bulkTransfers
-  },
+  login,
+  register,
+  activate,
+  requestResetEmailState,
+  resetPasswordState,
+  validateTFA,
+  adminUsers,
+  spreadsheetUpload,
+  datasetSave,
+  datasetList,
+  export: ExportReducer,
+  transferAccounts,
+  users,
+  creditTransfers,
+  metrics,
+  filters,
+  businessVerification,
+  wyre,
+  transferUsages: TransferUsageReducer,
+  organisations: OrganisationReducer,
+  allowedFilters,
+  tokens,
+  form,
   ...baseReducers
 });
 

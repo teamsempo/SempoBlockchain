@@ -412,7 +412,6 @@ def proccess_create_or_modify_user_request(
     :param modify_only: whether to allow the creation of a  new user
     :return: An http response
     """
-
     if not attribute_dict.get('custom_attributes'):
         attribute_dict['custom_attributes'] = {}
 
@@ -525,7 +524,6 @@ def proccess_create_or_modify_user_request(
     if primary_user_identifier:
         primary_user, _ = find_user_from_public_identifier(
             primary_user_identifier)
-
         if not primary_user or not primary_user.verify_password(primary_user_pin):
             response_object = {'message': 'Primary User not Found'}
             return response_object, 400
@@ -638,7 +636,7 @@ def proccess_create_or_modify_user_request(
     user = create_transfer_account_user(
         first_name=first_name, last_name=last_name, preferred_language=preferred_language,
         phone=phone, email=email, public_serial_number=public_serial_number, uuid=uuid,
-        organisation=organisation,
+        organisation=organisation if organisation else g.active_organisation,
         blockchain_address=blockchain_address,
         transfer_account_name=transfer_account_name,
         use_precreated_pin=use_precreated_pin,
@@ -664,7 +662,6 @@ def proccess_create_or_modify_user_request(
     if is_self_sign_up and attribute_dict.get('deviceInfo', None) is not None:
         save_device_info(device_info=attribute_dict.get(
             'deviceInfo'), user=user)
-    send_onboarding_sms_messages(user)
     # Location fires an async task that needs to know user ID
     db.session.flush()
 

@@ -1,6 +1,7 @@
 import React from "react";
 import { connect } from "react-redux";
 import { ThemeProvider } from "styled-components";
+import { Card } from "antd";
 
 import { browserHistory } from "../../createStore.js";
 import { PageWrapper, WrapperDiv, StyledButton } from "../styledElements.js";
@@ -105,7 +106,9 @@ class TransferAccountListPage extends React.Component {
       <WrapperDiv>
         <PageWrapper>
           <ThemeProvider theme={LightTheme}>
-            <StandardTransferAccountList />
+            <Card title="All Accounts" style={{ margin: "10px" }}>
+              <StandardTransferAccountList />
+            </Card>
           </ThemeProvider>
         </PageWrapper>
       </WrapperDiv>

@@ -56,26 +56,37 @@ export const sagaFactory = (
 
       const result = yield call(apiHandler, { ...action.payload, url });
 
-      const singularData = reg.singularData || url;
-      const pluralData = reg.pluralData || `${url}s`;
+      let normalizedData: any;
+      let id: number | undefined;
 
-      let dataList = result.data[pluralData] || [result.data[singularData]];
+      if (result.data) {
+        const singularData = reg.singularData || url;
+        const pluralData = reg.pluralData || `${url}s`;
 
-      const normalizedData = normalize(dataList, reg.schema);
+        let dataList = result.data[pluralData] || [result.data[singularData]];
 
-      yield* Object.keys(registrations).map(key => {
-        let r = registrations[key];
-        let plural = r.pluralData || `${r.endpoint}s`;
-        let objects = normalizedData.entities[plural];
-        if (objects) {
-          return put({ type: deepUpdateObjectsActionType(r.name), objects });
-        }
+        normalizedData = normalize(dataList, reg.schema);
+
+        id = normalizedData.result.length === 1 && normalizedData.result[0];
+
+        yield* Object.keys(registrations).map(key => {
+          let r = registrations[key];
+          let plural = r.pluralData || `${r.endpoint}s`;
+          let objects = normalizedData.entities[plural];
+          if (objects) {
+            return put({ type: deepUpdateObjectsActionType(r.name), objects });
+          }
+        });
+      }
+
+      yield put({
+        type: actionType.success(reg.name),
+        id: id
       });
-
-      yield put({ type: actionType.success(reg.name) });
 
       return normalizedData;
     } catch (fetch_error) {
+      console.log("fetch error", fetch_error);
       const error = yield call(handleError, fetch_error);
 
       yield put({ type: actionType.failure(reg.name), error });

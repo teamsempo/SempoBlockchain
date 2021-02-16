@@ -58,7 +58,6 @@ def filter_by_org(query):
     # We want to support multiple active organizations, but only for select GET requets.
     # This is done through a multi_org flag, very similar to the show_all flag
     multi_org = getattr(g, "multi_org", False) or query._execution_options.get("multi_org", False)
-
     if show_all and show_deleted:
         return query
 

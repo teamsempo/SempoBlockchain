@@ -1,7 +1,8 @@
 import sentry_sdk
 
 from flask import current_app
-from server import pusher_client, executor
+from server import pusher_client
+from server.utils.executor import standard_executor_job
 from server.schemas import credit_transfer_schema
 from server.utils import credit_transfer
 from server.utils import misc
@@ -10,11 +11,11 @@ from server.utils import misc
 # https://pusher.com/docs/channels/library_auth_reference/rest-api#post-batch-events-trigger-multiple-events-
 PUSHER_MAX_BATCH_SIZE = 10
 
-@executor.job
+@standard_executor_job
 def async_pusher_trigger(*args, **kwargs):
     pusher_client.trigger(*args, **kwargs)
 
-@executor.job
+@standard_executor_job
 def async_pusher_trigger_batch(*args, **kwargs):
     pusher_client.trigger_batch(*args, **kwargs)
 
