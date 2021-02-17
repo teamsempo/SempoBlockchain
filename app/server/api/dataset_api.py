@@ -70,17 +70,16 @@ class SpreadsheetUploadAPI(MethodView):
         return make_response(jsonify(reponse_object)), 200
 
 @executor.job
-def execute_dataset_import(dataset, header_positions, is_vendor):
+def execute_dataset_import(dataset, header_positions, is_vendor, customAttributes):
     diagnostics = []
     for datarow in dataset:
-        attribute_dict = {}
-
+        attribute_dict = { 'custom_attributes': {} }
         contains_anything = False
         for key, header_label in header_positions.items():
-
             attribute = datarow.get(key)
-
-            if attribute:
+            if attribute and (header_label in customAttributes):
+                attribute_dict['custom_attributes'][header_label] = attribute
+            elif attribute:
                 contains_anything = True
                 attribute_dict[header_label] = attribute
 
@@ -108,11 +107,16 @@ class DatasetAPI(MethodView):
         post_data = request.get_json()
 
         is_vendor = post_data.get('isVendor', False)
-
         header_positions = post_data.get('headerPositions')
-
         dataset = post_data.get('data')
-        add_after_request_executor_job(execute_dataset_import, kwargs={ 'dataset': dataset, 'header_positions': header_positions, 'is_vendor':is_vendor })
+        customAttributes = post_data.get('customAttributes')
+
+        add_after_request_executor_job(execute_dataset_import, kwargs={ 
+            'dataset': dataset, 
+            'header_positions': header_positions, 
+            'is_vendor':is_vendor, 
+            'customAttributes': customAttributes 
+        })
 
         response_object = {
             'status': 'success',
