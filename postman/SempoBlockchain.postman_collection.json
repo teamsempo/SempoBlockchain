@@ -1410,7 +1410,7 @@
           ]
         },
         {
-          "name": "Get Organisation",
+          "name": "Get Organisation (Project)",
           "request": {
             "method": "GET",
             "header": [
