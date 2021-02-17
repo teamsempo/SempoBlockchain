@@ -425,7 +425,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
 
     def get_transfer_account_for_organisation(self, organisation):
         for ta in self.transfer_accounts:
-            if ta in organisation.transfer_accounts:
+            if ta.organisation.id == organisation.id:
                 return ta
 
         raise Exception(

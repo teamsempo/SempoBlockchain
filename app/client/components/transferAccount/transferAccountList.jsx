@@ -31,7 +31,8 @@ const mapStateToProps = state => {
   return {
     login: state.login,
     transferAccounts: state.transferAccounts,
-    creditTransfers: state.creditTransfers
+    creditTransfers: state.creditTransfers,
+    tokens: state.tokens
   };
 };
 
@@ -462,7 +463,8 @@ class TransferAccountList extends React.Component {
                     Cell: cellInfo => {
                       const token =
                         cellInfo.original.token &&
-                        cellInfo.original.token.symbol;
+                        this.props.tokens.byId[cellInfo.original.token] &&
+                        this.props.tokens.byId[cellInfo.original.token].symbol;
                       const money = formatMoney(
                         cellInfo.value / 100,
                         undefined,

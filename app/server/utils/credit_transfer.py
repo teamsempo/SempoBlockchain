@@ -394,6 +394,9 @@ def make_target_balance_transfer(target_balance,
 
     transfer_amount = target_balance - target_user.transfer_account.balance
 
+    if transfer_amount == 0:
+        raise InvalidTargetBalanceError("Transfer Amount can't be zero")
+
     if transfer_amount < 0:
         transfer = make_payment_transfer(abs(transfer_amount),
                                          target_user.transfer_account.token,

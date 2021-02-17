@@ -6,13 +6,14 @@ import { StyledButton, StyledSelect, ModuleBox } from "../styledElements";
 import AsyncButton from "./../AsyncButton.jsx";
 
 import { CreditTransferAction } from "../../reducers/creditTransfer/actions";
+import { getActiveToken } from "../../utils";
 
 const mapStateToProps = state => {
   return {
     transferAccounts: state.transferAccounts,
     creditTransfers: state.creditTransfers,
     login: state.login,
-    activeOrganisation: state.organisations.byId[state.login.organisationId]
+    activeToken: getActiveToken(state)
   };
 };
 
@@ -56,7 +57,10 @@ class NewTransferManager extends React.Component {
     let transfer_amount = null;
     let target_balance = null;
 
-    if (this.state.transfer_amount > 0) {
+    if (
+      this.state.transfer_amount > 0 ||
+      (this.state.transfer_amount === "0" && transfer_type === "BALANCE")
+    ) {
       if (this.props.transfer_account_ids.length > 1) {
         // BULK TRANSFER
         is_bulk = true;
@@ -76,11 +80,9 @@ class NewTransferManager extends React.Component {
         confirmTransferString =
           `Are you sure you wish to make a ${transfer_type}` +
           (transfer_amount
-            ? ` of ${transfer_amount / 100} ${
-                this.props.activeOrganisation.token.symbol
-              }`
+            ? ` of ${transfer_amount / 100} ${this.props.activeToken.symbol}`
             : ` set of ${target_balance / 100} ${
-                this.props.activeOrganisation.token.symbol
+                this.props.activeToken.symbol
               }`) +
           ` to ${recipient_transfer_accounts_ids.length} users?`;
 
@@ -112,11 +114,9 @@ class NewTransferManager extends React.Component {
         confirmTransferString =
           `Are you sure you wish to make a ${transfer_type}` +
           (transfer_amount
-            ? ` of ${transfer_amount / 100} ${
-                this.props.activeOrganisation.token.symbol
-              }`
+            ? ` of ${transfer_amount / 100} ${this.props.activeToken.symbol}`
             : ` set of ${target_balance / 100} ${
-                this.props.activeOrganisation.token.symbol
+                this.props.activeToken.symbol
               }`) +
           ` to 1 user?`;
 
@@ -204,7 +204,7 @@ class NewTransferManager extends React.Component {
                   style={{ width: "7em", margin: "0" }}
                   aria-label="Transfer amount"
                 />
-                {this.props.activeOrganisation.token.symbol}
+                {this.props.activeToken.symbol}
                 {convertedBitcoin}
               </SubRow>
               <SubRow style={{ margin: "0 0 0 2em", width: "inherit" }}>

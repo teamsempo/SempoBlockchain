@@ -17,7 +17,8 @@ const mapStateToProps = state => {
     users: state.users,
     transferAccounts: state.transferAccounts,
     creditTransfers: state.creditTransfers,
-    login: state.login
+    login: state.login,
+    tokens: state.tokens
   };
 };
 
@@ -32,7 +33,8 @@ class BeneficiaryLiveFeed extends React.Component {
       users,
       transferAccounts,
       creditTransfers,
-      creditTransferList
+      creditTransferList,
+      tokens
     } = this.props;
 
     const collapsedCardStyle = {
@@ -166,7 +168,10 @@ class BeneficiaryLiveFeed extends React.Component {
                 let showExchange = false;
 
                 const transferAccountId = transfer.sender_transfer_account_id;
-                currency = transfer.token && transfer.token.symbol;
+                currency =
+                  transfer.token &&
+                  tokens.byId[transfer.token] &&
+                  tokens.byId[transfer.token].symbol;
                 const transferFromMoney = formatMoney(
                   transfer.transfer_amount / 100,
                   undefined,
@@ -189,7 +194,8 @@ class BeneficiaryLiveFeed extends React.Component {
                     recipientCurrency =
                       transferAccount &&
                       transferAccount.token &&
-                      transferAccount.token.symbol;
+                      tokens.byId[transferAccount.token] &&
+                      tokens.byId[transferAccount.token].symbol;
                   }
                   transferToMoney = formatMoney(
                     exchangeToTransfer.transfer_amount / 100,
