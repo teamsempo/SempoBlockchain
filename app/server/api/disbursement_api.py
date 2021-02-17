@@ -1,15 +1,13 @@
 from decimal import Decimal
 import math
 
-from sqlalchemy.orm import lazyload, joinedload
+from sqlalchemy.orm import joinedload
 from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 from sqlalchemy import desc, asc
-from uuid import uuid4
 
 from server import db, red
-from server.schemas import credit_transfers_schema, disbursement_schema
-from server.models.user import User
+from server.schemas import credit_transfers_schema, disbursement_schema, disbursements_schema
 from server.models.disbursement import Disbursement
 from server.models.transfer_account import TransferAccount
 from server.models.credit_transfer import CreditTransfer
@@ -18,7 +16,7 @@ from server.utils.transfer_filter import process_transfer_filters
 from server.utils.search import generate_search_query
 from server.utils.credit_transfer import make_payment_transfer
 from server.utils.transfer_enums import TransferSubTypeEnum, TransferModeEnum
-from server.models.utils import paginate_query, disbursement_credit_transfer_association_table
+from server.models.utils import paginate_query
 from server.utils.executor import status_checkable_executor_job, add_after_request_checkable_executor_job
 
 disbursement_blueprint = Blueprint('disbursement', __name__)
@@ -26,9 +24,6 @@ disbursement_blueprint = Blueprint('disbursement', __name__)
 
 @status_checkable_executor_job
 def make_transfers(disbursement_id, auto_resolve=False):
-    print('MAKE TRANSFERS')
-    print('MAKE TRANSFERS')
-    print('MAKE TRANSFERS')
     send_transfer_account = g.user.default_organisation.queried_org_level_transfer_account
     from server.models.user import User
     from server.models.transfer_account import TransferAccount
@@ -65,10 +60,6 @@ def make_transfers(disbursement_id, auto_resolve=False):
 
 @status_checkable_executor_job
 def trigger_jobs(transfers):
-    print('TRIGGER JOBS')
-    print('TRIGGER JOBS')
-    print('TRIGGER JOBS')
-
     from server.models.credit_transfer import CreditTransfer
     # Disabled batch_uuid, since executing two sequential bulk disbursements is unacceptably slow
     # Patch for this coming soon!
@@ -85,6 +76,19 @@ def trigger_jobs(transfers):
         }
 
 class MakeDisbursementAPI(MethodView):
+    @requires_auth(allowed_roles={'ADMIN': 'admin'})
+    def get(self):
+        disbursements = db.session.query(Disbursement).order_by(Disbursement.id.desc()).all()
+
+        response_object = {
+            'status': 'success',
+            'message': 'Successfully Loaded.',
+            'data': {
+                'disbursements': disbursements_schema.dump(disbursements).data
+            }
+        }
+        return make_response(jsonify(response_object)), 200
+
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self):
         post_data = request.get_json()
@@ -123,13 +127,11 @@ class MakeDisbursementAPI(MethodView):
 
         if include_accounts:
             transfer_accounts = db.session.query(TransferAccount).filter(TransferAccount.id.in_(include_accounts)).all()
-            users = [ta.primary_user for ta in transfer_accounts]
         else:
             search_query = generate_search_query(search_string, filters, order, sort_by_arg, include_user=True)
             search_query = search_query.filter(TransferAccount.id.notin_(exclude_accounts))
             results = search_query.all()
             transfer_accounts = [r[0] for r in results] # Get TransferAccount (TransferAccount, searchRank, User)
-            users = [r[2] for r in results] # Get User from (TransferAccount, searchRank, User)
         d.transfer_accounts.extend(transfer_accounts)
 
         db.session.flush()
@@ -240,7 +242,7 @@ class DisbursementAPI(MethodView):
 disbursement_blueprint.add_url_rule(
     '/disbursement/',
     view_func=MakeDisbursementAPI.as_view('make_disbursement_view'),
-    methods=['POST']
+    methods=['POST', 'GET']
 )
 
 disbursement_blueprint.add_url_rule(

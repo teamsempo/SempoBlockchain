@@ -578,3 +578,4 @@ me_exchanges_schema = ExchangeSchema(many=True)
 
 
 disbursement_schema = DisbursementSchema()
+disbursements_schema = DisbursementSchema(many=True)

@@ -144,8 +144,8 @@ class NavBar extends React.Component<Props, State> {
               >
                 <NavLink to="/transfers">Transfers List</NavLink>
               </Menu.Item>
-              <Menu.Item key="/bulk" icon={<SendOutlined translate={""} />}>
-                <NavLink to="/bulk/create">Bulk Disbursement</NavLink>
+              <Menu.Item key="/bulk/" icon={<SendOutlined translate={""} />}>
+                <NavLink to="/bulk/">Bulk Transfers</NavLink>
               </Menu.Item>
             </SubMenu>
 
