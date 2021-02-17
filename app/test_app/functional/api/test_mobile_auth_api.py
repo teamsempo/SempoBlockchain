@@ -4,6 +4,7 @@ from faker import Faker
 from functools import partial
 
 def test_request_api_token_golden_path_success(
+        init_database,
         test_client,
         mock_sms_apis,
         initialised_blockchain_network,
@@ -27,7 +28,7 @@ def test_request_api_token_golden_path_success(
     code = create_transfer_account_user.one_time_code
 
     failed_otp_response = test_client.post('/api/v1/auth/request_api_token/',
-                                          data=json.dumps(dict(phone=user_phone, password='12344')),
+                                          data=json.dumps(dict(phone=user_phone, pin='12344')),
                                           content_type='application/json', follow_redirects=True)
 
     assert failed_otp_response.status_code == 200
@@ -35,7 +36,7 @@ def test_request_api_token_golden_path_success(
 
     otp_response = test_client.post('/api/v1/auth/request_api_token/',
                                     data=json.dumps(
-                                        dict(phone=user_phone, password=code)),
+                                        dict(phone=user_phone, pin=code)),
                                     content_type='application/json', follow_redirects=True)
 
     assert otp_response.status_code == 200
@@ -43,8 +44,17 @@ def test_request_api_token_golden_path_success(
 
     set_pin_response = test_client.post('/api/v1/auth/reset_password/',
                                         data=json.dumps(
-                                            dict(phone=user_phone, new_password='1234', one_time_code=code)),
+                                            dict(phone=user_phone, new_pin='1234', one_time_code=code)),
                                         content_type='application/json', follow_redirects=True)
 
     assert set_pin_response.status_code == 200
     assert set_pin_response.json['message'] == 'Successfully set pin'
+
+
+    login_response = test_client.post('/api/v1/auth/request_api_token/',
+                                    data=json.dumps(
+                                        dict(phone=user_phone, pin='1234')),
+                                    content_type='application/json', follow_redirects=True)
+
+    assert login_response.status_code == 200
+    assert login_response.json['message'] == 'Successfully logged in.'
