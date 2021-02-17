@@ -316,16 +316,17 @@ class LoginAPI(MethodView):
         g.active_organisation = Organisation.master_organisation()
 
         post_data = request.get_json()
-
         user = None
         phone = None
 
         email = post_data.get('username', '') or post_data.get('email', '')
         email = email.lower() if email else ''
         password = post_data.get('password')
+        pin = post_data.get('pin', None)
         tfa_token = post_data.get('tfa_token')
 
         password_empty = password == '' or password is None
+        pin_empty = pin == '' or pin is None
 
         # First try to match email
         if email:
@@ -361,27 +362,10 @@ class LoginAPI(MethodView):
                 db.session.commit()
 
             return make_response(jsonify(response_object)), response_code
-
-        if user and user.is_activated and post_data.get('phone') and password_empty:
-            # user already exists, is activated. no password provided, thus request PIN screen.
-            # todo: this should check if device exists, if no, resend OTP to verify login is real.
-            response_object = {
-                'status': 'success',
-                'login_with_pin': True,
-                'message': 'Login with PIN'
-            }
-            return make_response(jsonify(attach_host(response_object))), 200
-
-        if not (email or post_data.get('phone')):
-            response_object = {
-                'status': 'fail',
-                'message': 'No username supplied'
-            }
-            return make_response(jsonify(response_object)), 401
-
-        if post_data.get('phone') and user and user.one_time_code and not user.is_activated:
+        no_password_or_pin_hash = user and not user.password_hash and not user.pin_hash
+        if post_data.get('phone') and user and user.one_time_code and (not user.is_activated or not user.pin_hash):
             # vendor sign up with one time code or OTP verified
-            if user.one_time_code == password:
+            if user.one_time_code == pin:
                 response_object = {
                     'status': 'success',
                     'pin_must_be_set': True,
@@ -389,7 +373,7 @@ class LoginAPI(MethodView):
                 }
                 return make_response(jsonify(attach_host(response_object))), 200
 
-            if not user.is_phone_verified:
+            if not user.is_phone_verified or no_password_or_pin_hash:
                 if user.is_self_sign_up:
                     # self sign up, resend phone verification code
                     user.set_pin(None, False)  # resets PIN
@@ -410,9 +394,26 @@ class LoginAPI(MethodView):
                 response_object = {'message':  'Please verify phone number.', 'otp_verify': True}
                 return make_response(jsonify(attach_host(response_object))), 200
 
-        try:
+        if user and user.is_activated and post_data.get('phone') and (password_empty and pin_empty):
+            # user already exists, is activated. no password or pin provided, thus request PIN screen.
+            # todo: this should check if device exists, if no, resend OTP to verify login is real.
+            response_object = {
+                'status': 'success',
+                'login_with_pin': True,
+                'message': 'Login with PIN'
+            }
+            return make_response(jsonify(attach_host(response_object))), 200
 
-            if not (user and password and user.verify_password(password)):
+        if not (email or post_data.get('phone')):
+            response_object = {
+                'status': 'fail',
+                'message': 'No username supplied'
+            }
+            return make_response(jsonify(response_object)), 401
+    
+
+        try:
+            if not (user and (pin and user.verify_pin(pin) or password and user.verify_password(password))):
                 response_object = {
                     'status': 'fail',
                     'message': 'Invalid username or password'
@@ -555,9 +556,9 @@ class ResetPasswordAPI(MethodView):
 
         # get the post data
         post_data = request.get_json()
-
         old_password = post_data.get('old_password')
         new_password = post_data.get('new_password')
+        new_pin = post_data.get('new_pin')
         phone = proccess_phone_number(phone_number=post_data.get('phone'), region=post_data.get('region'))
         one_time_code = post_data.get('one_time_code')
 
@@ -578,15 +579,7 @@ class ResetPasswordAPI(MethodView):
 
                 return make_response(jsonify(response_object)), 401
 
-            if user.is_activated:
-                response_object = {
-                    'status': 'fail',
-                    'message': 'Account already activated'
-                }
-
-                return make_response(jsonify(response_object)), 401
-
-            if str(one_time_code) != user.one_time_code:
+            if not one_time_code or str(one_time_code) != user.one_time_code:
                 response_object = {
                     'status': 'fail',
                     'message': 'One time code not valid'
@@ -594,7 +587,10 @@ class ResetPasswordAPI(MethodView):
 
                 return make_response(jsonify(response_object)), 401
 
-            user.hash_password(new_password)
+            if new_password:
+                user.hash_password(new_password)
+            else:
+                user.hash_pin(new_pin)
 
             user.is_phone_verified = True
             user.is_activated = True

@@ -758,13 +758,12 @@ def change_current_pin(user: User, new_pin):
 
 
 def admin_reset_user_pin(user: User):
+    user.set_one_time_code(None)
+    user.pin_hash = None
+
     pin_reset_token = user.encode_single_use_JWS('R')
     user.save_pin_reset_token(pin_reset_token)
     user.failed_pin_attempts = 0
-
-    pin_reset_message = i18n_for(user, "general_sms.pin_reset")
-    send_message(user.phone, pin_reset_message)
-
 
 def default_transfer_account(user: User) -> TransferAccount:
     if user.default_transfer_account is not None:
