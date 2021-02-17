@@ -288,13 +288,27 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
     const hasSelected = selectedRowKeys.length > 0;
     return (
       <div>
-        <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <div style={{}}>{actionButtonElems}</div>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            flexWrap: "wrap"
+          }}
+        >
           <div
             style={{ display: "flex", alignItems: "center", minHeight: "25px" }}
           >
+            {actionButtonElems}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "flex-end",
+              minHeight: "25px"
+            }}
+          >
             {hasSelected ? (
-              <span style={{ marginRight: "10px" }}>
+              <span style={{ marginRight: "10px", minHeight: "25px" }}>
                 {" "}
                 {`${
                   allSelected ? "All" : selectedRowKeys.length
@@ -311,7 +325,6 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
           dataSource={data}
           rowSelection={rowSelection}
           style={{ marginLeft: "10px", marginRight: "10px" }}
-          pagination={{ pageSize: 10 }}
         />
       </div>
     );

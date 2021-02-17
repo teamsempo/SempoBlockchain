@@ -157,7 +157,7 @@ class SingleBulkDisbursementPage extends React.Component {
                 disabled={status !== "PENDING"}
                 loading={this.props.bulkTransfers.modifyStatus.isRequesting}
               >
-                Complete
+                Approve
               </Button>
             </Space>
 
