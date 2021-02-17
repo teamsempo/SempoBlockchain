@@ -181,7 +181,7 @@ class OrganisationAPI(MethodView):
             else:
                 return make_response(jsonify(cic_response_object)), cic_response_code
 
-        if AccessControl.has_exact_role(g.user.roles, 'ADMIN', 'superadmin'):
+        if AccessControl.has_suffient_role(g.user.roles, {'ADMIN': 'superadmin'}):
             g.user.add_user_to_organisation(new_organisation, is_admin=True)
 
         return make_response(jsonify(response_object)), 201
