@@ -174,12 +174,20 @@ def test_admin_reset_user_pin(
     auth = get_complete_auth_token(authed_sempo_admin_user)
 
     user_id = reset_user_id_accessor(create_transfer_account_user)
+    create_transfer_account_user.pin_hash = 'FAKE PIN HASH!'
+    original_pin_hash = create_transfer_account_user.pin_hash
+    original_otc = create_transfer_account_user.one_time_code
+
     response = test_client.post('/api/v1/user/reset_pin/',
                                 headers=dict(Authorization=auth, Accept='application/json'),
                                 data=json.dumps(dict(user_id=user_id)),
                                 content_type='application/json', follow_redirects=True)
     assert response.status_code == status_code
-
+    if response.status_code == 200:
+        assert original_pin_hash != create_transfer_account_user.pin_hash
+        assert not create_transfer_account_user.pin_hash
+        assert int(create_transfer_account_user.one_time_code) >= 1000 <=9999
+        assert create_transfer_account_user.one_time_code != original_otc
 
 @pytest.mark.parametrize("user_id_accessor, tier, message, status_code", [
     (lambda o: o.id, 'admin', "user does not have any of the allowed roles", 403),

@@ -1114,10 +1114,10 @@
       "description": "The AUTH API is primarily used for user login, logout, password actions. This is used for both Admin and standard platform users.\n\nThere is also a sub-folder \"permissions\" that is used for managing admin user tiers and platform admin invites."
     },
     {
-      "name": "Organisation API",
+      "name": "Organisation (Project) API",
       "item": [
         {
-          "name": "Create Organisation",
+          "name": "Create Organisation (Project)",
           "request": {
             "method": "POST",
             "header": [
@@ -1239,7 +1239,7 @@
           ]
         },
         {
-          "name": "Edit Organisation",
+          "name": "Edit Organisation (Project)",
           "request": {
             "method": "PUT",
             "header": [
@@ -1410,7 +1410,7 @@
           ]
         },
         {
-          "name": "Get Organisation",
+          "name": "Get Organisation (Project)",
           "request": {
             "method": "GET",
             "header": [

@@ -425,6 +425,7 @@ class OrganisationSchema(SchemaBase):
     default_disbursement = fields.Function(lambda obj: int(obj.default_disbursement))
     minimum_vendor_payout_withdrawal = fields.Function(lambda obj: int(obj.minimum_vendor_payout_withdrawal))
     country_code = fields.Function(lambda obj: str(obj.country_code))
+    timezone = fields.Function(lambda obj: str(obj.timezone))
 
     token               = fields.Nested('server.schemas.TokenSchema')
 
