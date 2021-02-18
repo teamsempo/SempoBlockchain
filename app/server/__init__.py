@@ -155,8 +155,13 @@ def register_blueprints(app):
 
         g.is_after_request = True
         if g.executor_jobs:
+            from flask.globals import _request_ctx_stack
             for job, args, kwargs in g.executor_jobs:
-                job.submit(*args, **kwargs)
+                top = _request_ctx_stack.top
+                reqctx = top.copy()
+                reqctx.request.environ = reqctx.request.environ.copy()
+                with reqctx:
+                    job.submit(*args, **kwargs)
         else:
             from server.utils.executor import prepare_transactions_async_job
             prepare_transactions_async_job()
