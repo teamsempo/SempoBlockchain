@@ -30,6 +30,8 @@ export const replaceUpdateObjectsActionType: ActionGenerator = name =>
 export const replaceIDListActionType: ActionGenerator = name =>
   `REPLACE_${name}_ID_LIST`;
 
+// These functions are designed to be called directly from inside a dispatch,
+// and they will return an appropriately shaped action for the given Rest API... action? (load, create, modify)
 export const apiActions = {
   load: function<CB, MB>(
     reg: Registration<CB, MB>,
