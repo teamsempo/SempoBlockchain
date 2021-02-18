@@ -38,7 +38,7 @@ export const login = (state = initialLoginState, action: LoginAction) => {
     case LoginActionTypes.UPDATE_ACTIVE_ORG:
       return {
         ...state,
-        organisationId: action.payload.organisationId
+        organisationIds: action.payload.organisationIds
       };
     case LoginActionTypes.LOGIN_SUCCESS:
       return {

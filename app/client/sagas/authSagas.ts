@@ -14,8 +14,8 @@ import {
   removeSessionToken,
   storeSessionToken,
   storeTFAToken,
-  storeOrgid,
-  removeOrgId,
+  storeOrgIds,
+  removeOrgIds,
   removeTFAToken,
   parseQuery
 } from "../utils";
@@ -147,23 +147,29 @@ function* saveOrgId(
   >
 ) {
   try {
-    yield call(storeOrgid, action.payload.organisationId.toString());
+    yield call(storeOrgIds, action.payload.organisationIds);
 
-    // window.location.search = "?org=2"
-    // query_params = {org: 2}
+    // window.location.search = "?org=2" or "?query_organisations=1,2"
+    // query_params = {org: "2"} or {query_organisations: "1,2"}
     let query_params: any = parseQuery(window.location.search);
 
     // if query param and payload are matching then just reload to update navbar
     if (
       query_params["org"] &&
-      action.payload.organisationId === parseInt(query_params["org"])
+      action.payload.organisationIds[0] === parseInt(query_params["org"])
+    ) {
+      window.location.reload();
+    } else if (
+      query_params["query_organisations"] &&
+      action.payload.organisationIds.toString() ===
+        query_params["query_organisations"]
     ) {
       window.location.reload();
     } else {
       window.location.assign("/");
     }
   } catch (e) {
-    removeOrgId();
+    removeOrgIds();
   }
 }
 
@@ -172,7 +178,7 @@ function* watchSaveOrgId() {
 }
 export function* logout() {
   yield call(removeSessionToken);
-  yield call(removeOrgId);
+  yield call(removeOrgIds);
 }
 
 function createLoginSuccessObject(token: TokenData) {

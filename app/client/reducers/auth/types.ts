@@ -11,7 +11,7 @@ export enum LoginActionTypes {
 }
 
 export interface UpdateActiveOrgPayload {
-  organisationId: number;
+  organisationIds: number[];
 }
 
 export interface LoginRequestPayload {

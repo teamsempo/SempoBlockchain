@@ -66,13 +66,9 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
     setSwitcherActive(!switcherActive);
   };
 
-  let selectOrg = (organisationId: number) => {
+  let selectOrg = (organisationIds: number[]) => {
     setSwitcherActive(false);
-    dispatch(LoginAction.updateActiveOrgRequest({ organisationId }));
-  };
-
-  let selectMultiGroupView = (idArray: Array<string>) => {
-    console.log("group view", idArray);
+    dispatch(LoginAction.updateActiveOrgRequest({ organisationIds }));
   };
 
   let menu = (
@@ -103,7 +99,7 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
                       placement="rightTop"
                     >
                       <a
-                        onClick={() => selectMultiGroupView(orgIdsForToken)}
+                        onClick={() => selectOrg(orgIdsForToken)}
                         style={{ padding: "0 0 0 5px", color: grey[4] }}
                       >
                         <EyeOutlined translate={""} />
@@ -114,7 +110,7 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
               >
                 {orgsForToken.map((org: Organisation) => {
                   return (
-                    <Menu.Item key={org.id} onClick={() => selectOrg(org.id)}>
+                    <Menu.Item key={org.id} onClick={() => selectOrg([org.id])}>
                       <span>{org.name}</span>
                     </Menu.Item>
                   );

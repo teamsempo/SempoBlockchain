@@ -63,7 +63,7 @@ class VolumeChart extends React.Component {
   }
 
   render() {
-    let { selected, data, filter_dates } = this.props;
+    let { selected, data, filter_dates, activeToken } = this.props;
 
     if (!(data && data.timeseries)) {
       return (
@@ -104,9 +104,8 @@ class VolumeChart extends React.Component {
 
     const labelString = selected
       ? selected.includes("volume")
-        ? `${toTitleCase(replaceUnderscores(selected))} (${
-            this.props.activeToken.symbol
-          })`
+        ? `${toTitleCase(replaceUnderscores(selected))} (${activeToken &&
+            activeToken.symbol})`
         : `${toTitleCase(replaceUnderscores(selected))}`
       : null;
 
