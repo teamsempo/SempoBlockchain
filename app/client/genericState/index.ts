@@ -11,7 +11,6 @@ import {
   lifecycleReducerFactory
 } from "./reducers";
 import {
-  BaseReducerMapping,
   EndpointedRegistration,
   RegistrationMapping,
   Registration,
@@ -19,7 +18,12 @@ import {
 } from "./types";
 
 export { apiActions } from "./actions";
-export { Registration } from "./types";
+export {
+  Registration,
+  LoadRequestAction,
+  CreateRequestAction,
+  ModifyRequestAction
+} from "./types";
 export { Body } from "../api/client/types";
 
 function hasEndpoint(

@@ -6,6 +6,7 @@ import AuthModule from "../../auth/authModule.jsx";
 import UserList from "../../adminUser/adminUserList.jsx";
 import ExternalAuthCredentials from "../../externalAuthCredentials";
 import GetVerified from "../../GetVerified";
+import DemoGenericRedux from "../../demoGenericRedux";
 
 import {
   WrapperDiv,
@@ -19,6 +20,7 @@ export default class settingsPage extends React.Component {
   render() {
     return (
       <WrapperDiv>
+        <DemoGenericRedux />
         <PageWrapper style={{ display: "flex", flexDirection: "column" }}>
           <Row>
             <RestrictedModuleBox>
