@@ -28,9 +28,9 @@ function hasEndpoint(
   return (reg as EndpointedRegistration).endpoint !== undefined;
 }
 
-export const createReducers = (
-  registrations: RegistrationMapping
-): ReducersMapObject => {
+export const createReducers = <R extends RegistrationMapping>(
+  registrations: R
+): ReducersMapObject<R> => {
   const base: ReducersMapObject = {};
 
   Object.keys(registrations).map(key => {

@@ -93,7 +93,6 @@ const columns: ColumnsType<BulkTransfer> = [
 
 const mapStateToProps = (state: ReduxState): StateProps => {
   return {
-    // @ts-ignore
     bulkTransfers: state.bulkTransfers,
     activeToken: getActiveToken(state)
   };

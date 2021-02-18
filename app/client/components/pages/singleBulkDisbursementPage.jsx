@@ -33,7 +33,6 @@ import { formatMoney, getActiveToken } from "../../utils";
 //
 
 const mapStateToProps = state => ({
-  // @ts-ignore
   bulkTransfers: state.bulkTransfers,
   activeToken: getActiveToken(state)
 });

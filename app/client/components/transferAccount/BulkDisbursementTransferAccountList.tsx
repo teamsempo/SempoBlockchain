@@ -45,8 +45,6 @@ const mapStateToProps = (state: ReduxState): StateProps => {
   return {
     activeToken: getActiveToken(state),
     transferAccounts: state.transferAccounts,
-    // TODO: need to construct the generic properly for this
-    // @ts-ignore
     bulkTransfers: state.bulkTransfers
   };
 };

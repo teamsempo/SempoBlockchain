@@ -56,7 +56,7 @@ interface SempoObjects extends RegistrationMapping {
   >;
 }
 
-export const sempoObjects: SempoObjects = {
+export const sempoObjects = {
   CT: {
     name: "CT",
     endpoint: "credit_transfer",
