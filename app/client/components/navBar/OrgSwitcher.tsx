@@ -70,7 +70,7 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
       }}
       selectedKeys={[activeOrganisation && activeOrganisation.id.toString()]}
     >
-      <Menu.ItemGroup title="Your Organisations">
+      <Menu.ItemGroup title="Your Projects">
         {orgs.map((org: Organisation) => {
           return (
             <Menu.Item key={org.id} onClick={() => selectOrg(org.id)}>
@@ -84,8 +84,8 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
         <IntercomChat />
       </Menu.Item>
       <Menu.Item key="new">
-        <NavLink to="/settings/organisation/new">
-          <FolderAddOutlined translate={""} /> New Organisation
+        <NavLink to="/settings/project/new">
+          <FolderAddOutlined translate={""} /> New Project
         </NavLink>
       </Menu.Item>
       <Menu.Item key="invite">
