@@ -10,11 +10,13 @@ from server.schemas import transfer_accounts_schema, transfer_account_schema, \
     view_transfer_account_schema, view_transfer_accounts_schema
 from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl
+from server.utils.auth import multi_org
 
 transfer_account_blueprint = Blueprint('transfer_account', __name__)
 
 
 class TransferAccountAPI(MethodView):
+    @multi_org
     @requires_auth(allowed_roles={'ADMIN': 'any'})
     def get(self, transfer_account_id):
 
@@ -78,7 +80,7 @@ class TransferAccountAPI(MethodView):
                 'data': {'transfer_accounts': result.data}
             }
             return make_response(json.dumps(response_object), 200)
-
+    @multi_org
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def put(self, transfer_account_id):
         put_data = request.get_json()
