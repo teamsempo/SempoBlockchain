@@ -126,7 +126,7 @@ class OrganisationPage extends React.Component<IProps, IState> {
     return (
       <Space direction="vertical" style={{ width: "100%" }} size="middle">
         <Card
-          title={isNewOrg ? "New Organisation" : "Edit Organisation"}
+          title={isNewOrg ? "New Project" : "Edit Project"}
           bodyStyle={{ maxWidth: "400px" }}
         >
           {this.state.isoCountries ? (
