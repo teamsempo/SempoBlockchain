@@ -14,6 +14,7 @@ import organisationSagas from "./organisationSagas";
 import metricSaga from "./metricSaga";
 import allowedFilterSaga from "./allowedFilterSaga";
 import tokenSagas from "./tokenSaga";
+import { generatedSagas } from "../reducers/rootReducer";
 
 export default function* rootSaga() {
   yield all([
@@ -30,6 +31,7 @@ export default function* rootSaga() {
     organisationSagas(),
     metricSaga(),
     allowedFilterSaga(),
-    tokenSagas()
+    tokenSagas(),
+    generatedSagas()
   ]);
 }
