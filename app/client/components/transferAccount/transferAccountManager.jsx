@@ -105,7 +105,11 @@ class TransferAccountManager extends React.Component {
   editTransferAccount() {
     const balance = this.state.balance * 100;
     const approve =
-      this.state.is_approved == "n/a" ? null : this.state.is_approved == "true";
+      this.state.is_approved === "n/a"
+        ? null
+        : typeof this.state.is_approved === "boolean"
+        ? this.state.is_approved
+        : this.state.is_approved === "true";
     const notes = this.state.notes;
     const nfc_card_id = this.state.nfc_card_id;
     const qr_code = this.state.qr_code;
