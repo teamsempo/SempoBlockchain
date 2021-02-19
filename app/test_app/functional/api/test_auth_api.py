@@ -162,10 +162,10 @@ def test_request_api_token_phone_success(test_client, create_transfer_account_us
 
     create_transfer_account_user.is_activated = is_activated
     one_time_code = create_transfer_account_user.one_time_code
-    create_transfer_account_user.hash_password(one_time_code)  # set the one time code as password for easy check
+    create_transfer_account_user.hash_pin(one_time_code)  # set the one time code as password for easy check
 
     response = test_client.post('/api/v1/auth/request_api_token/',
-                                data=json.dumps(dict(phone=create_transfer_account_user.phone, password=one_time_code)),
+                                data=json.dumps(dict(phone=create_transfer_account_user.phone, pin=one_time_code)),
                                 content_type='application/json', follow_redirects=True)
     assert response.status_code == status_code
     assert response.json['message'] == message
