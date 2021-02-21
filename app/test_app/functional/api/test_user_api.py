@@ -186,7 +186,7 @@ def test_admin_reset_user_pin(
     if response.status_code == 200:
         assert original_pin_hash != create_transfer_account_user.pin_hash
         assert not create_transfer_account_user.pin_hash
-        assert int(create_transfer_account_user.one_time_code) >= 1000 <=9999
+        assert int(create_transfer_account_user.one_time_code) >= 0 <=9999
         assert create_transfer_account_user.one_time_code != original_otc
 
 @pytest.mark.parametrize("user_id_accessor, tier, message, status_code", [
