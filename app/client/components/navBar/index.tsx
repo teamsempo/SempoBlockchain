@@ -90,8 +90,10 @@ class NavBar extends React.Component<Props, State> {
   }
 
   render() {
-    let { loggedIn, pathname, isMobile, collapsed } = this.props;
+    let { loggedIn, pathname, isMobile, collapsed, login } = this.props;
     let { iconURL } = this.state;
+    const isMultiOrg =
+      login && login.organisationIds && login.organisationIds.length > 1;
 
     let activePath = pathname && "/" + pathname.split("/")[1];
 
@@ -127,15 +129,24 @@ class NavBar extends React.Component<Props, State> {
                 </NavLink>
               </Menu.Item>
             </SubMenu>
-            <Menu.Item key="/accounts" icon={<TeamOutlined translate={""} />}>
+            <Menu.Item
+              key="/accounts"
+              icon={<TeamOutlined translate={""} />}
+              disabled={isMultiOrg || false}
+            >
               <NavLink to="/accounts">Accounts</NavLink>
             </Menu.Item>
-            <Menu.Item key="/transfers" icon={<SendOutlined translate={""} />}>
+            <Menu.Item
+              key="/transfers"
+              icon={<SendOutlined translate={""} />}
+              disabled={isMultiOrg || false}
+            >
               <NavLink to="/transfers">Transfers</NavLink>
             </Menu.Item>
             <Menu.Item
               key="/settings"
               icon={<SettingOutlined translate={""} />}
+              disabled={isMultiOrg || false}
             >
               <NavLink to="/settings">Settings</NavLink>
             </Menu.Item>

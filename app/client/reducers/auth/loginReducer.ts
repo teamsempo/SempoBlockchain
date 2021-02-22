@@ -9,6 +9,7 @@ export interface LoginState {
   intercomHash: null | string;
   webApiVersion: null | string;
   organisationId: null | number;
+  organisationIds: null | string[];
   usdToSatoshiRate: null | number;
   error: null | string;
   tfaURL: null | string;
@@ -24,6 +25,7 @@ const initialLoginState: LoginState = {
   intercomHash: null,
   webApiVersion: null,
   organisationId: null,
+  organisationIds: null,
   usdToSatoshiRate: null,
   error: null,
   tfaURL: null,
@@ -37,8 +39,8 @@ export const login = (state = initialLoginState, action: LoginAction) => {
       return { ...state, isLoggingIn: true };
     case LoginActionTypes.UPDATE_ACTIVE_ORG:
       return {
-        ...state,
-        organisationIds: action.payload.organisationIds
+        ...state
+        // organisationIds: action.payload.organisationIds
       };
     case LoginActionTypes.LOGIN_SUCCESS:
       return {
@@ -49,6 +51,7 @@ export const login = (state = initialLoginState, action: LoginAction) => {
         intercomHash: action.payload.intercomHash,
         webApiVersion: action.payload.webApiVersion,
         organisationId: action.payload.organisationId,
+        organisationIds: action.payload.organisationIds,
         email: action.payload.email,
         adminTier: action.payload.adminTier,
         usdToSatoshiRate: action.payload.usdToSatoshiRate,

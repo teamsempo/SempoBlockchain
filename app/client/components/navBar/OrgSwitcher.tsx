@@ -12,7 +12,8 @@ import {
   DownOutlined,
   UserAddOutlined,
   FolderAddOutlined,
-  EyeOutlined
+  EyeOutlined,
+  EyeTwoTone
 } from "@ant-design/icons";
 import { grey } from "@ant-design/colors";
 
@@ -22,6 +23,7 @@ import { LoginAction } from "../../reducers/auth/actions";
 import { Organisation } from "../../reducers/organisation/types";
 
 import { IntercomChat } from "../intercom/IntercomChat";
+import { getActiveToken } from "../../utils";
 
 interface Props {
   icon: string;
@@ -31,8 +33,9 @@ interface Props {
 const OrgSwitcher: React.FunctionComponent<Props> = props => {
   const [switcherActive, setSwitcherActive] = React.useState(false);
 
+  const activeToken = useSelector((state: ReduxState) => getActiveToken(state));
   const login: LoginState = useSelector((state: ReduxState) => state.login);
-  let { email } = login;
+  let { email, organisationIds } = login;
   const tokens: ReduxState["tokens"] = useSelector(
     (state: ReduxState) => state.tokens
   );
@@ -57,6 +60,7 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
   });
 
   const dispatch: any = useDispatch();
+  const isMultiOrg = organisationIds && organisationIds.length > 1;
 
   let toggleSwitchOrgDropdown = () => {
     if (organisations.length <= 1) {
@@ -77,7 +81,11 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
         width: "200px",
         margin: props.collapsed ? "0 1em" : "0"
       }}
-      selectedKeys={[activeOrganisation && activeOrganisation.id.toString()]}
+      selectedKeys={[
+        !isMultiOrg
+          ? activeOrganisation && activeOrganisation.id.toString()
+          : ""
+      ]}
     >
       <Menu.ItemGroup title="Your Organisations">
         {Object.keys(tokenMap).map((id: string) => {
@@ -91,20 +99,31 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
               <Menu.ItemGroup
                 title={
                   <span>
-                    <span>{tokens.byId[id].symbol}</span>
-                    <Tooltip
-                      title={
-                        "View all organisations using this token as a group"
-                      }
-                      placement="rightTop"
-                    >
-                      <a
-                        onClick={() => selectOrg(orgIdsForToken)}
-                        style={{ padding: "0 0 0 5px", color: grey[4] }}
+                    <span>{tokens.byId[id] && tokens.byId[id].symbol}</span>
+                    {orgsForToken.length > 1 ? (
+                      <Tooltip
+                        title={
+                          "View all organisations using this token as a group"
+                        }
+                        placement="rightTop"
                       >
-                        <EyeOutlined translate={""} />
-                      </a>
-                    </Tooltip>
+                        <a
+                          onClick={() => selectOrg(orgIdsForToken)}
+                          style={{ padding: "0 0 0 5px", color: grey[4] }}
+                        >
+                          {isMultiOrg &&
+                          activeToken &&
+                          activeToken.id.toString() === id ? (
+                            <EyeTwoTone
+                              twoToneColor={"#30a4a6"}
+                              translate={""}
+                            />
+                          ) : (
+                            <EyeOutlined translate={""} />
+                          )}
+                        </a>
+                      </Tooltip>
+                    ) : null}
                   </span>
                 }
               >
@@ -124,18 +143,22 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
       <Menu.Item key="chat">
         <IntercomChat />
       </Menu.Item>
-      <Menu.Item key="new">
+      <Menu.Item key="new" disabled={isMultiOrg || false}>
         <NavLink to="/settings/organisation/new">
           <FolderAddOutlined translate={""} /> New Organisation
         </NavLink>
       </Menu.Item>
-      <Menu.Item key="invite">
+      <Menu.Item key="invite" disabled={isMultiOrg || false}>
         <NavLink to="/settings/invite">
           <UserAddOutlined translate={""} /> Invite User
         </NavLink>
       </Menu.Item>
     </Menu>
   );
+
+  const displayName = isMultiOrg
+    ? activeToken && activeToken.symbol + " Group"
+    : activeOrganisation && activeOrganisation.name;
 
   return (
     <Dropdown
@@ -165,8 +188,7 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
             {props.collapsed ? null : (
               <div style={{ margin: "auto 0", maxWidth: "100px" }}>
                 <BoldedNavBarHeaderText>
-                  {activeOrganisation && activeOrganisation.name}{" "}
-                  <DownOutlined translate={""} />
+                  {displayName} <DownOutlined translate={""} />
                 </BoldedNavBarHeaderText>
                 <StandardNavBarHeaderText>{email}</StandardNavBarHeaderText>
               </div>

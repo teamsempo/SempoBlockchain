@@ -77,7 +77,7 @@ export const generateQueryString = query => {
   }
 
   let orgId = getOrgIds();
-  let orgIds = orgId.split(",");
+  let orgIds = orgId && orgId.split(",");
   var response_string = query_string;
   if (orgIds && orgIds.length > 1) {
     response_string =

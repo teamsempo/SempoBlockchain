@@ -1,5 +1,6 @@
 import * as React from "react";
-import { Layout, Typography } from "antd";
+import { useSelector } from "react-redux";
+import { Layout, Typography, message } from "antd";
 import { CenterLoadingSideBarActive } from "../styledElements";
 
 import NavBar from "../navBar";
@@ -8,10 +9,14 @@ import { isMobileQuery, withMediaQuery } from "../helpers/responsive";
 import IntercomSetup from "../intercom/IntercomSetup";
 import ErrorBoundary from "../ErrorBoundary";
 import LoadingSpinner from "../loadingSpinner";
+import { LoginState } from "../../reducers/auth/loginReducer";
+import { ReduxState } from "../../reducers/rootReducer";
+import { browserHistory } from "../../createStore";
 
 const { Content, Footer } = Layout;
 
 interface OuterProps {
+  isMultiOrg?: boolean;
   noNav?: boolean;
   location?: any;
   footer?: boolean;
@@ -23,6 +28,7 @@ interface OuterProps {
 
 const Page: React.FunctionComponent<OuterProps> = props => {
   const {
+    isMultiOrg = false,
     footer = true,
     isAntDesign = false,
     noNav,
@@ -33,6 +39,16 @@ const Page: React.FunctionComponent<OuterProps> = props => {
   } = props;
 
   const [collapsed, setCollapsed] = React.useState(false);
+
+  const login: LoginState = useSelector((state: ReduxState) => state.login);
+  const { organisationIds } = login;
+  const multiOrgActive = organisationIds && organisationIds.length > 1;
+
+  if (multiOrgActive && !isMultiOrg) {
+    // Trying to access a page with multi org active
+    browserHistory.push("/");
+    message.error("This page is unsupported with multi organisation");
+  }
 
   React.useEffect(() => {
     let sideBarCollapsedString = localStorage.getItem("sideBarCollapsed");
