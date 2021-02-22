@@ -1,4 +1,5 @@
 import pytest
+from freezegun import freeze_time
 from server.models.transfer_usage import TransferUsage
 from server.models.custom_attribute import CustomAttribute, MetricsVisibility
 from server.utils.transfer_filter import Filters
@@ -10,6 +11,7 @@ import os
 from datetime import datetime, timedelta
 from dateutil.parser import isoparse
 
+@freeze_time("2020-02-15 13:30:00")
 @pytest.fixture(scope='module')
 def generate_timeseries_metrics(create_organisation):
     # Truncates date for timezone comparison to work any time of day you run the tests!
