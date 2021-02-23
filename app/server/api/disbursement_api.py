@@ -18,6 +18,7 @@ from server.utils.credit_transfer import make_payment_transfer
 from server.utils.transfer_enums import TransferSubTypeEnum, TransferModeEnum
 from server.models.utils import paginate_query
 from server.utils.executor import status_checkable_executor_job, add_after_request_checkable_executor_job
+from server.utils.access_control import AccessControl
 
 disbursement_blueprint = Blueprint('disbursement', __name__)
 
@@ -30,7 +31,6 @@ def make_transfers(disbursement_id, auto_resolve=False):
     from server.models.disbursement import Disbursement
 
     disbursement = db.session.query(Disbursement).filter(Disbursement.id == disbursement_id).first()
-
     for idx, ta in enumerate(disbursement.transfer_accounts):
         user = ta.primary_user
         transfer = make_payment_transfer(
@@ -56,23 +56,6 @@ def make_transfers(disbursement_id, auto_resolve=False):
             'message': 'success' if percent_complete == 100 else 'pending',
             'percent_complete': math.floor(percent_complete),
             'data': {'credit_transfers': credit_transfers_schema.dump(disbursement.credit_transfers).data}
-        }
-
-@status_checkable_executor_job
-def trigger_jobs(transfers):
-    from server.models.credit_transfer import CreditTransfer
-    # Disabled batch_uuid, since executing two sequential bulk disbursements is unacceptably slow
-    # Patch for this coming soon!
-    #batch_uuid = str(uuid4())
-    batch_uuid = None
-    for idx, transfer in enumerate(transfers):
-        transfer = db.session.query(CreditTransfer).filter(CreditTransfer.id == transfer.id).first()
-        status = transfer.resolve_as_complete_and_trigger_blockchain(batch_uuid=batch_uuid)
-        db.session.commit()
-        percent_complete = ((idx+1)/len(transfers))*100
-        yield {
-            'message': 'success' if percent_complete == 100 else 'pending',
-            'percent_complete': math.floor(percent_complete),
         }
 
 class MakeDisbursementAPI(MethodView):
@@ -212,9 +195,9 @@ class DisbursementAPI(MethodView):
             if action == 'APPROVE':
                 disbursement.approve()
                 db.session.commit()
-
+                auto_resolve = AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'superadmin')
                 task_uuid = add_after_request_checkable_executor_job(
-                    make_transfers, kwargs={'disbursement_id': disbursement.id, 'auto_resolve': True}
+                    make_transfers, kwargs={'disbursement_id': disbursement.id, 'auto_resolve': auto_resolve}
                 )
 
                 data = disbursement_schema.dump(disbursement).data
