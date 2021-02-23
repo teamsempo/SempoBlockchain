@@ -226,7 +226,6 @@ class OrganisationUserAPI(MethodView):
 
 
 class OrganisationConstantsAPI(MethodView):
-    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def get(self):
         response_object = {
             'message': 'Organisation constants',
