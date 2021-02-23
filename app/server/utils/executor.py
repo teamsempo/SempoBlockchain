@@ -27,8 +27,6 @@ def after_executor_jobs():
 
 # This is a phony executor job to be used in unthreaded environments (unit tests)
 class SynchronousFunction:
-    print('CREATING FUNC!')
-    print('CREATING FUNC!')
     def __init__(self, func):
         self.func = func
 
@@ -50,8 +48,6 @@ def _execute_function_with_status_checks(func, func_uuid, *args, **kwargs):
 def standard_executor_job(func):
     def wrapper(*args, **kwargs):
         try:
-            print('STARTING AFTER EX JOB')
-            print('STARTING AFTER EX JOB')
             # Get thread-local session variables! This is very ugly.
             from server.models.organisation import Organisation
             from server.models.user import User
@@ -63,8 +59,6 @@ def standard_executor_job(func):
                 db.session.merge(g.user)
                 func(*args, **kwargs)
         finally:
-            print('FINALLY STARTING AFTER EX JOB')
-            print('FINALLY STARTING AFTER EX JOB')
 
             after_executor_jobs()
         return True
@@ -77,7 +71,6 @@ def standard_executor_job(func):
 def status_checkable_executor_job(func):
     def wrapper(*args, **kwargs):
         try:
-            print('111')
             # Get thread-local session variables! This is very ugly.
             from server.models.organisation import Organisation
             from server.models.user import User
@@ -91,12 +84,10 @@ def status_checkable_executor_job(func):
             func_uuid = kwargs.pop('func_uuid')
             _execute_function_with_status_checks(func, func_uuid, *args, **kwargs)
         finally:
-            print('222')
             after_executor_jobs()
         return True
     if config.IS_TEST:
         return SynchronousFunction(func)
-    print('333')
 
     return executor.job(wrapper)
 
@@ -115,8 +106,6 @@ def add_after_request_executor_job(
     :param kwargs: function keyword arguments
     :return:
     """
-    print('STARTING AFTER REQUEST JOB')
-    print('STARTING AFTER REQUEST JOB')
     args = args or []
     kwargs = kwargs or {}
     # If after_request has already started, adding to the executor_jobs list is useless!
@@ -139,8 +128,6 @@ def add_after_request_checkable_executor_job(fn, args=None, kwargs=None):
 
 @standard_executor_job
 def bulk_process_transactions(transactions):
-    print("BULK PROC TXNS!!")
-    print("BULK PROC TXNS!!")
     # This is very ugly, but required to get a thread-local CreditTransfer/Exchange instance
     from server.models.credit_transfer import CreditTransfer
     from server.models.exchange import Exchange
@@ -152,7 +139,5 @@ def bulk_process_transactions(transactions):
         transaction.send_blockchain_payload_to_worker(queue=queue)
 
 def prepare_transactions_async_job():
-    print('PREP TXN!')
-    print('PREP TXN!')
     add_after_request_executor_job(bulk_process_transactions, args=[g.pending_transactions])
     g.pending_transactions = []
