@@ -59,7 +59,6 @@ def standard_executor_job(func):
                 db.session.merge(g.user)
                 func(*args, **kwargs)
         finally:
-
             after_executor_jobs()
         return True
     if config.IS_TEST:
@@ -88,7 +87,6 @@ def status_checkable_executor_job(func):
         return True
     if config.IS_TEST:
         return SynchronousFunction(func)
-
     return executor.job(wrapper)
 
 

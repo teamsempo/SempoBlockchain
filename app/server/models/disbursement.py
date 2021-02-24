@@ -4,13 +4,10 @@ from server.models.utils import ModelBase, OneOrgBase, disbursement_transfer_acc
 from sqlalchemy.types import ARRAY
 from sqlalchemy.ext.hybrid import hybrid_property
 
-
 ALLOWED_STATES = ['PENDING', 'APPROVED', 'REJECTED']
-
 ALLOWED_STATE_TRANSITIONS = {
     'PENDING': ['APPROVED', 'REJECTED']
 }
-
 
 class Disbursement(ModelBase):
     __tablename__ = 'disbursement'
