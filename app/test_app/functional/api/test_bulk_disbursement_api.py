@@ -83,11 +83,11 @@ def test_disbursement(search_string, params, include_list, exclude_list, disburs
     if response_status == 201:
         transfers = CreditTransfer.query.all()
         assert response.status_code == 201
-        assert response.json['recipient_count'] == expected_recipient_count
-        assert response.json['total_disbursement_amount'] == expected_total_disbursement_amount
+        assert response.json['data']['disbursement']['recipient_count'] == expected_recipient_count
+        assert response.json['data']['disbursement']['total_disbursement_amount'] == expected_total_disbursement_amount
 
         # Check that everything is correct with the generated PENDING transactions
-        resp_id = response.json['disbursement_id']
+        resp_id = response.json['data']['disbursement']['id']
         for t in transfers:
             assert t.recipient_user.first_name in recipient_firstnames
             assert t.transfer_status == TransferStatusEnum.PENDING
@@ -114,14 +114,15 @@ def test_disbursement(search_string, params, include_list, exclude_list, disburs
         phase_two_response = test_client.put(f'/api/v1/disbursement/{resp_id}',
             headers=dict(
             Authorization=complete_admin_auth_token, Accept='application/json'),
-            json={ "action": "EXECUTE" },
+            json={ "action": "APPROVE" },
             follow_redirects=True)
+        print(json.dumps(phase_two_response.json))
 
         task_uuid = phase_two_response.json['task_uuid']
-        assert json.loads(get_job_result(1, task_uuid)) == {"message": "success", "percent_complete": 100}
 
-        phase_two_response.json['task_uuid'] = '123'
-        assert phase_two_response.json == {'status': 'success', 'task_uuid': '123'}
+        job_data = json.loads(get_job_result(1, task_uuid))
+        assert job_data['message'] == 'success'
+        assert job_data['percent_complete'] == 100
 
         transfers = CreditTransfer.query.all()
         assert len(transfers) == expected_recipient_count
