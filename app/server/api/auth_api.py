@@ -322,7 +322,8 @@ class LoginAPI(MethodView):
         email = post_data.get('username', '') or post_data.get('email', '')
         email = email.lower() if email else ''
         password = post_data.get('password')
-        pin = post_data.get('pin', None)
+        # Default pin to password as fallback for old android versions
+        pin = post_data.get('pin', password)
         tfa_token = post_data.get('tfa_token')
 
         password_empty = password == '' or password is None
