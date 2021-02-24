@@ -109,6 +109,7 @@ class uploadedTable extends React.Component {
     var dataset = {
       data: this.dataList.slice(this.state.firstDataRow),
       headerPositions: this.state.headerPositions,
+      customAttributes: this.state.customAttributeList,
       country: this.state.country,
       saveName: this.state.saveName,
       isVendor: this.props.is_vendor

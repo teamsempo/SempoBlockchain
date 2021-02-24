@@ -24,6 +24,7 @@ export interface SaveDatasetPayload {
     country: string;
     data: object;
     headerPositions: object;
+    customAttributes: object;
     isVendor: boolean;
     saveName: string;
   };

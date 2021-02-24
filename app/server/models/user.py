@@ -463,6 +463,8 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
 
     @staticmethod
     def check_salt_hashed_secret(password, hashed_password):
+        if not hashed_password:
+            return False
         f = Fernet(config.PASSWORD_PEPPER)
         hashed_password = f.decrypt(hashed_password.encode())
         return bcrypt.checkpw(password.encode(), hashed_password)
@@ -710,7 +712,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         else:
             pin = supplied_pin
 
-        self.hash_password(pin)
+        self.hash_pin(pin)
 
     def has_valid_pin(self):
         # not in the process of resetting pin and has a pin

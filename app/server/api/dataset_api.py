@@ -71,16 +71,16 @@ class SpreadsheetUploadAPI(MethodView):
         return make_response(jsonify(reponse_object)), 200
 
 @status_checkable_executor_job
-def execute_dataset_import(dataset, header_positions, is_vendor):
+def execute_dataset_import(dataset, header_positions, is_vendor, custom_attributes):
     diagnostics = []
     for idx, datarow in enumerate(dataset):
-        attribute_dict = {}
+        attribute_dict = { 'custom_attributes': {} }
         contains_anything = False
         for key, header_label in header_positions.items():
-
             attribute = datarow.get(key)
-
-            if attribute:
+            if attribute and (header_label in custom_attributes):
+                attribute_dict['custom_attributes'][header_label] = attribute
+            elif attribute:
                 contains_anything = True
                 attribute_dict[header_label] = attribute
 
@@ -95,13 +95,21 @@ def execute_dataset_import(dataset, header_positions, is_vendor):
             else:
                 db.session.flush()
             percent_complete = ((idx+1)/len(dataset))*100
-
+            print({
+                'message': 'success' if percent_complete == 100 else 'pending',
+                'percent_complete': math.floor(percent_complete),
+                'diagnostics': diagnostics
+            })
             yield {
                 'message': 'success' if percent_complete == 100 else 'pending',
                 'percent_complete': math.floor(percent_complete),
                 'diagnostics': diagnostics
             }
-
+        yield {
+            'message': 'success' if percent_complete == 100 else 'pending',
+            'percent_complete': math.floor(percent_complete),
+            'diagnostics': diagnostics
+        }
 class DatasetAPI(MethodView):
 
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
@@ -109,11 +117,16 @@ class DatasetAPI(MethodView):
         # get the post data
         post_data = request.get_json()
         is_vendor = post_data.get('isVendor', False)
-
         header_positions = post_data.get('headerPositions')
-
         dataset = post_data.get('data')
-        task_uuid = add_after_request_checkable_executor_job(execute_dataset_import, kwargs={ 'dataset': dataset, 'header_positions': header_positions, 'is_vendor':is_vendor })
+        custom_attributes = post_data.get('customAttributes', [])
+
+        task_uuid = add_after_request_checkable_executor_job(execute_dataset_import, kwargs={ 
+            'dataset': dataset, 
+            'header_positions': header_positions, 
+            'is_vendor':is_vendor, 
+            'custom_attributes': custom_attributes 
+        })
 
         response_object = {
             'status': 'success',
