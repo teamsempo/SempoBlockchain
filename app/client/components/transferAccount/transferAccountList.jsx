@@ -25,7 +25,7 @@ import {
   LoadTransferAccountAction
 } from "../../reducers/transferAccount/actions";
 import { TransferAccountTypes } from "../transferAccount/types";
-import ImportModal from "./importModal.jsx";
+import ImportModal from "./import/importModal.jsx";
 
 const mapStateToProps = state => {
   return {
