@@ -65,20 +65,6 @@ const NewOrganisationForm = (props: OuterProps) => {
     tokens.byId[activeOrganisation.token] &&
     tokens.byId[activeOrganisation.token].symbol;
 
-  useEffect(() => {
-    navigator.geolocation.getCurrentPosition(function(position) {
-      console.log("Latitude is :", position.coords.latitude);
-      console.log("Longitude is :", position.coords.longitude);
-    });
-  });
-
-  function getCoordinates() {
-    navigator.geolocation.getCurrentPosition(function(position) {
-      console.log("Latitude is :", position.coords.latitude);
-      console.log("Longitude is :", position.coords.longitude);
-    });
-  }
-
   return (
     <Form
       form={form}
