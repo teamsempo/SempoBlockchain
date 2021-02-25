@@ -226,6 +226,7 @@ class OrganisationUserAPI(MethodView):
 
 
 class OrganisationConstantsAPI(MethodView):
+    @requires_auth
     def get(self):
         response_object = {
             'message': 'Organisation constants',
