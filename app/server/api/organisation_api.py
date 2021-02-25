@@ -44,7 +44,7 @@ class OrganisationAPI(MethodView):
                 return make_response(jsonify({'message': 'No organisations found'})), 400
 
             response_object = {
-                'message': 'Successfully Loaded All Organisations',
+                'message': 'Successfully Loaded All Projects',
                 'items': total_items,
                 'pages': total_pages,
                 'last_fetched': new_last_fetched,
@@ -96,7 +96,7 @@ class OrganisationAPI(MethodView):
             organisation.timezone = timezone
 
         response_object = {
-            'message': f'Organisation {organisation_id} successfully updated',
+            'message': f'Project {organisation_id} successfully updated',
             'data': {'organisation': organisation_schema.dump(organisation).data}
         }
 
@@ -163,7 +163,7 @@ class OrganisationAPI(MethodView):
         db.session.flush()
 
         response_object = {
-            'message': 'Created Organisation',
+            'message': 'Created Project',
             'data': {'organisation': organisation_schema.dump(new_organisation).data},
         }
 
