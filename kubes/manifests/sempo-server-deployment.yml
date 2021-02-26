@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sempo-server
+  labels:
+    app: sempo-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sempo-server
+  template:
+    metadata:
+      labels:
+        app: sempo-server
+    spec:
+      containers:
+        - name: nginx-app
+          image: gcr.io/vocal-tracer-302110/nginx:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+            - containerPort: 81
+
+        - name: sempo-server-app
+          image: gcr.io/vocal-tracer-302110/server:a9803
+          imagePullPolicy: Always
+          env:
+            # [START cloudsql_secrets]
+            - name: DATABASE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: cloudsql
+                  key: username
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cloudsql
+                  key: password
+            # [END cloudsql_secrets]
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: s3auth
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: s3auth
+                  key: AWS_SECRET_ACCESS_KEY
+            - name: LOAD_FROM_S3
+              value: "true"
+            - name: DEPLOYMENT_NAME
+              value: "devgke"
+          ports:
+            - containerPort: 9000
+            - containerPort: 3031
+
+        - image: gcr.io/cloudsql-docker/gce-proxy:1.16
+          name: cloudsql-proxy
+          command:
+            [
+              "/cloud_sql_proxy",
+              "--dir=/cloudsql",
+              "-instances=vocal-tracer-302110:australia-southeast1:sempo-test=tcp:5432",
+              "-credential_file=/secrets/cloudsql/credentials.json",
+            ]
+          volumeMounts:
+            - name: cloudsql-oauth-credentials
+              mountPath: /secrets/cloudsql
+              readOnly: true
+            - name: ssl-certs
+              mountPath: /etc/ssl/certs
+            - name: cloudsql
+              mountPath: /cloudsql
+          # [END proxy_container]
+      # [START volumes]
+      volumes:
+        - name: cloudsql-oauth-credentials
+          secret:
+            secretName: cloudsql-oauth-credentials
+        - name: ssl-certs
+          hostPath:
+            path: /etc/ssl/certs
+        - name: cloudsql
+          emptyDir: {}
+      # [END volumes]

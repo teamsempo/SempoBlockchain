@@ -1,0 +1,12 @@
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: sempo-server-scaler
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: sempo-server
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 50
