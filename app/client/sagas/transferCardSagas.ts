@@ -15,7 +15,7 @@ import { editTransferCardAPI } from "../api/transferCardAPI";
 
 import { ActionWithPayload } from "../reduxUtils";
 
-function* editOrganisation(
+function* editTransferCard(
   action: ActionWithPayload<
     EditTransferCardActionTypes.EDIT_TRANSFER_CARD_REQUEST,
     EditTransferCardPayload
@@ -41,7 +41,7 @@ function* editOrganisation(
 function* watchEditTransferCard() {
   yield takeEvery(
     EditTransferCardActionTypes.EDIT_TRANSFER_CARD_REQUEST,
-    editOrganisation
+    editTransferCard
   );
 }
 

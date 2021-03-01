@@ -3,6 +3,8 @@ import { connect } from "react-redux";
 
 import { reduxForm, InjectedFormProps, formValueSelector } from "redux-form";
 
+import { Tooltip } from "antd";
+
 import { StopOutlined } from "@ant-design/icons";
 
 import { GenderTypes } from "./types";
@@ -286,11 +288,17 @@ class EditUserForm extends React.Component<
                         }
                       />
                       {selectedUser.public_serial_number ? (
-                        <StopOutlined
-                          translate={""}
-                          style={{ fontSize: "20px", margin: "2px" }}
-                          onClick={() => this.props.onDisableCard()}
-                        />
+                        <Tooltip title="Disable Card">
+                          <StopOutlined
+                            translate={""}
+                            style={{
+                              fontSize: "20px",
+                              margin: "2px",
+                              color: "#555"
+                            }}
+                            onClick={() => this.props.onDisableCard()}
+                          />
+                        </Tooltip>
                       ) : (
                         <></>
                       )}
