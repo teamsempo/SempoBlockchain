@@ -140,6 +140,12 @@ class TransferCardAPI(MethodView):
             return make_response(jsonify(response_object)), 404
 
         if disable:
+            if transfer_card.is_disabled:
+                response_object = {
+                    'message': 'Card card already disabled',
+                }
+                return make_response(jsonify(response_object)), 400
+
             transfer_card.disable()
 
         if amount_offset:
