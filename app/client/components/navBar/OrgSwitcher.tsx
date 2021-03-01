@@ -26,6 +26,12 @@ interface Props {
   collapsed: boolean;
 }
 
+declare global {
+  interface Window {
+    INTERCOM_APP_ID: string;
+  }
+}
+
 const OrgSwitcher: React.FunctionComponent<Props> = props => {
   const [switcherActive, setSwitcherActive] = React.useState(false);
 
@@ -80,9 +86,11 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
         })}
       </Menu.ItemGroup>
       <Menu.Divider />
-      <Menu.Item key="chat">
-        <IntercomChat />
-      </Menu.Item>
+      {window.INTERCOM_APP_ID ? (
+        <Menu.Item key="chat">
+          <IntercomChat />
+        </Menu.Item>
+      ) : null}
       <Menu.Item key="new">
         <NavLink to="/settings/project/new">
           <FolderAddOutlined translate={""} /> New Project
