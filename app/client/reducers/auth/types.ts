@@ -11,7 +11,7 @@ export enum LoginActionTypes {
 }
 
 export interface UpdateActiveOrgPayload {
-  organisationId: number;
+  organisationIds: number[];
 }
 
 export interface LoginRequestPayload {
@@ -34,6 +34,7 @@ export interface LoginSuccessPayload {
   intercomHash: null | string;
   webApiVersion: null | string;
   organisationId: number;
+  organisationIds: null | string[];
   usdToSatoshiRate: null | number;
   adminTier?: string;
 }
@@ -191,6 +192,7 @@ export interface TokenData {
   web_intercom_hash: string;
   web_api_version: string;
   active_organisation_id: number;
+  organisation_ids: string[];
 }
 
 export interface OrganisationLoginData extends TokenData {

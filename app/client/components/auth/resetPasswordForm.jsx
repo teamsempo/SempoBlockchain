@@ -171,7 +171,7 @@ const ResetPasswordForm = function(props) {
       {oldPasswordSection}
       Enter a new password:
       <ReactPasswordStrength
-        minLength={6}
+        minLength={8}
         type="password"
         changeCallback={data => props.onNewPasswordFieldKeyPress(data)}
         inputProps={{ placeholder: "Password" }}
