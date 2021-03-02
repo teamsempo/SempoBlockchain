@@ -151,7 +151,7 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
       ) : null}
       <Menu.Item key="new" disabled={isMultiOrg || false}>
         <NavLink to="/settings/project/new">
-          <FolderAddOutlined translate={""} /> New Organisation
+          <FolderAddOutlined translate={""} /> New Project
         </NavLink>
       </Menu.Item>
       <Menu.Item key="invite" disabled={isMultiOrg || false}>
