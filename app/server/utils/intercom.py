@@ -10,9 +10,9 @@ def create_intercom_secret(user_id, device_type):
     :param device_type: Web, Android or iOS
     :return:
     """
-    if device_type is 'WEB':
+    if device_type == 'WEB':
         secret = current_app.config['INTERCOM_WEB_SECRET']
-    elif device_type is 'ANDROID':
+    elif device_type == 'ANDROID':
         secret = current_app.config['INTERCOM_ANDROID_SECRET']
     else:
         return Exception('No device_type provided')

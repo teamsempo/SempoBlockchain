@@ -283,7 +283,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
 
     def attempt_update_gps_location(self):
         from server.utils.location import async_set_user_gps_from_location
-        if self._location is not None and self._location is not '':
+        if self._location != None and self._location != '':
             # Delay execution until after request to avoid race condition with db
             # We still need to flush to get user id though
             db.session.flush()

@@ -33,6 +33,6 @@ else
 
   python manage.py update_data
 
-  uwsgi --socket 0.0.0.0:9000 --protocol http  --processes 4 --enable-threads --module=server.wsgi:app --stats :3031 --stats-http --lazy-apps
+  python run.py
 fi
 

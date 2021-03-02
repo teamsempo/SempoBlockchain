@@ -358,7 +358,7 @@ class ExportAPI(MethodView):
             else:
                 print('No Credit Transfers')
 
-        if len(user_accounts) is not 0:
+        if len(user_accounts) != 0:
             file_url = export_workbook_via_s3(wb, workbook_filename)
 
             response_object = {

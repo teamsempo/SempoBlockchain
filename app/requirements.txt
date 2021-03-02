@@ -5,7 +5,7 @@ blinker==1.4
 boto3==1.14.29
 celery==4.4.6
 certifi==2020.6.20
-CairoSVG==2.5.1
+#CairoSVG==2.5.1
 ecdsa==0.15
 Flask==1.1.2
 Flask-BasicAuth==0.2.0
@@ -41,6 +41,6 @@ toolz==0.10.0
 transitions==0.8.2
 twilio==6.44.1
 uWSGI==2.0.19.1
-weasyprint==51
+#weasyprint==51
 web3==5.12.0
 
