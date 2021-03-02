@@ -8,7 +8,7 @@ import {
 } from "./types";
 import {
   deepUpdateObjectsActionType,
-  replaceIDListActionType,
+  replaceIdListActionType,
   replaceUpdateObjectsActionType
 } from "./actions";
 
@@ -63,13 +63,13 @@ export const byIdReducerFactory = (
   };
 };
 
-export const IdListReducerFactory = (
+export const idListReducerFactory = (
   reg: Registration
 ): ((state: IdListState | undefined, action: any) => IdListState) => {
   return (state: IdListState | undefined = [], action: any): IdListState => {
     switch (action.type) {
-      case replaceIDListActionType(reg.name):
-        return (state = action.IdList);
+      case replaceIdListActionType(reg.name):
+        return (state = action.idList);
       default:
         return state;
     }

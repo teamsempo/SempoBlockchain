@@ -7,7 +7,7 @@ import { sagaFactory } from "./sagas";
 import { combineReducers, ReducersMapObject } from "redux";
 import {
   byIdReducerFactory,
-  IdListReducerFactory,
+  idListReducerFactory,
   lifecycleReducerFactory
 } from "./reducers";
 import {
@@ -61,7 +61,7 @@ export const createReducers = <R extends RegistrationMapping>(
           loadStatus: lifecycleReducerFactory(loadActionTypes, reg),
           createStatus: lifecycleReducerFactory(createActionTypes, reg),
           modifyStatus: lifecycleReducerFactory(modifyActionTypes, reg),
-          IdList: IdListReducerFactory(reg)
+          idList: idListReducerFactory(reg)
         }
       };
     }

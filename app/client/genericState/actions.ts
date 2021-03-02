@@ -27,7 +27,7 @@ export const deepUpdateObjectsActionType: ActionGenerator = name =>
   `DEEP_UPDATE_${name.toUpperCase()}`;
 export const replaceUpdateObjectsActionType: ActionGenerator = name =>
   `REPLACE_UPDATE_${name.toUpperCase()}`;
-export const replaceIDListActionType: ActionGenerator = name =>
+export const replaceIdListActionType: ActionGenerator = name =>
   `REPLACE_${name.toUpperCase()}_ID_LIST`;
 
 // These functions are designed to be called directly from inside a dispatch,
