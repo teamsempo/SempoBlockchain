@@ -122,7 +122,7 @@ function* createOrganisation(
 
     yield put(
       LoginAction.updateActiveOrgRequest({
-        organisationId: load_result.data.organisation.id
+        organisationIds: [load_result.data.organisation.id]
       })
     );
   } catch (fetch_error) {
