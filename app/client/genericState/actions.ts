@@ -14,9 +14,9 @@ class APILifeCycleActionType implements APILifecycleActionTypesInterface {
   }
 
   stage: string;
-  request = (name: string) => `${this.stage}_${name}_REQUEST`;
-  success = (name: string) => `${this.stage}_${name}_SUCCESS`;
-  failure = (name: string) => `${this.stage}_${name}_FAILURE`;
+  request = (name: string) => `${this.stage}_${name.toUpperCase()}_REQUEST`;
+  success = (name: string) => `${this.stage}_${name.toUpperCase()}_SUCCESS`;
+  failure = (name: string) => `${this.stage}_${name.toUpperCase()}_FAILURE`;
 }
 
 export const loadActionTypes = new APILifeCycleActionType("LOAD");
@@ -24,11 +24,11 @@ export const createActionTypes = new APILifeCycleActionType("CREATE");
 export const modifyActionTypes = new APILifeCycleActionType("MODIFY");
 
 export const deepUpdateObjectsActionType: ActionGenerator = name =>
-  `DEEP_UPDATE_${name}`;
+  `DEEP_UPDATE_${name.toUpperCase()}`;
 export const replaceUpdateObjectsActionType: ActionGenerator = name =>
-  `REPLACE_UPDATE_${name}`;
+  `REPLACE_UPDATE_${name.toUpperCase()}`;
 export const replaceIDListActionType: ActionGenerator = name =>
-  `REPLACE_${name}_ID_LIST`;
+  `REPLACE_${name.toUpperCase()}_ID_LIST`;
 
 // These functions are designed to be called directly from inside a dispatch,
 // and they will return an appropriately shaped action for the given Rest API... action? (load, create, modify)
