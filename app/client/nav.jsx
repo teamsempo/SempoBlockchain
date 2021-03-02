@@ -180,11 +180,22 @@ class Nav extends React.Component {
             />
             <PrivateRoute
               exact
-              path="/settings/organisation"
+              path="/settings/project"
               component={OrganisationPage}
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
-              title={`Organisation Settings`}
+              title={`Project Settings`}
+              isAntDesign={true}
+            />
+            <PrivateRoute
+              exact
+              path="/settings/project/new"
+              component={OrganisationPage}
+              isLoggedIn={isLoggedIn}
+              isReAuthing={isReAuthing}
+              title={`New Project`}
+              isAntDesign={true}
+              isNewOrg={true}
             />
 
             <PrivateRoute

@@ -24,6 +24,7 @@ import { handleError } from "../utils";
 import { UserListAction } from "../reducers/user/actions";
 import { MetricAction } from "../reducers/metric/actions";
 import { TransferAccountAction } from "../reducers/transferAccount/actions";
+import { TokenListAction } from "../reducers/token/actions";
 
 interface CreditLoadApiResult {
   is_create: boolean;
@@ -48,6 +49,11 @@ function* updateStateFromCreditTransfer(result: CreditLoadApiResult) {
     yield put(
       TransferAccountAction.deepUpdateTransferAccounts(transfer_accounts)
     );
+  }
+
+  const tokens = normalizedData.entities.tokens;
+  if (tokens) {
+    yield put(TokenListAction.updateTokenList(tokens));
   }
 
   const users = normalizedData.entities.users;

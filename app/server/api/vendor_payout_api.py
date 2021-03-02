@@ -31,10 +31,9 @@ class VendorPayoutAPI(MethodView):
             account_ids = post_data.get('accounts', [])
             relist_existing = post_data.get('relist_existing', True)
 
-        payout_withdrawal_limit = g.active_organisation._minimum_vendor_payout_withdrawal_wei
+        payout_withdrawal_limit = g.active_organisation._minimum_vendor_payout_withdrawal_wei or 0
 
         if not isinstance(account_ids, list):
-
             response_object = {
                 'message': 'Accounts parameter expects a list',
             }
@@ -98,6 +97,7 @@ class VendorPayoutAPI(MethodView):
                 withdrawals = []
 
             withdrawal_amount = Decimal(v._balance_wei or 0) / Decimal(1e16)
+
             if withdrawal_amount > 0 and (v._balance_wei or 0) >= payout_withdrawal_limit:
                 transfer = make_withdrawal_transfer(
                     withdrawal_amount,

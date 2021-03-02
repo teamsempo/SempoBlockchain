@@ -14,6 +14,7 @@ import organisationSagas from "./organisationSagas";
 import metricSaga from "./metricSaga";
 import allowedFilterSaga from "./allowedFilterSaga";
 import transferCardSagas from "./transferCardSagas";
+import tokenSagas from "./tokenSaga";
 
 export default function* rootSaga() {
   yield all([
@@ -31,5 +32,6 @@ export default function* rootSaga() {
     metricSaga(),
     allowedFilterSaga(),
     transferCardSagas()
+    tokenSagas()
   ]);
 }

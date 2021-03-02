@@ -11,7 +11,7 @@ import { Menu, Dropdown } from "antd";
 import {
   DownOutlined,
   UserAddOutlined,
-  SettingOutlined
+  FolderAddOutlined
 } from "@ant-design/icons";
 
 import { LoginState } from "../../reducers/auth/loginReducer";
@@ -24,6 +24,12 @@ import { IntercomChat } from "../intercom/IntercomChat";
 interface Props {
   icon: string;
   collapsed: boolean;
+}
+
+declare global {
+  interface Window {
+    INTERCOM_APP_ID: string;
+  }
 }
 
 const OrgSwitcher: React.FunctionComponent<Props> = props => {
@@ -70,7 +76,7 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
       }}
       selectedKeys={[activeOrganisation && activeOrganisation.id.toString()]}
     >
-      <Menu.ItemGroup title="Your Organisations">
+      <Menu.ItemGroup title="Your Projects">
         {orgs.map((org: Organisation) => {
           return (
             <Menu.Item key={org.id} onClick={() => selectOrg(org.id)}>
@@ -80,12 +86,14 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
         })}
       </Menu.ItemGroup>
       <Menu.Divider />
-      <Menu.Item key="chat">
-        <IntercomChat />
-      </Menu.Item>
-      <Menu.Item key="settings">
-        <NavLink to="/settings/organisation">
-          <SettingOutlined translate={""} /> Organisation Settings
+      {window.INTERCOM_APP_ID ? (
+        <Menu.Item key="chat">
+          <IntercomChat />
+        </Menu.Item>
+      ) : null}
+      <Menu.Item key="new">
+        <NavLink to="/settings/project/new">
+          <FolderAddOutlined translate={""} /> New Project
         </NavLink>
       </Menu.Item>
       <Menu.Item key="invite">

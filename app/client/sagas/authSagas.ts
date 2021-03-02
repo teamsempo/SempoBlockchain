@@ -87,6 +87,7 @@ import { browserHistory } from "../createStore";
 import { OrganisationAction } from "../reducers/organisation/actions";
 import { ActionWithPayload } from "../reduxUtils";
 import { ReduxState } from "../reducers/rootReducer";
+import { TokenListAction } from "../reducers/token/actions";
 
 function* updateStateFromAdmin(data: AdminData) {
   //Schema expects a list of admin user objects
@@ -127,8 +128,13 @@ export function* updateOrganisationStateFromLoginData(
   }
 
   const normalizedData = normalize(organisation_list, organisationSchema);
-  const organisations = normalizedData.entities.organisations;
 
+  const tokens = normalizedData.entities.tokens;
+  if (tokens) {
+    yield put(TokenListAction.updateTokenList(tokens));
+  }
+
+  const organisations = normalizedData.entities.organisations;
   if (organisations) {
     yield put(OrganisationAction.updateOrganisationList(organisations));
   }

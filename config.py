@@ -5,7 +5,7 @@ env_loglevel = os.environ.get('LOGLEVEL', 'DEBUG')
 logging.basicConfig(level=env_loglevel)
 logg = logging.getLogger(__name__)
 
-VERSION = '1.7.57'  # Remember to bump this in every PR
+VERSION = '1.7.69'  # Remember to bump this in every PR
 
 logg.info('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
@@ -255,22 +255,24 @@ AT_SENDER_ID = secrets_parser["AFRICASTALKING"].get("at_sender_id")
 
 try:
     from ecdsa import SigningKey, NIST192p
+
     ECDSA_SIGNING_KEY = SigningKey.from_string(ECDSA_SECRET, curve=NIST192p)
     ECDSA_PUBLIC = '04' + ECDSA_SIGNING_KEY.get_verifying_key().to_string().hex()
 except ImportError:
     logg.warn("Cannot import ECDSA Packages, make sure they're not required!")
 
-
 # https://ropsten.infura.io/9CAC3Lb5OjaoecQIpPNP
 # https://kovan.infura.io/9CAC3Lb5OjaoecQIpPNP
 
-CHAIN_NAMES = list(config_parser['APP'].get('chains', 'ETHEREUM').split(','))
+WINDOW_CHAIN_NAMES = config_parser['APP'].get('chains', 'ETHEREUM')
+CHAIN_NAMES = list(WINDOW_CHAIN_NAMES.split(','))
 DEFAULT_CHAIN = config_parser['APP'].get('default_chain', 'ETHEREUM')
 CHAINS = {}
 try:
     from eth_keys import keys
     from eth_utils import keccak
     from web3 import Web3
+
 
     def address_from_private_key(private_key):
         if isinstance(private_key, str):

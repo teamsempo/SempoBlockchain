@@ -20,6 +20,7 @@ const mapStateToProps = (state, ownProps) => {
     creditTransfers: state.creditTransfers,
     transferAccounts: state.transferAccounts,
     users: state.users,
+    tokens: state.tokens,
     transferAccount:
       state.transferAccounts.byId[parseInt(ownProps.transfer_account_id)]
   };
@@ -104,7 +105,11 @@ class TransferAccountManager extends React.Component {
   editTransferAccount() {
     const balance = this.state.balance * 100;
     const approve =
-      this.state.is_approved == "n/a" ? null : this.state.is_approved == "true";
+      this.state.is_approved === "n/a"
+        ? null
+        : typeof this.state.is_approved === "boolean"
+        ? this.state.is_approved
+        : this.state.is_approved === "true";
     const notes = this.state.notes;
     const nfc_card_id = this.state.nfc_card_id;
     const qr_code = this.state.qr_code;
@@ -181,7 +186,8 @@ class TransferAccountManager extends React.Component {
     const currency =
       this.props.transferAccount &&
       this.props.transferAccount.token &&
-      this.props.transferAccount.token.symbol;
+      this.props.tokens.byId[this.props.transferAccount.token] &&
+      this.props.tokens.byId[this.props.transferAccount.token].symbol;
     const displayAmount = (
       <p style={{ margin: 0, fontWeight: 100, fontSize: "16px" }}>
         {formatMoney(
