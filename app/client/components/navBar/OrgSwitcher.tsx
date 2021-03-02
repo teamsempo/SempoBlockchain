@@ -7,12 +7,15 @@ import { useSelector, useDispatch } from "react-redux";
 import { NavLink } from "react-router-dom";
 import { SVG, StyledLogoLink } from "./styles";
 import styled from "styled-components";
-import { Menu, Dropdown } from "antd";
+import { Menu, Dropdown, Tooltip } from "antd";
 import {
   DownOutlined,
   UserAddOutlined,
-  FolderAddOutlined
+  FolderAddOutlined,
+  EyeOutlined,
+  EyeTwoTone
 } from "@ant-design/icons";
+import { grey } from "@ant-design/colors";
 
 import { LoginState } from "../../reducers/auth/loginReducer";
 import { ReduxState } from "../../reducers/rootReducer";
@@ -20,6 +23,7 @@ import { LoginAction } from "../../reducers/auth/actions";
 import { Organisation } from "../../reducers/organisation/types";
 
 import { IntercomChat } from "../intercom/IntercomChat";
+import { getActiveToken } from "../../utils";
 
 interface Props {
   icon: string;
@@ -35,8 +39,12 @@ declare global {
 const OrgSwitcher: React.FunctionComponent<Props> = props => {
   const [switcherActive, setSwitcherActive] = React.useState(false);
 
+  const activeToken = useSelector((state: ReduxState) => getActiveToken(state));
   const login: LoginState = useSelector((state: ReduxState) => state.login);
-  let { email } = login;
+  let { email, organisationIds } = login;
+  const tokens: ReduxState["tokens"] = useSelector(
+    (state: ReduxState) => state.tokens
+  );
   const organisations: Organisation[] = useSelector((state: ReduxState) =>
     Object.keys(state.organisations.byId).map(
       id => state.organisations.byId[Number(id)]
@@ -47,13 +55,18 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
       state.organisations.byId[Number(state.login.organisationId)]
   );
 
+  const tokenMap: any = {};
+  organisations.map(org => {
+    if (tokenMap[org.token]) {
+      tokenMap[org.token].push(org);
+    } else {
+      tokenMap[org.token] = [];
+      tokenMap[org.token].push(org);
+    }
+  });
+
   const dispatch: any = useDispatch();
-
-  var orgs = organisations;
-
-  if (!orgs) {
-    orgs = [];
-  }
+  const isMultiOrg = organisationIds && organisationIds.length > 1;
 
   let toggleSwitchOrgDropdown = () => {
     if (organisations.length <= 1) {
@@ -63,9 +76,9 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
     setSwitcherActive(!switcherActive);
   };
 
-  let selectOrg = (organisationId: number) => {
+  let selectOrg = (organisationIds: number[]) => {
     setSwitcherActive(false);
-    dispatch(LoginAction.updateActiveOrgRequest({ organisationId }));
+    dispatch(LoginAction.updateActiveOrgRequest({ organisationIds }));
   };
 
   let menu = (
@@ -74,15 +87,60 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
         width: "200px",
         margin: props.collapsed ? "0 1em" : "0"
       }}
-      selectedKeys={[activeOrganisation && activeOrganisation.id.toString()]}
+      selectedKeys={[
+        !isMultiOrg
+          ? activeOrganisation && activeOrganisation.id.toString()
+          : ""
+      ]}
     >
       <Menu.ItemGroup title="Your Projects">
-        {orgs.map((org: Organisation) => {
-          return (
-            <Menu.Item key={org.id} onClick={() => selectOrg(org.id)}>
-              <span>{org.name}</span>
-            </Menu.Item>
-          );
+        {Object.keys(tokenMap).map((id: string) => {
+          const orgsForToken = tokenMap[id];
+
+          if (orgsForToken) {
+            const orgIdsForToken = orgsForToken.map(
+              (org: Organisation) => org.id
+            );
+            return (
+              <Menu.ItemGroup
+                title={
+                  <span>
+                    <span>{tokens.byId[id] && tokens.byId[id].symbol}</span>
+                    {orgsForToken.length > 1 ? (
+                      <Tooltip
+                        title={"View all projects using this token as a group"}
+                        placement="rightTop"
+                      >
+                        <a
+                          onClick={() => selectOrg(orgIdsForToken)}
+                          style={{ padding: "0 0 0 5px", color: grey[4] }}
+                        >
+                          {isMultiOrg &&
+                          activeToken &&
+                          activeToken.id.toString() === id ? (
+                            <EyeTwoTone
+                              twoToneColor={"#30a4a6"}
+                              translate={""}
+                            />
+                          ) : (
+                            <EyeOutlined translate={""} />
+                          )}
+                        </a>
+                      </Tooltip>
+                    ) : null}
+                  </span>
+                }
+              >
+                {orgsForToken.map((org: Organisation) => {
+                  return (
+                    <Menu.Item key={org.id} onClick={() => selectOrg([org.id])}>
+                      <span>{org.name}</span>
+                    </Menu.Item>
+                  );
+                })}
+              </Menu.ItemGroup>
+            );
+          }
         })}
       </Menu.ItemGroup>
       <Menu.Divider />
@@ -91,18 +149,22 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
           <IntercomChat />
         </Menu.Item>
       ) : null}
-      <Menu.Item key="new">
+      <Menu.Item key="new" disabled={isMultiOrg || false}>
         <NavLink to="/settings/project/new">
           <FolderAddOutlined translate={""} /> New Project
         </NavLink>
       </Menu.Item>
-      <Menu.Item key="invite">
+      <Menu.Item key="invite" disabled={isMultiOrg || false}>
         <NavLink to="/settings/invite">
           <UserAddOutlined translate={""} /> Invite User
         </NavLink>
       </Menu.Item>
     </Menu>
   );
+
+  const displayName = isMultiOrg
+    ? activeToken && activeToken.symbol + " Group"
+    : activeOrganisation && activeOrganisation.name;
 
   return (
     <Dropdown
@@ -132,8 +194,7 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
             {props.collapsed ? null : (
               <div style={{ margin: "auto 0", maxWidth: "100px" }}>
                 <BoldedNavBarHeaderText>
-                  {activeOrganisation && activeOrganisation.name}{" "}
-                  <DownOutlined translate={""} />
+                  {displayName} <DownOutlined translate={""} />
                 </BoldedNavBarHeaderText>
                 <StandardNavBarHeaderText>{email}</StandardNavBarHeaderText>
               </div>
