@@ -24,7 +24,7 @@ const mapStateToProps = state => {
 
 class GroupByChart extends React.Component {
   render() {
-    const { selected, data } = this.props;
+    const { selected, data, activeToken } = this.props;
     const { percent_change, ...aggregate } = this.props.data.aggregate;
     const aggregateKeys = aggregate ? Object.keys(aggregate) : [];
     var aggregateData = aggregate ? Object.values(aggregate) : [];
@@ -36,9 +36,8 @@ class GroupByChart extends React.Component {
 
     const labelString = selected
       ? selected.includes("volume")
-        ? `${toTitleCase(replaceUnderscores(selected))} (${
-            this.props.activeToken.symbol
-          })`
+        ? `${toTitleCase(replaceUnderscores(selected))} (${activeToken &&
+            activeToken.symbol})`
         : `${toTitleCase(replaceUnderscores(selected))}`
       : null;
 
