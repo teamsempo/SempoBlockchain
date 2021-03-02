@@ -11,7 +11,8 @@ from sqlalchemy import or_
 from uuid import uuid4
 
 from server import db, bt
-from server.models.utils import BlockchainTaskableBase, ManyOrgBase, credit_transfer_transfer_usage_association_table
+from server.models.utils import BlockchainTaskableBase, ManyOrgBase, credit_transfer_transfer_usage_association_table,\
+    disbursement_credit_transfer_association_table
 from server.models.token import Token
 from server.models.transfer_account import TransferAccount
 from server.utils.access_control import AccessControl
@@ -98,6 +99,13 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     to_exchange = db.relationship('Exchange', backref='to_transfer', lazy=True, uselist=False,
                                   foreign_keys='Exchange.to_transfer_id')
 
+    disbursement = db.relationship(
+        "Disbursement",
+        secondary=disbursement_credit_transfer_association_table,
+        back_populates="credit_transfers",
+        uselist=False
+    )
+
     def add_message(self, message):
         dated_message = f"[{datetime.datetime.utcnow()}:: {message}]"
         self.resolution_message = dated_message
@@ -179,11 +187,10 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         For why this works, see https://github.com/teamsempo/SempoBlockchain/pull/262
 
         """
-
         # We're constantly querying complete transfers here. Lazy and DRY
         complete_transfer_base_query = (
             CreditTransfer.query.filter(CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE)
-        )
+        ).execution_options(show_all=True)
 
         # Query for finding the most recent transfer sent by the sending account that isn't from the same batch uuid
         # that of the transfer in question
@@ -195,14 +202,14 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                 .filter(or_(CreditTransfer.batch_uuid != self.batch_uuid,
                             CreditTransfer.batch_uuid == None  # Only exclude matching batch_uuids if they're not null
                             )
-                ).first()
+                ).execution_options(show_all=True).first()
         )
 
         # Base query for finding more_recent_receives
         base_receives_query = (
             complete_transfer_base_query
                 .filter(CreditTransfer.recipient_transfer_account == self.sender_transfer_account)
-        )
+        ).execution_options(show_all=True)
 
         if most_recent_out_of_batch_send:
             # If most_recent_out_of_batch_send exists, find all receive transfers since it.
@@ -215,7 +222,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
             if most_recent_out_of_batch_send.batch_uuid is not None:
                 same_batch_priors = complete_transfer_base_query.filter(
                     CreditTransfer.batch_uuid == most_recent_out_of_batch_send.batch_uuid
-                ).all()
+                ).execution_options(show_all=True).all()
 
                 required_priors = required_priors + same_batch_priors
 

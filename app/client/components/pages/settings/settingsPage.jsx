@@ -26,11 +26,8 @@ export default class settingsPage extends React.Component {
               <p style={{ margin: "1em" }}></p>
               <ExternalAuthCredentials />
               <GetVerified />
-              <PageLink
-                to="/settings/organisation"
-                headerText="Organisation Settings"
-              >
-                Update your organisation settings
+              <PageLink to="/settings/project" headerText="Project Settings">
+                Update your project settings
               </PageLink>
             </RestrictedModuleBox>
 

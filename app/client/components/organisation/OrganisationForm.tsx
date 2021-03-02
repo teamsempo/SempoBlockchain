@@ -17,10 +17,12 @@ export interface IOrganisation {
   requireTransferCard: boolean;
   countryCode: string;
   accountTypes: string[];
+  timezone: string;
 }
 
 interface OuterProps {
   isoCountries: string[];
+  timezones: string[];
   organisations: ReduxState["organisations"];
   tokens: ReduxState["tokens"];
   activeOrganisation: Organisation | any;
@@ -37,6 +39,7 @@ const NewOrganisationForm = (props: OuterProps) => {
     organisations,
     activeOrganisation,
     isoCountries,
+    timezones,
     roles,
     isNewOrg
   } = props;
@@ -55,7 +58,6 @@ const NewOrganisationForm = (props: OuterProps) => {
       (country: string) =>
         country.slice(0, 2) == activeOrganisation.country_code
     ) || "";
-
   const tokenSymbol =
     activeOrganisation.token &&
     tokens.byId[activeOrganisation.token] &&
@@ -81,14 +83,15 @@ const NewOrganisationForm = (props: OuterProps) => {
               requireTransferCard: activeOrganisation.require_transfer_card,
               cardShardDistance: activeOrganisation.card_shard_distance,
               countryCode: countryCode,
+              timezone: activeOrganisation.timezone,
               token: activeOrganisation.token
             }
       }
     >
       <Form.Item
-        tooltip="The name of your organisation or project"
+        tooltip="The name of your project"
         name="organisationName"
-        label="Organisation Name"
+        label="Project Name"
         required={isNewOrg}
         rules={[
           {
@@ -100,7 +103,7 @@ const NewOrganisationForm = (props: OuterProps) => {
       </Form.Item>
 
       <Form.Item
-        tooltip="Select a token to use for this organisation"
+        tooltip="Select a token to use for this project"
         name="token"
         label="Token"
         required={isNewOrg}
@@ -147,7 +150,7 @@ const NewOrganisationForm = (props: OuterProps) => {
       <TokenModalForm visible={visible} onCancel={() => setVisible(false)} />
 
       <Form.Item
-        tooltip="The default country code for this organisation. Used for phone numbers."
+        tooltip="The default country code for this project. Used for phone numbers."
         name="countryCode"
         label="Default Country Code"
         required={isNewOrg}
@@ -176,7 +179,36 @@ const NewOrganisationForm = (props: OuterProps) => {
       </Form.Item>
 
       <Form.Item
-        tooltip="The available account types for this organisation."
+        tooltip="The default time zone for this project."
+        name="timezone"
+        label="Default Time Zone"
+        required={isNewOrg}
+        rules={[
+          {
+            required: isNewOrg
+          }
+        ]}
+      >
+        <Select
+          showSearch
+          placeholder="Select a timezone"
+          optionFilterProp="children"
+          filterOption={(input, option: any) =>
+            option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+          }
+        >
+          {timezones.map((item, i) => {
+            return (
+              <Option key={i} value={item}>
+                {item}
+              </Option>
+            );
+          })}
+        </Select>
+      </Form.Item>
+
+      <Form.Item
+        tooltip="The available account types for this project."
         name="accountTypes"
         label="Account Types"
       >
@@ -200,7 +232,7 @@ const NewOrganisationForm = (props: OuterProps) => {
       </Form.Item>
 
       <Form.Item
-        tooltip="The default disbursement amount for new beneficiaries created in this organisation"
+        tooltip="The default disbursement amount for new beneficiaries created in this project"
         name="defaultDisbursement"
         label="Default Disbursement"
       >
@@ -208,7 +240,7 @@ const NewOrganisationForm = (props: OuterProps) => {
       </Form.Item>
 
       <Form.Item
-        tooltip="The minimum vendor payout withdrawal amount for this organisation"
+        tooltip="The minimum vendor payout withdrawal amount for this project"
         name="minimumVendorPayoutWithdrawal"
         label="Minimum Vendor Payout Withdrawal"
       >
@@ -216,7 +248,7 @@ const NewOrganisationForm = (props: OuterProps) => {
       </Form.Item>
 
       <Form.Item
-        tooltip="The distance to automatically load transfer cards onto vendor phones for this organisation"
+        tooltip="The distance to automatically load transfer cards onto vendor phones for this project"
         name="cardShardDistance"
         label="Automatically Load Cards Within"
       >
@@ -240,4 +272,5 @@ const NewOrganisationForm = (props: OuterProps) => {
     </Form>
   );
 };
+
 export default NewOrganisationForm;

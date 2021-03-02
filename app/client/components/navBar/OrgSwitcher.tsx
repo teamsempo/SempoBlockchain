@@ -30,6 +30,12 @@ interface Props {
   collapsed: boolean;
 }
 
+declare global {
+  interface Window {
+    INTERCOM_APP_ID: string;
+  }
+}
+
 const OrgSwitcher: React.FunctionComponent<Props> = props => {
   const [switcherActive, setSwitcherActive] = React.useState(false);
 
@@ -87,7 +93,7 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
           : ""
       ]}
     >
-      <Menu.ItemGroup title="Your Organisations">
+      <Menu.ItemGroup title="Your Projects">
         {Object.keys(tokenMap).map((id: string) => {
           const orgsForToken = tokenMap[id];
 
@@ -102,9 +108,7 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
                     <span>{tokens.byId[id] && tokens.byId[id].symbol}</span>
                     {orgsForToken.length > 1 ? (
                       <Tooltip
-                        title={
-                          "View all organisations using this token as a group"
-                        }
+                        title={"View all projects using this token as a group"}
                         placement="rightTop"
                       >
                         <a
@@ -140,11 +144,13 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
         })}
       </Menu.ItemGroup>
       <Menu.Divider />
-      <Menu.Item key="chat">
-        <IntercomChat />
-      </Menu.Item>
+      {window.INTERCOM_APP_ID ? (
+        <Menu.Item key="chat">
+          <IntercomChat />
+        </Menu.Item>
+      ) : null}
       <Menu.Item key="new" disabled={isMultiOrg || false}>
-        <NavLink to="/settings/organisation/new">
+        <NavLink to="/settings/project/new">
           <FolderAddOutlined translate={""} /> New Organisation
         </NavLink>
       </Menu.Item>

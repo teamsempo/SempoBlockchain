@@ -216,7 +216,7 @@ const RegisterForm = function(props) {
         />
 
         <ReactPasswordStrength
-          minLength={6}
+          minLength={8}
           type="password"
           changeCallback={data => props.onPasswordFieldKeyPress(data)}
           inputProps={{ placeholder: "Password" }}

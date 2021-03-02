@@ -10,11 +10,10 @@ from server.schemas import organisation_schema, organisations_schema
 from server.utils.contract import deploy_cic_token
 from server.utils.auth import requires_auth, show_all
 from server.constants import ISO_COUNTRIES, ASSIGNABLE_TIERS
+import pendulum
 from server.utils.access_control import AccessControl
 
-
 organisation_blueprint = Blueprint('organisation', __name__)
-
 
 class OrganisationAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})
@@ -56,7 +55,6 @@ class OrganisationAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def put(self, organisation_id):
         put_data = request.get_json()
-
         country_code = put_data.get('country_code')
         default_disbursement = put_data.get('default_disbursement')
         minimum_vendor_payout_withdrawal = put_data.get('minimum_vendor_payout_withdrawal')
@@ -65,6 +63,7 @@ class OrganisationAPI(MethodView):
         default_lng = put_data.get('default_lng')
         account_types = put_data.get('account_types', [])
         card_shard_distance = put_data.get('card_shard_distance') # Kilometers
+        timezone = put_data.get('timezone')
 
         for at in account_types:
             if at not in ASSIGNABLE_TIERS.keys():
@@ -93,7 +92,9 @@ class OrganisationAPI(MethodView):
             organisation.default_lng = default_lng
         if card_shard_distance is not None: # Distance in KM
             organisation.card_shard_distance = card_shard_distance
-            
+        if timezone is not None:
+            organisation.timezone = timezone
+
         response_object = {
             'message': f'Organisation {organisation_id} successfully updated',
             'data': {'organisation': organisation_schema.dump(organisation).data}
@@ -180,7 +181,7 @@ class OrganisationAPI(MethodView):
             else:
                 return make_response(jsonify(cic_response_object)), cic_response_code
 
-        if AccessControl.has_exact_role(g.user.roles, 'ADMIN', 'superadmin'):
+        if AccessControl.has_suffient_role(g.user.roles, {'ADMIN': 'superadmin'}):
             g.user.add_user_to_organisation(new_organisation, is_admin=True)
 
         return make_response(jsonify(response_object)), 201
@@ -225,12 +226,13 @@ class OrganisationUserAPI(MethodView):
 
 
 class OrganisationConstantsAPI(MethodView):
-    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
+    @requires_auth
     def get(self):
         response_object = {
             'message': 'Organisation constants',
             'data': {
                 'iso_countries': ISO_COUNTRIES,
+                'timezones': list(pendulum.timezones),
                 'roles': list(ASSIGNABLE_TIERS.keys())
                 }
         }

@@ -33,6 +33,7 @@ interface OuterProps {
 
 interface IState {
   isoCountries?: string[];
+  timezones?: string[];
   roles?: string[];
 }
 
@@ -43,6 +44,7 @@ class OrganisationPage extends React.Component<IProps, IState> {
     super(props);
     this.state = {
       isoCountries: undefined,
+      timezones: undefined,
       roles: undefined
     };
   }
@@ -78,6 +80,7 @@ class OrganisationPage extends React.Component<IProps, IState> {
         }
         this.setState({
           isoCountries: isoCountriesOptions,
+          timezones: handled.data.timezones,
           roles: handled.data.roles
         });
       })
@@ -91,6 +94,7 @@ class OrganisationPage extends React.Component<IProps, IState> {
     this.props.editOrganisation(
       {
         country_code: form.countryCode,
+        timezone: form.timezone,
         default_disbursement: form.defaultDisbursement * 100,
         card_shard_distance: form.cardShardDistance,
         minimum_vendor_payout_withdrawal:
@@ -122,7 +126,7 @@ class OrganisationPage extends React.Component<IProps, IState> {
     return (
       <Space direction="vertical" style={{ width: "100%" }} size="middle">
         <Card
-          title={isNewOrg ? "New Organisation" : "Edit Organisation"}
+          title={isNewOrg ? "New Project" : "Edit Project"}
           bodyStyle={{ maxWidth: "400px" }}
         >
           {this.state.isoCountries ? (
@@ -132,6 +136,7 @@ class OrganisationPage extends React.Component<IProps, IState> {
               organisations={this.props.organisations}
               tokens={this.props.tokens}
               isoCountries={this.state.isoCountries || []}
+              timezones={this.state.timezones || []}
               roles={this.state.roles || []}
               onSubmit={(form: IOrganisation) =>
                 isNewOrg ? this.onNew(form) : this.onEdit(form)

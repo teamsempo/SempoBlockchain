@@ -5,13 +5,14 @@ from sentry_sdk import capture_message
 
 from config import logg
 from server import db, executor
+from server.utils.executor import standard_executor_job
 from server.models.user import User
 from server import red
 
 def redis_location_key(location):
     return f'GPS_LOCATION_{location}'
 
-@executor.job
+@standard_executor_job
 def async_set_user_gps_from_location(user_id: int, location: str):
     """
     Basic threaded process to set a users gps location based off a provided location string.

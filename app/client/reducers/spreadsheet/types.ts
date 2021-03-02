@@ -15,7 +15,6 @@ export enum SpreadsheetActionTypes {
 }
 
 export interface SaveDatasetSuccessPayload {
-  diagnostics: object;
   message: string;
   status?: string;
 }
@@ -25,6 +24,7 @@ export interface SaveDatasetPayload {
     country: string;
     data: object;
     headerPositions: object;
+    customAttributes: object;
     isVendor: boolean;
     saveName: string;
   };
