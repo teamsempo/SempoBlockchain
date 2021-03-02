@@ -31,7 +31,7 @@ export default function* rootSaga() {
     organisationSagas(),
     metricSaga(),
     allowedFilterSaga(),
-    transferCardSagas()
+    transferCardSagas(),
     tokenSagas()
   ]);
 }

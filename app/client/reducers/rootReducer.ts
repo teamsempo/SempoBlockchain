@@ -55,8 +55,8 @@ const appReducer = combineReducers({
   organisations: OrganisationReducer,
   allowedFilters,
   form,
-  transferCard
-  tokens,
+  transferCard,
+  tokens
 });
 
 const rootReducer = (state: any, action: any) => {
