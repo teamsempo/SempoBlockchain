@@ -18,6 +18,8 @@ export interface IOrganisation {
   countryCode: string;
   accountTypes: string[];
   timezone: string;
+  lat: number;
+  lng: number;
 }
 
 interface OuterProps {
@@ -84,7 +86,9 @@ const NewOrganisationForm = (props: OuterProps) => {
               cardShardDistance: activeOrganisation.card_shard_distance,
               countryCode: countryCode,
               timezone: activeOrganisation.timezone,
-              token: activeOrganisation.token
+              token: activeOrganisation.token,
+              lat: activeOrganisation.default_lat,
+              lng: activeOrganisation.default_lng
             }
       }
     >
@@ -253,6 +257,33 @@ const NewOrganisationForm = (props: OuterProps) => {
         label="Automatically Load Cards Within"
       >
         <Input placeholder="0" suffix="Km" type="number" />
+      </Form.Item>
+
+      <Form.Item style={{ marginBottom: 0 }}>
+        <Form.Item
+          tooltip="The map latitude"
+          name="lat"
+          label="Map Latitude"
+          style={{ display: "inline-block", width: "calc(50% - 12px)" }}
+        >
+          <Input placeholder="0" suffix="°" type="number" />
+        </Form.Item>
+        <span
+          style={{
+            display: "inline-block",
+            width: "24px",
+            lineHeight: "32px",
+            textAlign: "center"
+          }}
+        />
+        <Form.Item
+          tooltip="The map longitude"
+          name="lng"
+          label="Map Longitude"
+          style={{ display: "inline-block", width: "calc(50% - 12px)" }}
+        >
+          <Input placeholder="0" suffix="°" type="number" />
+        </Form.Item>
       </Form.Item>
 
       <Form.Item

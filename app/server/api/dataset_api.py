@@ -3,12 +3,13 @@ from flask.views import MethodView
 from openpyxl import load_workbook
 import csv
 import codecs
+import math
 
 from server.constants import ALLOWED_SPREADSHEET_EXTENSIONS, SPREADSHEET_UPLOAD_REQUESTED_ATTRIBUTES
 from server import db, executor
 from server.utils.auth import requires_auth
 from server.utils import user as UserUtils
-from server.utils.executor import add_after_request_executor_job
+from server.utils.executor import add_after_request_checkable_executor_job, status_checkable_executor_job
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -69,15 +70,15 @@ class SpreadsheetUploadAPI(MethodView):
         }
         return make_response(jsonify(reponse_object)), 200
 
-@executor.job
-def execute_dataset_import(dataset, header_positions, is_vendor, customAttributes):
+@status_checkable_executor_job
+def execute_dataset_import(dataset, header_positions, is_vendor, custom_attributes):
     diagnostics = []
-    for datarow in dataset:
+    for idx, datarow in enumerate(dataset):
         attribute_dict = { 'custom_attributes': {} }
         contains_anything = False
         for key, header_label in header_positions.items():
             attribute = datarow.get(key)
-            if attribute and (header_label in customAttributes):
+            if attribute and (header_label in custom_attributes):
                 attribute_dict['custom_attributes'][header_label] = attribute
             elif attribute:
                 contains_anything = True
@@ -89,40 +90,45 @@ def execute_dataset_import(dataset, header_positions, is_vendor, customAttribute
             )
 
             diagnostics.append((item_response_object.get('message'), response_code))
-        
             if response_code == 200:
                 db.session.commit()
             else:
                 db.session.flush()
-
+            percent_complete = ((idx+1)/len(dataset))*100
+            yield {
+                'message': 'success' if percent_complete == 100 else 'pending',
+                'percent_complete': math.floor(percent_complete),
+                'diagnostics': diagnostics
+            }
+        yield {
+            'message': 'success' if percent_complete == 100 else 'pending',
+            'percent_complete': math.floor(percent_complete),
+            'diagnostics': diagnostics
+        }
 class DatasetAPI(MethodView):
-
-    def add_diagnostic(self, diagnostic):
-        print(diagnostic)
-        self.diagnostics.append(diagnostic)
 
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self):
         # get the post data
         post_data = request.get_json()
-
         is_vendor = post_data.get('isVendor', False)
         header_positions = post_data.get('headerPositions')
         dataset = post_data.get('data')
-        customAttributes = post_data.get('customAttributes')
+        custom_attributes = post_data.get('customAttributes', [])
 
-        add_after_request_executor_job(execute_dataset_import, kwargs={ 
+        task_uuid = add_after_request_checkable_executor_job(execute_dataset_import, kwargs={ 
             'dataset': dataset, 
             'header_positions': header_positions, 
             'is_vendor':is_vendor, 
-            'customAttributes': customAttributes 
+            'custom_attributes': custom_attributes 
         })
 
         response_object = {
             'status': 'success',
             'message': 'Successfully Saved.',
+            'task_uuid': task_uuid,
         }
-
+        db.session.commit()
         return make_response(jsonify(response_object)), 201
 
 

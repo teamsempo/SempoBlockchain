@@ -48,6 +48,7 @@ class NewTransferManager extends React.Component {
   }
 
   createNewTransfer() {
+    const { activeToken } = this.props;
     let confirmTransferString;
     let is_bulk = false;
     let recipient_transfer_accounts_ids = this.props.transfer_account_ids;
@@ -56,6 +57,7 @@ class NewTransferManager extends React.Component {
     let sender_transfer_account_id = null;
     let transfer_amount = null;
     let target_balance = null;
+    let tokenSymbol = activeToken && activeToken.symbol;
 
     if (
       this.state.transfer_amount > 0 ||
@@ -80,10 +82,8 @@ class NewTransferManager extends React.Component {
         confirmTransferString =
           `Are you sure you wish to make a ${transfer_type}` +
           (transfer_amount
-            ? ` of ${transfer_amount / 100} ${this.props.activeToken.symbol}`
-            : ` set of ${target_balance / 100} ${
-                this.props.activeToken.symbol
-              }`) +
+            ? ` of ${transfer_amount / 100} ${tokenSymbol}`
+            : ` set of ${target_balance / 100} ${tokenSymbol}`) +
           ` to ${recipient_transfer_accounts_ids.length} users?`;
 
         window.confirm(confirmTransferString) &&
@@ -114,10 +114,8 @@ class NewTransferManager extends React.Component {
         confirmTransferString =
           `Are you sure you wish to make a ${transfer_type}` +
           (transfer_amount
-            ? ` of ${transfer_amount / 100} ${this.props.activeToken.symbol}`
-            : ` set of ${target_balance / 100} ${
-                this.props.activeToken.symbol
-              }`) +
+            ? ` of ${transfer_amount / 100} ${tokenSymbol}`
+            : ` set of ${target_balance / 100} ${tokenSymbol}`) +
           ` to 1 user?`;
 
         window.confirm(confirmTransferString) &&
@@ -137,6 +135,8 @@ class NewTransferManager extends React.Component {
   }
 
   render() {
+    const { activeToken } = this.props;
+    const tokenSymbol = activeToken && activeToken.symbol;
     if (this.props.login.usdToSatoshiRate) {
       let amount =
         Math.round(
@@ -204,7 +204,7 @@ class NewTransferManager extends React.Component {
                   style={{ width: "7em", margin: "0" }}
                   aria-label="Transfer amount"
                 />
-                {this.props.activeToken.symbol}
+                {tokenSymbol}
                 {convertedBitcoin}
               </SubRow>
               <SubRow style={{ margin: "0 0 0 2em", width: "inherit" }}>
