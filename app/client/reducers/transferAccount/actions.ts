@@ -5,7 +5,8 @@ import {
   SetTransferAccountActionTypes,
   TransfersByUserId,
   LoadTransferAccountListPayload,
-  EditTransferAccountPayload
+  EditTransferAccountPayload,
+  TransferAccountIdList
 } from "./types";
 import { CreditTransfer } from "../creditTransfer/types";
 import { createAction, ActionsUnion } from "../../reduxUtils";
@@ -24,6 +25,12 @@ export const SetTransferAccountAction = {
 export type SetTransferAccountAction = ActionsUnion<
   typeof SetTransferAccountAction
 >;
+
+export const updateTransferAccountIdList = (IdList: TransferAccountIdList) =>
+  createAction(
+    TransferAccountActionTypes.UPDATE_TRANSFER_ACCOUNT_ID_LIST,
+    IdList
+  );
 
 export const deepUpdateTransferAccounts = (
   transfer_accounts: TransfersByUserId
@@ -48,6 +55,7 @@ export const updateTransferAccountsCreditTransfers = (
   );
 
 export const TransferAccountAction = {
+  updateTransferAccountIdList,
   deepUpdateTransferAccounts,
   updateTransferAccounts,
   updateTransferAccountsCreditTransfers
@@ -69,7 +77,7 @@ export const loadTransferAccountsSuccess = (lastQueried: Date) =>
     lastQueried
   );
 
-export const loadTransferAccountsFailure = (error: any) =>
+export const loadTransferAccountsFailure = (error: string) =>
   createAction(
     LoadTransferAccountActionTypes.LOAD_TRANSFER_ACCOUNTS_FAILURE,
     error

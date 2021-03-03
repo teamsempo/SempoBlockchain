@@ -1,16 +1,18 @@
 import React from "react";
 import { connect } from "react-redux";
 import { ThemeProvider } from "styled-components";
+import { Card } from "antd";
 
 import { browserHistory } from "../../createStore.js";
 import { PageWrapper, WrapperDiv, StyledButton } from "../styledElements.js";
 import { LightTheme } from "../theme.js";
 
-import TransferAccountListWithFilterWrapper from "../transferAccount/transferAccountListWithFilterWrapper.jsx";
+import StandardTransferAccountList from "../transferAccount/StandardTransferAccountList";
 
 import { LoadTransferAccountAction } from "../../reducers/transferAccount/actions";
 import organizationWrapper from "../organizationWrapper.jsx";
 import NoDataMessage from "../NoDataMessage";
+import QueryConstructor from "../filterModule/queryConstructor";
 
 const mapStateToProps = state => {
   return {
@@ -79,6 +81,7 @@ class TransferAccountListPage extends React.Component {
     ) {
       return (
         <PageWrapper>
+          <QueryConstructor filterObject="user" />
           <NoDataMessage />
 
           <p style={{ textAlign: "center" }}>or</p>
@@ -103,9 +106,9 @@ class TransferAccountListPage extends React.Component {
       <WrapperDiv>
         <PageWrapper>
           <ThemeProvider theme={LightTheme}>
-            <TransferAccountListWithFilterWrapper
-              transferAccountList={transferAccountList}
-            />
+            <Card title="All Accounts" style={{ margin: "10px" }}>
+              <StandardTransferAccountList />
+            </Card>
           </ThemeProvider>
         </PageWrapper>
       </WrapperDiv>
