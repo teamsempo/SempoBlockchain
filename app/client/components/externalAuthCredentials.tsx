@@ -10,8 +10,8 @@ export default function KoboCredentials() {
   const [password, setPassword] = useState<string | null>(null);
 
   const [preprocess, setPreprocess] = useState<boolean>(true);
-  const [allow_as_update, setAllowAsUpdate] = useState<boolean>(false);
-  const [return_raw_on_error, setReturnRawOnError] = useState<boolean>(false);
+  const [allow_as_update, setAllowAsUpdate] = useState<boolean>(true);
+  const [return_raw_on_error, setReturnRawOnError] = useState<boolean>(true);
 
   const [url, setUrl] = useState<string | null>(null);
 
@@ -131,9 +131,9 @@ export default function KoboCredentials() {
                 name="return_raw_on_error"
                 checked={return_raw_on_error}
                 onClick={setCheckbox}
-                aria-label="Return Raw on Error"
+                aria-label="Send Error Data"
               >
-                Return Raw on Error
+                Send Error Data
               </Checkbox>
               <br />
             </StyledContent>
