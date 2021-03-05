@@ -8,7 +8,7 @@ from sqlalchemy import desc, asc
 from server.utils.auth import requires_auth
 from server.utils.transfer_filter import process_transfer_filters
 from server.utils.search import generate_search_query
-from server.schemas import transfer_accounts_schema
+from server.schemas import transfer_accounts_schema, view_transfer_accounts_schema
 from server.models.utils import paginate_query
 from server.utils.access_control import AccessControl
 
@@ -56,11 +56,10 @@ class SearchAPI(MethodView):
 
         final_query = generate_search_query(search_string, filters, order, sort_by_arg)
         transfer_accounts, total_items, total_pages, _ = paginate_query(final_query, ignore_last_fetched=True)
-        accounts = [resultTuple[0] for resultTuple in transfer_accounts]
         if AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'admin'):
-            result = transfer_accounts_schema.dump(accounts)
+            result = transfer_accounts_schema.dump(transfer_accounts)
         elif AccessControl.has_any_tier(g.user.roles, 'ADMIN'):
-            result = view_transfer_accounts_schema.dump(accounts)
+            result = view_transfer_accounts_schema.dump(transfer_accounts)
 
         return {
             'message': 'Successfully Loaded.',
