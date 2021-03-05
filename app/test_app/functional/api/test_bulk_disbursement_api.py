@@ -83,11 +83,12 @@ def test_disbursement(search_string, params, include_list, exclude_list, disburs
     if response_status == 201:
         transfers = CreditTransfer.query.all()
         assert response.status_code == 201
-        assert response.json['recipient_count'] == expected_recipient_count
-        assert response.json['total_disbursement_amount'] == expected_total_disbursement_amount
+
+        assert response.json['data']['disbursement']['recipient_count'] == expected_recipient_count
+        assert response.json['data']['disbursement']['total_disbursement_amount'] == expected_total_disbursement_amount
 
         # Check that everything is correct with the generated PENDING transactions
-        resp_id = response.json['disbursement_id']
+        resp_id = response.json['data']['disbursement']['id']
         for t in transfers:
             assert t.recipient_user.first_name in recipient_firstnames
             assert t.transfer_status == TransferStatusEnum.PENDING
