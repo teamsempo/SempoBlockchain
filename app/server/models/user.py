@@ -191,6 +191,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         """
         Soft deletes a User and default Transfer account if no other users associated to it.
         Removes User PII
+        Disables transfer card
         """
         try:
             ta = self.default_transfer_account
@@ -203,10 +204,13 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
             self.last_name = None
             self.phone = None
 
-            if self.transfer_card:
-                self.transfer_card.amount_loaded_signature = 'DEL'
+            transfer_card = TransferCard.get_transfer_card(
+                self.public_serial_number)
 
-        except (ResourceAlreadyDeletedError, TransferAccountDeletionError) as e:
+            if transfer_card and not transfer_card.is_disabled:
+                transfer_card.disable()
+
+        except (ResourceAlreadyDeletedError, TransferAccountDeletionError, NoTransferCardError) as e:
             raise e
 
     @hybrid_property
