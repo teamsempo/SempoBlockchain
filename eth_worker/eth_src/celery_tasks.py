@@ -204,7 +204,8 @@ def _handle_error(request, exc, traceback, transaction_id):
     return supervisor.handle_error(request, exc, traceback, transaction_id)
 
 
-@app.task(name=eth_endpoint('_check_transaction_response'), base=SqlAlchemyTask, bind=True, max_retries=chain_config['CHECK_TRANSACTION_RETRIES'], soft_time_limit=300)
+@app.task(name=eth_endpoint('_check_transaction_response'), base=SqlAlchemyTask, bind=True,\
+    max_retries=chain_config['CHECK_TRANSACTION_RETRIES'], retry_backoff=True, soft_time_limit=300)
 def _check_transaction_response(self, transaction_id):
     return supervisor.check_transaction_response(self, transaction_id)
 
