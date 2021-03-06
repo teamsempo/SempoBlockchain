@@ -3,8 +3,7 @@ import { connect } from "react-redux";
 import { ThemeProvider } from "styled-components";
 import { Card } from "antd";
 
-import { browserHistory } from "../../createStore.js";
-import { PageWrapper, WrapperDiv, StyledButton } from "../styledElements.js";
+import { PageWrapper, WrapperDiv } from "../styledElements.js";
 import { LightTheme } from "../theme.js";
 
 import StandardTransferAccountList from "../transferAccount/StandardTransferAccountList";
@@ -83,21 +82,6 @@ class TransferAccountListPage extends React.Component {
         <PageWrapper>
           <QueryConstructor filterObject="user" />
           <NoDataMessage />
-
-          <p style={{ textAlign: "center" }}>or</p>
-
-          <div style={{ justifyContent: "center", display: "flex" }}>
-            <StyledButton
-              onClick={() =>
-                browserHistory.push(
-                  "/create?type=" + browserHistory.location.pathname.slice(1)
-                )
-              }
-              label={"Add Single User"}
-            >
-              Add Single User
-            </StyledButton>
-          </div>
         </PageWrapper>
       );
     }
