@@ -15,7 +15,7 @@ from server.models.organisation import Organisation
 from server.utils.auth import get_complete_auth_token
 from server.constants import ACCESS_ROLES
 from flask import current_app
-
+from server import db
 
 def all_auth_roles_and_tiers_combos():
     return [(key, value) for key in ACCESS_ROLES.keys() for value in ACCESS_ROLES[key]]
@@ -162,10 +162,10 @@ def test_request_api_token_phone_success(test_client, create_transfer_account_us
 
     create_transfer_account_user.is_activated = is_activated
     one_time_code = create_transfer_account_user.one_time_code
-    create_transfer_account_user.hash_password(one_time_code)  # set the one time code as password for easy check
+    create_transfer_account_user.hash_pin(one_time_code)  # set the one time code as password for easy check
 
     response = test_client.post('/api/v1/auth/request_api_token/',
-                                data=json.dumps(dict(phone=create_transfer_account_user.phone, password=one_time_code)),
+                                data=json.dumps(dict(phone=create_transfer_account_user.phone, pin=one_time_code)),
                                 content_type='application/json', follow_redirects=True)
     assert response.status_code == status_code
     assert response.json['message'] == message
@@ -276,9 +276,10 @@ def get_admin_default_org_id(admin_user):
     ('sempoadmin', 'foo@acme.com', None, get_admin_default_org_id, 400),
     ('sempoadmin', 'foo@acme.com', 'admin', get_admin_default_org_id, 201),
     ('sempoadmin', 'foo@acme.com', 'admin', get_admin_default_org_id, 400),
+    ('sempoadmin', 'admin@acme.org', 'admin', get_admin_default_org_id, 201),
 ])
-
-def test_create_permissions_api(test_client, authed_sempo_admin_user,
+def test_create_permissions_api(test_client, init_database, authed_sempo_admin_user, create_master_organisation,
+                                create_transfer_account_user,
                                 creator_tier, email, invitee_tier, organisation_id_selector, response_code):
     """
     GIVEN a Flask application
@@ -301,6 +302,52 @@ def test_create_permissions_api(test_client, authed_sempo_admin_user,
     assert response.status_code == response_code
 
 
+@pytest.mark.parametrize("user_id, admin_tier, deactivated, invite_id, resend, response_code", [
+    (None, None, None, 1123123, True, 404),
+    (None, None, None, 1, True, 200),
+    (None, None, None, None, None, 400),
+    (123123, None, None, None, None, 404),
+    (1, 'sempoadmin', False, None, None, 200),
+])
+def test_edit_permissions_api(test_client, init_database, authed_sempo_admin_user,
+                              user_id, admin_tier, deactivated, invite_id, resend, response_code):
+    authed_sempo_admin_user.set_held_role('ADMIN', 'superadmin')
+
+    response = test_client.put(f'/api/v1/auth/permissions/',
+                                headers=dict(
+                                    Authorization=get_complete_auth_token(authed_sempo_admin_user),
+                                    Accept='application/json'
+                                ),
+                                json={'user_id': user_id, 'admin_tier': admin_tier, 'deactivated': deactivated,
+                                      'invite_id': invite_id, 'resend': resend})
+
+    assert response.status_code == response_code
+
+
+@pytest.mark.parametrize("invite_id, tier, message, status_code", [
+    (1, 'admin', "user does not have any of the allowed roles", 403),
+    (123123, 'superadmin', "Invite not found", 404),
+    (1, 'superadmin', "Deleted Invite", 202),
+])
+def test_delete_invite(test_client, authed_sempo_admin_user, create_transfer_account_user, create_credit_transfer,
+                     invite_id, tier, message, status_code):
+    authed_sempo_admin_user.set_held_role('ADMIN', tier)
+
+    default_org_id = get_admin_default_org_id(authed_sempo_admin_user)
+
+    response = test_client.delete(
+        f"/api/v1/auth/permissions/?org={default_org_id}",
+        headers=dict(
+            Authorization=get_complete_auth_token(authed_sempo_admin_user),
+            Accept='application/json'
+        ),
+        json={'invite_id': invite_id}
+    )
+
+    assert response.status_code == status_code
+    assert message in response.json['message']
+
+
 def test_get_external_credentials_api(test_client, authed_sempo_admin_user):
     """
     GIVEN a Flask Application
@@ -319,6 +366,7 @@ def test_get_external_credentials_api(test_client, authed_sempo_admin_user):
     assert response.json['username'] == 'admin_sempo'
     org = Organisation.query.filter_by(external_auth_username = response.json['username']).first()
     assert response.json['password'] == org.external_auth_password
+
 
 def test_logout_api(test_client, authed_sempo_admin_user):
     """

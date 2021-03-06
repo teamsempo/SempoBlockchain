@@ -465,7 +465,7 @@ def test_client():
     from flask import g
     g.pending_transactions = []
     g.executor_jobs = []
-
+    g.is_after_request = False
     yield testing_client  # this is where the testing happens!
 
     ctx.pop()

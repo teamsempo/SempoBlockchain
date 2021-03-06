@@ -9,6 +9,7 @@ export interface Organisation {
   card_shard_distance: number;
   minimum_vendor_payout_withdrawal: number;
   country_code: string;
+  timezone: string;
   valid_roles: TransferAccountTypes[];
 }
 
@@ -28,6 +29,7 @@ export enum OrganisationActionTypes {
 export interface EditOrganisationPayload {
   body: {
     country_code: string;
+    timezone: string;
     default_disbursement: number;
     card_shard_distance: number;
     minimum_vendor_payout_withdrawal: number;

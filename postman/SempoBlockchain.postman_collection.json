@@ -79,10 +79,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n    \"email\": \"admin@acme.org\",\n    \"tier\": \"admin\"\n}",
-                  "options": {
-                    "raw": {}
-                  }
+                  "raw": "{\n    \"email\": \"admin@acme.org\",\n    \"tier\": \"admin\"\n}"
                 },
                 "url": {
                   "raw": "{{HOST}}/api/v1/auth/permissions/",
@@ -205,10 +202,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n    \"user_id\": 1,\n    \"admin_tier\": \"superadmin\",\n    \"deactivated\": false\n}",
-                  "options": {
-                    "raw": {}
-                  }
+                  "raw": "{\n    \"user_id\": 1,\n    \"admin_tier\": \"superadmin\",\n    \"deactivated\": false\n}"
                 },
                 "url": {
                   "raw": "{{HOST}}/api/v1/auth/permissions/",
@@ -392,9 +386,7 @@
               ]
             }
           ],
-          "description": "This API is used to manage platform Admin users permissions. Admin User objects and Invite Objects are merged on the frontend for a better UX.",
-          "protocolProfileBehavior": {},
-          "_postman_isSubFolder": true
+          "description": "This API is used to manage platform Admin users permissions. Admin User objects and Invite Objects are merged on the frontend for a better UX."
         },
         {
           "name": "Register",
@@ -409,10 +401,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"email\": \"admin@acme.org\",\n    \"password\": \"C0rrectH0rse\"\n}",
-              "options": {
-                "raw": {}
-              }
+              "raw": "{\n    \"email\": \"admin@acme.org\",\n    \"password\": \"C0rrectH0rse\"\n}"
             },
             "url": {
               "raw": "{{HOST}}/api/v1/auth/register/",
@@ -535,10 +524,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"activation_token\": \"\"\n}",
-              "options": {
-                "raw": {}
-              }
+              "raw": "{\n    \"activation_token\": \"\"\n}"
             },
             "url": {
               "raw": "{{HOST}}/api/v1/auth/activate/",
@@ -661,10 +647,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"email\": \"admin@acme.org\",\n    \"password\": \"C0rrectH0rse\"\n}",
-              "options": {
-                "raw": {}
-              }
+              "raw": "{\n    \"email\": \"admin@acme.org\",\n    \"password\": \"C0rrectH0rse\"\n}"
             },
             "url": {
               "raw": "{{HOST}}/api/v1/auth/request_api_token/",
@@ -836,10 +819,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"email\": \"admin@acme.org\"\n}",
-              "options": {
-                "raw": {}
-              }
+              "raw": "{\n    \"email\": \"admin@acme.org\"\n}"
             },
             "url": {
               "raw": "{{HOST}}/api/v1/auth/request_reset_email/",
@@ -1131,14 +1111,13 @@
           ]
         }
       ],
-      "description": "The AUTH API is primarily used for user login, logout, password actions. This is used for both Admin and standard platform users.\n\nThere is also a sub-folder \"permissions\" that is used for managing admin user tiers and platform admin invites.",
-      "protocolProfileBehavior": {}
+      "description": "The AUTH API is primarily used for user login, logout, password actions. This is used for both Admin and standard platform users.\n\nThere is also a sub-folder \"permissions\" that is used for managing admin user tiers and platform admin invites."
     },
     {
-      "name": "Organisation API",
+      "name": "Organisation (Project) API",
       "item": [
         {
-          "name": "Create Organisation",
+          "name": "Create Organisation (Project)",
           "request": {
             "method": "POST",
             "header": [
@@ -1260,7 +1239,7 @@
           ]
         },
         {
-          "name": "Edit Organisation",
+          "name": "Edit Organisation (Project)",
           "request": {
             "method": "PUT",
             "header": [
@@ -1431,7 +1410,7 @@
           ]
         },
         {
-          "name": "Get Organisation",
+          "name": "Get Organisation (Project)",
           "request": {
             "method": "GET",
             "header": [
@@ -1497,8 +1476,7 @@
             }
           ]
         }
-      ],
-      "protocolProfileBehavior": {}
+      ]
     },
     {
       "name": "User API",
@@ -1868,8 +1846,7 @@
             }
           ]
         }
-      ],
-      "protocolProfileBehavior": {}
+      ]
     },
     {
       "name": "Transfer Account API",
@@ -2073,8 +2050,7 @@
             }
           ]
         }
-      ],
-      "protocolProfileBehavior": {}
+      ]
     },
     {
       "name": "Credit Transfer API",
@@ -2384,8 +2360,7 @@
             }
           ]
         }
-      ],
-      "protocolProfileBehavior": {}
+      ]
     },
     {
       "name": "Search API",
@@ -2536,8 +2511,7 @@
             }
           ]
         }
-      ],
-      "protocolProfileBehavior": {}
+      ]
     },
     {
       "name": "Transfer Usage API",
@@ -2668,8 +2642,7 @@
             }
           ]
         }
-      ],
-      "protocolProfileBehavior": {}
+      ]
     },
     {
       "name": "Filter API",
@@ -2800,8 +2773,7 @@
             }
           ]
         }
-      ],
-      "protocolProfileBehavior": {}
+      ]
     },
     {
       "name": "Transfer Card API",
@@ -2931,9 +2903,87 @@
               "body": "{\n    \"status\": \"success\"\n}"
             }
           ]
+        },
+        {
+          "name": "Create Transfer Card Copy",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"amount_offset\": 5331\n}"
+            },
+            "url": {
+              "raw": "{{HOST}}/api/v1/transfer_cards/public_serial_number/842835",
+              "host": ["{{HOST}}"],
+              "path": [
+                "api",
+                "v1",
+                "transfer_cards",
+                "public_serial_number",
+                "842835"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "201 CREATED",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"public_serial_number\": \"0x123nf\",\n    \"nfc_serial_number\": \"nfc123\"\n}"
+                },
+                "url": {
+                  "raw": "{{HOST}}/api/v1/transfer_cards/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "transfer_cards", ""]
+                }
+              },
+              "status": "CREATED",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "26"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Server",
+                  "value": "Werkzeug/1.0.1 Python/3.6.1"
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 23 Jun 2020 03:29:03 GMT"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"status\": \"success\"\n}"
+            }
+          ]
         }
-      ],
-      "protocolProfileBehavior": {}
+      ]
     },
     {
       "name": "Export API",
@@ -2960,9 +3010,31 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "Export Data (Me)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"date_range\": \"all\",\n    \"export_type\": \"\",\n    \"include_transfers\": false,\n    \"payable_period_end_date\": null,\n    \"payable_period_start_date\": null,\n    \"selected\": [],\n    \"user_type\": \"all\"\n}"
+            },
+            "url": {
+              "raw": "{{HOST}}/api/v1/export/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "export", ""]
+            }
+          },
+          "response": []
         }
-      ],
-      "protocolProfileBehavior": {}
+      ]
     },
     {
       "name": "Mock Data API",
@@ -3044,8 +3116,325 @@
             }
           ]
         }
-      ],
-      "protocolProfileBehavior": {}
+      ]
+    },
+    {
+      "name": "Vendor Payout",
+      "item": [
+        {
+          "name": "Get Vendor Payout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"accounts\": [206, 213]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{HOST}}/api/v1/get_vendor_payout/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "get_vendor_payout", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Process Vendor Payout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"accounts\": [9]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{HOST}}/api/v1/process_vendor_payout/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "process_vendor_payout", ""]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "KYC API",
+      "item": [
+        {
+          "name": "Create KYC",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"accounts\": [9]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{HOST}}/api/v1/get_vendor_payout/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "get_vendor_payout", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update KYC",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": ""
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Blockchain Transaction RPC",
+      "item": []
+    },
+    {
+      "name": "Token API",
+      "item": [
+        {
+          "name": "Get Tokens",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{HOST}}/api/v1/token/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "token", ""]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{HOST}}/api/v1/filters/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "filters", ""]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "440"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Server",
+                  "value": "Werkzeug/1.0.1 Python/3.6.1"
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 23 Jun 2020 03:56:21 GMT"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"data\": {\n        \"filters\": [\n            {\n                \"created\": \"2020-06-23T03:26:25.484276+00:00\",\n                \"filter\": {\n                    \"allowedValues\": [\n                        \"dd\"\n                    ],\n                    \"id\": 1,\n                    \"keyName\": \"bio\",\n                    \"type\": \"discrete\"\n                },\n                \"id\": 1,\n                \"name\": \"Acme filter\",\n                \"updated\": \"2020-06-23T03:26:25.484281+00:00\"\n            }\n        ]\n    },\n    \"message\": \"Successfully loaded saved filters\"\n}"
+            },
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{HOST}}/api/v1/token/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "token", ""]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "965"
+                },
+                {
+                  "key": "App-Version",
+                  "value": "1.7.55"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Server",
+                  "value": "Werkzeug/1.0.1 Python/3.7.2"
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 21 Jan 2021 02:07:48 GMT"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"data\": {\n        \"tokens\": [\n            {\n                \"address\": \"0x51035d198239F6CF55d9512B46F4D4B72edFF709\",\n                \"created\": \"2021-01-14T03:23:15.182317+00:00\",\n                \"exchange_rates\": {},\n                \"id\": 1,\n                \"name\": \"Reserve Currency\",\n                \"symbol\": \"RCU\",\n                \"updated\": \"2021-01-14T03:23:21.309767+00:00\"\n            },\n            {\n                \"address\": \"0x561565B594555C634E8B7188c6E1858206fBD4f4\",\n                \"created\": \"2021-01-14T03:23:45.886970+00:00\",\n                \"exchange_rates\": {},\n                \"id\": 2,\n                \"name\": \"ACME\",\n                \"symbol\": \"ACME\",\n                \"updated\": \"2021-01-14T03:23:52.015709+00:00\"\n            },\n            {\n                \"address\": \"0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48\",\n                \"created\": \"2021-01-18T06:44:45.245919+00:00\",\n                \"exchange_rates\": {},\n                \"id\": 5,\n                \"name\": \"USD Coin\",\n                \"symbol\": \"USDC\",\n                \"updated\": \"2021-01-18T06:44:45.268137+00:00\"\n            }\n        ]\n    },\n    \"message\": \"success\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Tokens",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"USDC Coin\",\n    \"symbol\": \"USDC\",\n    \"address\": \"0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48\",\n    \"decimals\": 18,\n    \"chain\": \"ETHEREUM\"\n}"
+            },
+            "url": {
+              "raw": "{{HOST}}/api/v1/token/",
+              "host": ["{{HOST}}"],
+              "path": ["api", "v1", "token", ""]
+            }
+          },
+          "response": [
+            {
+              "name": "201 CREATED",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"filter_name\": \"Acme filter\",\n    \"filter_attributes\": {\"id\": 1, \"type\": \"discrete\", \"keyName\": \"bio\", \"allowedValues\": [\"dd\"]}\n}"
+                },
+                "url": {
+                  "raw": "{{HOST}}/api/v1/filters/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "filters", ""]
+                }
+              },
+              "status": "CREATED",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "392"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Server",
+                  "value": "Werkzeug/1.0.1 Python/3.6.1"
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 23 Jun 2020 03:26:25 GMT"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"data\": {\n        \"filter\": {\n            \"created\": \"2020-06-23T03:26:25.484276+00:00\",\n            \"filter\": {\n                \"allowedValues\": [\n                    \"dd\"\n                ],\n                \"id\": 1,\n                \"keyName\": \"bio\",\n                \"type\": \"discrete\"\n            },\n            \"id\": 1,\n            \"name\": \"Acme filter\",\n            \"updated\": \"2020-06-23T03:26:25.484281+00:00\"\n        }\n    },\n    \"message\": \"Filter Acme filter created\"\n}"
+            },
+            {
+              "name": "201 CREATED",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"name\": \"USDC Coin\",\n    \"symbol\": \"USDC\",\n    \"address\": \"0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48\",\n    \"decimals\": 18,\n    \"chain\": \"ETHEREUM\"\n}"
+                },
+                "url": {
+                  "raw": "{{HOST}}/api/v1/token/",
+                  "host": ["{{HOST}}"],
+                  "path": ["api", "v1", "token", ""]
+                }
+              },
+              "status": "CREATED",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "335"
+                },
+                {
+                  "key": "App-Version",
+                  "value": "1.7.55"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Server",
+                  "value": "Werkzeug/1.0.1 Python/3.7.2"
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 21 Jan 2021 02:13:22 GMT"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"data\": {\n        \"token\": {\n            \"address\": \"0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48\",\n            \"created\": \"2021-01-21T02:13:22.681464+00:00\",\n            \"exchange_rates\": {},\n            \"id\": 12,\n            \"name\": \"USDC Coin\",\n            \"symbol\": \"USDC\",\n            \"updated\": \"2021-01-21T02:13:22.681478+00:00\"\n        }\n    },\n    \"message\": \"success\"\n}"
+            }
+          ]
+        }
+      ]
     }
   ],
   "auth": {
@@ -3067,7 +3456,6 @@
     {
       "listen": "prerequest",
       "script": {
-        "id": "1436f7ad-3b58-4209-9d63-b30615d6fb7d",
         "type": "text/javascript",
         "exec": [""]
       }
@@ -3075,11 +3463,9 @@
     {
       "listen": "test",
       "script": {
-        "id": "71d7094f-1f72-44fb-ad7b-9e9742f16a9e",
         "type": "text/javascript",
         "exec": [""]
       }
     }
-  ],
-  "protocolProfileBehavior": {}
+  ]
 }

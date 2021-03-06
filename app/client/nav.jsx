@@ -80,6 +80,7 @@ class Nav extends React.Component {
               isReAuthing={isReAuthing}
               isAntDesign={true}
               title={"Dashboard"}
+              isMultiOrg={true}
             />
             <PrivateRoute
               exact
@@ -89,6 +90,7 @@ class Nav extends React.Component {
               isReAuthing={isReAuthing}
               footer={false}
               title={"Map"}
+              isMultiOrg={true}
             />
             <PrivateRoute
               exact
@@ -180,20 +182,20 @@ class Nav extends React.Component {
             />
             <PrivateRoute
               exact
-              path="/settings/organisation"
+              path="/settings/project"
               component={OrganisationPage}
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
-              title={`Organisation Settings`}
+              title={`Project Settings`}
               isAntDesign={true}
             />
             <PrivateRoute
               exact
-              path="/settings/organisation/new"
+              path="/settings/project/new"
               component={OrganisationPage}
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
-              title={`New Organisation`}
+              title={`New Project`}
               isAntDesign={true}
               isNewOrg={true}
             />

@@ -211,7 +211,6 @@ class ResetPinAPI(MethodView):
 
         if reset_user_id is not None:
             user = User.query.get(reset_user_id)
-
             if user is None:
                 return make_response(jsonify({'message': 'No user found for ID: {}'.format(reset_user_id)})), 404
 
