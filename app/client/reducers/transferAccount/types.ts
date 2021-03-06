@@ -61,10 +61,6 @@ export interface TransfersByUserId {
   [userId: number]: TransfersForUser;
 }
 
-export interface TransferAccountIdList {
-  IdList: number[];
-}
-
 export interface LoadTransferAccountListPayload {
   query?: {};
   path?: number;

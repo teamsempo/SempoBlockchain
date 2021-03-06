@@ -74,7 +74,7 @@ const byId = (state = initialByIdState, action: TransferAccountAction) => {
 
 interface LoadStatusState {
   isRequesting: boolean;
-  error?: Error | null;
+  error?: Error | string | null;
   success: Boolean;
   lastQueried?: Date | null;
 }
