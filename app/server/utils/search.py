@@ -60,13 +60,6 @@ def generate_search_query(search_string, filters, order, sort_by_arg, include_us
         .filter(TransferAccount.is_ghost != True) \
         .with_entities(*entities)\
         .order_by(order(sort_by))
-
-    # TODO: work out the difference between the above and
-    # final_query = db.session.query(TransferAccount, User) \
-    #     .outerjoin(TransferAccount, User.default_transfer_account_id == TransferAccount.id) \
-    #     .with_entities(TransferAccount) \
-    #     .order_by(order(sort_by))
-
     # Joining custom attributes is quite expensive, and we don't need them in a listing of search results
     if include_user:
         final_query = final_query.options(lazyload(User.custom_attributes))
