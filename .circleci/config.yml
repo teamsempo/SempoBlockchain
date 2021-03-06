@@ -21,9 +21,9 @@ jobs:
       - restore_cache:
           keys:
             # when lock file changes, use increasingly general patterns to restore cache
-            - node-v1-{{ .Branch }}-{{ checksum "~/project/app/package-lock.json" }}
-            - node-v1-{{ .Branch }}-
-            - node-v1-
+            - node-v2-{{ .Branch }}-{{ checksum "~/project/app/package-lock.json" }}
+            - node-v2-{{ .Branch }}-
+            - node-v2-
       - run:
           name: Install Node
           command: |
@@ -32,7 +32,7 @@ jobs:
       - save_cache:
           paths:
             - ~/project/app/node_modules
-          key: node-v1-{{ .Branch }}-{{ checksum "~/project/app/package-lock.json" }}
+          key: node-v2-{{ .Branch }}-{{ checksum "~/project/app/package-lock.json" }}
 
       # Then, if the src or packages have changed run a new build
       - run:
