@@ -5,31 +5,7 @@ env_loglevel = os.environ.get('LOGLEVEL', 'DEBUG')
 logging.basicConfig(level=env_loglevel)
 logg = logging.getLogger(__name__)
 
-
-try:
-    logg.debug('TRY')
-    logg.debug('TRY')
-    logg.debug('TRY')
-    logg.debug('TRY')
-    logg.debug('TRY')
-    logg.debug('TRY')
-    s3 = boto3.client('s3')
-    tags = s3.head_object(Bucket='ctp-prod-secrets', Key='common_secrets.ini')
-    logg.debug(tags['ResponseMetadata']['HTTPHeaders']['etag'])
-    logg.debug(tags['ResponseMetadata']['HTTPHeaders']['etag'])
-    logg.debug(tags['ResponseMetadata']['HTTPHeaders']['etag'])
-    logg.debug(tags['ResponseMetadata']['HTTPHeaders']['etag'])
-    logg.debug(tags['ResponseMetadata']['HTTPHeaders']['etag'])
-    logg.debug(tags['ResponseMetadata']['HTTPHeaders']['etag'])
-except ClientError:
-    logg.debug('FAIL:')
-    logg.debug('FAIL:')
-    logg.debug('FAIL:')
-    logg.debug('FAIL:')
-    logg.debug('FAIL')
-    traceback.print_exc()
-
-VERSION = '1.7.69'  # Remember to bump this in every PR
+VERSION = '1.7.72'  # Remember to bump this in every PR
 
 logg.info('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 

@@ -1,6 +1,5 @@
 from decimal import Decimal
 import math
-
 from sqlalchemy.orm import lazyload, joinedload
 from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
