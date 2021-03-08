@@ -14,10 +14,11 @@ import {
   removeSessionToken,
   storeSessionToken,
   storeTFAToken,
-  storeOrgid,
-  removeOrgId,
+  storeOrgIds,
+  removeOrgIds,
   removeTFAToken,
-  parseQuery
+  parseQuery,
+  getOrgIds
 } from "../utils";
 import {
   adminUserSchema,
@@ -147,23 +148,29 @@ function* saveOrgId(
   >
 ) {
   try {
-    yield call(storeOrgid, action.payload.organisationId.toString());
+    yield call(storeOrgIds, action.payload.organisationIds);
 
-    // window.location.search = "?org=2"
-    // query_params = {org: 2}
+    // window.location.search = "?org=2" or "?query_organisations=1,2"
+    // query_params = {org: "2"} or {query_organisations: "1,2"}
     let query_params: any = parseQuery(window.location.search);
 
     // if query param and payload are matching then just reload to update navbar
     if (
       query_params["org"] &&
-      action.payload.organisationId === parseInt(query_params["org"])
+      action.payload.organisationIds[0] === parseInt(query_params["org"])
+    ) {
+      window.location.reload();
+    } else if (
+      query_params["query_organisations"] &&
+      action.payload.organisationIds.toString() ===
+        query_params["query_organisations"]
     ) {
       window.location.reload();
     } else {
       window.location.assign("/");
     }
   } catch (e) {
-    removeOrgId();
+    removeOrgIds();
   }
 }
 
@@ -172,7 +179,7 @@ function* watchSaveOrgId() {
 }
 export function* logout() {
   yield call(removeSessionToken);
-  yield call(removeOrgId);
+  yield call(removeOrgIds);
 }
 
 function createLoginSuccessObject(token: TokenData) {
@@ -184,7 +191,8 @@ function createLoginSuccessObject(token: TokenData) {
     usdToSatoshiRate: token.usd_to_satoshi_rate,
     intercomHash: token.web_intercom_hash,
     webApiVersion: token.web_api_version,
-    organisationId: token.active_organisation_id
+    organisationId: token.active_organisation_id,
+    organisationIds: token.organisation_ids
   };
 }
 
@@ -251,6 +259,14 @@ function* refreshToken() {
     if (token_request.auth_token) {
       storeSessionToken(token_request.auth_token);
 
+      let orgId = getOrgIds();
+      let orgIds = orgId && orgId.split(",");
+      if (orgIds && orgIds.length > 1) {
+        token_request["organisation_ids"] = orgIds;
+      } else {
+        token_request["organisation_ids"] = null;
+      }
+
       yield call(updateOrganisationStateFromLoginData, token_request);
       yield put(
         LoginAction.loginSuccess(createLoginSuccessObject(token_request))
@@ -260,7 +276,6 @@ function* refreshToken() {
     return token_request;
   } catch (error) {
     yield put(LoginAction.logout());
-    yield call(removeSessionToken);
     return error;
   } finally {
     if (yield cancelled()) {

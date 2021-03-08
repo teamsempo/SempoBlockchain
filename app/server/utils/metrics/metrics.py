@@ -23,8 +23,11 @@ from server.models.token import Token
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql import func, text
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import text
+
 import sqlalchemy
 import datetime, json
+import pendulum
 
 def calculate_transfer_stats(
     start_date=None,
@@ -66,11 +69,16 @@ def calculate_transfer_stats(
     if not organisations:
         org = g.active_organisation
         token = org.token
+        timezone = org.timezone or 'UTC'
+
+    tz = g.active_organisation.timezone or 'UTC'
+    # Gets hours offset from UTC in timezone in hours
+    time_offset = pendulum.from_timestamp(0, tz).offset/60/60
 
     date_filter_attributes = {
-        CreditTransfer: CreditTransfer.created,
-        User: User.created,
-        TransferAccount: TransferAccount.created
+        CreditTransfer: CreditTransfer.created + text(f"interval '{time_offset} hours'"),
+        User: User.created + text(f"interval '{time_offset} hours'"),
+        TransferAccount: TransferAccount.created + text(f"interval '{time_offset} hours'")
     }
 
     # Disable cache if any filters are being used, or explicitly requested
@@ -90,20 +98,20 @@ def calculate_transfer_stats(
 
     total_users = {}
     if group_strategy and set(groups_and_filters_tables).issubset(set([CustomAttributeUserStorage.__tablename__, User.__tablename__, TransferAccount.__tablename__])):
-        total_users_stats = TotalUsers(group_strategy, timeseries_unit)
-        total_users[metrics_const.GROUPED] = total_users_stats.total_users_grouped_timeseries.execute_query(user_filters=user_filter, date_filter_attributes=date_filter_attributes, enable_caching=enable_cache, end_date=end_date, group_by=group_by)
-        total_users[metrics_const.UNGROUPED] = total_users_stats.total_users_timeseries.execute_query(user_filters=[], date_filter_attributes=date_filter_attributes, enable_caching=enable_cache, end_date=end_date, group_by=group_by)
+        total_users_stats = TotalUsers(group_strategy, timeseries_unit, date_filter_attributes=date_filter_attributes)
+        total_users[metrics_const.GROUPED] = total_users_stats.total_users_grouped_timeseries.execute_query(user_filters=user_filter, date_filter_attributes=date_filter_attributes, enable_caching=enable_cache, end_date=end_date)
+        total_users[metrics_const.UNGROUPED] = total_users_stats.total_users_timeseries.execute_query(user_filters=[], date_filter_attributes=date_filter_attributes, enable_caching=enable_cache, end_date=end_date)
     else:
-        total_users_stats = TotalUsers(None, timeseries_unit)
-        total_users[metrics_const.UNGROUPED] = total_users_stats.total_users_timeseries.execute_query(user_filters=[], date_filter_attributes=date_filter_attributes, enable_caching=enable_cache, end_date=end_date, group_by=group_by)
+        total_users_stats = TotalUsers(None, timeseries_unit, date_filter_attributes=date_filter_attributes)
+        total_users[metrics_const.UNGROUPED] = total_users_stats.total_users_timeseries.execute_query(user_filters=[], date_filter_attributes=date_filter_attributes, enable_caching=enable_cache, end_date=end_date)
 
     # Determines which metrics the user is asking for, and calculate them
     if metric_type == metrics_const.TRANSFER:
-        metrics_list = TransferStats(group_strategy, timeseries_unit, token).metrics
+        metrics_list = TransferStats(group_strategy, timeseries_unit, token, date_filter_attributes=date_filter_attributes).metrics
     elif metric_type == metrics_const.USER:
-        metrics_list = ParticipantStats(group_strategy, timeseries_unit).metrics
+        metrics_list = ParticipantStats(group_strategy, timeseries_unit, date_filter_attributes=date_filter_attributes).metrics
     else:
-        metrics_list = TransferStats(group_strategy, timeseries_unit, token).metrics + ParticipantStats(group_strategy, timeseries_unit).metrics
+        metrics_list = TransferStats(group_strategy, timeseries_unit, token, date_filter_attributes=date_filter_attributes).metrics + ParticipantStats(group_strategy, timeseries_unit, date_filter_attributes=date_filter_attributes).metrics
     
     # Ensure that the metric requested by the user is available
     availible_metrics = [m.metric_name for m in metrics_list]

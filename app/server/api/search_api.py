@@ -1,4 +1,4 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, g
 import datetime
 
 from flask.views import MethodView
@@ -10,6 +10,7 @@ from server.utils.transfer_filter import process_transfer_filters
 from server.utils.search import generate_search_query
 from server.schemas import transfer_accounts_schema
 from server.models.utils import paginate_query
+from server.utils.access_control import AccessControl
 
 search_blueprint = Blueprint('search', __name__)
 
@@ -55,7 +56,11 @@ class SearchAPI(MethodView):
 
         final_query = generate_search_query(search_string, filters, order, sort_by_arg)
         transfer_accounts, total_items, total_pages, _ = paginate_query(final_query, ignore_last_fetched=True)
-        result = transfer_accounts_schema.dump([resultTuple[0] for resultTuple in transfer_accounts])
+        accounts = [resultTuple[0] for resultTuple in transfer_accounts]
+        if AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'admin'):
+            result = transfer_accounts_schema.dump(accounts)
+        elif AccessControl.has_any_tier(g.user.roles, 'ADMIN'):
+            result = view_transfer_accounts_schema.dump(accounts)
 
         return {
             'message': 'Successfully Loaded.',

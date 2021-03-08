@@ -2,7 +2,8 @@
 
 The Sempo team takes security seriously to ensure the security of customer funds and private information. See our Software Version Upgrade Policy for information on how we update and support software.
 
-- [Software Version Upgrade Policy](https://drive.google.com/file/d/1TmpfMPsQfnB9ZPD8POANcdjYpTz6BaWu/view?usp=sharing)
+- [Software Version Upgrade Policy](https://drive.google.com/file/d/1vjEQPDkCI72tdwosTT1VgglwIF5ohRJY/view?usp=sharing)
+- [Responsible Disclosure Policy](https://drive.google.com/file/d/1jc_xs5KierUudF7VvPgyBJ6GqjW4jN4_/view?usp=sharing)
 
 ## Supported Versions
 

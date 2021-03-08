@@ -1,5 +1,6 @@
 from decimal import Decimal
-
+import math
+from sqlalchemy.orm import lazyload, joinedload
 from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 from sqlalchemy import desc, asc
@@ -17,12 +18,11 @@ from server.utils.search import generate_search_query
 from server.utils.credit_transfer import make_payment_transfer
 from server.utils.transfer_enums import TransferSubTypeEnum, TransferModeEnum
 from server.models.utils import paginate_query, disbursement_credit_transfer_association_table
-from sqlalchemy.orm import lazyload, joinedload
+from server.utils.executor import status_checkable_executor_job, add_after_request_checkable_executor_job
 
 disbursement_blueprint = Blueprint('disbursement', __name__)
 
 class MakeDisbursementAPI(MethodView):
-
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self):
         post_data = request.get_json()
@@ -68,26 +68,42 @@ class MakeDisbursementAPI(MethodView):
             transfer_accounts = [r[0] for r in results] # Get TransferAccount (TransferAccount, searchRank, User)
             users = [r[2] for r in results] # Get User from (TransferAccount, searchRank, User)
         d.transfer_accounts.extend(transfer_accounts)
-        db.session.add(d)
-
-        send_transfer_account = g.user.default_organisation.queried_org_level_transfer_account
-        for user, ta in zip(users, transfer_accounts):
-            d.credit_transfers.append(make_payment_transfer(
-                disbursement_amount,
-                send_user=g.user,
-                receive_user=user,
-                send_transfer_account=send_transfer_account,
-                receive_transfer_account=ta,
-                transfer_subtype=TransferSubTypeEnum.DISBURSEMENT,
-                transfer_mode=TransferModeEnum.WEB,
-                automatically_resolve_complete=False,
-            ))
         db.session.flush()
+
+        @status_checkable_executor_job
+        def make_transfers(users, transfer_accounts, disbursement):
+            send_transfer_account = g.user.default_organisation.queried_org_level_transfer_account
+            from server.models.user import User
+            from server.models.transfer_account import TransferAccount
+            from server.models.disbursement import Disbursement
+
+            for idx, (user, ta) in enumerate(zip(users, transfer_accounts)):
+                d = db.session.query(Disbursement).filter(Disbursement.id == disbursement.id).first()
+                d.credit_transfers.append(make_payment_transfer(
+                    disbursement_amount,
+                    send_user=g.user,
+                    receive_user=db.session.query(User).filter(User.id == user.id).first(),
+                    send_transfer_account=send_transfer_account,
+                    receive_transfer_account=db.session.query(TransferAccount).filter(TransferAccount.id == ta.id).first(),
+                    transfer_subtype=TransferSubTypeEnum.DISBURSEMENT,
+                    transfer_mode=TransferModeEnum.WEB,
+                    automatically_resolve_complete=False,
+                ))
+                db.session.commit()
+                percent_complete = ((idx+1)/len(users))*100 
+                yield {
+                    'message': 'success' if percent_complete == 100 else 'pending',
+                    'percent_complete': math.floor(percent_complete),
+                    'data': { 'credit_transfers': credit_transfers_schema.dump(d.credit_transfers).data }
+                }
+        task_uuid = add_after_request_checkable_executor_job(make_transfers, kwargs={ 'users': users, 'transfer_accounts': transfer_accounts, 'disbursement': d })
+
         response_object = {
             'status': 'success',
+            'task_uuid': task_uuid,
             'disbursement_id': d.id,
-            'recipient_count': len(d.credit_transfers),
-            'total_disbursement_amount': disbursement_amount*len(d.credit_transfers)
+            'recipient_count': len(transfer_accounts),
+            'total_disbursement_amount': disbursement_amount*len(transfer_accounts)
         }
         return make_response(jsonify(response_object)), 201
 
@@ -138,6 +154,10 @@ class DisbursementAPI(MethodView):
         disbursement = Disbursement.query.filter(Disbursement.id == disbursement_id)\
             .options(joinedload(Disbursement.credit_transfers))\
             .first()
+        # Since credit transfers are created async, and transfer accounts are added synchronously, we can 
+        # check that it's ready to execute by comparing these lists!
+        if len(disbursement.transfer_accounts) > len(disbursement.credit_transfers):
+            return { 'message': f'Please wait for disbursement creation to complete' }
 
         if not disbursement:
             return { 'message': f'Disbursement with ID \'{disbursement_id}\' not found' }
@@ -145,13 +165,28 @@ class DisbursementAPI(MethodView):
         if disbursement.is_executed == True:
             return { 'message': f'Disbursement with ID \'{disbursement_id}\' has already been executed!' }
 
-        batch_uuid = str(uuid4())
-        for transfer in disbursement.credit_transfers:
-            transfer.resolve_as_complete_and_trigger_blockchain(batch_uuid=batch_uuid)
-
+        @status_checkable_executor_job
+        def trigger_jobs(transfers):
+            from server.models.credit_transfer import CreditTransfer
+            # Disabled batch_uuid, since executing two sequential bulk disbursements is unacceptably slow
+            # Patch for this coming soon!
+            #batch_uuid = str(uuid4())
+            batch_uuid = None
+            for idx, transfer in enumerate(transfers):
+                transfer = db.session.query(CreditTransfer).filter(CreditTransfer.id == transfer.id).first()
+                status = transfer.resolve_as_complete_and_trigger_blockchain(batch_uuid=batch_uuid)
+                db.session.commit()
+                percent_complete = ((idx+1)/len(transfers))*100 
+                yield {
+                    'message': 'success' if percent_complete == 100 else 'pending',
+                    'percent_complete': math.floor(percent_complete),
+                }
         disbursement.is_executed = True
+        task_uuid = add_after_request_checkable_executor_job(trigger_jobs, kwargs={ 'transfers': disbursement.credit_transfers })
+        
         return {
             'status': 'success',
+            'task_uuid': task_uuid,
         }
 
 disbursement_blueprint.add_url_rule(

@@ -129,6 +129,7 @@ def register_blueprints(app):
         # Celery task list. Tasks are added here so that they can be completed after db commit
         g.pending_transactions = []
         g.executor_jobs: ExecutorJobList = []
+        g.is_after_request = False
 
         if request.url.startswith('http://') and '.withsempo.com' in request.url:
             url = request.url.replace('http://', 'https://', 1)
@@ -137,49 +138,34 @@ def register_blueprints(app):
 
     @app.after_request
     def after_request(response):
-        # Prepare pending transactions to be picked up by a new sqlalchemy session after this one closes
-        after_request_transactions = []
-        for transaction, queue in g.pending_transactions:
-            # Since you can't pass DB objects to a new separate session, we're saving the transaction class' and 
-            # IDs so they can be looked up later in the new session 
-            after_request_transactions.append((transaction.__class__, transaction.id, queue))
-        # response.on_call_close will execute _after_ the call returns. This makes it so the user doesn't 
-        # have to wait for send_blockchain_payload_to_worker to finish for each transaction 
-        def process_after_request_transactions(after_request_transactions):
-            for transaction_class, transaction_id, queue in after_request_transactions:
-                transaction = db.session.query(transaction_class)\
-                    .filter(transaction_class.id == transaction_id)\
-                    .execution_options(show_all=True)\
-                    .first()
-                transaction.send_blockchain_payload_to_worker(queue=queue)
-                # DB is modified, so commit changes
-                db.session.commit()
-
-        # on_call_close doesn't run in the test environment so process transactions here in that case
-        if config.IS_TEST and after_request_transactions:
-            process_after_request_transactions(after_request_transactions)
-
-        @response.call_on_close
-        def process_after_request():
-            if after_request_transactions:
-                with app.app_context():
-                    if not config.IS_TEST:
-                        process_after_request_transactions(after_request_transactions)
-
-        # Push only credit transfers, not exchanges
-        from server.models.credit_transfer import CreditTransfer
-        from server.utils import pusher_utils
-        transactions = [t[0] for t in g.pending_transactions if isinstance(t[0], CreditTransfer)]
-        pusher_utils.push_admin_credit_transfer(transactions)
-
-        for job, args, kwargs in g.executor_jobs:
-            job.submit(*args, **kwargs)
-
         from server.utils import pusher_utils
         if response.status_code < 300 and response.status_code >= 200:
             db.session.commit()
+
         # Adds version to response header
         response.headers['App-Version'] = config.VERSION
+
+        # Async tasks are synchronous in pytest, so no need to nuke
+        if not config.IS_TEST:
+            # Detaches all existing db objects from the old session
+            db.session.expunge_all()
+            # Closes and tosses out the old session and engine
+            db.session.close()
+            db.engine.dispose()
+
+        g.is_after_request = True
+        if g.executor_jobs:
+            from flask.globals import _request_ctx_stack
+            for job, args, kwargs in g.executor_jobs:
+                top = _request_ctx_stack.top
+                reqctx = top.copy()
+                reqctx.request.environ = reqctx.request.environ.copy()
+                with reqctx:
+                    job.submit(*args, **kwargs)
+        else:
+            from server.utils.executor import prepare_transactions_async_job
+            prepare_transactions_async_job()
+
         return response
 
     from .views.index import index_view
@@ -215,6 +201,7 @@ def register_blueprints(app):
     from server.api.attribute_map_api import attribute_map_blueprint
     from server.api.vendor_payout_api import vendor_payout
     from server.api.disbursement_api import disbursement_blueprint 
+    from server.api.async_api import async_blueprint 
 
     versioned_url = '/api/v1'
 
@@ -251,6 +238,7 @@ def register_blueprints(app):
     app.register_blueprint(attribute_map_blueprint, url_prefix=versioned_url)
     app.register_blueprint(vendor_payout, url_prefix=versioned_url)
     app.register_blueprint(disbursement_blueprint, url_prefix=versioned_url)
+    app.register_blueprint(async_blueprint, url_prefix=versioned_url)
 
     # 404 handled in react
     @app.errorhandler(404)
@@ -295,7 +283,7 @@ class AppQuery(BaseQuery):
 db = SQLAlchemy(
     query_class=AppQuery,
     session_options={
-        "expire_on_commit": not config.IS_TEST,
+        "expire_on_commit": False,
         "enable_baked_queries": False
         # enable_baked_queries prevents the filter_by_org query from getting trapped on
         # organisation change. Shouldn't by default but ¯\_(ツ)_/¯
