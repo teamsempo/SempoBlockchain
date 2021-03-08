@@ -63,9 +63,8 @@ if load_from_s3:
             region_name=SECRET_BUCKET_REGION
         )
 
-
-
     client = session.client('s3')
+    
     SECRET_BUCKET = os.environ.get("SECRETS_BUCKET", "ctp-prod-secrets")
     FORCE_SSL = True
     common_obj = client.get_object(Bucket=SECRET_BUCKET, Key=COMMON_FILENAME)
