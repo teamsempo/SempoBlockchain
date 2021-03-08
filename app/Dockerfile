@@ -1,4 +1,4 @@
-FROM python:3.8-slim-buster
+FROM python:3.8-buster
 
 RUN apt update \
   && apt -y install gcc g++ libffi-dev libstdc++-8-dev python3-dev musl-dev libssl-dev curl

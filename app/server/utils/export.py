@@ -1,7 +1,7 @@
 import os
 
 from flask import render_template, current_app, g
-#from weasyprint import HTML
+from weasyprint import HTML
 
 from server.schemas import pdf_users_schema
 from server.utils.amazon_s3 import upload_local_file_to_s3, get_local_save_path
