@@ -47,10 +47,6 @@ else:
     load_from_s3 = False
 
 if load_from_s3:
-    logg.debug('Load from S3')
-    logg.debug('Load from S3')
-    logg.debug('Load from S3')
-    logg.debug('Load from S3')
     # Load config from S3 Bucket
     SECRET_BUCKET_REGION = os.environ.get("SECRETS_BUCKET_REGION", "ap-southeast-2")
     if os.environ.get('AWS_ACCESS_KEY_ID'):
@@ -63,10 +59,6 @@ if load_from_s3:
         )
     else:
         # The server itself has S3 Auth
-        logg.debug('Session')
-        logg.debug('Session')
-        logg.debug('Session')
-        logg.debug('Session')
         session = boto3.Session(
             region_name=SECRET_BUCKET_REGION
         )
@@ -74,19 +66,8 @@ if load_from_s3:
 
 
     client = session.client('s3')
-    logg.debug(client)
-    logg.debug(client)
-    logg.debug(client)
     SECRET_BUCKET = os.environ.get("SECRETS_BUCKET", "ctp-prod-secrets")
     FORCE_SSL = True
-    logg.debug(SECRET_BUCKET)
-    logg.debug(SECRET_BUCKET)
-    logg.debug(SECRET_BUCKET)
-    logg.debug(SECRET_BUCKET)
-    logg.debug(COMMON_FILENAME)
-    logg.debug(COMMON_FILENAME)
-    logg.debug(COMMON_FILENAME)
-    logg.debug(COMMON_FILENAME)
     common_obj = client.get_object(Bucket=SECRET_BUCKET, Key=COMMON_FILENAME)
     common_read_result = common_obj['Body'].read().decode('utf-8')
     common_secrets_parser.read_string(common_read_result)
