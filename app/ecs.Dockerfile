@@ -1,4 +1,4 @@
-FROM python:3.8-slim-buster
+FROM python:3.8-buster
 
 RUN apt update \
   && apt -y install gcc g++ libffi-dev libstdc++-8-dev python3-dev musl-dev libssl-dev curl
@@ -18,18 +18,18 @@ COPY ./config_files/* /src/config_files/
 COPY ./app/server /src/server
 COPY ./app/migrations /src/migrations
 COPY ./app/manage.py /src
-COPY ./app/run.py /src
-COPY ./app/_docker_app_script.sh /
+COPY ./app/ecs_run.py /src
+COPY ./app/_ecs_docker_app_script.sh /
 COPY ./app/test_app /src/test_app
 COPY ./app/.coveragerc /src
 
 WORKDIR /
 
-RUN chmod +x /_docker_app_script.sh
+RUN chmod +x /_ecs_docker_app_script.sh
 
 ARG GIT_HASH
 ENV GIT_HASH=$GIT_HASH
 
 EXPOSE 9000
 
-CMD ["/_docker_app_script.sh"]
+CMD ["/_ecs_docker_app_script.sh"]
