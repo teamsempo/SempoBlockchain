@@ -195,3 +195,31 @@ def test_put_multiple_transfer_account_api(test_client, authed_sempo_admin_user,
         else:
             assert response.json['data']['transfer_accounts'][0][
                        'balance'] == 0
+
+def test_bulk_approve_and_disapprove(test_client, authed_sempo_admin_user, create_transfer_account_user_function):
+    transfer_account = create_transfer_account_user_function.transfer_account
+    transfer_account.is_approved = True
+    authed_sempo_admin_user.set_held_role('ADMIN', 'superadmin')
+    auth = get_complete_auth_token(authed_sempo_admin_user)
+
+    test_client.put(
+            "/api/v1/transfer_account/bulk/",
+            headers=dict(
+                Authorization=auth,
+                Accept='application/json'
+            ),
+            json={
+                "approve": True
+        })
+    assert transfer_account.is_approved == True
+
+    resp = test_client.put(
+            "/api/v1/transfer_account/bulk/",
+            headers=dict(
+                Authorization=auth,
+                Accept='application/json'
+            ),
+            json={
+                "approve": False
+        })
+    assert transfer_account.is_approved == False
