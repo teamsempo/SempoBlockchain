@@ -6,7 +6,7 @@ import { ReduxState } from "../../reducers/rootReducer";
 import { EditTransferAccountPayload } from "../../reducers/transferAccount/types";
 import { EditTransferAccountAction } from "../../reducers/transferAccount/actions";
 
-import QueryConstructor, { Query } from "../filterModule/queryConstructor";
+import QueryConstructor, { Query } from "../filterModule/QueryConstructor";
 import TransferAccountList from "./TransferAccountList";
 import ImportModal from "./import/importModal.jsx";
 

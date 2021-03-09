@@ -11,7 +11,7 @@ import StandardTransferAccountList from "../transferAccount/StandardTransferAcco
 import { LoadTransferAccountAction } from "../../reducers/transferAccount/actions";
 import organizationWrapper from "../organizationWrapper.jsx";
 import NoDataMessage from "../NoDataMessage";
-import QueryConstructor from "../filterModule/queryConstructor";
+import QueryConstructor from "../filterModule/QueryConstructor";
 
 const mapStateToProps = state => {
   return {
