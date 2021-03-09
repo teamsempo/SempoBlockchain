@@ -100,3 +100,54 @@ export const createSagas = (registrations: RegistrationMapping) => {
 
   return sagaList;
 };
+
+/**
+ * ~~~~~For example~~~~~
+ *
+ *
+ *  interface CreateUserBody {
+ *   first_name: string;
+ *   last_name: string;
+ *   public_serial_number: string;
+ *   //  And so on
+ * }
+ *
+ * interface ModifyUserBody {
+ *   //Defaults to the same as create body, but can be different
+ *   first_name: string;
+ *   last_name: string;
+ *   some_other_thing: boolean;
+ *   //  And so on
+ * }
+ *
+ * interface SempoObjects extends RegistrationMapping {
+ *   UserExample: Registration<CreateUserBody, ModifyUserBody>;
+ * }
+ *
+ * export const sempoObjects: SempoObjects = {
+ *   UserExample: {
+ *     name: "UserExample",
+ *     endpoint: "user",
+ *     schema: userSchema
+ *   }
+ *
+ * let baseReducers = createReducers(sempoObjects);
+ * let sagalist = createSagas(sempoObjects);
+ *
+ * const appReducer = combineReducers({
+ *  ...baseReducers
+ * });
+ *
+ * export default function* rootSaga() {
+ *    yield all([
+ *      generatedSagas()
+ *    ]);
+ * }
+ *
+ * Then for dispatch in component:
+ * const mapDispatchToProps = (dispatch: any): DispatchProps => {
+ *   return {
+ *     loadUsers: () => dispatch(apiActions.load(sempoObjects.UserExample))
+ *   }
+ * }
+ */
