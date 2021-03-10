@@ -53,6 +53,7 @@ type State = typeof initialState;
 declare global {
   interface Window {
     DEPLOYMENT_NAME: string;
+    INTERCOM_APP_ID: string;
   }
 }
 
@@ -163,9 +164,11 @@ class NavBar extends React.Component<Props, State> {
               <Menu.Item key="help-centre">
                 <HelpCentre />
               </Menu.Item>
-              <Menu.Item key="contact-support">
-                <IntercomChat />
-              </Menu.Item>
+              {window.INTERCOM_APP_ID ? (
+                <Menu.Item key="contact-support">
+                  <IntercomChat />
+                </Menu.Item>
+              ) : null}
             </SubMenu>
           </Menu>
         </Sider>

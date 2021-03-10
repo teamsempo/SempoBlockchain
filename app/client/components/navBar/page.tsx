@@ -21,6 +21,12 @@ interface OuterProps {
   component?: React.ComponentClass | React.FunctionComponent;
 }
 
+declare global {
+  interface Window {
+    INTERCOM_APP_ID: string;
+  }
+}
+
 const Page: React.FunctionComponent<OuterProps> = props => {
   const {
     footer = true,
@@ -54,7 +60,7 @@ const Page: React.FunctionComponent<OuterProps> = props => {
 
   return (
     <ErrorBoundary>
-      <IntercomSetup />
+      {window.INTERCOM_APP_ID ? <IntercomSetup /> : null}
 
       <Layout style={{ minHeight: "100vh" }}>
         {noNav ? null : (
