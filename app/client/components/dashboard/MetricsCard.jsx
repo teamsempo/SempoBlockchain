@@ -6,12 +6,12 @@ import React from "react";
 
 import { connect } from "react-redux";
 import { CSVLink } from "react-csv";
+import { DownloadOutlined } from "@ant-design/icons";
 
 import { isMobileQuery, withMediaQuery } from "../helpers/responsive";
 import { toCurrency } from "../../utils";
 import { VALUE_TYPES } from "../../constants";
-
-import { Card, Divider } from "antd";
+import { Card, Divider, Tooltip } from "antd";
 
 import VolumeChart from "./card/VolumeChart";
 import GroupByChart from "./card/GroupByChart";
@@ -90,7 +90,8 @@ class MetricsCard extends React.Component {
         });
       });
       // Make 2d array in the shape of the CSV we want!
-      var sheetArray = [["Date", ...headers]];
+      const sheetHeaders = headers.length == 1 ? ["Value"] : headers;
+      var sheetArray = [["Date", ...sheetHeaders]];
       Object.keys(datesToValues).forEach(date => {
         const row = headers.map(header => {
           return datesToValues[date][header];
@@ -99,20 +100,19 @@ class MetricsCard extends React.Component {
       });
     }
 
+    const csvLink = (
+      <Tooltip title={"Download CSV"}>
+        <CSVLink
+          filename={cardTitle + "_" + this.state.selectedTimeSeries + ".csv"}
+          data={sheetArray || [[]]}
+        >
+          <DownloadOutlined />
+        </CSVLink>
+      </Tooltip>
+    );
+
     const filter = <DateRangeSelector onChange={this.setDateRange} />;
-    const csvDownload = (
-      <CSVLink
-        filename={cardTitle + "_" + this.state.selectedTimeSeries + ".csv"}
-        data={sheetArray || [[]]}
-      >
-        Download CSV
-      </CSVLink>
-    );
-    const extra = (
-      <div>
-        {filter} {csvDownload}
-      </div>
-    );
+    const extra = <div>{filter}</div>;
 
     let dataModule;
 
@@ -183,7 +183,15 @@ class MetricsCard extends React.Component {
     }
 
     return (
-      <Card title={cardTitle} bordered={false} extra={extra}>
+      <Card
+        title={
+          <span>
+            {cardTitle} {csvLink}
+          </span>
+        }
+        bordered={false}
+        extra={extra}
+      >
         <div
           style={{
             display: "flex",
