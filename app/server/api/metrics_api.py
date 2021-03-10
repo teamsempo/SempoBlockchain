@@ -84,6 +84,7 @@ class CreditTransferStatsApi(MethodView):
         return make_response(jsonify(response_object)), 200
 
 class FiltersApi(MethodView):
+    @multi_org
     @requires_auth(allowed_roles={'ADMIN': 'any'})
     def get(self):
         """
