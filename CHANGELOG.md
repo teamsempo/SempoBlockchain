@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [v1.7.70] - 2021-03-01
+## [v1.7.72] - 2021-03-10
 
 ### Added
 
@@ -16,4 +16,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Please see PRs for specifications before changelog
 
 [unreleased]: https://github.com/teamsempo/SempoBlockchain/compare/v1.7.70...HEAD
-[v1.7.70]: https://github.com/teamsempo/SempoBlockchain/releases/tag/server-v1.7.70
+[v1.7.72]: https://github.com/teamsempo/SempoBlockchain/releases/tag/server-v1.7.70
