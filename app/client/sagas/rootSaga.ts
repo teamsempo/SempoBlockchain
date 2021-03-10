@@ -15,8 +15,8 @@ import metricSaga from "./metricSaga";
 import allowedFilterSaga from "./allowedFilterSaga";
 import transferCardSagas from "./transferCardSagas";
 import tokenSagas from "./tokenSaga";
-import bulkTransferSagas from "./bulkTransferSagas";
 import { generatedSagas } from "../reducers/rootReducer";
+import bulkTransferSagas from "./bulkTransferSagas";
 
 export default function* rootSaga() {
   yield all([

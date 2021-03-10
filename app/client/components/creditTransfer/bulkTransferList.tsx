@@ -9,8 +9,7 @@ import { ColumnsType } from "antd/es/table";
 import { ReduxState, sempoObjects } from "../../reducers/rootReducer";
 import { connect } from "react-redux";
 import DateTime from "../dateTime";
-import { LoadRequestAction } from "../../genericState/types";
-import { apiActions } from "../../genericState";
+import { apiActions, LoadRequestAction } from "../../genericState";
 import { formatMoney, getActiveToken } from "../../utils";
 
 interface StateProps {
@@ -119,20 +118,20 @@ class BulkTransferList extends React.Component<Props, ComponentState> {
   render() {
     const { bulkTransfers } = this.props;
 
-    let data: BulkTransfer[] = bulkTransfers.IdList.filter(
-      (id: number) => bulkTransfers.byId[id] != undefined
-    ).map((id: number) => {
-      let bulkTransfer = bulkTransfers.byId[id];
+    let data: BulkTransfer[] = bulkTransfers.idList
+      .filter((id: number) => bulkTransfers.byId[id] != undefined)
+      .map((id: number) => {
+        let bulkTransfer = bulkTransfers.byId[id];
 
-      return {
-        key: id,
-        disbursement_amount: bulkTransfer.disbursement_amount,
-        recipient_count: bulkTransfer.recipient_count,
-        state: bulkTransfer.state,
-        created: bulkTransfer.created,
-        symbol: this.props.activeToken.symbol
-      };
-    });
+        return {
+          key: id,
+          disbursement_amount: bulkTransfer.disbursement_amount,
+          recipient_count: bulkTransfer.recipient_count,
+          state: bulkTransfer.state,
+          created: bulkTransfer.created,
+          symbol: this.props.activeToken.symbol
+        };
+      });
 
     return (
       <Table
