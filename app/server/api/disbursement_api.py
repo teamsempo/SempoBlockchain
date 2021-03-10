@@ -119,8 +119,6 @@ class MakeDisbursementAPI(MethodView):
 
         db.session.flush()
 
-        # task_uuid = add_after_request_checkable_executor_job(make_transfers, kwargs={ 'users': users, 'transfer_accounts': transfer_accounts, 'disbursement': d })
-
         disbursement = disbursement_schema.dump(d).data
 
         response_object = {

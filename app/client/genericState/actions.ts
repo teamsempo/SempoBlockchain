@@ -5,7 +5,7 @@ import {
   CreateRequestAction,
   LoadRequestAction,
   ModifyRequestAction,
-  NamedRegistration
+  Registration
 } from "./types";
 
 class APILifeCycleActionType implements APILifecycleActionTypesInterface {
@@ -14,9 +14,9 @@ class APILifeCycleActionType implements APILifecycleActionTypesInterface {
   }
 
   stage: string;
-  request = (name: string) => `${this.stage}_${name}_REQUEST`;
-  success = (name: string) => `${this.stage}_${name}_SUCCESS`;
-  failure = (name: string) => `${this.stage}_${name}_FAILURE`;
+  request = (name: string) => `${this.stage}_${name.toUpperCase()}_REQUEST`;
+  success = (name: string) => `${this.stage}_${name.toUpperCase()}_SUCCESS`;
+  failure = (name: string) => `${this.stage}_${name.toUpperCase()}_FAILURE`;
 }
 
 export const loadActionTypes = new APILifeCycleActionType("LOAD");
@@ -24,15 +24,17 @@ export const createActionTypes = new APILifeCycleActionType("CREATE");
 export const modifyActionTypes = new APILifeCycleActionType("MODIFY");
 
 export const deepUpdateObjectsActionType: ActionGenerator = name =>
-  `DEEP_UPDATE_${name}`;
+  `DEEP_UPDATE_${name.toUpperCase()}`;
 export const replaceUpdateObjectsActionType: ActionGenerator = name =>
-  `REPLACE_UPDATE_${name}`;
-export const replaceIDListActionType: ActionGenerator = name =>
-  `REPLACE_${name}_ID_LIST`;
+  `REPLACE_UPDATE_${name.toUpperCase()}`;
+export const replaceIdListActionType: ActionGenerator = name =>
+  `REPLACE_${name.toUpperCase()}_ID_LIST`;
 
+// These functions are designed to be called directly from inside a dispatch,
+// and they will return an appropriately shaped action for the given Rest API... action? (load, create, modify)
 export const apiActions = {
   load: function<CB, MB>(
-    reg: NamedRegistration<CB, MB>,
+    reg: Registration<CB, MB>,
     path?: number,
     query?: Query
   ): LoadRequestAction {
@@ -43,7 +45,7 @@ export const apiActions = {
   },
 
   create: function<CB, MB>(
-    reg: NamedRegistration<CB, MB>,
+    reg: Registration<CB, MB>,
     body?: CB,
     query?: Query
   ): CreateRequestAction {
@@ -54,7 +56,7 @@ export const apiActions = {
   },
 
   modify: function<CB, MB>(
-    reg: NamedRegistration<CB, MB>,
+    reg: Registration<CB, MB>,
     path: number,
     body?: MB,
     query?: Query

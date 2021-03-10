@@ -3,18 +3,18 @@ import {
   APILifecycleActionTypesInterface,
   byIdState,
   IdListState,
-  NamedRegistration,
+  Registration,
   RequestingState
 } from "./types";
 import {
   deepUpdateObjectsActionType,
-  replaceIDListActionType,
+  replaceIdListActionType,
   replaceUpdateObjectsActionType
 } from "./actions";
 
 export const lifecycleReducerFactory = (
   actionType: APILifecycleActionTypesInterface,
-  reg: NamedRegistration
+  reg: Registration
 ): ((state: RequestingState | undefined, action: any) => RequestingState) => {
   const initialLoaderState = {
     isRequesting: false,
@@ -47,7 +47,7 @@ export const lifecycleReducerFactory = (
 };
 
 export const byIdReducerFactory = (
-  reg: NamedRegistration
+  reg: Registration
 ): ((state: byIdState | undefined, action: any) => byIdState) => {
   return (state: byIdState | undefined = {}, action: any): byIdState => {
     switch (action.type) {
@@ -63,13 +63,13 @@ export const byIdReducerFactory = (
   };
 };
 
-export const IdListReducerFactory = (
-  reg: NamedRegistration
+export const idListReducerFactory = (
+  reg: Registration
 ): ((state: IdListState | undefined, action: any) => IdListState) => {
   return (state: IdListState | undefined = [], action: any): IdListState => {
     switch (action.type) {
-      case replaceIDListActionType(reg.name):
-        return (state = action.IdList);
+      case replaceIdListActionType(reg.name):
+        return (state = action.idList);
       default:
         return state;
     }

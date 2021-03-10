@@ -54,7 +54,9 @@ export interface byIdState {
 
 export type IdListState = (number | string)[];
 
+// The Generics here correspond to the Body sent during either Create or Modify requests.
 export interface Registration<CB extends Body = Body, MB extends Body = CB> {
+  name: string;
   schema: Schema;
   endpoint?: string;
   singularData?: string;
@@ -62,28 +64,17 @@ export interface Registration<CB extends Body = Body, MB extends Body = CB> {
   _?: CB | MB; //Prevents a "declared but never used" error
 }
 
-export interface NamedRegistration<
-  CB extends Body = Body,
-  MB extends Body = CB
-> extends Registration<CB, MB> {
-  name: string;
-}
-
 export interface EndpointedRegistration<
   CB extends Body = Body,
   MB extends Body = CB
-> extends NamedRegistration<CB, MB> {
+> extends Registration<CB, MB> {
   endpoint: string;
 }
 
 export interface RegistrationMapping {
-  [key: string]: NamedRegistration;
+  [key: string]: Registration;
 }
 
 export interface EndpointedRegistrationMapping {
   [key: string]: EndpointedRegistration;
-}
-
-export interface BaseReducerMapping {
-  [key: string]: Reducer;
 }

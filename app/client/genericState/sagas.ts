@@ -21,7 +21,7 @@ import {
   deepUpdateObjectsActionType,
   loadActionTypes,
   modifyActionTypes,
-  replaceIDListActionType
+  replaceIdListActionType
 } from "./actions";
 
 export const sagaFactory = (
@@ -32,8 +32,8 @@ export const sagaFactory = (
     const normalized = yield apiRequest(genericGetAPI, loadActionTypes, action);
     if (normalized) {
       yield put({
-        type: replaceIDListActionType(reg.name),
-        IdList: normalized.result
+        type: replaceIdListActionType(reg.name),
+        idList: normalized.result
       });
     }
   }

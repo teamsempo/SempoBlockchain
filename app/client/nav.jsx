@@ -90,6 +90,7 @@ class Nav extends React.Component {
               isReAuthing={isReAuthing}
               isAntDesign={true}
               title={"Dashboard"}
+              isMultiOrg={true}
             />
             <PrivateRoute
               exact
@@ -99,6 +100,7 @@ class Nav extends React.Component {
               isReAuthing={isReAuthing}
               footer={false}
               title={"Map"}
+              isMultiOrg={true}
             />
             <PrivateRoute
               exact

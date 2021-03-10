@@ -37,10 +37,10 @@ import {
 import {
   createReducers,
   createSagas,
-  NamedRegistration,
+  Registration,
   Body
 } from "../genericState";
-import { Registration, RegistrationMapping } from "../genericState/types";
+import { RegistrationMapping } from "../genericState/types";
 import {
   CreateBulkTransferBody,
   ModifyBulkTransferBody
@@ -118,42 +118,3 @@ const rootReducer = (state: any, action: any) => {
 export default rootReducer;
 
 export type ReduxState = ReturnType<typeof rootReducer>;
-
-// }
-//
-//
-// function* loadRequest({ path, query }: GetRequestAction<string>) {
-//   try {
-//     const url = reg.endpoint;
-//
-//     const result = yield call(genericGetAPI, {url, path, query});
-//
-//     yield updateFromResult(url, result);
-//
-//     yield put({type: loadSuccessActionType(reg.name)});
-//   } catch (fetch_error) {
-//     const error = yield call(handleError, fetch_error);
-//
-//     yield put({type: loadFailureActionType(reg.name), error});
-//     message.error(error.message);
-//
-//   }
-// }
-
-// function* createRequest({ query, body}: CreateRequestAction<string>)
-// {
-//   try {
-//     const url = reg.endpoint;
-//
-//     const result = yield call(genericPostAPI,{url, query, body});
-//
-//     yield updateFromResult(url, result);
-//
-//     yield put({type: createSuccessActionType(reg.name)});
-//   } catch (fetch_error) {
-//     const error = yield call(handleError, fetch_error);
-//
-//     yield put({type: createFailureActionType(reg.name), error});
-//     message.error(error.message);
-//   }
-// }

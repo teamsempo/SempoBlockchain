@@ -55,6 +55,7 @@ type State = typeof initialState;
 declare global {
   interface Window {
     DEPLOYMENT_NAME: string;
+    INTERCOM_APP_ID: string;
   }
 }
 
@@ -92,8 +93,10 @@ class NavBar extends React.Component<Props, State> {
   }
 
   render() {
-    let { loggedIn, pathname, isMobile, collapsed } = this.props;
+    let { loggedIn, pathname, isMobile, collapsed, login } = this.props;
     let { iconURL } = this.state;
+    const isMultiOrg =
+      login && login.organisationIds && login.organisationIds.length > 1;
 
     let activePath = pathname && "/" + pathname.split("/")[1];
 
@@ -129,7 +132,11 @@ class NavBar extends React.Component<Props, State> {
                 </NavLink>
               </Menu.Item>
             </SubMenu>
-            <Menu.Item key="/accounts" icon={<TeamOutlined translate={""} />}>
+            <Menu.Item
+              key="/accounts"
+              icon={<TeamOutlined translate={""} />}
+              disabled={isMultiOrg || false}
+            >
               <NavLink to="/accounts">Accounts</NavLink>
             </Menu.Item>
 
@@ -141,10 +148,15 @@ class NavBar extends React.Component<Props, State> {
               <Menu.Item
                 key="/transfers"
                 icon={<UnorderedListOutlined translate={""} />}
+                disabled={isMultiOrg || false}
               >
                 <NavLink to="/transfers">Transfers List</NavLink>
               </Menu.Item>
-              <Menu.Item key="/bulk/" icon={<SendOutlined translate={""} />}>
+              <Menu.Item
+                key="/bulk/"
+                icon={<SendOutlined translate={""} />}
+                disabled={isMultiOrg || false}
+              >
                 <NavLink to="/bulk/">Bulk Transfers</NavLink>
               </Menu.Item>
             </SubMenu>
@@ -152,6 +164,7 @@ class NavBar extends React.Component<Props, State> {
             <Menu.Item
               key="/settings"
               icon={<SettingOutlined translate={""} />}
+              disabled={isMultiOrg || false}
             >
               <NavLink to="/settings">Settings</NavLink>
             </Menu.Item>
@@ -179,9 +192,11 @@ class NavBar extends React.Component<Props, State> {
               <Menu.Item key="help-centre">
                 <HelpCentre />
               </Menu.Item>
-              <Menu.Item key="contact-support">
-                <IntercomChat />
-              </Menu.Item>
+              {window.INTERCOM_APP_ID ? (
+                <Menu.Item key="contact-support">
+                  <IntercomChat />
+                </Menu.Item>
+              ) : null}
             </SubMenu>
           </Menu>
         </Sider>
