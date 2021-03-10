@@ -19,6 +19,7 @@ class Disbursement(ModelBase):
     include_accounts = db.Column(db.ARRAY(db.Integer))
     exclude_accounts = db.Column(db.ARRAY(db.Integer))
     state = db.Column(db.String)
+    transfer_type = db.Column(db.String)
     _disbursement_amount_wei = db.Column(db.Numeric(27), default=0)
 
     creator_user = db.relationship('User',

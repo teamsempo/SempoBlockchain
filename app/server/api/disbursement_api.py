@@ -14,7 +14,7 @@ from server.models.credit_transfer import CreditTransfer
 from server.utils.auth import requires_auth
 from server.utils.transfer_filter import process_transfer_filters
 from server.utils.search import generate_search_query
-from server.utils.credit_transfer import make_payment_transfer
+from server.utils.credit_transfer import make_payment_transfer, make_target_balance_transfer
 from server.utils.transfer_enums import TransferSubTypeEnum, TransferModeEnum
 from server.models.utils import paginate_query
 from server.utils.executor import status_checkable_executor_job, add_after_request_checkable_executor_job
@@ -29,20 +29,37 @@ def make_transfers(disbursement_id, auto_resolve=False):
     from server.models.user import User
     from server.models.transfer_account import TransferAccount
     from server.models.disbursement import Disbursement
-
     disbursement = db.session.query(Disbursement).filter(Disbursement.id == disbursement_id).first()
     for idx, ta in enumerate(disbursement.transfer_accounts):
         user = ta.primary_user
-        transfer = make_payment_transfer(
-            disbursement.disbursement_amount,
-            send_user=g.user,
-            receive_user=db.session.query(User).filter(User.id == user.id).first(),
-            send_transfer_account=send_transfer_account,
-            receive_transfer_account=db.session.query(TransferAccount).filter(TransferAccount.id == ta.id).first(),
-            transfer_subtype=TransferSubTypeEnum.DISBURSEMENT,
-            transfer_mode=TransferModeEnum.WEB,
-            automatically_resolve_complete=False,
-        )
+        if disbursement.transfer_type == 'DISBURSEMENT':
+            transfer = make_payment_transfer(
+                disbursement.disbursement_amount,
+                send_user=g.user,
+                receive_user=db.session.query(User).filter(User.id == user.id).first(),
+                send_transfer_account=send_transfer_account,
+                receive_transfer_account=db.session.query(TransferAccount).filter(TransferAccount.id == ta.id).first(),
+                transfer_subtype=TransferSubTypeEnum.DISBURSEMENT,
+                transfer_mode=TransferModeEnum.WEB,
+                automatically_resolve_complete=False,
+            )
+        if disbursement.transfer_type == 'RECLAMATION':
+            transfer = make_payment_transfer(
+                disbursement.disbursement_amount,
+                send_user=db.session.query(User).filter(User.id == user.id).first(),
+                send_transfer_account=db.session.query(TransferAccount).filter(TransferAccount.id == ta.id).first(),
+                transfer_subtype=TransferSubTypeEnum.RECLAMATION,
+                transfer_mode=TransferModeEnum.WEB,
+                require_recipient_approved=False,
+                automatically_resolve_complete=False,
+            )
+        if disbursement.transfer_type == 'BALANCE':
+            transfer = make_target_balance_transfer(
+                    disbursement.disbursement_amount,
+                    db.session.query(User).filter(User.id == user.id).first(),
+                    automatically_resolve_complete=False,
+                    transfer_mode=TransferModeEnum.WEB,
+                )
 
         disbursement.credit_transfers.append(transfer)
 
@@ -88,9 +105,12 @@ class MakeDisbursementAPI(MethodView):
         # HANDLE PARAM : include_accounts - Explicitly exclude these users
         exclude_accounts = post_data.get('exclude_accounts', [])
         disbursement_amount = abs(round(Decimal(post_data.get('disbursement_amount') or 0),6))
-
         if include_accounts and exclude_accounts:
             return { 'message': 'Please either include or exclude users (include is additive from the whole search, while exclude is subtractive)'}
+        # HANDLE PARAM : transfer_type - Transfer type-- either DISBURSEMENT, RECLAMATION, or BALANCE
+        transfer_type = post_data.get('transfer_type', 'DISBURSEMENT')
+        if transfer_type not in ['DISBURSEMENT', 'RECLAMATION', 'BALANCE']:
+            return { 'message': f'{transfer_type} not a valid transfer type. Please choose one of DISBURSEMENT, RECLAMATION, or BALANCE'}
 
         order_arg = request.args.get('order') or 'DESC'
         if order_arg.upper() not in ['ASC', 'DESC']:
@@ -105,7 +125,8 @@ class MakeDisbursementAPI(MethodView):
             search_filter_params = encoded_filters,
             include_accounts = include_accounts,
             exclude_accounts = exclude_accounts,
-            disbursement_amount = disbursement_amount
+            disbursement_amount = disbursement_amount,
+            transfer_type = transfer_type
         )
 
         if include_accounts:
