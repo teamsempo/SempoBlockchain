@@ -123,7 +123,11 @@ class TransferCardAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})
     def put(self, public_serial_number, nfc_serial_number):
         data = request.get_json()
+
         amount_offset = data.get('amount_offset')
+
+        disable = data.get('disable', False)
+
         if nfc_serial_number:
             transfer_card = TransferCard.query.filter_by(nfc_serial_number=nfc_serial_number).first()
         else:
@@ -135,13 +139,23 @@ class TransferCardAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 404
 
-        if not transfer_card.transfer_account:
-            response_object = {
-                'message': f'Card {transfer_card.id} not bound to transfer account',
-            }
-            return make_response(jsonify(response_object)), 400
+        if disable:
+            if transfer_card.is_disabled:
+                response_object = {
+                    'message': 'Card card already disabled',
+                }
+                return make_response(jsonify(response_object)), 400
+
+            transfer_card.disable()
 
         if amount_offset:
+
+            if not transfer_card.transfer_account:
+                response_object = {
+                    'message': f'Card {transfer_card.id} must be bound to at transfer account to modify offset',
+                }
+                return make_response(jsonify(response_object)), 400
+
             transfer_card.amount_offset = amount_offset
 
             db.session.commit()
@@ -168,7 +182,7 @@ transfer_cards_blueprint.add_url_rule(
 )
 
 transfer_cards_blueprint.add_url_rule(
-    '/transfer_cards/public_serial_number/<public_serial_number>',
+    '/transfer_cards/public_serial_number/<public_serial_number>/',
     view_func=TransferCardAPI.as_view('public_sn_referenced_transfer_card_view'),
     methods=['PUT'],
     defaults={'nfc_serial_number': None}

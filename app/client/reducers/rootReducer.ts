@@ -26,6 +26,7 @@ import { TransferUsageReducer } from "./transferUsage/reducers";
 import { OrganisationReducer } from "./organisation/reducers";
 import { metrics } from "./metric/reducers";
 import { allowedFilters } from "./allowedFilters/reducers";
+import { transferCard } from "./transferCard/reducers";
 import { tokens } from "./token/reducers";
 import { bulkTransfers } from "./bulkTransfer/reducers";
 import { all } from "redux-saga/effects";
@@ -103,8 +104,9 @@ const appReducer = combineReducers({
   transferUsages: TransferUsageReducer,
   organisations: OrganisationReducer,
   allowedFilters,
-  tokens,
   form,
+  transferCard,
+  tokens,
   ...baseReducers
 });
 
