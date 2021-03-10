@@ -8,7 +8,7 @@ import { EditTransferAccountAction } from "../../reducers/transferAccount/action
 
 import QueryConstructor, { Query } from "../filterModule/queryConstructor";
 import TransferAccountList from "./TransferAccountList";
-import ImportModal from "./importModal.jsx";
+import ImportModal from "./import/importModal.jsx";
 
 import { browserHistory } from "../../createStore";
 import { CreateBulkTransferBody } from "../../reducers/bulkTransfer/types";
