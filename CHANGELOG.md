@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v1.8.0] - 2021-03-11
+
+### Added capacity to deactivate transfer cards as per https://github.com/teamsempo/SempoBlockchain/pull/602
+
 ## [v1.7.72] - 2021-03-10
 
 ### Added

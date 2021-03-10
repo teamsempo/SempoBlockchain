@@ -47,7 +47,7 @@ export enum LoadUserActionTypes {
 }
 
 export interface LoadUserRequestPayload {
-  query: {};
+  query?: {};
   path: number;
 }
 
