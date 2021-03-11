@@ -15,13 +15,16 @@ class TransferCard(ModelBase):
     public_serial_number    = db.Column(db.String, index=True, unique=True, nullable=False)
     nfc_serial_number       = db.Column(db.String)
     PIN                     = db.Column(db.String)
+    _is_disabled             = db.Column(db.Boolean, default=False)
 
     _amount_loaded          = db.Column(db.Integer)
     _amount_offset           = db.Column(db.Integer)
+
     amount_loaded_signature = db.Column(db.String)
 
     user_id                 = db.Column(db.Integer, db.ForeignKey("user.id"))
     transfer_account_id     = db.Column(db.Integer, db.ForeignKey("transfer_account.id"))
+
 
     credit_transfers = db.relationship(
         'CreditTransfer',
@@ -29,6 +32,14 @@ class TransferCard(ModelBase):
         lazy='dynamic',
         foreign_keys='CreditTransfer.sender_transfer_card_id'
     )
+
+    def disable(self):
+        # disabling cards is permanent, hence no setter to enable a disabled card
+        self._is_disabled = True
+
+    @hybrid_property
+    def is_disabled(self):
+        return self._is_disabled
 
     @hybrid_property
     def amount_loaded(self):
