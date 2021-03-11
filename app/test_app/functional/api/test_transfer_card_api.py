@@ -293,7 +293,7 @@ def test_transfer_card_api(test_client, init_database, complete_admin_auth_token
 
     # With bound user, check modify offset
     resp = test_client.put(
-        f"/api/v1/transfer_cards/public_serial_number/123456",
+        f"/api/v1/transfer_cards/public_serial_number/123456/",
         headers=dict(
             Authorization=complete_admin_auth_token,
             Accept='application/json'
