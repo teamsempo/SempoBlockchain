@@ -4,8 +4,14 @@ import { Modal, Button, InputNumber, Space, Select } from "antd";
 const { Option } = Select;
 
 import { ReduxState, sempoObjects } from "../../reducers/rootReducer";
-import {EditTransferAccountPayload, LoadTransferAccountListPayload} from "../../reducers/transferAccount/types";
-import {EditTransferAccountAction, LoadTransferAccountAction} from "../../reducers/transferAccount/actions";
+import {
+  EditTransferAccountPayload,
+  LoadTransferAccountListPayload
+} from "../../reducers/transferAccount/types";
+import {
+  EditTransferAccountAction,
+  LoadTransferAccountAction
+} from "../../reducers/transferAccount/actions";
 
 import QueryConstructor, { Query } from "../filterModule/queryConstructor";
 import TransferAccountList from "./TransferAccountList";
@@ -52,7 +58,7 @@ interface ComponentState {
   allSelected: boolean;
   params: string;
   searchString: string;
-  awaitingEditSuccess: boolean
+  awaitingEditSuccess: boolean;
 }
 
 type Props = StateProps & DispatchProps & OuterProps;
@@ -102,29 +108,26 @@ class StandardTransferAccountList extends React.Component<
   }
 
   componentDidUpdate(prevProps: Props) {
-
-    if (this.props.transferAccounts.editStatus.isRequesting == true
-      &&  prevProps.transferAccounts.editStatus.isRequesting == false) {
-
+    if (
+      this.props.transferAccounts.editStatus.isRequesting == true &&
+      prevProps.transferAccounts.editStatus.isRequesting == false
+    ) {
       //Set a flag so that if the transferAccounts edit status swaps to success, we'll reload the list
-      this.setState({awaitingEditSuccess: true});
-
-    } else if (this.state.awaitingEditSuccess && this.props.transferAccounts.editStatus.success == true) {
-
+      this.setState({ awaitingEditSuccess: true });
+    } else if (
+      this.state.awaitingEditSuccess &&
+      this.props.transferAccounts.editStatus.success == true
+    ) {
       // Update transfer list by re-running server-side search
-      this.setState({awaitingEditSuccess: false});
+      this.setState({ awaitingEditSuccess: false });
       this.props.loadTransferAccountList({
         query: {
           params: this.state.params,
           search_string: this.state.searchString
         }
       });
-
     }
-
-
   }
-
 
   onSelectChange = (
     selectedRowKeys: React.Key[],
@@ -163,7 +166,6 @@ class StandardTransferAccountList extends React.Component<
       //If the "select all" box is false, only specify the accounts to include.
       include_accounts = selectedRowKeys;
     }
-
 
     this.props.editTransferAccountRequest({
       body: {
