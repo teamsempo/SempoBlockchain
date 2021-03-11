@@ -461,10 +461,15 @@ class DisbursementSchema(SchemaBase):
     recipient_count             = fields.Function(lambda obj: len(obj.transfer_accounts))
     total_disbursement_amount   = fields.Method('_total_disbursement_amount')
     state                       = fields.Str()
+    transfer_type               = fields.Str()
     disbursement_amount         = fields.Int()
+    creator_email               = fields.Method('_creator_email')
 
     def _total_disbursement_amount(self, obj):
-        return  len(obj.transfer_accounts)*obj.disbursement_amount
+        return len(obj.transfer_accounts)*obj.disbursement_amount
+
+    def _creator_email(self, obj):
+        return obj.creator_user.email
 
 
 pdf_users_schema = UserSchema(many=True, only=("id", "qr", "first_name", "last_name"))

@@ -28,11 +28,8 @@ import { metrics } from "./metric/reducers";
 import { allowedFilters } from "./allowedFilters/reducers";
 import { transferCard } from "./transferCard/reducers";
 import { tokens } from "./token/reducers";
-import { bulkTransfers } from "./bulkTransfer/reducers";
 import { all } from "redux-saga/effects";
 import {
-  creditTransferSchema,
-  transferAccountSchema,
   bulkTransferSchema
 } from "../schemas";
 import {
@@ -42,6 +39,7 @@ import {
   Body
 } from "../genericState";
 import { RegistrationMapping } from "../genericState/types";
+
 import {
   CreateBulkTransferBody,
   ModifyBulkTransferBody
@@ -51,23 +49,13 @@ import {
 const form = <Reducer<FormStateMap, AnyAction>>FormReducer;
 
 interface SempoObjects extends RegistrationMapping {
-  bulkTransfers: NamedRegistration<
+  bulkTransfers: Registration<
     CreateBulkTransferBody,
     ModifyBulkTransferBody
   >;
 }
 
-export const sempoObjects = {
-  CT: {
-    name: "CT",
-    endpoint: "credit_transfer",
-    schema: creditTransferSchema
-  },
-  TA: {
-    name: "TA",
-    endpoint: "transfer_account",
-    schema: transferAccountSchema
-  },
+export const sempoObjects: SempoObjects = {
   bulkTransfers: {
     name: "bulkTransfers",
     endpoint: "disbursement",

@@ -1,20 +1,23 @@
 import * as React from "react";
 import { connect } from "react-redux";
-import { Modal, Button, InputNumber, Space } from "antd";
+import { Modal, Button, InputNumber, Space, Select } from "antd";
+const { Option } = Select;
 
 import { ReduxState, sempoObjects } from "../../reducers/rootReducer";
-import { EditTransferAccountPayload } from "../../reducers/transferAccount/types";
-import { EditTransferAccountAction } from "../../reducers/transferAccount/actions";
+import {EditTransferAccountPayload, LoadTransferAccountListPayload} from "../../reducers/transferAccount/types";
+import {EditTransferAccountAction, LoadTransferAccountAction} from "../../reducers/transferAccount/actions";
 
 import QueryConstructor, { Query } from "../filterModule/queryConstructor";
 import TransferAccountList from "./TransferAccountList";
 import ImportModal from "./import/importModal.jsx";
 
 import { browserHistory } from "../../createStore";
-import { CreateBulkTransferBody } from "../../reducers/bulkTransfer/types";
-import { CreateRequestAction } from "../../genericState/types";
+import {
+  CreateBulkTransferBody,
+  TransferTypes
+} from "../../reducers/bulkTransfer/types";
 import { getActiveToken } from "../../utils";
-import { apiActions } from "../../genericState";
+import { apiActions, CreateRequestAction } from "../../genericState";
 
 type numberInput = string | number | null | undefined;
 
@@ -31,6 +34,10 @@ interface DispatchProps {
   createBulkTransferRequest: (
     body: CreateBulkTransferBody
   ) => CreateRequestAction;
+  loadTransferAccountList: ({
+    query,
+    path
+  }: LoadTransferAccountListPayload) => LoadTransferAccountAction;
 }
 
 interface OuterProps {}
@@ -39,11 +46,13 @@ interface ComponentState {
   importModalVisible: boolean;
   bulkTransferModalVisible: boolean;
   amount: numberInput;
+  transferType: TransferTypes;
   selectedRowKeys: React.Key[];
   unselectedRowKeys: React.Key[];
   allSelected: boolean;
   params: string;
   searchString: string;
+  awaitingEditSuccess: boolean
 }
 
 type Props = StateProps & DispatchProps & OuterProps;
@@ -61,7 +70,14 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => {
     editTransferAccountRequest: (payload: EditTransferAccountPayload) =>
       dispatch(EditTransferAccountAction.editTransferAccountRequest(payload)),
     createBulkTransferRequest: (body: CreateBulkTransferBody) =>
-      dispatch(apiActions.create(sempoObjects.bulkTransfers, body))
+      dispatch(apiActions.create(sempoObjects.bulkTransfers, body)),
+    loadTransferAccountList: ({
+      query,
+      path
+    }: LoadTransferAccountListPayload) =>
+      dispatch(
+        LoadTransferAccountAction.loadTransferAccountsRequest({ query, path })
+      )
   };
 };
 
@@ -75,13 +91,40 @@ class StandardTransferAccountList extends React.Component<
       importModalVisible: false,
       bulkTransferModalVisible: false,
       amount: 0,
+      transferType: "DISBURSEMENT",
       selectedRowKeys: [],
       unselectedRowKeys: [],
       allSelected: false,
       params: "",
-      searchString: ""
+      searchString: "",
+      awaitingEditSuccess: false
     };
   }
+
+  componentDidUpdate(prevProps: Props) {
+
+    if (this.props.transferAccounts.editStatus.isRequesting == true
+      &&  prevProps.transferAccounts.editStatus.isRequesting == false) {
+
+      //Set a flag so that if the transferAccounts edit status swaps to success, we'll reload the list
+      this.setState({awaitingEditSuccess: true});
+
+    } else if (this.state.awaitingEditSuccess && this.props.transferAccounts.editStatus.success == true) {
+
+      // Update transfer list by re-running server-side search
+      this.setState({awaitingEditSuccess: false});
+      this.props.loadTransferAccountList({
+        query: {
+          params: this.state.params,
+          search_string: this.state.searchString
+        }
+      });
+
+    }
+
+
+  }
+
 
   onSelectChange = (
     selectedRowKeys: React.Key[],
@@ -107,12 +150,30 @@ class StandardTransferAccountList extends React.Component<
     this.setState({ bulkTransferModalVisible: false, amount: 0 });
   }
 
-  setApproval(approve: boolean, transfer_account_id_list: React.Key[]) {
+  setApproval(approve: boolean) {
+    let { selectedRowKeys, unselectedRowKeys, allSelected } = this.state;
+
+    let include_accounts, exclude_accounts;
+
+    if (allSelected) {
+      //If the "select all" box is true, only specify the accounts to exclude,
+      // as leaving "include_accounts" blank defaults to everything
+      exclude_accounts = unselectedRowKeys;
+    } else {
+      //If the "select all" box is false, only specify the accounts to include.
+      include_accounts = selectedRowKeys;
+    }
+
+
     this.props.editTransferAccountRequest({
       body: {
-        transfer_account_id_list,
-        approve
-      }
+        approve,
+        params: this.state.params,
+        search_string: this.state.searchString,
+        include_accounts: include_accounts,
+        exclude_accounts: exclude_accounts
+      },
+      path: "bulk"
     });
   }
 
@@ -149,6 +210,7 @@ class StandardTransferAccountList extends React.Component<
 
     this.props.createBulkTransferRequest({
       disbursement_amount: amount,
+      transfer_type: this.state.transferType,
       params: this.state.params,
       search_string: this.state.searchString,
       include_accounts: include_accounts,
@@ -165,14 +227,14 @@ class StandardTransferAccountList extends React.Component<
     const actionButtons = [
       {
         label: "Approve",
-        onClick: (IdList: React.Key[]) => this.setApproval(true, IdList)
+        onClick: (IdList: React.Key[]) => this.setApproval(true)
       },
       {
         label: "Unapprove",
-        onClick: (IdList: React.Key[]) => this.setApproval(false, IdList)
+        onClick: (IdList: React.Key[]) => this.setApproval(false)
       },
       {
-        label: "New Bulk Disbursement",
+        label: "New Bulk Transfer",
         onClick: (IdList: React.Key[]) => this.showBulkTransferModal()
       }
     ];
@@ -209,7 +271,7 @@ class StandardTransferAccountList extends React.Component<
         />
 
         <Modal
-          title="Create New Bulk Disbursement"
+          title="Create New Bulk Transfer"
           visible={this.state.bulkTransferModalVisible}
           onOk={this.createBulkTransferFromState}
           confirmLoading={bulkTransfers.createStatus.isRequesting}
@@ -229,13 +291,29 @@ class StandardTransferAccountList extends React.Component<
             </Button>
           ]}
         >
-          <Space>
-            <span>Disbursement Amount: </span>
-            <InputNumber
-              min={0}
-              onChange={(amount: numberInput) => this.setState({ amount })}
-            />
-            {this.props.activeToken.symbol}
+          <Space direction="vertical" size="large">
+            <Space>
+              <span>Transfer Type: </span>
+              <Select
+                defaultValue="DISBURSEMENT"
+                style={{ width: 240 }}
+                onChange={(transferType: TransferTypes) =>
+                  this.setState({ transferType })
+                }
+              >
+                <Option value="DISBURSEMENT">Disbursement</Option>
+                <Option value="RECLAMATION">Reclamation</Option>
+                <Option value="BALANCE">Balance</Option>
+              </Select>
+            </Space>
+            <Space>
+              <span>Transfer Amount: </span>
+              <InputNumber
+                min={0}
+                onChange={(amount: numberInput) => this.setState({ amount })}
+              />
+              {this.props.activeToken.symbol}
+            </Space>
           </Space>
         </Modal>
       </>

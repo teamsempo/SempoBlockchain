@@ -1,3 +1,5 @@
+import * as React from "react";
+
 export interface TransferAccount {
   id: string;
 }
@@ -68,6 +70,10 @@ export interface LoadTransferAccountListPayload {
 
 export interface EditTransferAccountPayload {
   body: {
+    params?: string;
+    search_string?: string;
+    include_accounts?: React.Key[];
+    exclude_accounts?: React.Key[];
     transfer_account_id_list?: (string | number)[];
     approve?: boolean;
     balance?: number;
@@ -77,5 +83,5 @@ export interface EditTransferAccountPayload {
     phone?: string;
     qr_code?: string;
   };
-  path?: number;
+  path?: number | string;
 }

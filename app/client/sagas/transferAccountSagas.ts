@@ -125,11 +125,14 @@ function* editTransferAccount({ payload }: TransferAccountEditApiResult) {
   try {
     const edit_response = yield call(editTransferAccountAPI, payload);
 
-    yield call(updateStateFromTransferAccount, edit_response.data);
+    if (edit_response.data) {
+      yield call(updateStateFromTransferAccount, edit_response.data);
+    }
 
     yield put(EditTransferAccountAction.editTransferAccountSuccess());
     message.success(edit_response.message);
   } catch (fetch_error) {
+    console.log("fe is", fetch_error)
     const error = yield call(handleError, fetch_error);
 
     yield put(EditTransferAccountAction.editTransferAccountFailure(error));

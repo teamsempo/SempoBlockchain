@@ -7,30 +7,7 @@ import { PageWrapper, WrapperDiv } from "../styledElements";
 import organizationWrapper from "../organizationWrapper.jsx";
 import { apiActions } from "../../genericState";
 import { sempoObjects } from "../../reducers/rootReducer";
-import { ModifyBulkTransferBody } from "../../reducers/bulkTransfer/types";
-import {
-  LoadRequestAction,
-  ModifyRequestAction
-} from "../../genericState/types";
 import { formatMoney, getActiveToken } from "../../utils";
-
-// TODO: GET TYPESCRIPT TO PLAY NICE WITH NAV IMPORTS
-// interface StateProps {
-//   bulkTransfers: any;
-// }
-//
-// interface DispatchProps {
-//   loadBulkDisbursement: (path: number) => LoadRequestAction;
-//   modifyBulkDisbursement: (path: number, body: ModifyBulkTransferBody) => ModifyRequestAction;
-//
-// }
-//
-// interface OuterProps {
-//   match: any
-// }
-//
-// type Props = StateProps & DispatchProps & OuterProps;
-//
 
 const mapStateToProps = state => ({
   bulkTransfers: state.bulkTransfers,
@@ -97,6 +74,8 @@ class SingleBulkDisbursementPage extends React.Component {
     }
 
     let status = bulkItem && bulkItem.state;
+    let transferType = bulkItem && bulkItem.transfer_type;
+    let createdBy = bulkItem && bulkItem.creator_email;
 
     let tag;
     let info;
@@ -120,13 +99,18 @@ class SingleBulkDisbursementPage extends React.Component {
     return (
       <WrapperDiv>
         <PageWrapper>
-          <Card
-            title={`Bulk Disbursement ${bulkId}`}
-            style={{ margin: "10px" }}
-          >
+          <Card title={`Bulk Transfer ${bulkId}`} style={{ margin: "10px" }}>
+            <p>
+              {" "}
+              <b>Created by:</b> {createdBy || " "}
+            </p>
             <p>
               {" "}
               <b>Current status:</b> {tag}
+            </p>
+            <p>
+              {" "}
+              <b>Transfer Type:</b> {transferType || " "}
             </p>
             <p>
               {" "}
@@ -139,7 +123,7 @@ class SingleBulkDisbursementPage extends React.Component {
             </p>
             <p>
               {" "}
-              <b>Total amount to disburse:</b> {totalAmount || ""}{" "}
+              <b>Total amount transferred:</b> {totalAmount || ""}{" "}
             </p>
 
             <Space>

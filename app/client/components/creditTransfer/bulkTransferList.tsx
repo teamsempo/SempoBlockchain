@@ -64,6 +64,11 @@ const columns: ColumnsType<BulkTransfer> = [
     render: (text: any, record: any) => record.recipient_count
   },
   {
+    title: "Transfer Type",
+    key: "Type",
+    render: (text: any, record: any) => record.type
+  },
+  {
     title: "Transfer Amount",
     key: "amount",
     render: (text: any, record: any) =>
@@ -128,6 +133,7 @@ class BulkTransferList extends React.Component<Props, ComponentState> {
           disbursement_amount: bulkTransfer.disbursement_amount,
           recipient_count: bulkTransfer.recipient_count,
           state: bulkTransfer.state,
+          type: bulkTransfer.transfer_type,
           created: bulkTransfer.created,
           symbol: this.props.activeToken.symbol
         };

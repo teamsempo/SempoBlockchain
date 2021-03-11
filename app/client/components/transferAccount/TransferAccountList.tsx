@@ -8,7 +8,7 @@ import { ColumnsType } from "antd/es/table";
 
 import { ReduxState } from "../../reducers/rootReducer";
 import { connect } from "react-redux";
-import { formatMoney, maybe } from "../../utils";
+import { formatMoney } from "../../utils";
 import DateTime from "../dateTime";
 
 interface StateProps {
@@ -222,10 +222,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
       .map((accountId: number) => {
         let transferAccount = transferAccounts.byId[accountId];
         let user = users.byId[transferAccount.primary_user_id];
-        let token_symbol = maybe(tokens.byId, [
-          transferAccount.token,
-          "symbol"
-        ]);
+        let token_symbol = tokens.byId[transferAccount.token]?.symbol;
 
         return {
           key: accountId,
