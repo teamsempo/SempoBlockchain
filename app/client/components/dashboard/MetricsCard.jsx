@@ -11,7 +11,7 @@ import { DownloadOutlined } from "@ant-design/icons";
 import { isMobileQuery, withMediaQuery } from "../helpers/responsive";
 import { toCurrency } from "../../utils";
 import { VALUE_TYPES } from "../../constants";
-import { Card, Divider, Tooltip } from "antd";
+import { Card, Divider, Tooltip, Space } from "antd";
 
 import VolumeChart from "./card/VolumeChart";
 import GroupByChart from "./card/GroupByChart";
@@ -185,9 +185,9 @@ class MetricsCard extends React.Component {
     return (
       <Card
         title={
-          <span>
+          <Space>
             {cardTitle} {csvLink}
-          </span>
+          </Space>
         }
         bordered={false}
         extra={extra}
