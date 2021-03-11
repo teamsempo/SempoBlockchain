@@ -5,8 +5,7 @@ import {
   SetTransferAccountActionTypes,
   TransfersByUserId,
   LoadTransferAccountListPayload,
-  EditTransferAccountPayload,
-  TransferAccountIdList
+  EditTransferAccountPayload
 } from "./types";
 import { CreditTransfer } from "../creditTransfer/types";
 import { createAction, ActionsUnion } from "../../reduxUtils";
@@ -26,7 +25,7 @@ export type SetTransferAccountAction = ActionsUnion<
   typeof SetTransferAccountAction
 >;
 
-export const updateTransferAccountIdList = (IdList: TransferAccountIdList) =>
+export const updateTransferAccountIdList = (IdList: number[]) =>
   createAction(
     TransferAccountActionTypes.UPDATE_TRANSFER_ACCOUNT_ID_LIST,
     IdList
