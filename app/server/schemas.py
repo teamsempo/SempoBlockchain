@@ -91,6 +91,8 @@ class UserSchema(SchemaBase):
                                              many=True,
                                              exclude=('users', 'credit_sends', 'credit_receives'))
 
+    transfer_card = fields.Nested('TransferCardSchema', only=('is_disabled', 'public_serial_number'))
+
     def get_qr_code(self, obj):
         return gen_qr(f'{obj.id}: {obj.first_name} {obj.last_name}')
 
@@ -331,6 +333,8 @@ class TransferAccountSchema(SchemaBase):
 class TransferCardSchema(SchemaBase):
     public_serial_number    = fields.Str()
     nfc_serial_number       = fields.Function(lambda obj: obj.nfc_serial_number.upper())
+    is_disabled             = fields.Boolean()
+
 
     symbol                  = fields.Method('get_symbol')
 
