@@ -117,7 +117,7 @@ class SingleUserManagement extends React.Component<Props> {
     this.props.editTransferCard(
       { disable: true },
       this.props.selectedUser.public_serial_number,
-      this.props.selectedUser.userID
+      this.props.selectedUser.id
     );
   }
 

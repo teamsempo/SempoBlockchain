@@ -31,7 +31,7 @@ class MasterWalletCard extends React.Component {
     const amountDisbursed = creditTransferStats.total_distributed / 100;
     const amountWithdrawn = creditTransferStats.total_withdrawn / 100;
     const amountReclaimed = creditTransferStats.total_reclaimed / 100;
-    const symbol = activeToken.symbol;
+    const symbol = activeToken && activeToken.symbol;
 
     const amountInCirculation =
       amountDisbursed - amountWithdrawn - amountReclaimed;
