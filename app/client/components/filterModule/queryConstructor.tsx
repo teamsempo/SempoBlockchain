@@ -8,14 +8,14 @@ import { SearchOutlined } from "@ant-design/icons";
 import { AllowedFiltersAction } from "../../reducers/allowedFilters/actions";
 import { AllowedMetricsObjects } from "../../reducers/metric/types";
 import { processFiltersForQuery } from "../../utils";
-import Filter from "./filter";
+import Filter from "./filter.jsx";
 import { LoadTransferAccountAction } from "../../reducers/transferAccount/actions";
 import { LoadTransferAccountListPayload } from "../../reducers/transferAccount/types";
 
 import { TooltipWrapper } from "../dashboard/TooltipWrapper";
 
 interface StateProps {
-  allowedFilters: any;
+  allowedFilters: object;
 }
 
 interface DispatchProps {
@@ -36,6 +36,9 @@ export interface Query {
 interface OuterProps {
   filterObject: AllowedMetricsObjects;
   onQueryChange?: (query: Query) => void;
+  providedParams?: string;
+  providedSearchString?: string;
+  disabled?: boolean;
 }
 
 interface ComponentState {
@@ -82,6 +85,42 @@ class QueryConstructor extends React.Component<Props, ComponentState> {
     this.props.loadAllowedFilters(this.props.filterObject);
   }
 
+  componentDidMount() {
+    this.setState(
+      {
+        searchString: this.props.providedSearchString || "",
+        encodedFilters: this.props.providedParams || ""
+      },
+      this.loadData
+    );
+  }
+
+  componentDidUpdate(prevProps: Props) {
+    let needsUpdate = false;
+    let updatedParams: string | undefined = undefined;
+    let updatedSearch: string | undefined = undefined;
+
+    if (prevProps.providedParams !== this.props.providedParams) {
+      updatedParams = this.props.providedParams;
+      needsUpdate = true;
+    }
+
+    if (prevProps.providedSearchString !== this.props.providedSearchString) {
+      updatedSearch = this.props.providedSearchString;
+      needsUpdate = true;
+    }
+
+    if (needsUpdate) {
+      this.setState(
+        {
+          encodedFilters: updatedParams || this.state.encodedFilters,
+          searchString: updatedSearch || this.state.searchString
+        },
+        this.loadData
+      );
+    }
+  }
+
   onFiltersChanged = (filters: any[]) => {
     let encodedFilters = processFiltersForQuery(filters);
     this.setState({ encodedFilters }, () => {
@@ -116,23 +155,45 @@ class QueryConstructor extends React.Component<Props, ComponentState> {
   };
 
   render() {
-    return (
-      <div style={{ margin: "10px" }}>
+    let searchInput;
+    if (this.props.providedSearchString) {
+      searchInput = (
         <Input
+          defaultValue={this.props.providedSearchString}
+          disabled={this.props.disabled}
           placeholder="Search"
           prefix={<SearchOutlined translate={""} />}
           onChange={this.onSearchChange}
         />
-        <Space>
-          <TooltipWrapper
-            label={"Filters:"}
-            prompt={"Filter data by custom attributes"}
-          />
+      );
+    } else {
+      searchInput = (
+        <Input
+          placeholder="Search"
+          disabled={this.props.disabled}
+          prefix={<SearchOutlined translate={""} />}
+          onChange={this.onSearchChange}
+        />
+      );
+    }
+
+    return (
+      <div style={{ margin: "10px" }}>
+        {searchInput}
+        <Space style={{ opacity: this.props.disabled ? 0.6 : 1 }}>
+          <div style={{ marginTop: "10px" }}>
+            <TooltipWrapper
+              label={"Filters:"}
+              prompt={"Filter data by custom attributes"}
+            />
+          </div>
 
           <Filter
             label={"Filter by user:"}
             possibleFilters={this.props.allowedFilters}
             onFiltersChanged={this.onFiltersChanged}
+            providedParams={this.props.providedParams}
+            disabled={this.props.disabled}
           />
         </Space>
       </div>

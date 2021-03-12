@@ -27,15 +27,22 @@ export interface OnSelectChange {
   ): void;
 }
 
-interface OuterProps {
+interface stringIndexable {
+  [index: string]: any;
+}
+
+interface OuterProps extends stringIndexable {
+  disabled?: boolean
   orderedTransferAccounts: number[];
   users: any;
   actionButtons: ActionButton[];
   noneSelectedbuttons: NoneSelectedButton[];
   onSelectChange?: OnSelectChange;
+  providedSelectedRowKeys?: React.Key[];
+  providedUnselectedRowKeys?: React.Key[];
 }
 
-interface ComponentState {
+interface ComponentState extends stringIndexable {
   selectedRowKeys: React.Key[];
   unselectedRowKeys: React.Key[];
   allSelected: boolean;
@@ -149,10 +156,64 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
     };
   }
 
+  componentDidMount() {
+    let unselectedKeys = this.props.providedUnselectedRowKeys || this.state.unselectedRowKeys;
+    let selectedKeys = this.props.providedSelectedRowKeys || this.state.selectedRowKeys;
+
+    if (unselectedKeys.length > 0) {
+      selectedKeys = this.props.orderedTransferAccounts.filter(
+          (accountId: number) => (
+            this.props.transferAccounts.byId[accountId] != undefined && !unselectedKeys.includes(accountId)
+          )
+      );
+    }
+
+
+
+    this.setState({
+      selectedRowKeys:  selectedKeys,
+      unselectedRowKeys: unselectedKeys
+    })
+  }
+
+  componentDidUpdate(prevProps: Props) {
+
+    if (prevProps.providedSelectedRowKeys != this.props.providedSelectedRowKeys) {
+      this.setState({selectedRowKeys: this.props.providedSelectedRowKeys || this.state.selectedRowKeys})
+    }
+
+    if (prevProps.providedUnselectedRowKeys != this.props.providedUnselectedRowKeys) {
+      let unselectedKeys = this.props.providedUnselectedRowKeys || this.state.unselectedRowKeys;
+      this.setState({
+        unselectedRowKeys: unselectedKeys,
+        allSelected: unselectedKeys.length > 0,
+      })
+
+      if (unselectedKeys.length > 0) {
+        let selected = this.props.orderedTransferAccounts.filter(
+            (accountId: number) => (
+              this.props.transferAccounts.byId[accountId] != undefined && !unselectedKeys.includes(accountId)
+            )
+        );
+
+        this.setState({selectedRowKeys: selected})
+
+      }
+
+
+    }
+  }
+
+
   onChange = (
     selectedRowKeys: React.Key[],
     selectedRows: TransferAccount[]
   ) => {
+
+    if (this.props.disabled) {
+      return
+    }
+
     let unselectedRowKeys: React.Key[] = [];
 
     if (this.state.allSelected) {
@@ -171,6 +232,10 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
   };
 
   toggleSelectAll = (keys: React.Key[], data: TransferAccount[]) => {
+    if (this.props.disabled) {
+      return
+    }
+
     if (keys.length === data.length) {
       this.setState(
         {
@@ -284,7 +349,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
 
     const hasSelected = selectedRowKeys.length > 0;
     return (
-      <div>
+      <div style={{opacity: this.props.disabled? 0.6 : 1}}>
         <div
           style={{
             display: "flex",
