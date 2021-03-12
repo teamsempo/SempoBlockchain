@@ -181,7 +181,7 @@ class QueryConstructor extends React.Component<Props, ComponentState> {
       <div style={{ margin: "10px" }}>
         {searchInput}
         <Space style={{ opacity: this.props.disabled ? 0.6 : 1 }}>
-          <div style={{ marginTop: "10px" }}>
+          <div style={{ marginTop: "5px" }}>
             <TooltipWrapper
               label={"Filters:"}
               prompt={"Filter data by custom attributes"}
