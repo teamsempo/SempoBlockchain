@@ -204,13 +204,17 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
             self.last_name = None
             self.phone = None
 
-            transfer_card = TransferCard.get_transfer_card(
-                self.public_serial_number)
+            transfer_card = None
+
+            try:
+                transfer_card = TransferCard.get_transfer_card(self.public_serial_number)
+            except NoTransferCardError as e:
+                pass
 
             if transfer_card and not transfer_card.is_disabled:
                 transfer_card.disable()
 
-        except (ResourceAlreadyDeletedError, TransferAccountDeletionError, NoTransferCardError) as e:
+        except (ResourceAlreadyDeletedError, TransferAccountDeletionError) as e:
             raise e
 
     @hybrid_property
