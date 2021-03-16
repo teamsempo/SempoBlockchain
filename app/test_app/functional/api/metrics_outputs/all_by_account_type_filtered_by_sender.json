@@ -1,0 +1,226 @@
+{
+  "active_filters": ["rounded_account_balance,sender"],
+  "active_group_by": "sender,account_type",
+  "active_users": {
+    "aggregate": {
+      "USER": 4,
+      "percent_change": null,
+      "total": 4
+    },
+    "timeseries": {
+      "USER": [
+        {
+          "date": "2021-02-05T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-07T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-10T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-11T00:00:00",
+          "value": 1
+        }
+      ]
+    },
+    "type": {
+      "display_decimals": 0,
+      "value_type": "count"
+    }
+  },
+  "all_payments_volume": {
+    "aggregate": {
+      "USER": 145,
+      "percent_change": null,
+      "total": 145
+    },
+    "timeseries": {
+      "USER": [
+        {
+          "date": "2021-02-05T00:00:00",
+          "value": 20
+        },
+        {
+          "date": "2021-02-07T00:00:00",
+          "value": 20
+        },
+        {
+          "date": "2021-02-10T00:00:00",
+          "value": 5
+        },
+        {
+          "date": "2021-02-11T00:00:00",
+          "value": 100
+        }
+      ]
+    },
+    "type": {
+      "currency_name": "AUD Reserve Token",
+      "currency_symbol": "AUD",
+      "display_decimals": 2,
+      "value_type": "currency"
+    }
+  },
+  "daily_transaction_count": {
+    "aggregate": {
+      "USER": 4,
+      "percent_change": null,
+      "total": 4
+    },
+    "timeseries": {
+      "USER": [
+        {
+          "date": "2021-02-05T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-07T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-10T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-11T00:00:00",
+          "value": 1
+        }
+      ]
+    },
+    "type": {
+      "display_decimals": 0,
+      "value_type": "count"
+    }
+  },
+  "mandatory_filter": {},
+  "master_wallet_balance": -1517,
+  "total_distributed": 1517,
+  "total_reclaimed": 0,
+  "total_withdrawn": 0,
+  "trades_per_user": {
+    "aggregate": {
+      "USER": 0.5714285714285714,
+      "percent_change": null,
+      "total": 0.5714285714285714
+    },
+    "timeseries": {
+      "USER": [
+        {
+          "date": "2021-02-05T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-07T00:00:00",
+          "value": 0.5
+        },
+        {
+          "date": "2021-02-10T00:00:00",
+          "value": 0.3333333333333333
+        },
+        {
+          "date": "2021-02-11T00:00:00",
+          "value": 0.14285714285714285
+        }
+      ]
+    },
+    "type": {
+      "display_decimals": 2,
+      "value_type": "count_average"
+    }
+  },
+  "transfer_amount_per_user": {
+    "aggregate": {
+      "USER": 20.714285714285715,
+      "percent_change": null,
+      "total": 20.714285714285715
+    },
+    "timeseries": {
+      "USER": [
+        {
+          "date": "2021-02-05T00:00:00",
+          "value": 20
+        },
+        {
+          "date": "2021-02-07T00:00:00",
+          "value": 10
+        },
+        {
+          "date": "2021-02-10T00:00:00",
+          "value": 1.6666666666666667
+        },
+        {
+          "date": "2021-02-11T00:00:00",
+          "value": 14.285714285714286
+        }
+      ]
+    },
+    "type": {
+      "currency_name": "AUD Reserve Token",
+      "currency_symbol": "AUD",
+      "display_decimals": 2,
+      "value_type": "currency"
+    }
+  },
+  "users_created": {
+    "aggregate": {
+      "USER": 5,
+      "percent_change": 300,
+      "total": 35
+    },
+    "timeseries": {
+      "USER": [
+        {
+          "date": "2021-02-01T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-07T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-11T00:00:00",
+          "value": 3
+        }
+      ]
+    },
+    "type": {
+      "display_decimals": 0,
+      "value_type": "count"
+    }
+  },
+  "users_who_made_purchase": {
+    "aggregate": {
+      "USER": 4,
+      "percent_change": null,
+      "total": 4
+    },
+    "timeseries": {
+      "USER": [
+        {
+          "date": "2021-02-05T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-07T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-10T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-11T00:00:00",
+          "value": 1
+        }
+      ]
+    },
+    "type": {
+      "display_decimals": 0,
+      "value_type": "count"
+    }
+  }
+}

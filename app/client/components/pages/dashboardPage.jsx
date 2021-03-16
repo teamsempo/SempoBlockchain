@@ -44,17 +44,15 @@ class DashboardPage extends React.Component {
   constructor() {
     super();
     this.state = {
+      liveFeedExpanded: false,
       subscribe,
       unsubscribe
     };
   }
 
-  componentWillMount() {
-    setTimeout(() => this.setState({ loading: false }), 1000);
-    this.subscribe();
-  }
-
   componentDidMount() {
+    this.subscribe();
+
     let transfer_type = "ALL";
     let per_page = 50;
     let page = 1;
@@ -64,10 +62,24 @@ class DashboardPage extends React.Component {
       per_page: per_page,
       page: page
     });
+
+    let liveFeedExpandedStr = localStorage.getItem("liveFeedExpanded");
+
+    if (liveFeedExpandedStr) {
+      this.setState({ liveFeedExpanded: liveFeedExpandedStr === "true" });
+    }
   }
 
   componentWillUnmount() {
     this.unsubscribe();
+  }
+
+  handleExpandToggle() {
+    let liveFeedExpanded = !this.state.liveFeedExpanded;
+
+    this.setState({ liveFeedExpanded });
+
+    localStorage.setItem("liveFeedExpanded", liveFeedExpanded.toString());
   }
 
   subscribe() {
@@ -102,6 +114,62 @@ class DashboardPage extends React.Component {
   }
 
   render() {
+    let expanded = false;
+
+    let metrics = (
+      <React.Fragment>
+        <MetricsCard
+          chartHeight={250}
+          cardTitle="Transfers"
+          defaultGroupBy="ungrouped"
+          defaultTimeSeries="all_payments_volume"
+          filterObject="credit_transfer"
+          timeSeriesNameLabels={[
+            ["all_payments_volume", "Volume", "Total amount transferred"],
+            [
+              "daily_transaction_count",
+              "Transfer Count",
+              "Total number of transfers"
+            ],
+            [
+              "users_who_made_purchase",
+              "Unique Participants",
+              "Unique participants who have sent or received a transfer"
+            ],
+            [
+              "transfer_amount_per_user",
+              "Average Volume",
+              "Average amount transferred per participant"
+            ],
+            [
+              "trades_per_user",
+              "Average Count",
+              "Average number of transfers per participant"
+            ]
+          ]}
+        />
+        <MetricsCard
+          chartHeight={250}
+          cardTitle="Participants"
+          defaultGroupBy="ungrouped"
+          defaultTimeSeries="active_users"
+          filterObject="user"
+          timeSeriesNameLabels={[
+            [
+              "active_users",
+              "Active Participants",
+              "Number of unique participants who have sent or received a transfer"
+            ],
+            [
+              "users_created",
+              "New Participants",
+              "Number of new participants created"
+            ]
+          ]}
+        />
+      </React.Fragment>
+    );
+
     if (this.props.creditTransfers.loadStatus.isRequesting === true) {
       return (
         <WrapperDiv>
@@ -113,89 +181,80 @@ class DashboardPage extends React.Component {
     } else if (Object.values(this.props.creditTransfers.byId).length === 0) {
       return <NoDataMessage />;
     } else if (this.props.creditTransfers.loadStatus.success === true) {
-      return (
-        <div>
-          <div className="site-card-wrapper">
-            <Space direction="vertical" style={{ width: "100%" }} size="middle">
-              <Default>
-                <div style={{ marginBottom: "-16px" }}>
-                  <Row gutter={16}>
-                    <Col span={14}>
+      if (this.state.liveFeedExpanded) {
+        return (
+          <div>
+            <div className="site-card-wrapper">
+              <div style={{ marginBottom: "-16px" }}>
+                <Row gutter={16}>
+                  <Col span={17}>
+                    <Space
+                      direction="vertical"
+                      style={{ width: "100%" }}
+                      size="middle"
+                    >
                       <MasterWalletCard />
-                    </Col>
-                    <Col span={10}>
-                      <BeneficiaryLiveFeed />
-                    </Col>
-                  </Row>
-                </div>
-              </Default>
-
-              <Mobile>
-                {/* override ant defaults for mobile! */}
-                <div style={{ marginTop: "-24px", marginBottom: "-16px" }}>
-                  <Row gutter={[0, 16]}>
-                    <Col style={{ width: "100%" }}>
-                      <MasterWalletCard />
-                    </Col>
-                    <Col style={{ width: "100%" }}>
-                      <BeneficiaryLiveFeed />
-                    </Col>
-                  </Row>
-                </div>
-              </Mobile>
-              <MetricsCard
-                chartHeight={250}
-                cardTitle="Transfers"
-                defaultGroupBy="ungrouped"
-                defaultTimeSeries="all_payments_volume"
-                filterObject="credit_transfer"
-                timeSeriesNameLabels={[
-                  ["all_payments_volume", "Volume", "Total amount transferred"],
-                  [
-                    "daily_transaction_count",
-                    "Transfer Count",
-                    "Total number of transfers"
-                  ],
-                  [
-                    "users_who_made_purchase",
-                    `Unique Participants`,
-                    "Unique participants who have sent or received a transfer"
-                  ],
-                  [
-                    "transfer_amount_per_user",
-                    "Volume Per Participant",
-                    "Average amount transferred per participant"
-                  ],
-                  [
-                    "trades_per_user",
-                    "Count Per Participant",
-                    "Average number of transfers per participant"
-                  ]
-                ]}
-              />
-              <MetricsCard
-                chartHeight={250}
-                cardTitle="Participants"
-                defaultGroupBy="ungrouped"
-                defaultTimeSeries="active_users"
-                filterObject="user"
-                timeSeriesNameLabels={[
-                  [
-                    "active_users",
-                    "Active Participants",
-                    "Number of unique participants sent or received a transfer"
-                  ],
-                  [
-                    "users_created",
-                    "New Participants",
-                    "Number of new participants created"
-                  ]
-                ]}
-              />
-            </Space>
+                      {metrics}
+                    </Space>
+                  </Col>
+                  <Col span={7}>
+                    <BeneficiaryLiveFeed
+                      expanded={this.state.liveFeedExpanded}
+                      handleExpandToggle={() => this.handleExpandToggle()}
+                    />
+                  </Col>
+                </Row>
+              </div>
+            </div>
           </div>
-        </div>
-      );
+        );
+      } else {
+        return (
+          <div>
+            <div className="site-card-wrapper">
+              <Space
+                direction="vertical"
+                style={{ width: "100%" }}
+                size="middle"
+              >
+                <Default>
+                  <div>
+                    <Row gutter={16}>
+                      <Col span={14}>
+                        <MasterWalletCard />
+                      </Col>
+                      <Col span={10}>
+                        <BeneficiaryLiveFeed
+                          expanded={this.state.liveFeedExpanded}
+                          handleExpandToggle={() => this.handleExpandToggle()}
+                        />
+                      </Col>
+                    </Row>
+                  </div>
+                </Default>
+
+                <Mobile>
+                  {/* override ant defaults for mobile! */}
+                  <div style={{ marginTop: "-24px", marginBottom: "-16px" }}>
+                    <Row gutter={[0, 16]}>
+                      <Col style={{ width: "100%" }}>
+                        <MasterWalletCard />
+                      </Col>
+                      <Col style={{ width: "100%" }}>
+                        <BeneficiaryLiveFeed
+                          expanded={this.state.liveFeedExpanded}
+                          handleExpandToggle={() => this.handleExpandToggle()}
+                        />
+                      </Col>
+                    </Row>
+                  </div>
+                </Mobile>
+                {metrics}
+              </Space>
+            </div>
+          </div>
+        );
+      }
     } else {
       return (
         <WrapperDiv>

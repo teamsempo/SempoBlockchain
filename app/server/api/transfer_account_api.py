@@ -55,7 +55,7 @@ class TransferAccountAPI(MethodView):
                 # Filter Contract, Float and Organisation Transfer Accounts
                 transfer_accounts_query = (base_query.filter(TransferAccount.account_type == TransferAccountType.USER))
 
-            transfer_accounts, total_items, total_pages = paginate_query(transfer_accounts_query, TransferAccount)
+            transfer_accounts, total_items, total_pages, new_last_fetched = paginate_query(transfer_accounts_query)
 
             if transfer_accounts is None:
                 response_object = {
@@ -73,6 +73,7 @@ class TransferAccountAPI(MethodView):
                 'message': 'Successfully Loaded.',
                 'items': total_items,
                 'pages': total_pages,
+                'last_fetched': new_last_fetched,
                 'query_time': datetime.datetime.utcnow().strftime("%m/%d/%Y, %H:%M:%S"),
                 'data': {'transfer_accounts': result.data}
             }
@@ -86,6 +87,8 @@ class TransferAccountAPI(MethodView):
         approve = put_data.get('approve')
 
         transfer_account_name = put_data.get('transfer_account_name')
+        
+        notes = put_data.get('notes')
 
         payable_period_type = put_data.get('payable_period_type')
         payable_period_length = put_data.get('payable_period_length')
@@ -110,11 +113,21 @@ class TransferAccountAPI(MethodView):
             if payable_period_length and not payable_period_length == transfer_account.payable_period_length:
                 transfer_account.payable_period_length = payable_period_length
 
+            if notes and not notes == transfer_account.notes:
+                transfer_account.notes = notes
+
             if payable_epoch and not payable_epoch == transfer_account.payable_epoch:
                 transfer_account.payable_epoch = payable_epoch
 
             if not approve == transfer_account.is_approved and transfer_account.is_approved is not True:
-                transfer_account.approve_and_disburse()
+                transfer_account.is_approved = True
+                transfer_account.approve_initial_disbursement()
+
+            # Explicitly checking True and False since null is also possible
+            if approve == True: 
+                transfer_account.is_approved = True
+            elif approve == False:
+                transfer_account.is_approved = False
 
             db.session.flush()
 
@@ -143,9 +156,14 @@ class TransferAccountAPI(MethodView):
                     })
 
                     continue
+                if approve == True: 
+                    transfer_account.is_approved = True
+                elif approve == False:
+                    transfer_account.is_approved = False
 
                 if not transfer_account.is_approved and approve:
-                    transfer_account.approve_and_disburse()
+                    transfer_account.is_approved = True
+                    transfer_account.approve_initial_disbursement()
 
                 transfer_accounts.append(transfer_account)
 

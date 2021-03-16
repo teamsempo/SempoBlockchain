@@ -1,5 +1,6 @@
 import { put, takeEvery, call, all } from "redux-saga/effects";
 import { normalize } from "normalizr";
+import { message } from "antd";
 import { handleError } from "../utils";
 
 import { transferAccountSchema } from "../schemas";
@@ -9,6 +10,9 @@ import {
   TransferAccountAction,
   EditTransferAccountAction
 } from "../reducers/transferAccount/actions";
+import { CreditTransferAction } from "../reducers/creditTransfer/actions";
+import { UserListAction } from "../reducers/user/actions";
+import { TokenListAction } from "../reducers/token/actions";
 
 import {
   LoadTransferAccountActionTypes,
@@ -17,21 +21,16 @@ import {
   TransferAccountLoadApiResult
 } from "../reducers/transferAccount/types";
 
-import { CreditTransferAction } from "../reducers/creditTransfer/actions";
-
-import {
-  loadTransferAccountListAPI,
-  editTransferAccountAPI
-} from "../api/transferAccountAPI";
-
-import { MessageAction } from "../reducers/message/actions";
-import { UserListAction } from "../reducers/user/actions";
-
 import {
   TransferAccountData,
   SingularTransferAccountData,
   MultipleTransferAccountData
 } from "../reducers/transferAccount/types";
+
+import {
+  loadTransferAccountListAPI,
+  editTransferAccountAPI
+} from "../api/transferAccountAPI";
 
 function* updateStateFromTransferAccount(data: TransferAccountData) {
   //Schema expects a list of transfer account objects
@@ -47,6 +46,11 @@ function* updateStateFromTransferAccount(data: TransferAccountData) {
     transfer_account_list,
     transferAccountSchema
   );
+
+  const tokens = normalizedData.entities.tokens;
+  if (tokens) {
+    yield put(TokenListAction.updateTokenList(tokens));
+  }
 
   const users = normalizedData.entities.users;
   if (users) {
@@ -91,9 +95,7 @@ function* loadTransferAccounts({ payload }: TransferAccountLoadApiResult) {
 
     yield put(LoadTransferAccountAction.loadTransferAccountsFailure(error));
 
-    yield put(
-      MessageAction.addMessage({ error: true, message: error.message })
-    );
+    message.error(error.message);
   }
 }
 
@@ -111,18 +113,12 @@ function* editTransferAccount({ payload }: TransferAccountEditApiResult) {
     yield call(updateStateFromTransferAccount, edit_response.data);
 
     yield put(EditTransferAccountAction.editTransferAccountSuccess());
-
-    yield put(
-      MessageAction.addMessage({ error: false, message: edit_response.message })
-    );
+    message.success(edit_response.message);
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
     yield put(EditTransferAccountAction.editTransferAccountFailure(error));
-
-    yield put(
-      MessageAction.addMessage({ error: true, message: error.message })
-    );
+    message.error(error.message);
   }
 }
 

@@ -63,8 +63,6 @@ class CreateUserUpdated extends React.Component<Props, ComponentState> {
       businessUsage = form.usageOtherSpecific;
     }
 
-    const accountTypes = form.accountTypes.map(o => Object.values(o).pop());
-
     this.props.createUser({
       body: {
         first_name: form.firstName,
@@ -72,7 +70,7 @@ class CreateUserUpdated extends React.Component<Props, ComponentState> {
         bio: form.bio,
         gender: form.gender,
         public_serial_number: form.publicSerialNumber,
-        phone: form.phone,
+        phone: form.publicSerialNumber ? undefined : form.phone,
         initial_disbursement: (form.initialDisbursement || 0) * 100,
         require_transfer_card_exists:
           activeOrganisation && activeOrganisation.require_transfer_card,

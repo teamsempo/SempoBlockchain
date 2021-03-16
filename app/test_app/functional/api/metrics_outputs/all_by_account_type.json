@@ -1,46 +1,47 @@
 {
   "active_filters": [],
-  "active_group_by": "account_type",
+  "active_group_by": "sender,account_type",
   "active_users": {
     "aggregate": {
       "ORGANISATION": 1,
       "USER": 5,
+      "percent_change": 100,
       "total": 6
     },
     "timeseries": {
       "ORGANISATION": [
         {
-          "date": "2020-07-30T00:00:00",
+          "date": "2021-01-22T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-08-11T00:00:00",
+          "date": "2021-02-04T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-08-17T00:00:00",
+          "date": "2021-02-09T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-08-19T00:00:00",
+          "date": "2021-02-11T00:00:00",
           "value": 1
         }
       ],
       "USER": [
         {
-          "date": "2020-08-13T00:00:00",
+          "date": "2021-02-05T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-08-15T00:00:00",
+          "date": "2021-02-07T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-08-18T00:00:00",
+          "date": "2021-02-10T00:00:00",
           "value": 2
         },
         {
-          "date": "2020-08-19T00:00:00",
+          "date": "2021-02-11T00:00:00",
           "value": 1
         }
       ]
@@ -54,75 +55,44 @@
     "aggregate": {
       "ORGANISATION": 1517,
       "USER": 170,
+      "percent_change": 397.029702970297,
       "total": 1687
     },
     "timeseries": {
       "ORGANISATION": [
         {
-          "date": "2020-07-30T00:00:00",
-          "value": 406
+          "date": "2021-01-22T00:00:00",
+          "value": 202
         },
         {
-          "date": "2020-08-11T00:00:00",
+          "date": "2021-02-04T00:00:00",
           "value": 201
         },
         {
-          "date": "2020-08-17T00:00:00",
+          "date": "2021-02-09T00:00:00",
           "value": 210
         },
         {
-          "date": "2020-08-19T00:00:00",
-          "value": 700
+          "date": "2021-02-11T00:00:00",
+          "value": 904
         }
       ],
       "USER": [
         {
-          "date": "2020-08-13T00:00:00",
+          "date": "2021-02-05T00:00:00",
           "value": 20
         },
         {
-          "date": "2020-08-15T00:00:00",
+          "date": "2021-02-07T00:00:00",
           "value": 20
         },
         {
-          "date": "2020-08-18T00:00:00",
+          "date": "2021-02-10T00:00:00",
           "value": 30
         },
         {
-          "date": "2020-08-19T00:00:00",
+          "date": "2021-02-11T00:00:00",
           "value": 100
-        }
-      ]
-    },
-    "type": {
-      "currency_name": "AUD Reserve Token",
-      "currency_symbol": "AUD",
-      "display_decimals": 2,
-      "value_type": "currency"
-    }
-  },
-  "daily_disbursement_volume": {
-    "aggregate": {
-      "ORGANISATION": 1517,
-      "total": 1517
-    },
-    "timeseries": {
-      "ORGANISATION": [
-        {
-          "date": "2020-07-30T00:00:00",
-          "value": 406
-        },
-        {
-          "date": "2020-08-11T00:00:00",
-          "value": 201
-        },
-        {
-          "date": "2020-08-17T00:00:00",
-          "value": 210
-        },
-        {
-          "date": "2020-08-19T00:00:00",
-          "value": 700
         }
       ]
     },
@@ -136,24 +106,25 @@
   "daily_transaction_count": {
     "aggregate": {
       "USER": 5,
+      "percent_change": null,
       "total": 5
     },
     "timeseries": {
       "USER": [
         {
-          "date": "2020-08-13T00:00:00",
+          "date": "2021-02-05T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-08-15T00:00:00",
+          "date": "2021-02-07T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-08-18T00:00:00",
+          "date": "2021-02-10T00:00:00",
           "value": 2
         },
         {
-          "date": "2020-08-19T00:00:00",
+          "date": "2021-02-11T00:00:00",
           "value": 1
         }
       ]
@@ -163,88 +134,33 @@
       "value_type": "count"
     }
   },
-  "daily_transaction_volume": {
-    "aggregate": {
-      "ORGANISATION": 1517,
-      "USER": 170,
-      "total": 1687
-    },
-    "timeseries": {
-      "ORGANISATION": [
-        {
-          "date": "2020-07-30T00:00:00",
-          "value": 406
-        },
-        {
-          "date": "2020-08-11T00:00:00",
-          "value": 201
-        },
-        {
-          "date": "2020-08-17T00:00:00",
-          "value": 210
-        },
-        {
-          "date": "2020-08-19T00:00:00",
-          "value": 700
-        }
-      ],
-      "USER": [
-        {
-          "date": "2020-08-13T00:00:00",
-          "value": 20
-        },
-        {
-          "date": "2020-08-15T00:00:00",
-          "value": 20
-        },
-        {
-          "date": "2020-08-18T00:00:00",
-          "value": 30
-        },
-        {
-          "date": "2020-08-19T00:00:00",
-          "value": 100
-        }
-      ]
-    },
-    "type": {
-      "currency_name": "AUD Reserve Token",
-      "currency_symbol": "AUD",
-      "display_decimals": 2,
-      "value_type": "currency"
-    }
-  },
-  "exhausted_balance": 0,
-  "has_transferred_count": 5,
   "mandatory_filter": {},
-  "master_wallet_balance": 0,
-  "total_beneficiaries": 1,
+  "master_wallet_balance": -1517,
   "total_distributed": 1517,
-  "total_exchanged": 0,
-  "total_spent": 170,
-  "total_users": 1,
-  "total_vendors": 0,
+  "total_reclaimed": 0,
+  "total_withdrawn": 0,
   "trades_per_user": {
     "aggregate": {
       "USER": 0.8333333333333334,
+      "percent_change": null,
       "total": 0.7142857142857143
     },
     "timeseries": {
       "USER": [
         {
-          "date": "2020-08-13T00:00:00",
+          "date": "2021-02-05T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-07T00:00:00",
           "value": 0.5
         },
         {
-          "date": "2020-08-15T00:00:00",
-          "value": 0.3333333333333333
+          "date": "2021-02-10T00:00:00",
+          "value": 0.6666666666666666
         },
         {
-          "date": "2020-08-18T00:00:00",
-          "value": 0.5
-        },
-        {
-          "date": "2020-08-19T00:00:00",
+          "date": "2021-02-11T00:00:00",
           "value": 0.16666666666666666
         }
       ]
@@ -257,24 +173,25 @@
   "transfer_amount_per_user": {
     "aggregate": {
       "USER": 28.333333333333332,
+      "percent_change": null,
       "total": 24.285714285714285
     },
     "timeseries": {
       "USER": [
         {
-          "date": "2020-08-13T00:00:00",
+          "date": "2021-02-05T00:00:00",
+          "value": 20
+        },
+        {
+          "date": "2021-02-07T00:00:00",
           "value": 10
         },
         {
-          "date": "2020-08-15T00:00:00",
-          "value": 6.666666666666667
+          "date": "2021-02-10T00:00:00",
+          "value": 10
         },
         {
-          "date": "2020-08-18T00:00:00",
-          "value": 7.5
-        },
-        {
-          "date": "2020-08-19T00:00:00",
+          "date": "2021-02-11T00:00:00",
           "value": 16.666666666666668
         }
       ]
@@ -289,25 +206,26 @@
   "users_created": {
     "aggregate": {
       "USER": 6,
+      "percent_change": 300,
       "total": 7
     },
     "timeseries": {
       "USER": [
         {
-          "date": "2020-08-09T00:00:00",
-          "value": 2
-        },
-        {
-          "date": "2020-08-15T00:00:00",
+          "date": "2021-02-01T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-08-18T00:00:00",
+          "date": "2021-02-07T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-08-19T00:00:00",
-          "value": 2
+          "date": "2021-02-10T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-11T00:00:00",
+          "value": 3
         }
       ]
     },
@@ -320,42 +238,43 @@
     "aggregate": {
       "ORGANISATION": 1,
       "USER": 5,
+      "percent_change": 100,
       "total": 6
     },
     "timeseries": {
       "ORGANISATION": [
         {
-          "date": "2020-07-30T00:00:00",
+          "date": "2021-01-22T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-08-11T00:00:00",
+          "date": "2021-02-04T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-08-17T00:00:00",
+          "date": "2021-02-09T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-08-19T00:00:00",
+          "date": "2021-02-11T00:00:00",
           "value": 1
         }
       ],
       "USER": [
         {
-          "date": "2020-08-13T00:00:00",
+          "date": "2021-02-05T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-08-15T00:00:00",
+          "date": "2021-02-07T00:00:00",
           "value": 1
         },
         {
-          "date": "2020-08-18T00:00:00",
+          "date": "2021-02-10T00:00:00",
           "value": 2
         },
         {
-          "date": "2020-08-19T00:00:00",
+          "date": "2021-02-11T00:00:00",
           "value": 1
         }
       ]

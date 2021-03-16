@@ -556,10 +556,11 @@ class BusinessDetails extends React.Component {
 
         <ThemeProvider theme={DefaultTheme}>
           <AsyncButton
-            buttonText={"Next"}
+            buttonText={<span>Next</span>}
             onClick={this.isValidated}
             isLoading={this.props.editStatus.isRequesting}
             buttonStyle={{ display: "flex" }}
+            label={"Next"}
           />
         </ThemeProvider>
       </div>

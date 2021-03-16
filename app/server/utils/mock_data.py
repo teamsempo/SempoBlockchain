@@ -13,6 +13,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.
 import config
 
 import math
+from decimal import Decimal
 
 from server import create_app, db, bt
 from server.models.token import Token, TokenType
@@ -100,7 +101,10 @@ def create_transfer_user(email, transfer_usages, organisation, created_offset):
     last_name = f'{middle_name} {random.choice(ANIMALS)}'
 
     is_beneficiary = rand_bool(0.9)
-    is_vendor = not is_beneficiary
+    if is_beneficiary:
+        roles = roles=[('BENEFICIARY', 'beneficiary')]
+    else:
+        roles=[('VENDOR', 'vendor')]
 
     phone = '+1' + ''.join([str(random.randint(0,10)) for i in range(0, 10)])
 
@@ -110,8 +114,7 @@ def create_transfer_user(email, transfer_usages, organisation, created_offset):
         email=email,
         phone=phone,
         organisation=organisation,
-        is_beneficiary=is_beneficiary,
-        is_vendor=is_vendor,
+        roles=roles,
     )
 
     # Set the created date to the first day
@@ -130,7 +133,7 @@ def create_transfer_user(email, transfer_usages, organisation, created_offset):
 
     set_custom_attributes(attribute_dict, user)
 
-    if is_vendor:
+    if not is_beneficiary:
         bu = random.choice(transfer_usages)
         user.business_usage = bu
 
@@ -205,7 +208,7 @@ def create_payments(users_by_location, number_of_transfers, time_period_days, tr
 
                     sender_balance = sender_user.default_transfer_account.balance
 
-                    spend_amount = math.floor(random.random() * sender_balance * 100) / 100
+                    spend_amount = math.floor(Decimal(random.random()) * sender_balance * 100) / 100
 
                     if spend_amount > 0:
                         found_a_sender = True

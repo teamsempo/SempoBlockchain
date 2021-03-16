@@ -1,4 +1,5 @@
 import { put, takeEvery, call, all } from "redux-saga/effects";
+import { message } from "antd";
 
 import { BusinessVerificationAction } from "../reducers/businessVerification/actions";
 import {
@@ -19,7 +20,6 @@ import {
   createBankAccountAPI,
   editBankAccountAPI
 } from "../api/businessVerificationAPI";
-import { MessageAction } from "../reducers/message/actions";
 import { handleError } from "../utils";
 
 function* updateStateFromBusinessVerificationStep(data: any) {
@@ -48,9 +48,7 @@ function* editBusinessVerification({ payload }: EditBusinessSagaPayload) {
       BusinessVerificationAction.editBusinessVerificationFailure(error)
     );
 
-    yield put(
-      MessageAction.addMessage({ error: true, message: error.message })
-    );
+    message.error(error.message);
   }
 }
 
@@ -113,10 +111,7 @@ function* createBusinessVerification({
     yield put(
       BusinessVerificationAction.createBusinessVerificationFailure(error)
     );
-
-    yield put(
-      MessageAction.addMessage({ error: true, message: error.message })
-    );
+    message.error(error.message);
   }
 }
 
@@ -139,10 +134,7 @@ function* uploadDocument({ payload }: UploadDocumentSagaPayload) {
     const error = yield call(handleError, fetch_error);
 
     yield put(BusinessVerificationAction.uploadDocumentFailure(error));
-
-    yield put(
-      MessageAction.addMessage({ error: true, message: error.message })
-    );
+    message.error(error.message);
   }
 }
 
@@ -167,10 +159,7 @@ function* createBankAccount({ payload }: CreateBankAccountSagaPayload) {
     const error = yield call(handleError, fetch_error);
 
     yield put(BusinessVerificationAction.createBankAccountFailure(error));
-
-    yield put(
-      MessageAction.addMessage({ error: true, message: error.message })
-    );
+    message.error(error.message);
   }
 }
 
@@ -195,10 +184,7 @@ function* editBankAccount({ payload }: EditBankAccountSagaPayload) {
     const error = yield call(handleError, fetch_error);
 
     yield put(BusinessVerificationAction.editBankAccountFailure(error));
-
-    yield put(
-      MessageAction.addMessage({ error: true, message: error.message })
-    );
+    message.error(error.message);
   }
 }
 

@@ -1,4 +1,4 @@
-FROM python:3.8-slim-buster
+FROM python:3.8-buster
 
 RUN apt update \
   && apt -y install gcc g++ libffi-dev libstdc++-8-dev python3-dev musl-dev libssl-dev curl
@@ -9,6 +9,8 @@ COPY ./test_requirements.txt /
 RUN cd / && pip install -r requirements.txt && pip install -r test_requirements.txt
 
 RUN apt remove --purge -y gcc g++ libffi-dev libstdc++-8-dev python3-dev musl-dev libssl-dev
+
+RUN apt -y install libcairo2 libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf2.0-0 libffi-dev shared-mime-info
 
 COPY ./config.py /src/
 RUN mkdir /src/config_files

@@ -1,4 +1,5 @@
 from flask import Blueprint, request, make_response, jsonify, g, current_app
+import config
 from flask.views import MethodView
 import sentry_sdk
 from server import db
@@ -12,8 +13,11 @@ from server.utils.auth import requires_auth, tfa_logic, show_all, create_user_re
 from server.utils.access_control import AccessControl
 from server.utils import user as UserUtils
 from server.utils.phone import proccess_phone_number
-from server.utils.amazon_ses import send_reset_email, send_activation_email, send_invite_email
+from server.utils.amazon_ses import send_reset_email, send_activation_email, send_invite_email, \
+    send_invite_email_to_existing_user
 from server.utils.misc import decrypt_string, attach_host
+from server.utils.multi_chain import get_chain
+from sqlalchemy.sql import func
 
 import random
 
@@ -57,7 +61,8 @@ class RegisterAPI(MethodView):
         # get the post data
         post_data = request.get_json()
 
-        email = post_data.get('email') or post_data.get('username')
+        email = post_data.get('email', '') or post_data.get('username', '')
+        email = email.lower() if email else ''
         password = post_data.get('password')
         phone = post_data.get('phone')
         referral_code = post_data.get('referral_code')
@@ -121,7 +126,7 @@ class RegisterAPI(MethodView):
             return make_response(jsonify(response_object)), 403
 
         # check if user already exists
-        user = User.query.filter_by(email=email).execution_options(show_all=True).first()
+        user = User.query.filter(func.lower(User.email)==email).execution_options(show_all=True).first()
         if user:
             response_object = {
                 'status': 'fail',
@@ -311,19 +316,22 @@ class LoginAPI(MethodView):
         g.active_organisation = Organisation.master_organisation()
 
         post_data = request.get_json()
-
         user = None
         phone = None
 
-        email = post_data.get('username') or post_data.get('email')
+        email = post_data.get('username', '') or post_data.get('email', '')
+        email = email.lower() if email else ''
         password = post_data.get('password')
+        # Default pin to password as fallback for old android versions
+        pin = post_data.get('pin', password)
         tfa_token = post_data.get('tfa_token')
 
         password_empty = password == '' or password is None
+        pin_empty = pin == '' or pin is None
 
         # First try to match email
         if email:
-            user = User.query.filter_by(email=email).execution_options(show_all=True).first()
+            user = User.query.filter(func.lower(User.email)==email).execution_options(show_all=True).first()
 
         # Now try to match the public serial number (comes in under the phone)
         if not user:
@@ -355,27 +363,10 @@ class LoginAPI(MethodView):
                 db.session.commit()
 
             return make_response(jsonify(response_object)), response_code
-
-        if user and user.is_activated and post_data.get('phone') and password_empty:
-            # user already exists, is activated. no password provided, thus request PIN screen.
-            # todo: this should check if device exists, if no, resend OTP to verify login is real.
-            response_object = {
-                'status': 'success',
-                'login_with_pin': True,
-                'message': 'Login with PIN'
-            }
-            return make_response(jsonify(attach_host(response_object))), 200
-
-        if not (email or post_data.get('phone')):
-            response_object = {
-                'status': 'fail',
-                'message': 'No username supplied'
-            }
-            return make_response(jsonify(response_object)), 401
-
-        if post_data.get('phone') and user and user.one_time_code and not user.is_activated:
+        no_password_or_pin_hash = user and not user.password_hash and not user.pin_hash
+        if post_data.get('phone') and user and user.one_time_code and (not user.is_activated or not user.pin_hash):
             # vendor sign up with one time code or OTP verified
-            if user.one_time_code == password:
+            if user.one_time_code == pin:
                 response_object = {
                     'status': 'success',
                     'pin_must_be_set': True,
@@ -383,7 +374,7 @@ class LoginAPI(MethodView):
                 }
                 return make_response(jsonify(attach_host(response_object))), 200
 
-            if not user.is_phone_verified:
+            if not user.is_phone_verified or no_password_or_pin_hash:
                 if user.is_self_sign_up:
                     # self sign up, resend phone verification code
                     user.set_pin(None, False)  # resets PIN
@@ -404,9 +395,26 @@ class LoginAPI(MethodView):
                 response_object = {'message':  'Please verify phone number.', 'otp_verify': True}
                 return make_response(jsonify(attach_host(response_object))), 200
 
-        try:
+        if user and user.is_activated and post_data.get('phone') and (password_empty and pin_empty):
+            # user already exists, is activated. no password or pin provided, thus request PIN screen.
+            # todo: this should check if device exists, if no, resend OTP to verify login is real.
+            response_object = {
+                'status': 'success',
+                'login_with_pin': True,
+                'message': 'Login with PIN'
+            }
+            return make_response(jsonify(attach_host(response_object))), 200
 
-            if not (user and password and user.verify_password(password)):
+        if not (email or post_data.get('phone')):
+            response_object = {
+                'status': 'fail',
+                'message': 'No username supplied'
+            }
+            return make_response(jsonify(response_object)), 401
+    
+
+        try:
+            if not (user and (pin and user.verify_pin(pin) or password and user.verify_password(password))):
                 response_object = {
                     'status': 'fail',
                     'message': 'Invalid username or password'
@@ -516,8 +524,8 @@ class RequestPasswordResetEmailAPI(MethodView):
         # get the post data
         post_data = request.get_json()
 
-        email = post_data.get('email')
-
+        email = post_data.get('email', '')
+        email = email.lower() if email else ''
         if not email:
             response_object = {
                 'status': 'fail',
@@ -525,8 +533,7 @@ class RequestPasswordResetEmailAPI(MethodView):
             }
 
             return make_response(jsonify(response_object)), 401
-
-        user = User.query.filter_by(email=email).execution_options(show_all=True).first()
+        user = User.query.filter(func.lower(User.email)==email).execution_options(show_all=True).first()
 
         if user:
             password_reset_token = user.encode_single_use_JWS('R')
@@ -550,9 +557,9 @@ class ResetPasswordAPI(MethodView):
 
         # get the post data
         post_data = request.get_json()
-
         old_password = post_data.get('old_password')
         new_password = post_data.get('new_password')
+        new_pin = post_data.get('new_pin')
         phone = proccess_phone_number(phone_number=post_data.get('phone'), region=post_data.get('region'))
         one_time_code = post_data.get('one_time_code')
 
@@ -573,15 +580,7 @@ class ResetPasswordAPI(MethodView):
 
                 return make_response(jsonify(response_object)), 401
 
-            if user.is_activated:
-                response_object = {
-                    'status': 'fail',
-                    'message': 'Account already activated'
-                }
-
-                return make_response(jsonify(response_object)), 401
-
-            if str(one_time_code) != user.one_time_code:
+            if not one_time_code or str(one_time_code) != user.one_time_code:
                 response_object = {
                     'status': 'fail',
                     'message': 'One time code not valid'
@@ -589,7 +588,10 @@ class ResetPasswordAPI(MethodView):
 
                 return make_response(jsonify(response_object)), 401
 
-            user.hash_password(new_password)
+            if new_password:
+                user.hash_password(new_password)
+            else:
+                user.hash_pin(new_pin)
 
             user.is_phone_verified = True
             user.is_activated = True
@@ -739,9 +741,17 @@ class PermissionsAPI(MethodView):
 
         post_data = request.get_json()
 
-        email = post_data.get('email')
+        email = post_data.get('email', '')
+        email = email.lower() if email else ''
         tier = post_data.get('tier')
         organisation_id = post_data.get('organisation_id', None)
+
+        if not (email and tier):
+            response_object = {'message': 'No email or tier provided'}
+            return make_response(jsonify(response_object)), 400
+
+        if not AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', tier):
+            return make_response(jsonify({'message': f'User does not have permission to invite {tier}'})), 400
 
         if organisation_id and not AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'sempoadmin'):
             response_object = {'message': 'Not Authorised to set organisation ID'}
@@ -757,15 +767,29 @@ class PermissionsAPI(MethodView):
             response_object = {'message': 'Organisation Not Found'}
             return make_response(jsonify(response_object)), 404
 
-        email_exists = EmailWhitelist.query.filter_by(email=email).first()
-
-        if email_exists:
-            response_object = {'message': 'Email already on whitelist.'}
+        email_exists_for_org = EmailWhitelist.query.filter(func.lower(EmailWhitelist.email)==email).first()
+        if email_exists_for_org:
+            response_object = {'message': 'Email already on organisation whitelist.'}
             return make_response(jsonify(response_object)), 400
 
-        if not (email and tier):
-            response_object = {'message': 'No email or tier provided'}
+        email_exists = EmailWhitelist.query.filter(func.lower(EmailWhitelist.email)==email)\
+            .execution_options(show_all=True).first()
+        if email_exists and not email_exists.used:
+            response_object = {'message': 'Email already on another organisation whitelist. '
+                                          'Please ask user to create an account first. '
+                                          'Contact support if issue persists.'}
             return make_response(jsonify(response_object)), 400
+
+        user = User.query.filter(func.lower(User.email)==email).execution_options(show_all=True).first()
+        if user:
+            user.add_user_to_organisation(organisation, is_admin=True)
+            send_invite_email_to_existing_user(organisation, user.email)
+            db.session.commit()
+            response_object = {
+                'message': 'An invite has been sent to an existing user!',
+            }
+
+            return make_response(jsonify(attach_host(response_object))), 201
 
         invite = EmailWhitelist(email=email,
                                 tier=tier,
@@ -871,11 +895,12 @@ class BlockchainKeyAPI(MethodView):
 
     @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def get(self):
+        chain = get_chain()
         response_object = {
             'status': 'success',
             'message': 'Key loaded',
-            'private_key': current_app.config['MASTER_WALLET_PRIVATE_KEY'],
-            'address': current_app.config['MASTER_WALLET_ADDRESS']
+            'private_key': current_app.config['CHAINS'][chain]['MASTER_WALLET_PRIVATE_KEY'],
+            'address': current_app.config['CHAINS'][chain]['MASTER_WALLET_ADDRESS']
         }
 
         return make_response(jsonify(attach_host(response_object))), 200

@@ -12,6 +12,9 @@ from twilio.rest import Client as TwilioClient
 import sentry_sdk
 from sentry_sdk import configure_scope
 from sentry_sdk.integrations.flask import FlaskIntegration
+from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+from sentry_sdk.integrations.redis import RedisIntegration
+
 import messagebird
 import africastalking
 from datetime import datetime
@@ -111,7 +114,11 @@ def register_extensions(app):
 
     celery_app.conf.update(app.config)
     if not config.IS_TEST:
-        sentry_sdk.init(app.config['SENTRY_SERVER_DSN'], integrations=[FlaskIntegration()], release=config.VERSION)
+        sentry_sdk.init(
+            app.config['SENTRY_SERVER_DSN'], 
+            integrations=[FlaskIntegration(), SqlalchemyIntegration(), RedisIntegration()], 
+            release=config.VERSION
+        )
         with configure_scope() as scope:
             scope.set_tag("domain", config.APP_HOST)
 
@@ -125,6 +132,7 @@ def register_blueprints(app):
         # Celery task list. Tasks are added here so that they can be completed after db commit
         g.pending_transactions = []
         g.executor_jobs: ExecutorJobList = []
+        g.is_after_request = False
 
         if request.url.startswith('http://') and '.withsempo.com' in request.url:
             url = request.url.replace('http://', 'https://', 1)
@@ -137,16 +145,29 @@ def register_blueprints(app):
         if response.status_code < 300 and response.status_code >= 200:
             db.session.commit()
 
-        for job, args, kwargs in g.executor_jobs:
-            job.submit(*args, **kwargs)
+        # Adds version to response header
+        response.headers['App-Version'] = config.VERSION
 
-        for transaction, queue in g.pending_transactions:
-            transaction.send_blockchain_payload_to_worker(queue=queue)
+        # Async tasks are synchronous in pytest, so no need to nuke
+        if not config.IS_TEST:
+            # Detaches all existing db objects from the old session
+            db.session.expunge_all()
+            # Closes and tosses out the old session and engine
+            db.session.close()
+            db.engine.dispose()
 
-        # Push only credit transfers, not exchanges
-        from server.models.credit_transfer import CreditTransfer
-        transactions = [t[0] for t in g.pending_transactions if isinstance(t[0], CreditTransfer)]
-        pusher_utils.push_admin_credit_transfer(transactions)
+        g.is_after_request = True
+        if g.executor_jobs:
+            from flask.globals import _request_ctx_stack
+            for job, args, kwargs in g.executor_jobs:
+                top = _request_ctx_stack.top
+                reqctx = top.copy()
+                reqctx.request.environ = reqctx.request.environ.copy()
+                with reqctx:
+                    job.submit(*args, **kwargs)
+        else:
+            from server.utils.executor import prepare_transactions_async_job
+            prepare_transactions_async_job()
 
         return response
 
@@ -181,6 +202,9 @@ def register_blueprints(app):
     from server.api.metrics_api import metrics_blueprint
     from server.api.mock_data_api import mock_data_blueprint
     from server.api.attribute_map_api import attribute_map_blueprint
+    from server.api.vendor_payout_api import vendor_payout
+    from server.api.disbursement_api import disbursement_blueprint 
+    from server.api.async_api import async_blueprint 
 
     versioned_url = '/api/v1'
 
@@ -215,6 +239,9 @@ def register_blueprints(app):
     app.register_blueprint(metrics_blueprint, url_prefix=versioned_url)
     app.register_blueprint(mock_data_blueprint, url_prefix=versioned_url)
     app.register_blueprint(attribute_map_blueprint, url_prefix=versioned_url)
+    app.register_blueprint(vendor_payout, url_prefix=versioned_url)
+    app.register_blueprint(disbursement_blueprint, url_prefix=versioned_url)
+    app.register_blueprint(async_blueprint, url_prefix=versioned_url)
 
     # 404 handled in react
     @app.errorhandler(404)
@@ -259,7 +286,7 @@ class AppQuery(BaseQuery):
 db = SQLAlchemy(
     query_class=AppQuery,
     session_options={
-        "expire_on_commit": not config.IS_TEST,
+        "expire_on_commit": False,
         "enable_baked_queries": False
         # enable_baked_queries prevents the filter_by_org query from getting trapped on
         # organisation change. Shouldn't by default but ¯\_(ツ)_/¯
@@ -280,8 +307,6 @@ celery_app = Celery('tasks',
                     backend=config.REDIS_URL,
                     task_serializer='json')
 
-
-encrypted_private_key = encrypt_string(config.MASTER_WALLET_PRIVATE_KEY)
 prior_tasks = None
 
 red = redis.Redis.from_url(config.REDIS_URL)

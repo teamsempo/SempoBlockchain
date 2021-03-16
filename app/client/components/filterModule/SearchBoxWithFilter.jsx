@@ -99,6 +99,7 @@ class SearchBoxWithFilter extends React.Component {
         if (attribute_dict[name] === undefined) {
           // This means that the attribute name has not been seen at all, which means we can just create array
           attribute_dict[name] = {
+            name: name, // New filter module expects a name - quick fix before we do proper filters
             values: new Set([value]),
             type:
               typeof value == "number"
@@ -192,7 +193,7 @@ class SearchBoxWithFilter extends React.Component {
 
       //Filtering Standard Attributes
       Object.keys(item).map(attribute_name => {
-        let key = filter.keyName;
+        let key = filter.attribute;
         if (attribute_name === key) {
           // attribute name matches key name, apply filter test
           var attribute_value = item[attribute_name];
@@ -207,7 +208,7 @@ class SearchBoxWithFilter extends React.Component {
       if (added === false && item.custom_attributes !== undefined) {
         //Filtering Custom Attributes
         Object.keys(item.custom_attributes).map(attribute_name => {
-          if (attribute_name === filter.keyName) {
+          if (attribute_name === filter.attribute) {
             let attribute_value = item.custom_attributes[attribute_name];
             test_conditions(filter, attribute_value);
           }
@@ -278,6 +279,7 @@ class SearchBoxWithFilter extends React.Component {
                 <SVG
                   style={{ padding: "0 5px 0 0" }}
                   src="/static/media/save.svg"
+                  alt={"Save filter titled: " + this.state.filterName}
                 />
               )}
               {saveFilterDropdown ? "Cancel" : "Save Filter"}
@@ -293,6 +295,7 @@ class SearchBoxWithFilter extends React.Component {
               value={this.state.filterName}
               placeholder="Filter name..."
               onChange={this.handleChange}
+              aria-label="Filter name"
             />
             <FilterText
               onClick={this.saveFilter}
@@ -314,6 +317,7 @@ class SearchBoxWithFilter extends React.Component {
               <SVG
                 style={{ padding: "0 5px 0 0" }}
                 src="/static/media/save.svg"
+                alt={"View saved filters"}
               />
               View Saved Filters
             </SavedFilterButton>
@@ -367,6 +371,7 @@ class SearchBoxWithFilter extends React.Component {
                 value={phrase}
                 placeholder="Search..."
                 onChange={this.handleChange}
+                aria-label="Search"
               />
 
               <FilterWrapper onClick={this.toggleFilter}>

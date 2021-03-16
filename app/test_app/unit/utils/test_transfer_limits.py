@@ -89,8 +89,6 @@ def test_new_credit_transfer_check_sender_transfer_limits(new_credit_transfer):
         if 'GE Liquid Token - Group Account User' in limit.name or 'Sempo Level 3: P' in limit.name
     ]
 
-    new_credit_transfer.exclude_from_limit_calcs = True
-
 def test_new_credit_transfer_check_sender_transfer_limits_for_exchange(new_credit_transfer):
     # Check Limits skipped if no sender user (exchange)
     new_credit_transfer.sender_user = None
@@ -113,7 +111,8 @@ def test_new_credit_transfer_check_sender_transfer_limits_exception_on_init(exte
             sender_user=new_credit_transfer.sender_user,
             recipient_user=new_credit_transfer.sender_user,
             transfer_type=TransferTypeEnum.PAYMENT,
-            transfer_subtype=TransferSubTypeEnum.STANDARD
+            transfer_subtype=TransferSubTypeEnum.STANDARD,
+            require_sufficient_balance=False
         )
         db.session.add(c)
         c.resolve_as_complete_and_trigger_blockchain()
@@ -122,20 +121,17 @@ def test_new_credit_transfer_check_sender_transfer_limits_exception_on_init(exte
 def test_liquidtoken_number_of_limits(new_credit_transfer):
     from server.models import token
 
+    new_credit_transfer.sender_user.set_held_role('GROUP_ACCOUNT', 'group_account')
+
     new_credit_transfer.transfer_type = TransferTypeEnum.PAYMENT
     new_credit_transfer.token.token_type = token.TokenType.LIQUID
     new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
-    new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
-
     assert len(new_credit_transfer.get_transfer_limits()) == 6
-
-    # TODO: We need this jank because these aren't full unit tests; alchemy is prone to committing when it feels like it
-    # Rather we should use mock db objects
-    new_credit_transfer.exclude_from_limit_calcs = True
 
 
 def test_liquidtoken_fraction_limit(new_credit_transfer):
     from server.models import token
+
     # Check GE LIMITS for Liquid Token (payment, agent_out subtype) on check LIMITS
     new_credit_transfer.transfer_type = TransferTypeEnum.PAYMENT
     new_credit_transfer.token.token_type = token.TokenType.LIQUID
@@ -148,7 +144,6 @@ def test_liquidtoken_fraction_limit(new_credit_transfer):
     with pytest.raises(TransferBalanceFractionLimitError):
         new_credit_transfer.check_sender_transfer_limits()
 
-    new_credit_transfer.exclude_from_limit_calcs = True
 
 def test_liquidtoken_min_send_limit(new_credit_transfer):
     from server.models import token
@@ -158,13 +153,12 @@ def test_liquidtoken_min_send_limit(new_credit_transfer):
     new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
     new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
     new_credit_transfer.transfer_amount = 1500
-    new_credit_transfer.sender_transfer_account.set_balance_offset(5000)
+    new_credit_transfer.sender_transfer_account.set_balance_offset(10000)
     new_credit_transfer.sender_user.set_held_role('GROUP_ACCOUNT', 'group_account')
 
     with pytest.raises(MinimumSentLimitError):
         new_credit_transfer.check_sender_transfer_limits()
 
-    new_credit_transfer.exclude_from_limit_calcs = True
 
 def test_liquidtoken_count_limit(new_credit_transfer, other_new_credit_transfer):
     from server.models import token
@@ -177,35 +171,35 @@ def test_liquidtoken_count_limit(new_credit_transfer, other_new_credit_transfer)
     other_new_credit_transfer.transfer_type = TransferTypeEnum.PAYMENT
     other_new_credit_transfer.token.token_type = token.TokenType.LIQUID
     other_new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
-    other_new_credit_transfer.sender_transfer_account.set_balance_offset(2000)
+    other_new_credit_transfer.sender_transfer_account.set_balance_offset(10000)
     other_new_credit_transfer.sender_user.set_held_role('GROUP_ACCOUNT', 'group_account')
 
     with pytest.raises(TransferCountLimitError):
         other_new_credit_transfer.check_sender_transfer_limits()
 
-    new_credit_transfer.exclude_from_limit_calcs = True
-    other_new_credit_transfer.exclude_from_limit_calcs = True
 
-def test_liquidtoken_max_amount_limit(new_credit_transfer):
+def test_liquidtoken_max_amount_limit(new_credit_transfer, mocker):
     from server.models import token
 
-    # The max per-amount transfer limit is higher than the KYC classes, so it's easier to test by just creating a new
-    # one with a lower amount
+
     from server.utils.transfer_limits import (
-        LIMIT_IMPLEMENTATIONS,
         AGENT_OUT_PAYMENT,
         WITHDRAWAL,
         is_group_and_liquid_token,
         MaximumAmountPerTransferLimit)
 
-    amount: TransferAmount = 10
+    from server.utils import transfer_limits
 
-    LIMIT_IMPLEMENTATIONS.append(
+    # The max per-amount transfer limit is higher than the KYC classes, so it's easier to test by patching
+    patched_limit = [
         MaximumAmountPerTransferLimit('GE Liquid Token - Group Account User',
-                                      [AGENT_OUT_PAYMENT, WITHDRAWAL],
-                                      is_group_and_liquid_token,
-                                      maximum_amount=amount)
-    )
+                                     [AGENT_OUT_PAYMENT, WITHDRAWAL],
+                                     is_group_and_liquid_token,
+                                     maximum_amount=10)
+
+    ]
+
+    mocker.patch.object(transfer_limits, 'LIMIT_IMPLEMENTATIONS', patched_limit)
 
     new_credit_transfer.transfer_type = TransferTypeEnum.PAYMENT
     new_credit_transfer.token.token_type = token.TokenType.LIQUID
@@ -213,14 +207,12 @@ def test_liquidtoken_max_amount_limit(new_credit_transfer):
     new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
     new_credit_transfer.transfer_subtype = TransferSubTypeEnum.AGENT_OUT
 
+    new_credit_transfer.sender_transfer_account.set_balance_offset(10000)
     new_credit_transfer.sender_user.set_held_role('GROUP_ACCOUNT', 'group_account')
 
     with pytest.raises(MaximumPerTransferLimitError):
         new_credit_transfer.check_sender_transfer_limits()
 
-    new_credit_transfer.exclude_from_limit_calcs = True
-    
-    LIMIT_IMPLEMENTATIONS.pop(-1)
 
 def test_new_credit_transfer_check_sender_transfer_limits_exception_on_check_limits(new_credit_transfer):
     from server.models import token

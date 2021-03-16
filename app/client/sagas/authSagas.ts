@@ -7,16 +7,18 @@ import {
   select
 } from "redux-saga/effects";
 import { normalize } from "normalizr";
+import { message } from "antd";
 
 import {
   handleError,
   removeSessionToken,
   storeSessionToken,
   storeTFAToken,
-  storeOrgid,
-  removeOrgId,
+  storeOrgIds,
+  removeOrgIds,
   removeTFAToken,
-  parseQuery
+  parseQuery,
+  getOrgIds
 } from "../utils";
 import {
   adminUserSchema,
@@ -83,10 +85,10 @@ import {
 } from "../reducers/auth/actions";
 
 import { browserHistory } from "../createStore";
-import { MessageAction } from "../reducers/message/actions";
 import { OrganisationAction } from "../reducers/organisation/actions";
 import { ActionWithPayload } from "../reduxUtils";
 import { ReduxState } from "../reducers/rootReducer";
+import { TokenListAction } from "../reducers/token/actions";
 
 function* updateStateFromAdmin(data: AdminData) {
   //Schema expects a list of admin user objects
@@ -127,8 +129,13 @@ export function* updateOrganisationStateFromLoginData(
   }
 
   const normalizedData = normalize(organisation_list, organisationSchema);
-  const organisations = normalizedData.entities.organisations;
 
+  const tokens = normalizedData.entities.tokens;
+  if (tokens) {
+    yield put(TokenListAction.updateTokenList(tokens));
+  }
+
+  const organisations = normalizedData.entities.organisations;
   if (organisations) {
     yield put(OrganisationAction.updateOrganisationList(organisations));
   }
@@ -141,23 +148,29 @@ function* saveOrgId(
   >
 ) {
   try {
-    yield call(storeOrgid, action.payload.organisationId.toString());
+    yield call(storeOrgIds, action.payload.organisationIds);
 
-    // window.location.search = "?org=2"
-    // query_params = {org: 2}
+    // window.location.search = "?org=2" or "?query_organisations=1,2"
+    // query_params = {org: "2"} or {query_organisations: "1,2"}
     let query_params: any = parseQuery(window.location.search);
 
     // if query param and payload are matching then just reload to update navbar
     if (
       query_params["org"] &&
-      action.payload.organisationId === parseInt(query_params["org"])
+      action.payload.organisationIds[0] === parseInt(query_params["org"])
+    ) {
+      window.location.reload();
+    } else if (
+      query_params["query_organisations"] &&
+      action.payload.organisationIds.toString() ===
+        query_params["query_organisations"]
     ) {
       window.location.reload();
     } else {
       window.location.assign("/");
     }
   } catch (e) {
-    removeOrgId();
+    removeOrgIds();
   }
 }
 
@@ -166,7 +179,7 @@ function* watchSaveOrgId() {
 }
 export function* logout() {
   yield call(removeSessionToken);
-  yield call(removeOrgId);
+  yield call(removeOrgIds);
 }
 
 function createLoginSuccessObject(token: TokenData) {
@@ -178,7 +191,8 @@ function createLoginSuccessObject(token: TokenData) {
     usdToSatoshiRate: token.usd_to_satoshi_rate,
     intercomHash: token.web_intercom_hash,
     webApiVersion: token.web_api_version,
-    organisationId: token.active_organisation_id
+    organisationId: token.active_organisation_id,
+    organisationIds: token.organisation_ids
   };
 }
 
@@ -245,16 +259,23 @@ function* refreshToken() {
     if (token_request.auth_token) {
       storeSessionToken(token_request.auth_token);
 
+      let orgId = getOrgIds();
+      let orgIds = orgId && orgId.split(",");
+      if (orgIds && orgIds.length > 1) {
+        token_request["organisation_ids"] = orgIds;
+      } else {
+        token_request["organisation_ids"] = null;
+      }
+
+      yield call(updateOrganisationStateFromLoginData, token_request);
       yield put(
         LoginAction.loginSuccess(createLoginSuccessObject(token_request))
       );
-      yield call(updateOrganisationStateFromLoginData, token_request);
       yield call(authenticatePusher);
     }
     return token_request;
   } catch (error) {
     yield put(LoginAction.logout());
-    yield call(removeSessionToken);
     return error;
   } finally {
     if (yield cancelled()) {
@@ -285,12 +306,7 @@ function* register(
     ) {
       // manual sign up, need to activate email
       yield put(RegisterAction.registerSuccess());
-      yield put(
-        MessageAction.addMessage({
-          error: false,
-          message: registered_account.message
-        })
-      );
+      message.success(registered_account.message);
       browserHistory.push("/login");
     } else if (registered_account.auth_token && !registered_account.tfa_url) {
       storeSessionToken(registered_account.auth_token);
@@ -349,11 +365,10 @@ function* activate(
     if (activated_account.auth_token && !activated_account.tfa_url) {
       storeSessionToken(activated_account.auth_token);
       yield put(ActivateAccountAction.activateAccountSuccess());
+      yield call(updateOrganisationStateFromLoginData, activated_account);
       yield put(
         LoginAction.loginSuccess(createLoginSuccessObject(activated_account))
       );
-      yield call(updateOrganisationStateFromLoginData, activated_account);
-
       yield call(authenticatePusher);
     } else if (activated_account.tfa_url) {
       storeSessionToken(activated_account.auth_token);
@@ -472,13 +487,9 @@ function* updateUserRequest(
     }
 
     yield put(EditAdminUserAction.editAdminUserSuccess());
-
-    yield put(
-      MessageAction.addMessage({ error: false, message: result.message })
-    );
+    message.success(result.message);
   } catch (error) {
-    yield put(EditAdminUserAction.editAdminUserFailure(error));
-    yield put(MessageAction.addMessage({ error: true, message: error }));
+    message.error(error);
   }
 }
 
@@ -508,9 +519,7 @@ function* deleteInvite(
     delete invites[action.payload.body.invite_id];
 
     yield put(InviteUserListAction.updateInviteUsers(invites));
-    yield put(
-      MessageAction.addMessage({ error: false, message: result.message })
-    );
+    message.success(result.message);
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
     yield put(DeleteInviteAction.deleteInviteFailure(error.message));
@@ -530,9 +539,7 @@ function* inviteUserRequest(
   try {
     const result = yield call(inviteUserAPI, action.payload);
     yield put(InviteUserAction.inviteUserSuccess());
-    yield put(
-      MessageAction.addMessage({ error: false, message: result.message })
-    );
+    message.success(result.message);
     browserHistory.push("/settings");
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);

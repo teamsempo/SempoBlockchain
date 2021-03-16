@@ -9,6 +9,7 @@ import base64
 from server import db
 from server.utils.auth import get_complete_auth_token
 from server.utils.phone import proccess_phone_number
+from server.utils.transfer_enums import TransferStatusEnum
 from server.models.transfer_usage import TransferUsage
 from server.models.user import User
 from server.models.transfer_card import TransferCard
@@ -62,9 +63,6 @@ def test_create_user(test_client, authed_sempo_admin_user, init_database, create
             'bio': 'EasyMart',
             'gender': 'female',
             'phone': phone,
-            'is_vendor': False,
-            'is_tokenagent': False,
-            'is_groupaccount': False,
             'initial_disbursement': initial_disbursement,
             'location': 'Elwood',
             'business_usage_name': business_usage_name,
@@ -128,13 +126,13 @@ def test_create_user(test_client, authed_sempo_admin_user, init_database, create
             assert kwargs == {'user_id': data['user']['id'], 'location': 'Elwood'}
 
 
-@pytest.mark.parametrize("user_id_accessor, is_vendor, is_groupaccount, tier, status_code", [
-    (lambda o: o.id, False, False, 'subadmin', 403),
-    (lambda o: o.id, True, False, 'admin', 200),
-    (lambda o: o.id, False, True, 'admin', 200),
-    (lambda o: 1222103, False, False, 'admin', 404),
+@pytest.mark.parametrize("user_id_accessor, is_vendor, is_groupaccount, roles, tier, status_code", [
+    (lambda o: o.id, False, False, [], 'subadmin', 403),
+    (lambda o: o.id, True, False, ['vendor'], 'admin', 200),
+    (lambda o: o.id, False, True, ['group_account'], 'admin', 200),
+    (lambda o: 1222103, False, False, [], 'admin', 404),
 ])
-def test_edit_user(test_client, authed_sempo_admin_user, create_transfer_account_user, user_id_accessor, is_vendor, is_groupaccount, tier, status_code):
+def test_edit_user(test_client, authed_sempo_admin_user, create_transfer_account_user, user_id_accessor, is_vendor, is_groupaccount, roles, tier, status_code):
     if tier:
         authed_sempo_admin_user.set_held_role('ADMIN', tier)
         auth = get_complete_auth_token(authed_sempo_admin_user)
@@ -151,8 +149,7 @@ def test_edit_user(test_client, authed_sempo_admin_user, create_transfer_account
         ),
         json={
             'phone': new_phone,
-            'is_vendor': is_vendor,
-            'is_groupaccount': is_groupaccount,
+            'account_types': roles
         })
 
     assert response.status_code == status_code
@@ -177,21 +174,41 @@ def test_admin_reset_user_pin(
     auth = get_complete_auth_token(authed_sempo_admin_user)
 
     user_id = reset_user_id_accessor(create_transfer_account_user)
+    create_transfer_account_user.pin_hash = 'FAKE PIN HASH!'
+    original_pin_hash = create_transfer_account_user.pin_hash
+    original_otc = create_transfer_account_user.one_time_code
+
     response = test_client.post('/api/v1/user/reset_pin/',
                                 headers=dict(Authorization=auth, Accept='application/json'),
                                 data=json.dumps(dict(user_id=user_id)),
                                 content_type='application/json', follow_redirects=True)
     assert response.status_code == status_code
+    if response.status_code == 200:
+        assert original_pin_hash != create_transfer_account_user.pin_hash
+        assert not create_transfer_account_user.pin_hash
+        assert int(create_transfer_account_user.one_time_code) >= 0 <=9999
+        assert create_transfer_account_user.one_time_code != original_otc
 
-
-@pytest.mark.parametrize("user_id_accessor, tier, status_code", [
-    (lambda o: o.id, 'admin', 403),
-    (lambda o: o.id, 'superadmin', 200),
-    (lambda o: o.id, 'superadmin', 400),
-    (lambda o: 1222103, 'superadmin', 404),
+@pytest.mark.parametrize("user_id_accessor, tier, message, status_code", [
+    (lambda o: o.id, 'admin', "user does not have any of the allowed roles", 403),
+    (lambda o: o.id, 'superadmin', "pending", 400),
+    (lambda o: o.id, 'superadmin', "Balance must be zero", 400),
+    (lambda o: o.id, 'superadmin', "deleted", 200),
+    (lambda o: o.id, 'superadmin', 'Resource Already Deleted', 400),
+    (lambda o: 1222103, 'superadmin', 'No User Found for ID', 404),
 ])
-def test_delete_user(test_client, authed_sempo_admin_user, create_transfer_account_user, user_id_accessor, tier,
-                     status_code):
+def test_delete_user(test_client, authed_sempo_admin_user, create_transfer_account_user, create_credit_transfer,
+                     user_id_accessor, tier, message, status_code):
+    create_transfer_account_user.transfer_account.set_balance_offset(1000)
+
+    if message == 'Balance must be zero' or message == 'Resource Already Deleted':
+        create_credit_transfer.resolve_as_rejected()
+        db.session.commit()
+
+    if message == 'deleted':
+        create_credit_transfer.resolve_as_complete()
+        db.session.commit()
+
     if tier:
         authed_sempo_admin_user.set_held_role('ADMIN', tier)
         auth = get_complete_auth_token(authed_sempo_admin_user)
@@ -206,8 +223,11 @@ def test_delete_user(test_client, authed_sempo_admin_user, create_transfer_accou
         ))
 
     assert response.status_code == status_code
-    if response.status_code == 200:
-        assert response.json['message'] is not None
+    assert message in response.json['message']  # in operator as annoying to make ID dynamic
+
+    if create_credit_transfer.transfer_status == TransferStatusEnum.PENDING:
+        create_credit_transfer.resolve_as_rejected()
+        db.session.commit()
 
 
 def test_get_user(test_client, authed_sempo_admin_user, create_transfer_account_user):
@@ -239,10 +259,11 @@ def test_get_user(test_client, authed_sempo_admin_user, create_transfer_account_
     # User 3 is in Org 2
     # User 4 is in Org 2
     # User 5 is in Org 2
+    # User 6 is in Org 2
     response = get_user_endpoint('1,2')
     assert response.status_code == 200
     users_list = response.json['data']['users']
-    assert get_transfer_account_ids(users_list) == [5, 4, 3, 1]
+    assert get_transfer_account_ids(users_list) == [6, 5, 4, 3, 1]
 
     response = get_user_endpoint('1')
     assert response.status_code == 200
@@ -253,7 +274,7 @@ def test_get_user(test_client, authed_sempo_admin_user, create_transfer_account_
     response = get_user_endpoint('2')
     assert response.status_code == 200
     users_list = response.json['data']['users']
-    assert get_transfer_account_ids(users_list) == [5, 4, 3, 1]
+    assert get_transfer_account_ids(users_list) == [6, 5, 4, 3, 1]
 
 def test_create_user_via_kobo(test_client, init_database, authed_sempo_admin_user):
 

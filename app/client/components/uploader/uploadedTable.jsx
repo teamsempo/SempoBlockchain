@@ -109,6 +109,7 @@ class uploadedTable extends React.Component {
     var dataset = {
       data: this.dataList.slice(this.state.firstDataRow),
       headerPositions: this.state.headerPositions,
+      customAttributes: this.state.customAttributeList,
       country: this.state.country,
       saveName: this.state.saveName,
       isVendor: this.props.is_vendor
@@ -315,42 +316,14 @@ class uploadedTable extends React.Component {
       );
     }
 
-    if (
-      this.props.saveState.saved &&
-      this.props.saveState.diagnostics.length > 0
-    ) {
+    if (this.props.saveState.saved) {
       var added = 0;
       var updated = 0;
       var errors = 0;
 
-      var diagnostic_list = this.props.saveState.diagnostics.map(
-        (diagnostic, index) => {
-          if (diagnostic[1] !== 200) {
-            errors += 1;
-            return (
-              <p style={{ size: "0.8em" }} key={index}>
-                {diagnostic[0]}
-              </p>
-            );
-          } else if (diagnostic[0] === "User Updated") {
-            updated += 1;
-          } else {
-            added += 1;
-            return null;
-          }
-        }
-      );
-
       var main_body = (
         <div>
           <PromptText>Save Complete</PromptText>
-          <p>
-            <b>
-              {" "}
-              Added: {added}, Updated: {updated}, Errors: {errors}{" "}
-            </b>
-          </p>
-          {diagnostic_list}
         </div>
       );
     } else {
@@ -408,6 +381,8 @@ class uploadedTable extends React.Component {
       );
     }
 
+    let nextText = this.currentStepNormalisedIndex() === 2 ? "Save" : "Next";
+
     return (
       <PageWrapper>
         <Prompt
@@ -433,6 +408,7 @@ class uploadedTable extends React.Component {
                 ? { opacity: 0, pointerEvents: "None" }
                 : {}
             }
+            label={"Previous"}
           >
             Prev
           </StyledButton>
@@ -444,8 +420,9 @@ class uploadedTable extends React.Component {
                 ? { opacity: 0, pointerEvents: "None" }
                 : {}
             }
+            label={nextText}
           >
-            {this.currentStepNormalisedIndex() === 2 ? "Save" : "Next"}
+            {nextText}
           </StyledButton>
         </div>
 
@@ -504,7 +481,7 @@ const CustomColumnFields = function(props) {
           value={props.customAttribute}
           onCustomAttributeKeyPress={e => props.onCustomAttributeKeyPress(e)}
         />
-        <StyledButton onClick={() => props.handleAddClick()}>
+        <StyledButton onClick={() => props.handleAddClick()} label={"Add"}>
           {" "}
           Add{" "}
         </StyledButton>
@@ -537,6 +514,7 @@ class CustomInput extends React.Component {
         innerRef={input => {
           this.nameInput = input;
         }}
+        aria-label={this.props.value}
       />
     );
   }
@@ -627,7 +605,6 @@ const CloseIcon = styled.div`
 `;
 
 const PageWrapper = styled.div`
-  margin-left: 234px;
-  width: calc(100vw - 234px);
+  margin: 1em;
   text-align: center;
 `;

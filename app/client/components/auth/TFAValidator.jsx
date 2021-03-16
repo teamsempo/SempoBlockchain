@@ -90,7 +90,8 @@ export class TFAValidator extends React.Component {
           onChange={e => this.onCodeKeyPress(e)}
           onKeyUp={e => this.onKeyup(e)}
           style={{ letterSpacing: "0.2em" }}
-          placeholder="Your Code"
+          placeholder="Your TFA Code"
+          aria-label="Your TFA Code"
         />
 
         <label style={{ marginLeft: "0.5em" }}>
@@ -99,6 +100,7 @@ export class TFAValidator extends React.Component {
             type="checkbox"
             checked={this.state.rememberComputer}
             onChange={() => this.onCheck()}
+            aria-label="Remember my computer"
           />
           Remember computer
         </label>
@@ -107,7 +109,8 @@ export class TFAValidator extends React.Component {
           onClick={() => this.onClick()}
           isLoading={this.props.validateState.isRequesting}
           buttonStyle={{ width: "calc(100% - 1em)", display: "flex" }}
-          buttonText="Verify"
+          buttonText={<span>Verify</span>}
+          label={"Verify my application"}
         />
 
         <div style={{ textAlign: "center" }}>

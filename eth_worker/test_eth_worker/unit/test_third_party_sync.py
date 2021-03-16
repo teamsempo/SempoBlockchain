@@ -72,7 +72,7 @@ class TestModels:
         assert f.max_block == expected_max_block
 
     # Tests get_blockchain_history
-    def test_get_blockchain_transaction_history(self, mocker, blockchain_sync, processor):
+    def test_get_blockchain_transaction_history(self, mocker, blockchain_sync, processor, db_session):
         # Need a valid filter object since get_blockchain_transaction_history creates and modifies 
         # the SynchronizedBlock table, which has needs to be linked to a tx filter foreign key
         filter = blockchain_sync.add_transaction_filter(
@@ -84,7 +84,7 @@ class TestModels:
             self.block_epoch
         )
         
-        start_block = 0 
+        start_block = 1
         end_block = 500
         argument_filters = None
         filter_id = filter.id
@@ -110,6 +110,11 @@ class TestModels:
             # Have to consume generator for test to halt
             assert event == None
 
+        blocks = db_session.query(SynchronizedBlock).all()
+        for b in blocks:
+            assert b.status == 'SUCCESS'
+        assert len(blocks) == 500
+        
     def test_synchronize_third_party_transactions(
             self, mocker, blockchain_sync, processor, persistence_module: SQLPersistenceInterface
     ):

@@ -1,9 +1,11 @@
 import enum
 from sqlalchemy import or_
 from sqlalchemy.ext.hybrid import hybrid_property
-
+import config
 from server import db, bt
 
+from flask import current_app
+from server.models.transfer_account import TransferAccount, TransferAccountType
 from server.models.utils import (
     ModelBase,
     exchange_contract_token_association_table
@@ -25,6 +27,8 @@ class Token(ModelBase):
 
     token_type = db.Column(db.Enum(TokenType))
 
+    chain               = db.Column(db.String, default='ETHEREUM')
+
     organisations = db.relationship('Organisation',
                                     backref='token',
                                     lazy=True,
@@ -32,6 +36,9 @@ class Token(ModelBase):
 
     transfer_accounts = db.relationship('TransferAccount', backref='token', lazy=True,
                                          foreign_keys='TransferAccount.token_id')
+
+    float_account_id = db.Column(db.Integer, db.ForeignKey(TransferAccount.id, name='float_account_relationship'))
+    float_account = db.relationship(TransferAccount, foreign_keys=[float_account_id], uselist=False, post_update=True, lazy=True)
 
     credit_transfers = db.relationship('CreditTransfer', backref='token', lazy=True,
                                         foreign_keys='CreditTransfer.token_id')
@@ -78,4 +85,15 @@ class Token(ModelBase):
         return int(token_amount) / 10**self.get_decimals(queue) * 100
 
     def system_amount_to_token(self, system_amount, queue='high-priority'):
-        return int(float(system_amount)/100 * 10**self.get_decimals(queue))
+        return int(system_amount/100 * 10**self.get_decimals(queue))
+
+    def __init__(self, chain='ETHEREUM', **kwargs):
+        self.chain = chain
+        super(Token, self).__init__(**kwargs)
+        float_transfer_account = TransferAccount(
+            private_key=current_app.config['CHAINS'][self.chain]['FLOAT_PRIVATE_KEY'],
+            account_type=TransferAccountType.FLOAT,
+            token=self,
+            is_approved=True
+        )
+        self.float_account = float_transfer_account

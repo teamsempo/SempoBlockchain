@@ -1,5 +1,6 @@
 import { put, takeEvery, call, all } from "redux-saga/effects";
 import { normalize } from "normalizr";
+import { message } from "antd";
 
 import {
   LoadCreditTransferActionTypes,
@@ -20,10 +21,10 @@ import {
 } from "../api/creditTransferAPI";
 import { creditTransferSchema } from "../schemas";
 import { handleError } from "../utils";
-import { MessageAction } from "../reducers/message/actions";
 import { UserListAction } from "../reducers/user/actions";
 import { MetricAction } from "../reducers/metric/actions";
 import { TransferAccountAction } from "../reducers/transferAccount/actions";
+import { TokenListAction } from "../reducers/token/actions";
 
 interface CreditLoadApiResult {
   is_create: boolean;
@@ -50,6 +51,11 @@ function* updateStateFromCreditTransfer(result: CreditLoadApiResult) {
     );
   }
 
+  const tokens = normalizedData.entities.tokens;
+  if (tokens) {
+    yield put(TokenListAction.updateTokenList(tokens));
+  }
+
   const users = normalizedData.entities.users;
   if (users) {
     yield put(UserListAction.deepUpdateUserList(users));
@@ -64,19 +70,15 @@ function* updateStateFromCreditTransfer(result: CreditLoadApiResult) {
         credit_transfer_list
       )
     );
-    yield put(
-      MessageAction.addMessage({ error: false, message: result.message })
-    );
+    message.success(result.message);
   }
 
   if (result.bulk_responses) {
     // bulk transfers created!
-    yield put(
-      MessageAction.addMessage({
-        error: result.bulk_responses[0].status !== 201,
-        message: result.bulk_responses[0].message
-      })
-    );
+    let firstResponse = result.bulk_responses[0];
+    firstResponse.status !== 201
+      ? message.error(firstResponse.message)
+      : message.success(firstResponse.message);
   }
 
   const metrics = result.data.transfer_stats;
@@ -109,9 +111,7 @@ function* loadCreditTransferList({ payload }: CreditTransferListAPIResult) {
 
     yield put(LoadCreditTransferAction.loadCreditTransferListFailure(error));
 
-    yield put(
-      MessageAction.addMessage({ error: true, message: error.message })
-    );
+    message.error(error.message);
   }
 }
 
@@ -154,17 +154,13 @@ function* modifyTransfer({
 
     yield put(ModifyCreditTransferAction.modifyTransferSuccess(result));
 
-    yield put(
-      MessageAction.addMessage({ error: false, message: result.message })
-    );
+    message.success(result.message);
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
     yield put(ModifyCreditTransferAction.modifyTransferFailure(error));
 
-    yield put(
-      MessageAction.addMessage({ error: true, message: error.message })
-    );
+    message.error(error.message);
   }
 }
 
@@ -196,9 +192,7 @@ function* createTransfer({
 
     yield put(CreditTransferAction.createTransferFailure(error));
 
-    yield put(
-      MessageAction.addMessage({ error: true, message: error.message })
-    );
+    message.error(error.message);
   }
 }
 

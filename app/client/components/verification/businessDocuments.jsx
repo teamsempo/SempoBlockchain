@@ -94,7 +94,10 @@ class BusinessDocuments extends React.Component {
       .map((document, idx) => {
         return (
           <DocumentWrapper key={idx}>
-            <SVG src="/static/media/document.svg" />
+            <SVG
+              src="/static/media/document.svg"
+              alt={"Document " + document.user_filename}
+            />
             <div>
               <DocumentTitle>{document.user_filename}</DocumentTitle>
               <DateTime created={document.created} />
@@ -238,11 +241,18 @@ class BusinessDocuments extends React.Component {
 
         <ThemeProvider theme={DefaultTheme}>
           <div>
-            <AsyncButton buttonText={"Back"} onClick={this.props.backStep} />
             <AsyncButton
-              buttonText={this.props.isFinal ? "COMPLETE" : "Next"}
+              buttonText={<span>Back</span>}
+              onClick={this.props.backStep}
+              label={"Back"}
+            />
+            <AsyncButton
+              buttonText={
+                this.props.isFinal ? <span>COMPLETE</span> : <span>Next</span>
+              }
               onClick={this.isValidated}
               isLoading={this.props.editStatus.isRequesting}
+              label={this.props.isFinal ? "Complete" : "Next"}
             />
           </div>
         </ThemeProvider>

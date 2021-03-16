@@ -103,7 +103,7 @@ class UserAPI(MethodView):
             else:
                 user_query = User.query
 
-            users, total_items, total_pages = paginate_query(user_query, User)
+            users, total_items, total_pages, new_last_fetched = paginate_query(user_query)
 
             if users is None:
                 response_object = {
@@ -118,13 +118,14 @@ class UserAPI(MethodView):
                 'message': 'Successfully Loaded.',
                 'pages': total_pages,
                 'items': total_items,
+                'last_fetched': new_last_fetched,
                 'data': {
                     'users': user_list,
                 }
             }
             return make_response(jsonify(response_object)), 200
 
-    @requires_auth(allowed_roles={'ADMIN': 'subadmin'}, allowed_basic_auth_types=('external',))
+    @requires_auth(allowed_roles={'ADMIN': 'subadmin'}, allowed_basic_auth_types=('external',), allow_query_string_auth=True)
     def post(self, user_id):
         """
         :arg preprocess: whether the data should be cleaned before attempting to create a user - for example converting
@@ -210,7 +211,6 @@ class ResetPinAPI(MethodView):
 
         if reset_user_id is not None:
             user = User.query.get(reset_user_id)
-
             if user is None:
                 return make_response(jsonify({'message': 'No user found for ID: {}'.format(reset_user_id)})), 404
 

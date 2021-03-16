@@ -49,18 +49,18 @@ describe("test localStorage", () => {
   const sessionToken = "asfdasfd91234pfa";
 
   describe("orgId", () => {
-    test("test setOrgId", () => {
-      utils.storeOrgid(orgId);
-      expect(localStorage).toHaveProperty("orgId", orgId);
+    test("test setOrgIds", () => {
+      utils.storeOrgIds(orgId);
+      expect(localStorage).toHaveProperty("orgIds", orgId);
     });
 
-    test("test getOrgId", () => {
-      expect(utils.getOrgId()).toEqual(orgId);
+    test("test getOrgIds", () => {
+      expect(utils.getOrgIds()).toEqual(orgId);
     });
 
-    test("test removeOrgId", () => {
-      utils.removeOrgId();
-      expect(localStorage).not.toHaveProperty("orgId", orgId);
+    test("test removeOrgIds", () => {
+      utils.removeOrgIds();
+      expect(localStorage).not.toHaveProperty("orgIds", orgId);
     });
   });
 

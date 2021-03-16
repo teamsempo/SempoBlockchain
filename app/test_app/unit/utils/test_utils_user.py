@@ -99,8 +99,6 @@ def test_admin_reset_user_pin(mocker, test_client, init_database, create_transfe
     assert user.failed_pin_attempts == 0
     assert isinstance(user.pin_reset_tokens, list)
     assert len(user.pin_reset_tokens) == 1
-    messages = mock_sms_apis
-    assert messages == [{'phone': user.phone, 'message': 'Dial *384*96# Safaricom or *483*46# Airtel to change your PIN'}]
 
 @pytest.mark.parametrize("preferred_language, org_key, expected_welcome, expected_terms, phone", [
 
@@ -126,7 +124,7 @@ def test_send_welcome_sms(mocker, test_client, init_database, mock_sms_apis,
     from flask import g
     from server import db
 
-    token = TokenFactory(name='Sarafu', symbol='SARAFU')
+    token = TokenFactory(name='Sarafu', symbol='Sarafu')
     organisation = OrganisationFactory(custom_welcome_message_key=org_key, token=token, country_code='AU')
     g.active_organisation = organisation
     transfer_account = TransferAccountFactory(token=token, organisation=organisation)

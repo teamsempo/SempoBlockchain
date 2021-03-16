@@ -4,6 +4,12 @@ import { LoginAction } from "./reducers/auth/actions";
 import store from "./createStore.js";
 import { USER_FILTER_TYPE } from "./constants";
 
+export const getActiveToken = state =>
+  state.tokens.byId[
+    state.organisations.byId[state.login.organisationId] &&
+      state.organisations.byId[state.login.organisationId].token
+  ];
+
 export function formatMoney(
   amount,
   decimalCount,
@@ -32,8 +38,7 @@ export function formatMoney(
             .toFixed(decimalCount)
             .slice(2)
         : "") +
-      " " +
-      currency
+      (currency ? " " + currency : "")
     );
   } catch (e) {
     console.log(e);
@@ -71,9 +76,13 @@ export const generateQueryString = query => {
     });
   }
 
-  let orgId = getOrgId();
+  let orgId = getOrgIds();
+  let orgIds = orgId && orgId.split(",");
   var response_string = query_string;
-  if (orgId !== null && typeof orgId !== "undefined") {
+  if (orgIds && orgIds.length > 1) {
+    response_string =
+      query_string + `query_organisations=${orgIds.toString()}&`;
+  } else if (orgId !== null && typeof orgId !== "undefined") {
     response_string = query_string + `org=${orgId}&`;
   }
 
@@ -154,19 +163,19 @@ const extractJson = error => {
   return error.json();
 };
 
-export const storeOrgid = orgId => {
-  localStorage.setItem("orgId", orgId);
+export const storeOrgIds = orgIds => {
+  localStorage.setItem("orgIds", orgIds);
 };
 
-export const removeOrgId = orgId => {
-  localStorage.removeItem("orgId");
+export const removeOrgIds = orgId => {
+  localStorage.removeItem("orgIds");
 };
 
-export const getOrgId = () => {
+export const getOrgIds = () => {
   try {
-    return localStorage.getItem("orgId");
+    return localStorage.getItem("orgIds");
   } catch (err) {
-    removeOrgId();
+    removeOrgIds();
     return null;
   }
 };

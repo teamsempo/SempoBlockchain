@@ -19,7 +19,6 @@ import redis
 from web3 import Web3
 
 import config
-from eth_src.eth_manager.eth_transaction_processor import EthTransactionProcessor
 from eth_src.eth_manager.transaction_supervisor import TransactionSupervisor
 from eth_src.eth_manager.task_manager import TaskManager
 from eth_src.eth_manager.blockchain_sync.blockchain_sync import BlockchainSyncer
@@ -32,11 +31,17 @@ from utils import str_uuid
 
 @pytest.fixture(autouse=True)
 def mock_queue_sig(monkeypatch):
+
+    queued_sigs = []
+
     def mock_response(sig, countdown=0):
+        queued_sigs.append((sig,countdown))
         return str_uuid()
 
     import celery_utils
     monkeypatch.setattr(celery_utils, 'queue_sig', mock_response)
+
+    return queued_sigs
 
 @pytest.fixture(scope='function')
 def db_session():
@@ -109,7 +114,7 @@ def mock_w3(monkeypatch, noncer, mock_txn_send):
 
 @pytest.fixture(scope='function')
 def processor(persistence_module, mock_w3):
-
+    from eth_src.eth_manager.eth_transaction_processor import EthTransactionProcessor
     p = EthTransactionProcessor(
         ethereum_chain_id=1,
         w3=mock_w3,

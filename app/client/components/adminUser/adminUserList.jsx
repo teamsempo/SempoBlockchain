@@ -209,7 +209,10 @@ class AdminUserList extends React.Component {
             })
           }
         >
-          <IconSVG src="/static/media/action-icon.svg" />
+          <IconSVG
+            src="/static/media/action-icon.svg"
+            alt={"Actions for " + item.email}
+          />
         </IconWrapper>
         <CloseWrapper
           onClick={() =>
@@ -263,6 +266,7 @@ class AdminUserList extends React.Component {
                     lineHeight: "25px",
                     height: "25px"
                   }}
+                  label={"Add New Admin"}
                 >
                   + New Admin
                 </StyledButton>

@@ -204,8 +204,9 @@ class WyreBankFunding extends React.Component {
                 onClick={() =>
                   this.setState({ isLive: true }, () => this.fundAccount(true))
                 }
-                buttonText={"FUND ACCOUNT"}
+                buttonText={<span>FUND ACCOUNT</span>}
                 isLoading={isLoading}
+                label={"Fund Account"}
               />
             </ButtonWrapper>
           </PreviewWrapper>

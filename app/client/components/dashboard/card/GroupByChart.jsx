@@ -6,31 +6,38 @@ import React from "react";
 import { connect } from "react-redux";
 
 import { HorizontalBar } from "react-chartjs-2";
-import { toTitleCase, replaceUnderscores, toCurrency } from "../../../utils";
+import {
+  toTitleCase,
+  replaceUnderscores,
+  toCurrency,
+  formatMoney,
+  getActiveToken
+} from "../../../utils";
 import { VALUE_TYPES } from "../../../constants";
+import { ChartColors } from "../../theme";
 
 const mapStateToProps = state => {
   return {
-    activeOrganisation: state.organisations.byId[state.login.organisationId]
+    activeToken: getActiveToken(state)
   };
 };
 
 class GroupByChart extends React.Component {
   render() {
-    const selected = this.props.selected;
-
-    const aggregate = this.props.data.aggregate;
+    const { selected, data, activeToken } = this.props;
+    const { percent_change, ...aggregate } = this.props.data.aggregate;
     const aggregateKeys = aggregate ? Object.keys(aggregate) : [];
     var aggregateData = aggregate ? Object.values(aggregate) : [];
     if (this.props.data.type.value_type == VALUE_TYPES.CURRENCY) {
       aggregateData = aggregateData.map(a => toCurrency(a));
     }
 
+    let maxVal = Math.max(...aggregateData);
+
     const labelString = selected
       ? selected.includes("volume")
-        ? `${toTitleCase(replaceUnderscores(selected))} (${
-            this.props.activeOrganisation.token.symbol
-          })`
+        ? `${toTitleCase(replaceUnderscores(selected))} (${activeToken &&
+            activeToken.symbol})`
         : `${toTitleCase(replaceUnderscores(selected))}`
       : null;
 
@@ -43,7 +50,29 @@ class GroupByChart extends React.Component {
       tooltips: {
         mode: "y",
         backgroundColor: "rgba(87, 97, 113, 0.9)",
-        cornerRadius: 1
+        cornerRadius: 1,
+        callbacks: {
+          label: function(tooltipItem) {
+            let labelAbsoluteVal;
+            if (data.type && data.type.value_type === VALUE_TYPES.CURRENCY) {
+              labelAbsoluteVal = formatMoney(
+                tooltipItem.xLabel,
+                data.type.display_decimals,
+                undefined,
+                undefined,
+                data.type.currency_symbol
+              );
+            } else {
+              labelAbsoluteVal = tooltipItem.xLabel;
+            }
+
+            let labelPercent = parseFloat(
+              (tooltipItem.xLabel / maxVal) * 100
+            ).toFixed(1);
+
+            return `${labelAbsoluteVal} (${labelPercent}%)`;
+          }
+        }
       },
       scales: {
         xAxes: [
@@ -59,7 +88,17 @@ class GroupByChart extends React.Component {
             },
             ticks: {
               beginAtZero: true,
-              min: 0
+              min: 0,
+              callback(value) {
+                if (
+                  data.type &&
+                  data.type.value_type === VALUE_TYPES.CURRENCY
+                ) {
+                  // We don't want the yAxis to display decimals
+                  return formatMoney(value, 0, undefined, undefined);
+                }
+                return value;
+              }
             }
           }
         ],
@@ -79,25 +118,12 @@ class GroupByChart extends React.Component {
       }
     };
 
-    var data = {
+    var chartData = {
       labels: aggregateKeys,
       datasets: [
         {
           label: `${toTitleCase(replaceUnderscores(selected))}`,
-          backgroundColor: [
-            "#003F5C",
-            "#FF764D",
-            "#CB5188",
-            "#62508E",
-            "#508E79",
-            "#2E4A7A",
-            "#F05B6F",
-            "#995194",
-            "#57AA65",
-            "#FF9C22",
-            "#42B1B1",
-            "#555555"
-          ],
+          backgroundColor: ChartColors,
           data: aggregateData
         }
       ]
@@ -106,7 +132,7 @@ class GroupByChart extends React.Component {
       <div>
         <div style={{ height: `${this.props.chartHeight}px` }}>
           <HorizontalBar
-            data={data}
+            data={chartData}
             height={this.props.chartHeight}
             options={options}
           />

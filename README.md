@@ -36,6 +36,13 @@ You can use your preferred implementation of the Ethereum Blockchain to test thi
 npm install -g ganache-cli@6.4.1
 ```
 
+**Cairo and Pango (Optional)**
+PDF generation requires Cairo and Pango. On OSX:
+
+```
+brew install cairo && brew install pango
+```
+
 **Python**
 
 Download and install python 3.8 and its respective pip and virtualenv. Then:
@@ -255,7 +262,7 @@ Ensure your test_config.ini and test_secrets.ini files are up to date. Test secr
 
 ```
 cd config files
-python generate_secrets.py test
+python generate_secrets.py -n test
 ```
 
 Create the test databases:

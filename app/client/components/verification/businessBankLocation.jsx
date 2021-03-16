@@ -184,8 +184,16 @@ class BusinessBankLocation extends React.Component {
 
         <ThemeProvider theme={DefaultTheme}>
           <div>
-            <AsyncButton buttonText={"Back"} onClick={this.props.backStep} />
-            <AsyncButton buttonText={"Next"} onClick={this.isValidated} />
+            <AsyncButton
+              buttonText={<span>Back</span>}
+              onClick={this.props.backStep}
+              label={"Back"}
+            />
+            <AsyncButton
+              buttonText={<span>Next</span>}
+              onClick={this.isValidated}
+              label={"Next"}
+            />
           </div>
         </ThemeProvider>
       </div>

@@ -217,9 +217,14 @@ class BusinessBankDetails extends React.Component {
 
         <ThemeProvider theme={DefaultTheme}>
           <div style={{ display: "flex" }}>
-            <AsyncButton buttonText={"Back"} onClick={this.props.backStep} />
             <AsyncButton
-              buttonText={"Next"}
+              buttonText={<span>Back</span>}
+              onClick={this.props.backStep}
+              label={"Back"}
+            />
+            <AsyncButton
+              buttonText={<span>Next</span>}
+              label={"Next"}
               onClick={this.isValidated}
               isLoading={
                 this.props.editBankAccountStatus.isRequesting ||

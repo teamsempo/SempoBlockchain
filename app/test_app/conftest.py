@@ -131,6 +131,7 @@ def create_transfer_account_user(test_client, init_database, create_organisation
     db.session.commit()
     return user
 
+create_transfer_account_user_2 = create_transfer_account_user
 
 @pytest.fixture(scope='function')
 def create_transfer_account_user_function(test_client, init_database, create_organisation):
@@ -178,7 +179,7 @@ def new_disbursement(create_transfer_account_user):
 
 
 @pytest.fixture(scope='function')
-def new_credit_transfer(create_transfer_account_user, external_reserve_token):
+def new_credit_transfer(create_transfer_account_user, create_transfer_account_user_2, external_reserve_token):
     from server.models.credit_transfer import CreditTransfer
     from uuid import uuid4
 
@@ -186,10 +187,11 @@ def new_credit_transfer(create_transfer_account_user, external_reserve_token):
         amount=1000,
         token=external_reserve_token,
         sender_user=create_transfer_account_user,
-        recipient_user=create_transfer_account_user,
+        recipient_user=create_transfer_account_user_2,
         transfer_type=TransferTypeEnum.PAYMENT,
         transfer_subtype=TransferSubTypeEnum.STANDARD,
-        uuid=str(uuid4())
+        uuid=str(uuid4()),
+        require_sufficient_balance=False
     )
     return credit_transfer
 
@@ -206,7 +208,8 @@ def other_new_credit_transfer(create_transfer_account_user, external_reserve_tok
         recipient_user=create_transfer_account_user,
         transfer_type=TransferTypeEnum.PAYMENT,
         transfer_subtype=TransferSubTypeEnum.STANDARD,
-        uuid=str(uuid4())
+        uuid=str(uuid4()),
+        require_sufficient_balance=False
     )
     return credit_transfer
 
@@ -407,7 +410,7 @@ def loaded_master_wallet_address(load_account):
     """
     from server import bt
 
-    deploying_address = bt.create_blockchain_wallet(private_key=config.MASTER_WALLET_PRIVATE_KEY)
+    deploying_address = bt.create_blockchain_wallet(private_key=current_app.config['CHAINS']['ETHEREUM']['MASTER_WALLET_PRIVATE_KEY'])
 
     load_account(deploying_address)
 
@@ -462,14 +465,14 @@ def test_client():
     from flask import g
     g.pending_transactions = []
     g.executor_jobs = []
-
+    g.is_after_request = False
     yield testing_client  # this is where the testing happens!
 
     ctx.pop()
 
 
 @pytest.fixture(scope='module')
-def init_database():
+def init_database(test_client):
     # Create the database and the database table
 
     with current_app.app_context():
@@ -514,9 +517,9 @@ def mock_osm_search(mocker):
                 return self.json_response
 
             def __init__(self, query_string):
-                if query_string == 'not a real place':
+                if query_string == 'not a real place' or query_string == 'not a real place, Canada':
                     self.json_response = []
-                elif query_string == 'multiple matched place':
+                elif query_string == 'multiple matched place' or query_string == 'multiple matched place, Canada':
                     self.json_response = [
                         {'lat': '12.0', 'lon': '14.4'},
                         {'lat': '-37.81', 'lon': '144.97'},

@@ -37,14 +37,16 @@ CREATE_USER_SETTINGS = [
     'use_last_4_digits_of_id_as_initial_pin'
 ]
 
-DEFAULT_ATTRIBUTES = ['email', 'phone', 'blockchain_address', 'public_serial_number',
+DEFAULT_ATTRIBUTES = ['user_id', 'email', 'phone', 'blockchain_address', 'public_serial_number', 'uuid',
+                      'user_id_name_string',
                       'custom_attributes',
                       'location', 'geo_location',
                       'use_precreated_pin',
                       'transfer_account_name', 'primary_user_identifier',
                       'first_name', 'last_name', 'preferred_language',
-                      'initial_disbursement', 'is_vendor', 'is_beneficiary', 'business_usage_id',
-                      'existing_vendor_phone', 'existing_vendor_pin', 'use_last_4_digits_of_id_as_initial_pin']
+                      'initial_disbursement', 'is_vendor', 'is_beneficiary', 'account_types', 'business_usage_id',
+                      'existing_vendor_phone', 'existing_vendor_pin',
+                      'use_last_4_digits_of_id_as_initial_pin', 'allow_existing_user_modify', 'require_identifier']
 
 SPREADSHEET_UPLOAD_REQUESTED_ATTRIBUTES = [
     # (attribute_name, display name)

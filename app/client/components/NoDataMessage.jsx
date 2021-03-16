@@ -1,38 +1,13 @@
 import React from "react";
-import styled from "styled-components";
-import { ModuleBox } from "./styledElements";
-
-import UploadButton from "./uploader/uploadButton.jsx";
+import { Card } from "antd";
+import ImportButton from "./transferAccount/import/importButton";
 
 export default class NoDataMessage extends React.Component {
   render() {
     return (
-      <ModuleBox>
-        <NoDataMessageWrapper>
-          <UploadButton
-            uploadButtonText={
-              <NoDataMessageWrapper>
-                <IconSVG src="/static/media/no_data_icon.svg" />
-                <p>There is no data available. Please upload a spreadsheet.</p>
-              </NoDataMessageWrapper>
-            }
-          />
-        </NoDataMessageWrapper>
-      </ModuleBox>
+      <Card bodyStyle={{ display: "flex", justifyContent: "center" }}>
+        <ImportButton size={"large"} showIcon={true} type={"primary"} />
+      </Card>
     );
   }
 }
-
-const NoDataMessageWrapper = styled.div`
-  text-align: center;
-  display: flex;
-  justify-content: center;
-  flex-direction: column;
-  align-items: center;
-`;
-
-const IconSVG = styled.img`
-  width: 35px;
-  padding: 1em 0 0.5em;
-  display: flex;
-`;

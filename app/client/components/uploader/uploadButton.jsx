@@ -1,6 +1,9 @@
 import React from "react";
 import { connect } from "react-redux";
-import styled from "styled-components";
+import { Upload } from "antd";
+import { InboxOutlined } from "@ant-design/icons";
+
+const { Dragger } = Upload;
 
 import { SpreadsheetAction } from "../../reducers/spreadsheet/actions";
 
@@ -17,13 +20,6 @@ class UploadButton extends React.Component {
   }
 
   handleFileChange(event) {
-    //todo: this needs to be updated as account type no longer handled via URL
-    // if (this.props.is_vendor === true) {
-    //   var transfer_account_type = 'vendor'
-    // } else {
-    //   transfer_account_type = window.BENEFICIARY_TERM_PLURAL.toLowerCase()
-    // }
-
     let spreadsheet = event.target.files[0];
 
     if (spreadsheet) {
@@ -41,28 +37,58 @@ class UploadButton extends React.Component {
     }
   }
 
-  render() {
-    if (this.props.button) {
-      return (
-        <TheRealInputButton>
-          {this.props.uploadButtonText}
-          <InputTrigger type="file" onChange={e => this.handleFileChange(e)} />
-        </TheRealInputButton>
-      );
-    }
+  customRequest = ({ onSuccess, onError, file }) => {
+    const checkInfo = () => {
+      setTimeout(() => {
+        if (!this.imageDataAsURL) {
+          checkInfo();
+        } else {
+          this.props
+            .uploadSpreadsheet({
+              body: {
+                spreadsheet: file,
+                preview_id: Math.floor(Math.random() * 100000)
+              }
+            })
+            .then(() => {
+              onSuccess(null, file);
+            })
+            .catch(() => {
+              onError();
+            });
+        }
+      }, 100);
+    };
 
+    checkInfo();
+  };
+
+  onChange = info => {
+    const reader = new FileReader();
+    reader.onloadend = obj => {
+      this.imageDataAsURL = obj.srcElement.result;
+    };
+    reader.readAsDataURL(info.file.originFileObj);
+  };
+
+  render() {
+    let draggerProps = {
+      name: "file",
+      multiple: false,
+      showUploadList: true,
+      customRequest: this.customRequest,
+      onChange: this.onChange
+    };
     return (
-      <div style={{ display: "flex" }}>
-        <InputButtonWrapper>
-          <InputButton>
-            {this.props.uploadButtonText}
-            <InputTrigger
-              type="file"
-              onChange={e => this.handleFileChange(e)}
-            />
-          </InputButton>
-        </InputButtonWrapper>
-      </div>
+      <Dragger {...draggerProps}>
+        <p className="ant-upload-drag-icon">
+          <InboxOutlined />
+        </p>
+        <p className="ant-upload-text">
+          Click or drag file to this area to upload
+        </p>
+        <p className="ant-upload-hint">Support for a CSV or XLSX files only.</p>
+      </Dragger>
     );
   }
 }
@@ -71,60 +97,3 @@ export default connect(
   null,
   mapDispatchToProps
 )(UploadButton);
-
-const TheRealInputButton = styled.label`
-  background-color: rgb(247, 250, 252);
-  color: rgb(184, 197, 207);
-  margin: 0;
-  line-height: 25px;
-  height: 25px;
-  position: relative;
-  align-items: center;
-  justify-content: center;
-  outline: none;
-  border: 0;
-  white-space: nowrap;
-  display: inline-block;
-  padding: 0 14px;
-  box-shadow: 0px 2px 0px 0 rgba(51, 51, 79, 0.08);
-  font-size: 1em;
-  font-weight: 400;
-  text-transform: uppercase;
-  -webkit-letter-spacing: 0.025em;
-  -moz-letter-spacing: 0.025em;
-  -ms-letter-spacing: 0.025em;
-  letter-spacing: 0.025em;
-  text-decoration: none;
-  -webkit-transition: all 0.15s ease;
-  transition: all 0.15s ease;
-  &:hover {
-    background-color: #fcfeff;
-  }
-`;
-
-const InputButtonWrapper = styled.div`
-  display: inline-block;
-  overflow: hidden;
-  //border: 2px dashed #e8e8e8;
-  padding: 5px;
-  //margin: 10px;
-  border-radius: 6px;
-`;
-
-const InputButton = styled.label`
-  width: 100%;
-  height: 100%;
-  font-weight: 500;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-`;
-
-const InputTrigger = styled.input`
-  width: 0.1px;
-  height: 0.1px;
-  opacity: 0;
-  overflow: hidden;
-  position: absolute;
-  z-index: -1;
-`;

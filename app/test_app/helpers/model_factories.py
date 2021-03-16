@@ -9,6 +9,7 @@ from server.models.feedback import Feedback
 from server.models.kyc_application import KycApplication
 from server.models.organisation import Organisation
 from server.models.transfer_account import TransferAccount
+from server.models.credit_transfer import CreditTransfer
 from server.models.transfer_usage import TransferUsage
 from server.models.credit_transfer import CreditTransfer
 from server.models.upload import UploadedResource

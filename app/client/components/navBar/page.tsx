@@ -1,19 +1,22 @@
 import * as React from "react";
-import { Layout, Typography } from "antd";
+import { useSelector } from "react-redux";
+import { Layout, Typography, message } from "antd";
 import { CenterLoadingSideBarActive } from "../styledElements";
 
 import NavBar from "../navBar";
 import { isMobileQuery, withMediaQuery } from "../helpers/responsive";
 
 import IntercomSetup from "../intercom/IntercomSetup";
-import MessageBar from "../messageBar";
 import ErrorBoundary from "../ErrorBoundary";
 import LoadingSpinner from "../loadingSpinner";
+import { LoginState } from "../../reducers/auth/loginReducer";
+import { ReduxState } from "../../reducers/rootReducer";
+import { browserHistory } from "../../createStore";
 
-const { Header, Content, Footer } = Layout;
-const { Title } = Typography;
+const { Content, Footer } = Layout;
 
 interface OuterProps {
+  isMultiOrg?: boolean;
   noNav?: boolean;
   location?: any;
   footer?: boolean;
@@ -23,10 +26,15 @@ interface OuterProps {
   component?: React.ComponentClass | React.FunctionComponent;
 }
 
-const Page: React.FunctionComponent<OuterProps> = props => {
-  const [collapsed, setCollapsed] = React.useState(false);
+declare global {
+  interface Window {
+    INTERCOM_APP_ID: string;
+  }
+}
 
+const Page: React.FunctionComponent<OuterProps> = props => {
   const {
+    isMultiOrg = false,
     footer = true,
     isAntDesign = false,
     noNav,
@@ -36,14 +44,39 @@ const Page: React.FunctionComponent<OuterProps> = props => {
     component: Component = React.Component
   } = props;
 
+  const [collapsed, setCollapsed] = React.useState(false);
+
+  const login: LoginState = useSelector((state: ReduxState) => state.login);
+  const { organisationIds } = login;
+  const multiOrgActive = organisationIds && organisationIds.length > 1;
+
+  if (multiOrgActive && !isMultiOrg) {
+    // Trying to access a page with multi org active
+    browserHistory.push("/");
+    message.error("This page is unsupported with multi organisation");
+  }
+
+  React.useEffect(() => {
+    let sideBarCollapsedString = localStorage.getItem("sideBarCollapsed");
+    if (sideBarCollapsedString) {
+      setCollapsed(localStorage.getItem("sideBarCollapsed") === "true");
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (title) {
+      document.title = `Sempo | ${title}`;
+    }
+  }, [title]);
+
   let onCollapse = (collapsed: boolean) => {
     setCollapsed(collapsed);
+    localStorage.setItem("sideBarCollapsed", collapsed.toString());
   };
 
   return (
     <ErrorBoundary>
-      <IntercomSetup />
-      <MessageBar />
+      {window.INTERCOM_APP_ID ? <IntercomSetup /> : null}
 
       <Layout style={{ minHeight: "100vh" }}>
         {noNav ? null : (
@@ -85,11 +118,6 @@ const Page: React.FunctionComponent<OuterProps> = props => {
               : { marginLeft: "200px" }
           }
         >
-          {title ? (
-            <Header className="site-layout-background" style={{ padding: 0 }}>
-              <Title>{title}</Title>
-            </Header>
-          ) : null}
           <Content style={{ margin: isAntDesign ? "0 16px" : "" }}>
             <React.Suspense
               fallback={

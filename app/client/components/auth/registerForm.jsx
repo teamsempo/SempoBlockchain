@@ -210,11 +210,13 @@ const RegisterForm = function(props) {
           type="email"
           onKeyUp={props.onUserFieldKeyPress}
           placeholder="Email"
+          disabled={props.state.invite ? "disabled" : ""}
           style={props.state.invite ? { display: "none" } : null}
+          aria-label="Email"
         />
 
         <ReactPasswordStrength
-          minLength={6}
+          minLength={8}
           type="password"
           changeCallback={data => props.onPasswordFieldKeyPress(data)}
           inputProps={{ placeholder: "Password" }}
@@ -225,6 +227,7 @@ const RegisterForm = function(props) {
           type="password"
           onKeyUp={props.onReenterPasswordFieldKeyPress}
           placeholder="Retype Password"
+          aria-label="Password"
         />
 
         <ErrorMessage>{error_message}</ErrorMessage>
@@ -234,7 +237,8 @@ const RegisterForm = function(props) {
         onClick={props.onClick}
         isLoading={props.isRegistering}
         buttonStyle={{ width: "calc(100% - 1em)", display: "flex" }}
-        buttonText="REGISTER"
+        buttonText={<span>REGISTER</span>}
+        label={"Register for Sempo Dashboard"}
       />
     </div>
   );

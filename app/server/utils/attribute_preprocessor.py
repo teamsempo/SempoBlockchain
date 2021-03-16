@@ -13,6 +13,7 @@ def standard_user_preprocess(attribute_dict, SETTINGS):
     return pipe(
         attribute_dict,
         unwrap_data,
+        filter_commcare_tags,
         map_attribute_keys,
         filter_out_kobo_meta_attributes,
         filter_out_underscore_prefixed_attributes,
@@ -29,16 +30,35 @@ def unwrap_data(attribute_dict):
     """
     Allows the use of wrapped data payloads by taking the contents of _data and moving it up a level.
     This is useful for setting default values in the wrapper in tools such as Kobo toolbox.
-    In the event of a conflict between two levels, the wrapped data takes priority.
+    In the event of a conflict between two levels, the _wrapped_takes_priority field
+    (defined in the wrapper) sets data takes priority and overwrites the other.
     {'is_vendor': True, '_data': {'first_name': 'Alice'}} -> {'is_vendor': True, 'first_name': 'Alice'}
     """
+    # Commcare puts all the form data in one object called 'form'
+    if 'form' in attribute_dict:
+        return attribute_dict.get('form')
     _data = attribute_dict.get('_data')
+    _wrapped_takes_priority = attribute_dict.get('_wrapped_takes_priority', True)
     if isinstance(_data, dict):
-        attribute_dict = {**attribute_dict, **_data}
+        if _wrapped_takes_priority:
+            attribute_dict = {**attribute_dict, **_data}
+        else:
+            attribute_dict = {**_data, **attribute_dict}
+
         attribute_dict.pop('_data')
 
     return attribute_dict
 
+def filter_commcare_tags(attribute_dict):
+    """
+    Commcare's JSON schema adds unneeded metadata in tags prefixed with # and @
+    This strips those out!
+    """
+    data = {}
+    for element in attribute_dict:
+        if element[0] != '#' and element[0] != '@' and element != 'meta':
+            data[element] = attribute_dict[element]
+    return data
 
 def map_attribute_keys(attribute_dict):
     """

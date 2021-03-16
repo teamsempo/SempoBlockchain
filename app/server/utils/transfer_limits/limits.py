@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from sqlalchemy import func
 from sqlalchemy.orm import Query
+from decimal import Decimal
 
 import config
 from server import db
@@ -315,10 +316,11 @@ class AggregateTransferAmountMixin(object):
     @staticmethod
     def used_aggregator(transfer: CreditTransfer, query_constructor: QueryConstructorFunc):
         # We need to sub the transfer amount from the allowance because it's hard to exclude it from the aggregation
-        return query_constructor(
+        allowance = query_constructor(
             transfer,
             db.session.query(func.sum(CreditTransfer.transfer_amount).label('total'))
-        ).execution_options(show_all=True).first().total - int(transfer.transfer_amount)
+        ).execution_options(show_all=True).first().total or 0
+        return allowance - int(transfer.transfer_amount)
 
     @staticmethod
     def case_will_use(transfer: CreditTransfer) -> TransferAmount:
@@ -446,7 +448,7 @@ class BalanceFractionLimit(AggregateTransferAmountMixin, AggregateLimit):
             applied_to_transfer_types: AppliedToTypes,
             application_filter: ApplicationFilter,
             time_period_days: int,
-            balance_fraction: float,
+            balance_fraction: Decimal,
             aggregation_filter: AggregationFilter = matching_transfer_type_filter
 
     ):

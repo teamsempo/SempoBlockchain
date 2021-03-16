@@ -1,6 +1,6 @@
 {
   "name": "SempoBlockchain",
-  "version": "1.2.17",
+  "version": "1.4.1",
   "description": "Sempo blockchain web app using Python-Flask and React",
   "main": "index.js",
   "homepage": "./",
@@ -79,7 +79,7 @@
     "ts-import-plugin": "^1.6.6",
     "ts-jest": "^25.2.1",
     "ts-loader": "^8.0.3",
-    "typescript": "^3.7.4",
+    "typescript": "^3.8.3",
     "uglifyjs-webpack-plugin": "^2.0.1",
     "webpack": "^4.41.5",
     "webpack-bundle-analyzer": "^3.6.0",
@@ -89,7 +89,8 @@
     "@ant-design/icons": "^4.2.1",
     "@babel/polyfill": "^7.0.0",
     "@sentry/browser": "^4.2.3",
-    "antd": "^4.4.2",
+    "@types/qrcode.react": "^1.0.1",
+    "antd": "^4.7.3",
     "chart.js": "^2.7.2",
     "deck.gl": "5.1.4",
     "deepmerge": "^2.2.1",
@@ -107,7 +108,6 @@
     "react": "^16.8.6",
     "react-chartjs-2": "^2.7.0",
     "react-country-region-selector": "^1.4.3",
-    "react-dates": "^18.1.0",
     "react-dom": "^16.6.3",
     "react-keydown": "^1.9.7",
     "react-map-gl": "^3.2.5",
@@ -128,7 +128,8 @@
     "redux-form": "^8.3.5",
     "redux-saga": "^1.1.3",
     "source-map-explorer": "^1.6.0",
-    "styled-components": "^2.2.3"
+    "styled-components": "^2.2.3",
+    "react-csv": "^2.0.3"
   },
   "husky": {
     "hooks": {
