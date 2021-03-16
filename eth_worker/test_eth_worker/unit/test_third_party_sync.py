@@ -89,19 +89,16 @@ class TestModels:
         filter_id = filter.id
 
         def dummy_contract(*args, **kwargs):
-            class Filter():
-                def get_all_entries(self):
-                    yield None
             class Contract():
                 class events():
                     class Transfer():
-                        def createFilter(**kwargs):
+                        def getLogs(**kwargs):
                             assert kwargs['fromBlock'] == start_block
                             assert kwargs['toBlock'] == end_block
                             assert kwargs['argument_filters'] == argument_filters
-                            return Filter()
+                            return []
             return Contract()
-        mocker.patch.object(blockchain_sync.w3_websocket.eth, 'contract', dummy_contract)
+        mocker.patch.object(blockchain_sync.w3.eth, 'contract', dummy_contract)
 
         events = blockchain_sync.get_blockchain_transaction_history(self.contract_address, start_block, end_block, argument_filters, filter_id)
 
