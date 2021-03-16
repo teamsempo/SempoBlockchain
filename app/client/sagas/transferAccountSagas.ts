@@ -132,7 +132,6 @@ function* editTransferAccount({ payload }: TransferAccountEditApiResult) {
     yield put(EditTransferAccountAction.editTransferAccountSuccess());
     message.success(edit_response.message);
   } catch (fetch_error) {
-    console.log("fe is", fetch_error)
     const error = yield call(handleError, fetch_error);
 
     yield put(EditTransferAccountAction.editTransferAccountFailure(error));
