@@ -154,7 +154,7 @@ def blockchain_sync(persistence_module, mock_w3):
     red = MockRedis()
 
     s = BlockchainSyncer(
-        w3_websocket=mock_w3,
+        w3=mock_w3,
         red=red,
         persistence=persistence_module
     )

@@ -69,8 +69,8 @@ app.conf.beat_schedule = {
 }
 
 w3 = Web3(HTTPProvider(chain_config['HTTP_PROVIDER']))
-
-w3_websocket = Web3(WebsocketProvider(chain_config['WEBSOCKET_PROVIDER']))
+# Currently nothing uses a websocket RPC
+#w3_websocket = Web3(WebsocketProvider(chain_config['WEBSOCKET_PROVIDER']))
 
 if celery_utils.chain == 'CELO':
     from web3.middleware import geth_poa_middleware
@@ -78,7 +78,7 @@ if celery_utils.chain == 'CELO':
     from celo_integration import CeloTransactionProcessor
 
     w3.middleware_onion.inject(geth_poa_middleware, layer=0)
-    w3_websocket.middleware_onion.inject(geth_poa_middleware, layer=0)
+    #w3_websocket.middleware_onion.inject(geth_poa_middleware, layer=0)
     w3.eth.account = Account
 
     TransactionProcessorClass = CeloTransactionProcessor
@@ -109,7 +109,7 @@ supervisor = TransactionSupervisor(
 
 task_manager = TaskManager(persistence=persistence_module, transaction_supervisor=supervisor)
 
-blockchain_sync = BlockchainSyncer(persistence=persistence_module, red=red, w3_websocket=w3_websocket)
+blockchain_sync = BlockchainSyncer(persistence=persistence_module, red=red, w3=w3)
 
 if os.environ.get('CONTAINER_TYPE') == 'PRIMARY':
     persistence_module.create_blockchain_wallet_from_private_key(
