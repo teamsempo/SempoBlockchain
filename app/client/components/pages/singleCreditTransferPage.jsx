@@ -7,6 +7,7 @@ import { CenterLoadingSideBarActive, WrapperDiv } from "../styledElements.js";
 import { LoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
 import organizationWrapper from "../organizationWrapper.jsx";
 import LoadingSpinner from "../loadingSpinner";
+import SingleCreditTransfer from "../creditTransfer/singleCreditTransfer";
 
 const mapStateToProps = state => {
   return {
@@ -35,7 +36,9 @@ class SingleCreditTransferPage extends React.Component {
 
     let creditTransferComponent;
     if (this.props.creditTransfers.byId[creditTransferId]) {
-      creditTransferComponent = <div>Single Credit Transfer</div>;
+      creditTransferComponent = (
+        <SingleCreditTransfer creditTransferId={creditTransferId} />
+      );
     } else {
       creditTransferComponent = (
         <Card style={{ textAlign: "center" }}>
