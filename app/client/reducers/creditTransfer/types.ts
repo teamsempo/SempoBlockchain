@@ -70,11 +70,12 @@ export interface CreditTransfers {
 }
 
 export interface LoadCreditTransferPayload {
-  query: {
+  query?: {
     transfer_type: string;
     per_page: number;
     page: number;
   };
+  path?: number;
 }
 
 export interface ModifyCreditTransferRequestPayload {
