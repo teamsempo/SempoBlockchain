@@ -10,7 +10,7 @@ import { ReduxState, sempoObjects } from "../../reducers/rootReducer";
 import { connect } from "react-redux";
 import DateTime from "../dateTime";
 import { apiActions, LoadRequestAction } from "../../genericState";
-import { formatMoney, getActiveToken } from "../../utils";
+import { formatMoney, getActiveToken, toCurrency } from "../../utils";
 
 interface StateProps {
   bulkTransfers: any;
@@ -28,7 +28,7 @@ interface ComponentState {}
 export interface BulkTransfer {
   key: number;
   disbursement_amount: number;
-  recipient_count: 15;
+  recipient_count: number;
   state: string;
   created: string;
 }
@@ -73,7 +73,7 @@ const columns: ColumnsType<BulkTransfer> = [
     key: "amount",
     render: (text: any, record: any) =>
       formatMoney(
-        record.disbursement_amount / 100,
+        toCurrency(record.disbursement_amount),
         undefined,
         undefined,
         undefined,

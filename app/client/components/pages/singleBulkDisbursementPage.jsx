@@ -7,7 +7,7 @@ import { PageWrapper, WrapperDiv } from "../styledElements";
 import organizationWrapper from "../organizationWrapper.jsx";
 import { apiActions } from "../../genericState";
 import { sempoObjects } from "../../reducers/rootReducer";
-import { formatMoney, getActiveToken } from "../../utils";
+import { formatMoney, getActiveToken, toCurrency } from "../../utils";
 
 const mapStateToProps = state => ({
   bulkTransfers: state.bulkTransfers,
@@ -54,7 +54,7 @@ class SingleBulkDisbursementPage extends React.Component {
     let totalAmount;
     if (bulkItem && bulkItem.total_disbursement_amount) {
       totalAmount = formatMoney(
-        bulkItem.total_disbursement_amount / 100,
+        toCurrency(bulkItem.total_disbursement_amount),
         undefined,
         undefined,
         undefined,

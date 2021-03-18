@@ -39,9 +39,6 @@ const FundWalletPage = lazy(() =>
 const createUserPage = lazy(() =>
   import("./components/pages/createUserPage.jsx")
 );
-const createBulkDisbursementPage = lazy(() =>
-  import("./components/pages/createBulkDisbursementPage.jsx")
-);
 const bulkTransferListPage = lazy(() =>
   import("./components/pages/bulkTransferListPage.jsx")
 );
@@ -223,13 +220,6 @@ class Nav extends React.Component {
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
               title={`Create User`}
-            />
-            <PrivateRoute
-              path="/bulk/create"
-              component={createBulkDisbursementPage}
-              isLoggedIn={isLoggedIn}
-              isReAuthing={isReAuthing}
-              title={`Create Bulk Disbursement`}
             />
             <PrivateRoute
               exact
