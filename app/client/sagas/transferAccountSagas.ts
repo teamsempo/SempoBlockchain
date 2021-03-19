@@ -100,6 +100,11 @@ function* loadTransferAccounts({ payload }: TransferAccountLoadApiResult) {
       );
     }
 
+    if (load_result.items) {
+      yield put(
+        TransferAccountAction.updateTransferAccountPagination(load_result.items)
+      )
+    }
     yield put(
       LoadTransferAccountAction.loadTransferAccountsSuccess(
         load_result.query_time

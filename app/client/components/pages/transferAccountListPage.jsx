@@ -59,8 +59,6 @@ class TransferAccountListPage extends React.Component {
       query.updated_after = this.props.transferAccounts.loadStatus.lastQueried;
     }
 
-    const path = null;
-    this.props.loadTransferAccountList(query, path);
   }
 
   render() {

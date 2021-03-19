@@ -32,6 +32,23 @@ const IdList = (state = initialIdListState, action: TransferAccountAction) => {
   }
 };
 
+export interface Pagination {
+  items: number,
+}
+
+const initialPaginationState: Pagination = {
+  items: 0,
+};
+
+const pagination = (state = initialPaginationState, action: TransferAccountAction) => {
+  switch (action.type) {
+    case TransferAccountActionTypes.UPDATE_TRANSFER_ACCOUNT_PAGINATION:
+      return {items: action.payload};
+    default:
+      return state;
+  }
+};
+
 const initialByIdState: TransfersByUserId = {};
 
 const byId = (state = initialByIdState, action: TransferAccountAction) => {
@@ -155,6 +172,7 @@ const selected = (
 export const transferAccounts = combineReducers({
   byId,
   IdList,
+  pagination,
   loadStatus,
   editStatus,
   selected

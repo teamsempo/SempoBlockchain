@@ -2,7 +2,7 @@ import * as React from "react";
 
 import { Link } from "react-router-dom";
 
-import { Table, Button, Checkbox, Tag } from "antd";
+import { Table, Button, Checkbox, Tag, Pagination,Space } from "antd";
 
 import { ColumnsType } from "antd/es/table";
 
@@ -27,12 +27,25 @@ export interface OnSelectChange {
   ): void;
 }
 
+export interface OnPaginateChange {
+  (
+    page: number,
+    pageSize: number | undefined
+  ): void;
+}
+
+export interface Pagination {
+  items: number,
+  onChange: OnPaginateChange;
+}
+
 interface OuterProps {
   orderedTransferAccounts: number[];
   users: any;
   actionButtons: ActionButton[];
   noneSelectedbuttons: NoneSelectedButton[];
   onSelectChange?: OnSelectChange;
+  paginationOptions?: Pagination;
 }
 
 interface ComponentState {
@@ -316,13 +329,26 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
             )}
           </div>
         </div>
-        <Table
-          loading={transferAccounts.loadStatus.isRequesting}
-          columns={columns}
-          dataSource={data}
-          rowSelection={rowSelection}
-          style={{ marginLeft: "10px", marginRight: "10px" }}
-        />
+        <Space direction="vertical">
+          <Table
+            loading={transferAccounts.loadStatus.isRequesting}
+            columns={columns}
+            dataSource={data}
+            rowSelection={rowSelection}
+            style={{ marginLeft: "10px", marginRight: "10px" }}
+            pagination={this.props.paginationOptions? false: undefined}
+          />
+          { this.props.paginationOptions?
+            <Pagination
+              showSizeChanger
+              defaultPageSize={10}
+              total={this.props.paginationOptions.items}
+              onChange={this.props.paginationOptions.onChange}
+            />
+            : <></>
+          }
+
+        </Space>
       </div>
     );
   }

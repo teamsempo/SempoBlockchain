@@ -33,8 +33,14 @@ export interface Query {
   searchString: string;
 }
 
+interface Pagination {
+  page: number;
+  per_page: number;
+}
+
 interface OuterProps {
   filterObject: AllowedMetricsObjects;
+  pagination?: Pagination
   onQueryChange?: (query: Query) => void;
 }
 
@@ -82,6 +88,19 @@ class QueryConstructor extends React.Component<Props, ComponentState> {
     this.props.loadAllowedFilters(this.props.filterObject);
   }
 
+  componentDidMount() {
+    this.loadData()
+  }
+
+  componentDidUpdate(prevProps: Props) {
+    if (
+      (prevProps.pagination?.page !== this.props.pagination?.page)
+      || (prevProps.pagination?.per_page !== this.props.pagination?.per_page)
+    ) {
+      this.loadData()
+    }
+  }
+
   onFiltersChanged = (filters: any[]) => {
     let encodedFilters = processFiltersForQuery(filters);
     this.setState({ encodedFilters }, () => {
@@ -107,10 +126,12 @@ class QueryConstructor extends React.Component<Props, ComponentState> {
   };
 
   loadData = () => {
+    let pagination = this.props.pagination || {};
     this.props.loadTransferAccountList({
       query: {
         params: this.state.encodedFilters,
-        search_string: this.state.searchString
+        search_string: this.state.searchString,
+        ...pagination
       }
     });
   };
