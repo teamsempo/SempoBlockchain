@@ -281,6 +281,7 @@ try:
     for chain in CHAIN_NAMES:
         configs = {}
         configs['HTTP_PROVIDER']       = config_parser[chain]['http_provider']
+        configs['BACKUP_HTTP_PROVIDER']= config_parser[chain].get('backup_http_provider') or configs['HTTP_PROVIDER']
         configs['WEBSOCKET_PROVIDER']  = config_parser[chain].get('websocket_provider')
         configs['CHAIN_ID']            = config_parser[chain].get('chain_id')
         configs['EXPLORER_URL']        = (config_parser[chain].get('explorer_url') or 'https://etherscan.io').strip('/')
