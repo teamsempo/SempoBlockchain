@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v1.8.2] - 2021-03-16
 
+### Add fallback URL incase the main RPC is experiencing downtime
+
+## [v1.8.2] - 2021-03-16
+
 ### Enhanced reliability of external transaction sync
 
 ## [v1.8.0] - 2021-03-11
