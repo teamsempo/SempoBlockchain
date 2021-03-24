@@ -228,12 +228,7 @@ class StandardTransferAccountList extends React.Component<
   }
 
   render() {
-    const {
-      transferAccounts,
-      bulkTransfers,
-      login,
-      organisations
-    } = this.props;
+    const { transferAccounts, bulkTransfers } = this.props;
     const { importModalVisible, amount } = this.state;
     let numberSet = typeof amount === "number" && amount !== 0;
 
