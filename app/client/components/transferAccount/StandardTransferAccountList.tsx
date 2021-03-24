@@ -95,10 +95,11 @@ class StandardTransferAccountList extends React.Component<
   Props,
   ComponentState
 > {
-
   constructor(props: Props) {
     super(props);
-    const defaultDisbusement = props.organisations.byId[props.login.organisationId].default_disbursement / 100 || 0;
+    const defaultDisbusement =
+      props.organisations.byId[props.login.organisationId]
+        .default_disbursement / 100 || 0;
     this.state = {
       importModalVisible: false,
       bulkTransferModalVisible: false,
@@ -227,7 +228,12 @@ class StandardTransferAccountList extends React.Component<
   }
 
   render() {
-    const { transferAccounts, bulkTransfers, login, organisations } = this.props;
+    const {
+      transferAccounts,
+      bulkTransfers,
+      login,
+      organisations
+    } = this.props;
     const { importModalVisible, amount } = this.state;
     let numberSet = typeof amount === "number" && amount !== 0;
 
