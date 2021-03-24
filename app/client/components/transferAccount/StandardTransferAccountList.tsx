@@ -1,5 +1,5 @@
 import * as React from "react";
-import { connect, useSelector } from "react-redux";
+import { connect } from "react-redux";
 import { Modal, Button, InputNumber, Space, Select } from "antd";
 const { Option } = Select;
 
