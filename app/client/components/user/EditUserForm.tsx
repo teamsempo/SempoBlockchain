@@ -3,6 +3,10 @@ import { connect } from "react-redux";
 
 import { reduxForm, InjectedFormProps, formValueSelector } from "redux-form";
 
+import { Tooltip } from "antd";
+
+import { StopOutlined } from "@ant-design/icons";
+
 import { GenderTypes } from "./types";
 import {
   Wrapper,
@@ -47,6 +51,7 @@ interface OuterProps {
   transferUsages: TransferUsage[];
   onResetPin: () => void;
   onDeleteUser: () => void;
+  onDisableCard: () => void;
 }
 
 interface StateProps {
@@ -264,13 +269,40 @@ class EditUserForm extends React.Component<
                 </SubRow>
               </Row>
               <Row>
-                <SubRow>
+                <SubRow
+                  style={{
+                    color:
+                      selectedUser.transfer_card &&
+                      selectedUser.transfer_card.is_disabled
+                        ? "#c53631"
+                        : "#555"
+                  }}
+                >
                   <InputField name="publicSerialNumber" label={"ID Number"}>
-                    {/*
-                  // @ts-ignore */}
-                    <QrReadingModal
-                      updateData={(data: string) => this.setSerialNumber(data)}
-                    />
+                    {/* // @ts-ignore */}
+
+                    <div style={{ display: "flex", alignItems: "flex-end" }}>
+                      <QrReadingModal
+                        updateData={(data: string) =>
+                          this.setSerialNumber(data)
+                        }
+                      />
+                      {selectedUser.public_serial_number ? (
+                        <Tooltip title="Disable Card">
+                          <StopOutlined
+                            translate={""}
+                            style={{
+                              fontSize: "20px",
+                              margin: "2px",
+                              color: "#555"
+                            }}
+                            onClick={() => this.props.onDisableCard()}
+                          />
+                        </Tooltip>
+                      ) : (
+                        <></>
+                      )}
+                    </div>
                   </InputField>
                 </SubRow>
                 <SubRow>
@@ -383,14 +415,14 @@ const EditUserFormReduxForm = reduxForm<IEditUser, Props>({
   validate
 })(EditUserForm);
 
-export default connect(
-  (state: ReduxState): StateProps => {
-    const selector = formValueSelector("editUser");
-    return {
-      accountTypes: selector(state, "accountTypes"),
-      businessUsageValue: selector(state, "businessUsage"),
-      // @ts-ignore
-      activeOrganisation: state.organisations.byId[state.login.organisationId]
-    };
-  }
-)(EditUserFormReduxForm);
+const mapStateToProps = (state: ReduxState): StateProps => {
+  const selector = formValueSelector("editUser");
+  return {
+    accountTypes: selector(state, "accountTypes"),
+    businessUsageValue: selector(state, "businessUsage"),
+    // @ts-ignore
+    activeOrganisation: state.organisations.byId[state.login.organisationId]
+  };
+};
+
+export default connect(mapStateToProps)(EditUserFormReduxForm);

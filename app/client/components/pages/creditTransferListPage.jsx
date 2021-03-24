@@ -22,9 +22,9 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    loadCreditTransferList: (query, path) =>
+    loadCreditTransferList: query =>
       dispatch(
-        LoadCreditTransferAction.loadCreditTransferListRequest({ query, path })
+        LoadCreditTransferAction.loadCreditTransferListRequest({ query })
       )
   };
 };

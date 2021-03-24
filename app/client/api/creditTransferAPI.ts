@@ -7,12 +7,14 @@ import {
 } from "../reducers/creditTransfer/types";
 
 export const loadCreditTransferListAPI = ({
-  query
+  query,
+  path
 }: LoadCreditTransferPayload) =>
   apiClient({
     url: "/credit_transfer/",
     method: "GET",
-    query: query
+    query: query,
+    path: path
   });
 
 export const modifyTransferAPI = ({
