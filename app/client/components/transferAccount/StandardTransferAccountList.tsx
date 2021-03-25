@@ -196,7 +196,8 @@ class StandardTransferAccountList extends React.Component<
   updateQueryData(query: Query) {
     this.setState({
       params: query.params,
-      searchString: query.searchString
+      searchString: query.searchString,
+      page: 1
     });
   }
 

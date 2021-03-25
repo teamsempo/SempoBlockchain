@@ -47,6 +47,7 @@ interface OuterProps {
 interface ComponentState {
   searchString: string;
   encodedFilters: string;
+  timeout: any;
 }
 
 type Props = DispatchProps & StateProps & OuterProps;
@@ -82,7 +83,8 @@ class QueryConstructor extends React.Component<Props, ComponentState> {
     super(props);
     this.state = {
       searchString: "",
-      encodedFilters: ""
+      encodedFilters: "",
+      timeout: 0,
     };
 
     this.props.loadAllowedFilters(this.props.filterObject);
@@ -109,9 +111,12 @@ class QueryConstructor extends React.Component<Props, ComponentState> {
   };
 
   onSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    this.setState({ searchString: e.target.value }, () => {
+    if (this.state.timeout) {
+       clearTimeout(this.state.timeout);
+    }
+    this.setState({ searchString: e.target.value, timeout: setTimeout(() => {
       this.handleQueryChange();
-    });
+    }, 300)})
   };
 
   handleQueryChange = () => {
