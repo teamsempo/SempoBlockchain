@@ -152,8 +152,8 @@ class StandardTransferAccountList extends React.Component<
     this.setState({
       page,
       per_page
-    })
-  }
+    });
+  };
 
   toggleImportModal() {
     this.setState({ importModalVisible: !this.state.importModalVisible });
@@ -284,8 +284,10 @@ class StandardTransferAccountList extends React.Component<
             this.onSelectChange(s, u, a)
           }
           paginationOptions={{
+            currentPage: this.state.page,
             items: this.props.transferAccounts.pagination.items,
-            onChange: (page: number, perPage: number|undefined) => this.onPaginateChange(page, perPage)
+            onChange: (page: number, perPage: number | undefined) =>
+              this.onPaginateChange(page, perPage)
           }}
         />
         <ImportModal

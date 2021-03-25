@@ -35,6 +35,7 @@ export interface OnPaginateChange {
 }
 
 export interface Pagination {
+  currentPage: number,
   items: number,
   onChange: OnPaginateChange;
 }
@@ -340,7 +341,9 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
           />
           { this.props.paginationOptions?
             <Pagination
+              current={this.props.paginationOptions.currentPage}
               showSizeChanger
+              defaultCurrent={1}
               defaultPageSize={10}
               total={this.props.paginationOptions.items}
               onChange={this.props.paginationOptions.onChange}
