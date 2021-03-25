@@ -31,6 +31,8 @@ interface StateProps {
   activeToken: any;
   transferAccounts: any;
   bulkTransfers: any;
+  login: any;
+  organisations: any;
 }
 
 interface DispatchProps {
@@ -67,7 +69,9 @@ const mapStateToProps = (state: ReduxState): StateProps => {
   return {
     activeToken: getActiveToken(state),
     transferAccounts: state.transferAccounts,
-    bulkTransfers: state.bulkTransfers
+    bulkTransfers: state.bulkTransfers,
+    login: state.login,
+    organisations: state.organisations
   };
 };
 
@@ -93,10 +97,13 @@ class StandardTransferAccountList extends React.Component<
 > {
   constructor(props: Props) {
     super(props);
+    const defaultDisbusement =
+      props.organisations.byId[props.login.organisationId]
+        .default_disbursement / 100 || 0;
     this.state = {
       importModalVisible: false,
       bulkTransferModalVisible: false,
-      amount: 0,
+      amount: defaultDisbusement,
       transferType: "DISBURSEMENT",
       selectedRowKeys: [],
       unselectedRowKeys: [],
@@ -223,7 +230,6 @@ class StandardTransferAccountList extends React.Component<
   render() {
     const { transferAccounts, bulkTransfers } = this.props;
     const { importModalVisible, amount } = this.state;
-
     let numberSet = typeof amount === "number" && amount !== 0;
 
     const actionButtons = [
@@ -311,6 +317,7 @@ class StandardTransferAccountList extends React.Component<
             <Space>
               <span>Transfer Amount: </span>
               <InputNumber
+                defaultValue={Number(amount)}
                 min={0}
                 onChange={(amount: numberInput) => this.setState({ amount })}
               />
