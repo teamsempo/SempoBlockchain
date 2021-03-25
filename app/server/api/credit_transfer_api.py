@@ -36,7 +36,7 @@ class CreditTransferAPI(MethodView):
     def get(self, credit_transfer_id):
         transfer_account_ids = request.args.get('transfer_account_ids')
         transfer_type = request.args.get('transfer_type', 'ALL')
-        transfer_list = None
+        result = None
         if transfer_type:
             transfer_type = transfer_type.upper()
 
@@ -48,9 +48,9 @@ class CreditTransferAPI(MethodView):
                 return make_response(jsonify({'message': 'Credit transfer not found'})), 404
 
             if AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'admin'):
-                transfer_list = credit_transfer_schema.dump(credit_transfer).data
+                result = credit_transfer_schema.dump(credit_transfer).data
             elif AccessControl.has_any_tier(g.user.roles, 'ADMIN'):
-                transfer_list = view_credit_transfer_schema.dump(credit_transfer).data
+                result = view_credit_transfer_schema.dump(credit_transfer).data
 
             transfer_stats = []
 
@@ -58,7 +58,7 @@ class CreditTransferAPI(MethodView):
                 'status': 'success',
                 'message': 'Successfully Loaded.',
                 'data': {
-                    'credit_transfer': transfer_list,
+                    'credit_transfer': result,
                     'transfer_stats': transfer_stats
                 }
             }

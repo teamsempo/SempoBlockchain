@@ -22,6 +22,9 @@ const singleUserPage = lazy(() =>
 const creditTransferListPage = lazy(() =>
   import("./components/pages/creditTransferListPage.jsx")
 );
+const singleCreditTransferPage = lazy(() =>
+  import("./components/pages/singleCreditTransferPage.jsx")
+);
 const settingsPage = lazy(() =>
   import("./components/pages/settings/settingsPage.jsx")
 );
@@ -138,6 +141,15 @@ class Nav extends React.Component {
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
               title={`Transfers`}
+            />
+            <PrivateRoute
+              exact
+              path="/transfers/:creditTransferId"
+              component={singleCreditTransferPage}
+              isLoggedIn={isLoggedIn}
+              isReAuthing={isReAuthing}
+              title={`Single Transfer`}
+              isAntDesign={true}
             />
             <PrivateRoute
               exact

@@ -522,6 +522,8 @@ credit_transfers_schema = CreditTransferSchema(many=True)
 
 synchronization_filter_schema = SynchronizationFilterSchema()
 
+view_credit_transfer_schema = CreditTransferSchema(exclude=(
+"sender_user", "recipient_user", "lat", "lng", "attached_images"))
 view_credit_transfers_schema = CreditTransferSchema(many=True, exclude=(
 "sender_user", "recipient_user", "lat", "lng", "attached_images"))
 view_credit_transfer_schema = CreditTransferSchema(exclude=(
