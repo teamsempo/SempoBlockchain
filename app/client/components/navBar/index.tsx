@@ -12,7 +12,9 @@ import {
   SettingOutlined,
   QuestionCircleOutlined,
   StockOutlined,
-  CompassOutlined
+  CompassOutlined,
+  UnorderedListOutlined,
+  DollarOutlined
 } from "@ant-design/icons";
 
 const { Sider } = Layout;
@@ -137,13 +139,28 @@ class NavBar extends React.Component<Props, State> {
             >
               <NavLink to="/accounts">Accounts</NavLink>
             </Menu.Item>
-            <Menu.Item
-              key="/transfers"
-              icon={<SendOutlined translate={""} />}
-              disabled={isMultiOrg || false}
+
+            <SubMenu
+              key="sub2"
+              icon={<DollarOutlined translate={""} />}
+              title="Transfers"
             >
-              <NavLink to="/transfers">Transfers</NavLink>
-            </Menu.Item>
+              <Menu.Item
+                key="/transfers"
+                icon={<UnorderedListOutlined translate={""} />}
+                disabled={isMultiOrg || false}
+              >
+                <NavLink to="/transfers">Transfers List</NavLink>
+              </Menu.Item>
+              <Menu.Item
+                key="/bulk/"
+                icon={<SendOutlined translate={""} />}
+                disabled={isMultiOrg || false}
+              >
+                <NavLink to="/bulk/">Bulk Transfers</NavLink>
+              </Menu.Item>
+            </SubMenu>
+
             <Menu.Item
               key="/settings"
               icon={<SettingOutlined translate={""} />}
