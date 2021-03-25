@@ -61,6 +61,8 @@ interface ComponentState {
   params: string;
   searchString: string;
   awaitingEditSuccess: boolean;
+  page: number;
+  per_page: number;
 }
 
 type Props = StateProps & DispatchProps & OuterProps;
@@ -110,7 +112,9 @@ class StandardTransferAccountList extends React.Component<
       allSelected: false,
       params: "",
       searchString: "",
-      awaitingEditSuccess: false
+      awaitingEditSuccess: false,
+      page: 1,
+      per_page: 10
     };
   }
 
@@ -130,7 +134,9 @@ class StandardTransferAccountList extends React.Component<
       this.props.loadTransferAccountList({
         query: {
           params: this.state.params,
-          search_string: this.state.searchString
+          search_string: this.state.searchString,
+          page: this.state.page,
+          per_page: this.state.per_page
         }
       });
     }
@@ -145,6 +151,14 @@ class StandardTransferAccountList extends React.Component<
       selectedRowKeys,
       unselectedRowKeys,
       allSelected
+    });
+  };
+
+  onPaginateChange = (page: number, pageSize: number | undefined) => {
+    let per_page = pageSize || 10;
+    this.setState({
+      page,
+      per_page
     });
   };
 
@@ -189,7 +203,8 @@ class StandardTransferAccountList extends React.Component<
   updateQueryData(query: Query) {
     this.setState({
       params: query.params,
-      searchString: query.searchString
+      searchString: query.searchString,
+      page: 1
     });
   }
 
@@ -263,6 +278,10 @@ class StandardTransferAccountList extends React.Component<
         <QueryConstructor
           onQueryChange={(query: Query) => this.updateQueryData(query)}
           filterObject="user"
+          pagination={{
+            page: this.state.page,
+            per_page: this.state.per_page
+          }}
         />
         <TransferAccountList
           orderedTransferAccounts={transferAccounts.IdList}
@@ -271,6 +290,12 @@ class StandardTransferAccountList extends React.Component<
           onSelectChange={(s: React.Key[], u: React.Key[], a: boolean) =>
             this.onSelectChange(s, u, a)
           }
+          paginationOptions={{
+            currentPage: this.state.page,
+            items: this.props.transferAccounts.pagination.items,
+            onChange: (page: number, perPage: number | undefined) =>
+              this.onPaginateChange(page, perPage)
+          }}
         />
         <ImportModal
           isModalVisible={importModalVisible}

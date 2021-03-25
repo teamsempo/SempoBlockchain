@@ -58,9 +58,6 @@ class TransferAccountListPage extends React.Component {
     if (this.props.transferAccounts.loadStatus.lastQueried) {
       query.updated_after = this.props.transferAccounts.loadStatus.lastQueried;
     }
-
-    const path = null;
-    this.props.loadTransferAccountList(query, path);
   }
 
   render() {
@@ -72,15 +69,20 @@ class TransferAccountListPage extends React.Component {
       );
     }
 
-    let isNoData = Object.keys(transferAccountList).length === 0;
+    const isNoData = Object.keys(transferAccountList).length === 0;
+    const isNotRequesting = !this.props.transferAccounts.loadStatus
+      .isRequesting;
+    const isNotRequestSuccess = !this.props.transferAccounts.loadStatus.success;
+    const isNotNullError =
+      this.props.transferAccounts.loadStatus.error !== null;
 
     if (
       isNoData &&
-      this.props.transferAccounts.loadStatus.isRequesting !== true
+      isNotRequesting &&
+      (isNotRequestSuccess && isNotNullError)
     ) {
       return (
         <PageWrapper>
-          <QueryConstructor filterObject="user" />
           <NoDataMessage />
         </PageWrapper>
       );
