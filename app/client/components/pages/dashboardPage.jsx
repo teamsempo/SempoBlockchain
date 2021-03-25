@@ -161,6 +161,11 @@ class DashboardPage extends React.Component {
               "Number of unique participants who have sent or received a transfer"
             ],
             [
+              "total_population_cumulative",
+              "Cumulative Participants",
+              "Cumulative number of new participants created"
+            ],
+            [
               "users_created",
               "New Participants",
               "Number of new participants created"
