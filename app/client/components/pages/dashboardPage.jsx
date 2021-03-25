@@ -134,7 +134,7 @@ class DashboardPage extends React.Component {
             [
               "users_who_made_purchase",
               "Unique Participants",
-              "Unique participants who have sent or received a transfer"
+              "Unique participants who have sent a transfer"
             ],
             [
               "transfer_amount_per_user",
@@ -158,7 +158,7 @@ class DashboardPage extends React.Component {
             [
               "active_users",
               "Active Participants",
-              "Number of unique participants who have sent or received a transfer"
+              "Number of unique participants who have sent a transfer"
             ],
             [
               "users_created",
