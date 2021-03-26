@@ -38,6 +38,8 @@ const organisation = new schema.Entity("organisations", {
   token: token
 });
 
+const bulk_transfer = new schema.Entity("disbursements");
+
 export const transferAccountSchema = [transfer_account];
 
 export const creditTransferSchema = [credit_transfer];
@@ -53,3 +55,5 @@ export const adminUserSchema = [admin];
 export const inviteUserSchema = [invite];
 
 export const organisationSchema = [organisation];
+
+export const bulkTransferSchema = [bulk_transfer];

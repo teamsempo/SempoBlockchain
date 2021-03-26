@@ -2,18 +2,18 @@ import { AnyAction, combineReducers, Reducer } from "redux";
 import { FormStateMap, reducer as FormReducer } from "redux-form";
 
 import {
-  register,
   activate,
+  adminUsers,
+  register,
   requestResetEmailState,
   resetPasswordState,
-  adminUsers,
   validateTFA
 } from "./auth/reducers";
 import { login } from "./auth/loginReducer";
 import {
-  spreadsheetUpload,
+  datasetList,
   datasetSave,
-  datasetList
+  spreadsheetUpload
 } from "./spreadsheet/reducers";
 import { ExportReducer } from "./export/reducers";
 import { creditTransfers } from "./creditTransfer/reducers";
@@ -29,7 +29,9 @@ import { allowedFilters } from "./allowedFilters/reducers";
 import { transferCard } from "./transferCard/reducers";
 import { tokens } from "./token/reducers";
 import { all } from "redux-saga/effects";
-import { userSchema } from "../schemas";
+import {
+  bulkTransferSchema
+} from "../schemas";
 import {
   createReducers,
   createSagas,
@@ -38,8 +40,35 @@ import {
 } from "../genericState";
 import { RegistrationMapping } from "../genericState/types";
 
+import {
+  CreateBulkTransferBody,
+  ModifyBulkTransferBody
+} from "./bulkTransfer/types";
+
 //might be because of older version of react-redux that have to force like this...
 const form = <Reducer<FormStateMap, AnyAction>>FormReducer;
+
+interface SempoObjects extends RegistrationMapping {
+  bulkTransfers: Registration<
+    CreateBulkTransferBody,
+    ModifyBulkTransferBody
+  >;
+}
+
+export const sempoObjects: SempoObjects = {
+  bulkTransfers: {
+    name: "bulkTransfers",
+    endpoint: "disbursement",
+    schema: bulkTransferSchema
+  }
+};
+
+let baseReducers = createReducers(sempoObjects);
+let sagalist = createSagas(sempoObjects);
+
+export function* generatedSagas() {
+  yield all(sagalist);
+}
 
 const appReducer = combineReducers({
   login,
@@ -65,7 +94,8 @@ const appReducer = combineReducers({
   allowedFilters,
   form,
   transferCard,
-  tokens
+  tokens,
+  ...baseReducers
 });
 
 const rootReducer = (state: any, action: any) => {
@@ -76,4 +106,5 @@ const rootReducer = (state: any, action: any) => {
 };
 
 export default rootReducer;
+
 export type ReduxState = ReturnType<typeof rootReducer>;

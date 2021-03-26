@@ -2,7 +2,7 @@
 // The code in this file is not included in the GPL license applied to this repository
 // Unauthorized copying of this file, via any medium is strictly prohibited
 
-import { combineReducers } from "redux";
+import { combineReducers, ReducersMapObject } from "redux";
 import { DEEEEEEP } from "../../utils";
 
 import { AllowedFiltersAction } from "./actions";
@@ -65,7 +65,9 @@ const credit_transfer = combineReducers({
   allowed: createNamedWrapperReducer(allowedFilterState, "credit_transfer")
 });
 
-export const allowedFilters = combineReducers({
+const combined: ReducersMapObject = {
   user,
   credit_transfer //Follows underscore convention to match python
-});
+};
+
+export const allowedFilters = combineReducers(combined);

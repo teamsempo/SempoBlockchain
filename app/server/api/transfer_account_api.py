@@ -2,6 +2,7 @@ from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 import datetime
 import json
+from sqlalchemy import func, asc, desc
 
 from server import db
 from server.models.utils import paginate_query
@@ -10,6 +11,8 @@ from server.schemas import transfer_accounts_schema, transfer_account_schema, \
     view_transfer_account_schema, view_transfer_accounts_schema
 from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl
+from server.utils.transfer_filter import process_transfer_filters
+from server.utils.search import generate_search_query
 
 transfer_account_blueprint = Blueprint('transfer_account', __name__)
 
@@ -44,7 +47,25 @@ class TransferAccountAPI(MethodView):
 
         else:
 
-            base_query = TransferAccount.query.filter(TransferAccount.is_ghost != True)
+            search_string = request.args.get('search_string') or ''
+            # HANDLE PARAM : params - Standard filter object. Exact same as the ones Metrics uses!
+            encoded_filters = request.args.get('params')
+            filters = process_transfer_filters(encoded_filters)
+            # HANDLE PARAM : order
+            # Valid orders types are: `ASC` and `DESC`
+            # Default: DESC
+            order_arg = request.args.get('order') or 'DESC'
+            if order_arg.upper() not in ['ASC', 'DESC']:
+                return {'message': 'Invalid order value \'{}\'. Please use \'ASC\' or \'DESC\''.format(order_arg)}
+            order = asc if order_arg.upper() == 'ASC' else desc
+            # HANDLE PARAM: sort_by
+            # Valid orders types are: first_name, last_name, email, date_account_created, rank, balance, status
+            # Default: rank
+            sort_by_arg = request.args.get('sort_by') or 'rank'
+
+            base_query = generate_search_query(
+                search_string, filters, order, sort_by_arg
+            ).filter(TransferAccount.is_ghost != True)
 
             if account_type_filter == 'vendor':
                 transfer_accounts_query = base_query.filter_by(is_vendor=True)
@@ -178,6 +199,54 @@ class TransferAccountAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 201
 
+class BulkTransferAccountAPI(MethodView):
+    @requires_auth(allowed_roles={'ADMIN': 'admin'})
+    def put(self):
+        put_data = request.get_json()
+        # HANDLE PARAM : search_stirng - Any search string. An empty string (or None) will just return everything!
+        search_string = put_data.get('search_string') or ''
+        # HANDLE PARAM : params - Standard filter object. Exact same as the ones Metrics uses!
+        encoded_filters = put_data.get('params')
+        filters = process_transfer_filters(encoded_filters)
+        # HANDLE PARAM : include_accounts - Explicitly include these users
+        include_accounts = put_data.get('include_accounts', [])
+        # HANDLE PARAM : include_accounts - Explicitly exclude these users
+        exclude_accounts = put_data.get('exclude_accounts', [])
+
+        approve = put_data.get('approve')
+
+        if include_accounts and exclude_accounts:
+            return { 'message': 'Please either include or exclude users (include is additive from the whole search, while exclude is subtractive)'}
+
+        order_arg = request.args.get('order') or 'DESC'
+        if order_arg.upper() not in ['ASC', 'DESC']:
+            return { 'message': 'Invalid order value \'{}\'. Please use \'ASC\' or \'DESC\''.format(order_arg)}
+        order = asc if order_arg.upper()=='ASC' else desc
+        sort_by_arg = request.args.get('sort_by') or 'rank'
+
+        if include_accounts:
+            transfer_accounts = db.session.query(TransferAccount).filter(TransferAccount.id.in_(include_accounts)).all()
+        else:
+            search_query = generate_search_query(search_string, filters, order, sort_by_arg, include_user=True)
+            search_query = search_query.filter(TransferAccount.id.notin_(exclude_accounts))
+            results = search_query.all()
+            transfer_accounts = [r[0] for r in results] # Get TransferAccount (TransferAccount, searchRank, User)
+
+        for ta in transfer_accounts:
+            if approve == True: 
+                ta.is_approved = True
+            elif approve == False:
+                ta.is_approved = False
+
+        db.session.commit()
+
+        response_object = {
+            'status': 'success',
+            'message': 'Successfully Edited Transfer Accounts.',
+        }
+        return make_response(jsonify(response_object)), 201
+
+
 # add Rules for API Endpoints
 transfer_account_blueprint.add_url_rule(
     '/transfer_account/',
@@ -190,4 +259,10 @@ transfer_account_blueprint.add_url_rule(
     '/transfer_account/<int:transfer_account_id>/',
     view_func=TransferAccountAPI.as_view('single_transfer_account_view'),
     methods=['GET', 'PUT']
+)
+
+transfer_account_blueprint.add_url_rule(
+    '/transfer_account/bulk/',
+    view_func=BulkTransferAccountAPI.as_view('bulk_transfer_account_view'),
+    methods=['PUT']
 )
