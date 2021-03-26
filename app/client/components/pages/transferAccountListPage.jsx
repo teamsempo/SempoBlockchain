@@ -83,7 +83,6 @@ class TransferAccountListPage extends React.Component {
     ) {
       return (
         <PageWrapper>
-          <QueryConstructor filterObject="user" />
           <NoDataMessage />
         </PageWrapper>
       );
