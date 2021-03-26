@@ -2,7 +2,7 @@ import * as React from "react";
 
 import { Link } from "react-router-dom";
 
-import { Table, Button, Checkbox, Tag } from "antd";
+import { Table, Button, Checkbox, Tag, Pagination,Space } from "antd";
 
 import { ColumnsType } from "antd/es/table";
 
@@ -27,17 +27,30 @@ export interface OnSelectChange {
   ): void;
 }
 
+export interface OnPaginateChange {
+  (
+    page: number,
+    pageSize: number | undefined
+  ): void;
+}
+
+export interface Pagination {
+  currentPage: number,
+  items: number,
+  onChange: OnPaginateChange;
+}
+
 interface stringIndexable {
   [index: string]: any;
 }
 
 interface OuterProps extends stringIndexable {
-  disabled?: boolean
   orderedTransferAccounts: number[];
   users: any;
   actionButtons: ActionButton[];
   noneSelectedbuttons: NoneSelectedButton[];
   onSelectChange?: OnSelectChange;
+  paginationOptions?: Pagination;
   providedSelectedRowKeys?: React.Key[];
   providedUnselectedRowKeys?: React.Key[];
 }
@@ -109,7 +122,7 @@ const columns: ColumnsType<TransferAccount> = [
   {
     title: "Created",
     key: "created",
-    render: (text: any, record: any) => <DateTime created={record.created} />
+    render: (text: any, record: any) => <DateTime created={record.created} useRelativeTime={false} />
   },
   {
     title: "Balance",
@@ -381,13 +394,29 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
             )}
           </div>
         </div>
-        <Table
-          loading={transferAccounts.loadStatus.isRequesting}
-          columns={columns}
-          dataSource={data}
-          rowSelection={rowSelection}
-          style={{ marginLeft: "10px", marginRight: "10px" }}
-        />
+        <Space direction="vertical">
+          <Table
+            loading={transferAccounts.loadStatus.isRequesting}
+            columns={columns}
+            dataSource={data}
+            rowSelection={rowSelection}
+            style={{ marginLeft: "10px", marginRight: "10px" }}
+            pagination={this.props.paginationOptions? false: undefined}
+          />
+          { this.props.paginationOptions?
+            <Pagination
+              current={this.props.paginationOptions.currentPage}
+              showSizeChanger
+              defaultCurrent={1}
+              defaultPageSize={10}
+              total={this.props.paginationOptions.items}
+              onChange={this.props.paginationOptions.onChange}
+              showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
+            />
+            : <></>
+          }
+
+        </Space>
       </div>
     );
   }

@@ -31,6 +31,8 @@ interface StateProps {
   activeToken: any;
   transferAccounts: any;
   bulkTransfers: any;
+  login: any;
+  organisations: any;
 }
 
 interface DispatchProps {
@@ -59,6 +61,8 @@ interface ComponentState {
   params: string;
   searchString: string;
   awaitingEditSuccess: boolean;
+  page: number;
+  per_page: number;
 }
 
 type Props = StateProps & DispatchProps & OuterProps;
@@ -67,7 +71,9 @@ const mapStateToProps = (state: ReduxState): StateProps => {
   return {
     activeToken: getActiveToken(state),
     transferAccounts: state.transferAccounts,
-    bulkTransfers: state.bulkTransfers
+    bulkTransfers: state.bulkTransfers,
+    login: state.login,
+    organisations: state.organisations
   };
 };
 
@@ -93,17 +99,22 @@ class StandardTransferAccountList extends React.Component<
 > {
   constructor(props: Props) {
     super(props);
+    const defaultDisbusement =
+      props.organisations.byId[props.login.organisationId]
+        .default_disbursement / 100 || 0;
     this.state = {
       importModalVisible: false,
       bulkTransferModalVisible: false,
-      amount: 0,
+      amount: defaultDisbusement,
       transferType: "DISBURSEMENT",
       selectedRowKeys: [],
       unselectedRowKeys: [],
       allSelected: false,
       params: "",
       searchString: "",
-      awaitingEditSuccess: false
+      awaitingEditSuccess: false,
+      page: 1,
+      per_page: 10
     };
   }
 
@@ -123,7 +134,9 @@ class StandardTransferAccountList extends React.Component<
       this.props.loadTransferAccountList({
         query: {
           params: this.state.params,
-          search_string: this.state.searchString
+          search_string: this.state.searchString,
+          page: this.state.page,
+          per_page: this.state.per_page
         }
       });
     }
@@ -138,6 +151,14 @@ class StandardTransferAccountList extends React.Component<
       selectedRowKeys,
       unselectedRowKeys,
       allSelected
+    });
+  };
+
+  onPaginateChange = (page: number, pageSize: number | undefined) => {
+    let per_page = pageSize || 10;
+    this.setState({
+      page,
+      per_page
     });
   };
 
@@ -182,7 +203,8 @@ class StandardTransferAccountList extends React.Component<
   updateQueryData(query: Query) {
     this.setState({
       params: query.params,
-      searchString: query.searchString
+      searchString: query.searchString,
+      page: 1
     });
   }
 
@@ -223,7 +245,6 @@ class StandardTransferAccountList extends React.Component<
   render() {
     const { transferAccounts, bulkTransfers } = this.props;
     const { importModalVisible, amount } = this.state;
-
     let numberSet = typeof amount === "number" && amount !== 0;
 
     const actionButtons = [
@@ -257,6 +278,10 @@ class StandardTransferAccountList extends React.Component<
         <QueryConstructor
           onQueryChange={(query: Query) => this.updateQueryData(query)}
           filterObject="user"
+          pagination={{
+            page: this.state.page,
+            per_page: this.state.per_page
+          }}
         />
         <TransferAccountList
           orderedTransferAccounts={transferAccounts.IdList}
@@ -265,6 +290,12 @@ class StandardTransferAccountList extends React.Component<
           onSelectChange={(s: React.Key[], u: React.Key[], a: boolean) =>
             this.onSelectChange(s, u, a)
           }
+          paginationOptions={{
+            currentPage: this.state.page,
+            items: this.props.transferAccounts.pagination.items,
+            onChange: (page: number, perPage: number | undefined) =>
+              this.onPaginateChange(page, perPage)
+          }}
         />
         <ImportModal
           isModalVisible={importModalVisible}
@@ -311,6 +342,7 @@ class StandardTransferAccountList extends React.Component<
             <Space>
               <span>Transfer Amount: </span>
               <InputNumber
+                defaultValue={Number(amount)}
                 min={0}
                 onChange={(amount: numberInput) => this.setState({ amount })}
               />

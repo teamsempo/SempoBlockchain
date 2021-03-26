@@ -8,7 +8,7 @@ import { SearchOutlined } from "@ant-design/icons";
 import { AllowedFiltersAction } from "../../reducers/allowedFilters/actions";
 import { AllowedMetricsObjects } from "../../reducers/metric/types";
 import { processFiltersForQuery } from "../../utils";
-import Filter from "./filter.jsx";
+import Filter from "./filter";
 import { LoadTransferAccountAction } from "../../reducers/transferAccount/actions";
 import { LoadTransferAccountListPayload } from "../../reducers/transferAccount/types";
 
@@ -33,8 +33,14 @@ export interface Query {
   searchString: string;
 }
 
+interface Pagination {
+  page: number;
+  per_page: number;
+}
+
 interface OuterProps {
   filterObject: AllowedMetricsObjects;
+  pagination?: Pagination
   onQueryChange?: (query: Query) => void;
   providedParams?: string;
   providedSearchString?: string;
@@ -44,6 +50,7 @@ interface OuterProps {
 interface ComponentState {
   searchString: string;
   encodedFilters: string;
+  timeout: any;
 }
 
 type Props = DispatchProps & StateProps & OuterProps;
@@ -79,7 +86,8 @@ class QueryConstructor extends React.Component<Props, ComponentState> {
     super(props);
     this.state = {
       searchString: "",
-      encodedFilters: ""
+      encodedFilters: "",
+      timeout: 0,
     };
 
     this.props.loadAllowedFilters(this.props.filterObject);
@@ -110,6 +118,13 @@ class QueryConstructor extends React.Component<Props, ComponentState> {
       needsUpdate = true;
     }
 
+    if (
+      (prevProps.pagination?.page !== this.props.pagination?.page)
+      || (prevProps.pagination?.per_page !== this.props.pagination?.per_page)
+    ) {
+      needsUpdate = true;
+    }
+
     if (needsUpdate) {
       this.setState(
         {
@@ -129,9 +144,12 @@ class QueryConstructor extends React.Component<Props, ComponentState> {
   };
 
   onSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    this.setState({ searchString: e.target.value }, () => {
+    if (this.state.timeout) {
+       clearTimeout(this.state.timeout);
+    }
+    this.setState({ searchString: e.target.value, timeout: setTimeout(() => {
       this.handleQueryChange();
-    });
+    }, 300)})
   };
 
   handleQueryChange = () => {
@@ -146,10 +164,12 @@ class QueryConstructor extends React.Component<Props, ComponentState> {
   };
 
   loadData = () => {
+    let pagination = this.props.pagination || {};
     this.props.loadTransferAccountList({
       query: {
         params: this.state.encodedFilters,
-        search_string: this.state.searchString
+        search_string: this.state.searchString,
+        ...pagination
       }
     });
   };

@@ -31,6 +31,13 @@ export const updateTransferAccountIdList = (IdList: number[]) =>
     IdList
   );
 
+
+export const updateTransferAccountPagination = (items: number) =>
+  createAction(
+    TransferAccountActionTypes.UPDATE_TRANSFER_ACCOUNT_PAGINATION,
+    items
+  );
+
 export const deepUpdateTransferAccounts = (
   transfer_accounts: TransfersByUserId
 ) =>
@@ -57,7 +64,8 @@ export const TransferAccountAction = {
   updateTransferAccountIdList,
   deepUpdateTransferAccounts,
   updateTransferAccounts,
-  updateTransferAccountsCreditTransfers
+  updateTransferAccountsCreditTransfers,
+  updateTransferAccountPagination
 };
 
 export type TransferAccountAction = ActionsUnion<typeof TransferAccountAction>;

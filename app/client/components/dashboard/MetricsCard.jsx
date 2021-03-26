@@ -5,10 +5,13 @@
 import React from "react";
 
 import { connect } from "react-redux";
+import { CSVLink } from "react-csv";
+import { DownloadOutlined } from "@ant-design/icons";
 
 import { isMobileQuery, withMediaQuery } from "../helpers/responsive";
-
-import { Card, Divider } from "antd";
+import { toCurrency } from "../../utils";
+import { VALUE_TYPES } from "../../constants";
+import { Card, Divider, Tooltip, Space } from "antd";
 
 import VolumeChart from "./card/VolumeChart";
 import GroupByChart from "./card/GroupByChart";
@@ -60,7 +63,56 @@ class MetricsCard extends React.Component {
 
     const selectedData = metrics[this.state.selectedTimeSeries];
 
+    // Prep data for CSV export
+    if (selectedData) {
+      // Map values to dates
+      const headers = Object.keys(selectedData["timeseries"]);
+      var datesToValues = {};
+      headers.forEach(header => {
+        selectedData["timeseries"][header].forEach(data => {
+          var a = datesToValues[data["date"]]
+            ? datesToValues[data["date"]]
+            : {};
+          if (selectedData["type"]["value_type"] == VALUE_TYPES.CURRENCY) {
+            a[header] = toCurrency(data["value"]);
+          } else {
+            a[header] = data["value"];
+          }
+          datesToValues[data["date"]] = a;
+        });
+      });
+      // Add zeros
+      Object.keys(datesToValues).forEach(date => {
+        headers.forEach(header => {
+          if (!(header in datesToValues[date])) {
+            datesToValues[date][header] = 0;
+          }
+        });
+      });
+      // Make 2d array in the shape of the CSV we want!
+      const sheetHeaders = headers.length == 1 ? ["Value"] : headers;
+      var sheetArray = [["Date", ...sheetHeaders]];
+      Object.keys(datesToValues).forEach(date => {
+        const row = headers.map(header => {
+          return datesToValues[date][header];
+        });
+        sheetArray.push([date, ...row]);
+      });
+    }
+
+    const csvLink = (
+      <Tooltip title={"Download CSV"}>
+        <CSVLink
+          filename={cardTitle + "_" + this.state.selectedTimeSeries + ".csv"}
+          data={sheetArray || [[]]}
+        >
+          <DownloadOutlined />
+        </CSVLink>
+      </Tooltip>
+    );
+
     const filter = <DateRangeSelector onChange={this.setDateRange} />;
+    const extra = <div>{filter}</div>;
 
     let dataModule;
 
@@ -131,7 +183,15 @@ class MetricsCard extends React.Component {
     }
 
     return (
-      <Card title={cardTitle} bordered={false} extra={filter}>
+      <Card
+        title={
+          <Space>
+            {cardTitle} {csvLink}
+          </Space>
+        }
+        bordered={false}
+        extra={extra}
+      >
         <div
           style={{
             display: "flex",

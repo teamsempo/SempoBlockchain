@@ -215,7 +215,10 @@ class BeneficiaryLiveFeed extends React.Component {
                 var timeStatusBlock = (
                   <UserTime>
                     <Status>
-                      <DateTime created={transfer.created} />
+                      <DateTime
+                        created={transfer.created}
+                        useRelativeTime={true}
+                      />
                     </Status>
                     <Status
                       style={{ color: statuscolors[transfer.transfer_status] }}

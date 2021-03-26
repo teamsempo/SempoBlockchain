@@ -100,6 +100,11 @@ function* loadTransferAccounts({ payload }: TransferAccountLoadApiResult) {
       );
     }
 
+    if (load_result.items) {
+      yield put(
+        TransferAccountAction.updateTransferAccountPagination(load_result.items)
+      )
+    }
     yield put(
       LoadTransferAccountAction.loadTransferAccountsSuccess(
         load_result.query_time
@@ -132,7 +137,6 @@ function* editTransferAccount({ payload }: TransferAccountEditApiResult) {
     yield put(EditTransferAccountAction.editTransferAccountSuccess());
     message.success(edit_response.message);
   } catch (fetch_error) {
-    console.log("fe is", fetch_error)
     const error = yield call(handleError, fetch_error);
 
     yield put(EditTransferAccountAction.editTransferAccountFailure(error));

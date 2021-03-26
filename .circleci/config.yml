@@ -237,7 +237,6 @@ workflows:
             branches:
               only:
                 - master
-                - bulk_disbursement_fe
 
           requires:
             - build

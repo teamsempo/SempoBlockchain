@@ -2,6 +2,7 @@ import React from "react";
 import moment from "moment";
 
 interface Props {
+  useRelativeTime: Boolean;
   created:
     | string
     | number
@@ -15,11 +16,16 @@ interface Props {
 
 export default function DateTime(props: Props) {
   const { created } = props;
+  const useRelativeTime = props.useRelativeTime || false;
   if (created) {
-    var formatted_time = moment.utc(created).fromNow();
-
+    const formatted_time = useRelativeTime
+      ? moment.utc(created).fromNow()
+      : moment
+          .utc(created)
+          .local()
+          .format("YYYY-MM-DD HH:mm:ss");
     return <div style={{ margin: 0 }}>{formatted_time}</div>;
   } else {
-    return <div style={{ margin: 0 }}>Not long ago</div>;
+    return <div style={{ margin: 0 }}>Unknown</div>;
   }
 }
