@@ -56,7 +56,9 @@ const columns: ColumnsType<BulkTransfer> = [
   {
     title: "Created",
     key: "created",
-    render: (text: any, record: any) => <DateTime created={record.created} />
+    render: (text: any, record: any) => (
+      <DateTime created={record.created} useRelativeTime={false} />
+    )
   },
   {
     title: "Recipient Count",
