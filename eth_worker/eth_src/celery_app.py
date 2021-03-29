@@ -72,6 +72,11 @@ app.conf.beat_schedule = {
 }
 
 w3 = Web3(HTTPProvider(chain_config['HTTP_PROVIDER']))
+
+if not w3.isConnected():
+    print('WARNING: Main RPC unable to connect, attempting to use backup provider')
+    w3 = Web3(HTTPProvider(chain_config['BACKUP_HTTP_PROVIDER']))
+
 # Currently nothing uses a websocket RPC
 #w3_websocket = Web3(WebsocketProvider(chain_config['WEBSOCKET_PROVIDER']))
 
