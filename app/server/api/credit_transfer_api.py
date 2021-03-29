@@ -11,7 +11,7 @@ from server.models.credit_transfer import CreditTransfer
 from server.models.blockchain_address import BlockchainAddress
 from server.models.transfer_account import TransferAccount, TransferAccountType
 
-from server.schemas import credit_transfers_schema, credit_transfer_schema, view_credit_transfers_schema
+from server.schemas import credit_transfers_schema, credit_transfer_schema, view_credit_transfers_schema, view_credit_transfer_schema
 from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl
 from server.utils.credit_transfer import find_user_with_transfer_account_from_identifiers
@@ -36,7 +36,7 @@ class CreditTransferAPI(MethodView):
     def get(self, credit_transfer_id):
         transfer_account_ids = request.args.get('transfer_account_ids')
         transfer_type = request.args.get('transfer_type', 'ALL')
-        transfer_list = None
+        result = None
         if transfer_type:
             transfer_type = transfer_type.upper()
 
@@ -48,9 +48,9 @@ class CreditTransferAPI(MethodView):
                 return make_response(jsonify({'message': 'Credit transfer not found'})), 404
 
             if AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'admin'):
-                transfer_list = credit_transfers_schema.dump([credit_transfer]).data
+                result = credit_transfer_schema.dump(credit_transfer).data
             elif AccessControl.has_any_tier(g.user.roles, 'ADMIN'):
-                transfer_list = view_credit_transfers_schema.dump([credit_transfer]).data
+                result = view_credit_transfer_schema.dump(credit_transfer).data
 
             transfer_stats = []
 
@@ -58,7 +58,7 @@ class CreditTransferAPI(MethodView):
                 'status': 'success',
                 'message': 'Successfully Loaded.',
                 'data': {
-                    'credit_transfer': transfer_list,
+                    'credit_transfer': result,
                     'transfer_stats': transfer_stats
                 }
             }

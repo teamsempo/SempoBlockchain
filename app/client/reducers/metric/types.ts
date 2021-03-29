@@ -1,12 +1,14 @@
 import { inferredPredicate } from "../../../node_modules/@types/babel__traverse/node_modules/@babel/types/lib";
 
+export type AllowedMetricsObjects = "user" | "credit_transfer";
+
 export interface LoadAllowedFiltersPayload {
   query?: LoadAllowedFiltersQuery;
   filterObject?: string;
 }
 
 interface LoadAllowedFiltersQuery {
-  metric_type: "user" | "credit_transfer";
+  metric_type: AllowedMetricsObjects;
 }
 
 export enum MetricsActionType {

@@ -14,7 +14,7 @@ class BlockchainSyncer(object):
 
     # Hit the database to get the latest block number to which we're synced
     def get_latest_block_number(self):
-        return self.w3_websocket.eth.getBlock('latest').number
+        return self.w3.eth.getBlock('latest').number
 
     # Call app-level webhook with newfound transacitons
     def call_webhook(self, transaction):
@@ -123,17 +123,17 @@ class BlockchainSyncer(object):
         config.logg.info(f'Fetching block range {start_block} to {end_block} for contract {contract_address}')
 
         self.persistence.add_block_range(start_block, end_block, filter_id)
-        erc20_contract = self.w3_websocket.eth.contract(
+        erc20_contract = self.w3.eth.contract(
             address = Web3.toChecksumAddress(contract_address),
             abi = erc20_abi.abi
         )
         try:
-            filter = erc20_contract.events.Transfer.createFilter(
+            events = erc20_contract.events.Transfer.getLogs(
                 fromBlock = start_block,
                 toBlock = end_block,
                 argument_filters = argument_filters
             )
-            for event in filter.get_all_entries():
+            for event in events:
                 yield event
             # Once a batch of chunks is completed, we can mark them completed
             self.persistence.set_block_range_status(start_block, end_block, 'SUCCESS', filter_id)
@@ -194,8 +194,7 @@ class BlockchainSyncer(object):
         else:
             return f'Transaction {transaction_hash} not found!'
 
-    def __init__(self, w3_websocket, red, persistence):
-
-        self.w3_websocket = w3_websocket
+    def __init__(self, w3, red, persistence):
+        self.w3 = w3
         self.red = red
         self.persistence = persistence

@@ -22,6 +22,9 @@ const singleUserPage = lazy(() =>
 const creditTransferListPage = lazy(() =>
   import("./components/pages/creditTransferListPage.jsx")
 );
+const singleCreditTransferPage = lazy(() =>
+  import("./components/pages/singleCreditTransferPage.jsx")
+);
 const settingsPage = lazy(() =>
   import("./components/pages/settings/settingsPage.jsx")
 );
@@ -39,6 +42,13 @@ const FundWalletPage = lazy(() =>
 const createUserPage = lazy(() =>
   import("./components/pages/createUserPage.jsx")
 );
+const bulkTransferListPage = lazy(() =>
+  import("./components/pages/bulkTransferListPage.jsx")
+);
+const singleBulkDisbursementPage = lazy(() =>
+  import("./components/pages/singleBulkDisbursementPage.jsx")
+);
+
 const exportPage = lazy(() => import("./components/pages/exportPage.jsx"));
 const authPage = lazy(() => import("./components/pages/authPage.jsx"));
 const resetPasswordPage = lazy(() =>
@@ -134,6 +144,15 @@ class Nav extends React.Component {
             />
             <PrivateRoute
               exact
+              path="/transfers/:creditTransferId"
+              component={singleCreditTransferPage}
+              isLoggedIn={isLoggedIn}
+              isReAuthing={isReAuthing}
+              title={`Single Transfer`}
+              isAntDesign={true}
+            />
+            <PrivateRoute
+              exact
               path="/settings"
               component={settingsPage}
               isLoggedIn={isLoggedIn}
@@ -213,6 +232,22 @@ class Nav extends React.Component {
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
               title={`Create User`}
+            />
+            <PrivateRoute
+              exact
+              path="/bulk/"
+              component={bulkTransferListPage}
+              isLoggedIn={isLoggedIn}
+              isReAuthing={isReAuthing}
+              title={`Bulk Transfers`}
+            />
+            <PrivateRoute
+              exact
+              path="/bulk/:bulkId"
+              component={singleBulkDisbursementPage}
+              isLoggedIn={isLoggedIn}
+              isReAuthing={isReAuthing}
+              title={`Bulk Disbursement`}
             />
             <PrivateRoute
               path="/export"

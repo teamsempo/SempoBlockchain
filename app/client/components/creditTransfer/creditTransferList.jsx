@@ -2,6 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 import styled from "styled-components";
 import ReactTable from "react-table";
+import { Link } from "react-router-dom";
 
 import { TopRow, StyledSelect } from "../styledElements.js";
 
@@ -439,7 +440,18 @@ class CreditTransferList extends React.Component {
                   Header: "Type",
                   accessor: "transfer_type",
                   headerClassName: "react-table-header",
-                  className: "react-table-first-cell"
+                  className: "react-table-first-cell",
+                  Cell: cellInfo => (
+                    <Link
+                      to={"/transfers/" + cellInfo.original.id}
+                      style={{
+                        textDecoration: "underline",
+                        color: "#000000a6"
+                      }}
+                    >
+                      {cellInfo.original.transfer_type}
+                    </Link>
+                  )
                 },
                 {
                   Header: "Created",
