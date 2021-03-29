@@ -261,7 +261,7 @@ class StandardTransferAccountList extends React.Component<
         onClick: (IdList: React.Key[]) => this.setApproval(false)
       },
       {
-        label: "New Bulk Transfer",
+        label: "Create Bulk Transfer",
         onClick: (IdList: React.Key[]) => this.showBulkTransferModal()
       }
     ];
@@ -308,7 +308,7 @@ class StandardTransferAccountList extends React.Component<
         />
 
         <Modal
-          title="Create New Bulk Transfer"
+          title="Create Bulk Transfer"
           visible={this.state.bulkTransferModalVisible}
           onOk={this.createBulkTransferFromState}
           confirmLoading={bulkTransfers.createStatus.isRequesting}

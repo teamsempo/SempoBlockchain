@@ -181,49 +181,54 @@ def generate_timeseries_metrics(create_organisation):
     db.session.commit()
 
 base_participant = {
-    'data': 
-        {'transfer_stats':
-            {'active_filters': [],
-            'active_group_by': 'recipient,account_type', 
-            'active_users': {'aggregate': {'percent_change': None, 'total': 0},
-            'timeseries': {}, 
-            'type': {'display_decimals': 0, 'value_type': 'count'}}, 
-            'mandatory_filter': {}, 
-            'master_wallet_balance': 0,
-            'users_created': {'aggregate': {'percent_change': 0.0, 'total': 1}, 
-            'timeseries': {}, 
-            'type': {'display_decimals': 0, 'value_type': 'count'}}}
-        }, 
+    'data': {
+        'transfer_stats': 
+        {'active_filters': [], 
+        'active_group_by': 'recipient,account_type', 
+        'active_users': {'aggregate': {'percent_change': None, 'total': 0}, 
+        'timeseries': {}, 'type': {'display_decimals': 0, 'value_type': 'count'}}, 
+        'mandatory_filter': {}, 
+        'master_wallet_balance': 0, 
+        'total_population_cumulative': {'aggregate': {'percent_change': 0.0, 'total': 1}, 
+        'timeseries': {}, 
+        'type': {'display_decimals': 0, 'value_type': 'count'}}, 
+        'users_created': {'aggregate': {'percent_change': 0.0, 'total': 1}, 
+        'timeseries': {}, 'type': {'display_decimals': 0, 'value_type': 'count'}}}}, 
         'message': 'Successfully Loaded.', 
         'status': 'success'
     }
 
 
 base_all = {
-    'data': 
-        {'transfer_stats': 
+    'data': {
+        'transfer_stats': 
         {'active_filters': [], 
         'active_group_by': 'recipient,account_type', 
         'active_users': {'aggregate': {'percent_change': None, 'total': 0}, 
-        'timeseries': {}, 
-        'type': {'display_decimals': 0, 'value_type': 'count'}}, 
-        'all_payments_volume': 
-            {'aggregate': {'percent_change': None, 'total': 0}, 'timeseries': {}, 'type': {'currency_name': 'AUD Reserve Token', 'currency_symbol': 'AUD', 'display_decimals': 2, 'value_type': 'currency'}}, 
-        'daily_transaction_count': 
-            {'aggregate': {'percent_change': None, 'total': 0}, 'timeseries': {}, 'type': {'display_decimals': 0, 'value_type': 'count'}}, 
+        'timeseries': {}, 'type': {'display_decimals': 0, 'value_type': 'count'}}, 
+        'all_payments_volume': {'aggregate': {'percent_change': None, 'total': 0}, 
+        'timeseries': {}, 'type': {'currency_name': 'AUD Reserve Token', 'currency_symbol': 'AUD', 'display_decimals': 2, 'value_type': 'currency'}}, 
+        'daily_transaction_count': {'aggregate': {'percent_change': None, 'total': 0}, 
+        'timeseries': {}, 'type': {'display_decimals': 0, 'value_type': 'count'}}, 
         'mandatory_filter': {}, 
         'master_wallet_balance': 0, 
         'total_distributed': 0.0, 
-        'total_reclaimed': 0.0,
-        'total_withdrawn': 0.0,
-        'trades_per_user': 
-            {'aggregate': {'percent_change': None, 'total': 0.0}, 'timeseries': {}, 'type': {'display_decimals': 2, 'value_type': 'count_average'}}, 
-        'transfer_amount_per_user': 
-            {'aggregate': {'percent_change': None, 'total': 0.0}, 'timeseries': {}, 'type': {'currency_name': 'AUD Reserve Token', 'currency_symbol': 'AUD', 'display_decimals': 2, 'value_type': 'currency'}}, 
-        'users_created': 
-            {'aggregate': {'percent_change': 0.0, 'total': 1}, 'timeseries': {}, 'type': {'display_decimals': 0, 'value_type': 'count'}}, 
-        'users_who_made_purchase': 
-            {'aggregate': {'percent_change': None, 'total': 0}, 'timeseries': {}, 'type': {'display_decimals': 0, 'value_type': 'count'}}}}, 
+        'total_population_cumulative': {'aggregate': {'percent_change': 0.0, 'total': 1}, 
+        'timeseries': {}, 
+        'type': {'display_decimals': 0, 'value_type': 'count'}}, 
+        'total_reclaimed': 0.0, 
+        'total_withdrawn': 0.0, 
+        'trades_per_user': {'aggregate': {'percent_change': None, 'total': 0.0}, 'timeseries': {}, 
+        'type': {'display_decimals': 2, 'value_type': 'count_average'}}, 
+        'transfer_amount_per_user': {'aggregate': {'percent_change': None, 'total': 0.0}, 
+        'timeseries': {}, 
+        'type': {'currency_name': 'AUD Reserve Token', 'currency_symbol': 'AUD', 'display_decimals': 2, 'value_type': 'currency'}}, 
+        'users_created': {'aggregate': {'percent_change': 0.0, 'total': 1}, 
+        'timeseries': {}, 
+        'type': {'display_decimals': 0, 'value_type': 'count'}}, 
+        'users_who_made_purchase': {'aggregate': {'percent_change': None, 'total': 0}, 
+        'timeseries': {}, 
+        'type': {'display_decimals': 0, 'value_type': 'count'}}}}, 
         'message': 'Successfully Loaded.', 
         'status': 'success'
     }
@@ -232,33 +237,29 @@ base_all_zero_decimals = {'data':
     {'transfer_stats': 
     {'active_filters': [], 
     'active_group_by': 'recipient,account_type', 
-    'active_users': {'aggregate': {'percent_change': None, 'total': 0}, 
-    'timeseries': {}, 
-    'type': {'display_decimals': 0, 'value_type': 'count'}}, 
+    'active_users': {'aggregate': {'percent_change': None, 'total': 0}, 'timeseries': {}, 'type': {'display_decimals': 0, 'value_type': 'count'}}, 
     'all_payments_volume': {'aggregate': {'percent_change': None, 'total': 0}, 
     'timeseries': {}, 
     'type': {'currency_name': 'AUD Reserve Token', 'currency_symbol': 'AUD', 'display_decimals': 0, 'value_type': 'currency'}}, 
-    'daily_transaction_count': {'aggregate': {'percent_change': None, 'total': 0}, 
-    'timeseries': {}, 'type': {'display_decimals': 0, 'value_type': 'count'}}, 
-    'mandatory_filter': {}, 'master_wallet_balance': 0, 'total_distributed': 0.0, 
+    'daily_transaction_count': {'aggregate': {'percent_change': None, 'total': 0}, 'timeseries': {}, 'type': {'display_decimals': 0, 'value_type': 'count'}}, 
+    'mandatory_filter': {}, 
+    'master_wallet_balance': 0, 
+    'total_distributed': 0.0, 
+    'total_population_cumulative': {'aggregate': {'percent_change': 0.0, 'total': 1}, 'timeseries': {}, 'type': {'display_decimals': 0, 'value_type': 'count'}}, 
     'total_reclaimed': 0.0, 
     'total_withdrawn': 0.0, 
-    'trades_per_user': {'aggregate': {'percent_change': None, 'total': 0.0}, 
-    'timeseries': {}, 
+    'trades_per_user': {'aggregate': {'percent_change': None, 'total': 0.0}, 'timeseries': {}, 
     'type': {'display_decimals': 2, 'value_type': 'count_average'}}, 
     'transfer_amount_per_user': {'aggregate': {'percent_change': None, 'total': 0.0}, 
     'timeseries': {}, 
-    'type': {'currency_name': 'AUD Reserve Token', 
-    'currency_symbol': 'AUD', 
-    'display_decimals': 0, 'value_type': 'currency'}}, 
+    'type': {'currency_name': 'AUD Reserve Token', 'currency_symbol': 'AUD', 'display_decimals': 0, 'value_type': 'currency'}}, 
     'users_created': {'aggregate': {'percent_change': 0.0, 'total': 1}, 
     'timeseries': {}, 
     'type': {'display_decimals': 0, 'value_type': 'count'}}, 
-    'users_who_made_purchase': {'aggregate': {'percent_change': None, 'total': 0}, 
-    'timeseries': {}, 
-    'type': {'display_decimals': 0, 'value_type': 'count'}}}}, 
+    'users_who_made_purchase': {'aggregate': {'percent_change': None, 'total': 0}, 'timeseries': {}, 'type': {'display_decimals': 0, 'value_type': 'count'}}}}, 
     'message': 'Successfully Loaded.', 
-    'status': 'success'}
+    'status': 'success'
+    }
 
 base_transfer = {'data': 
     {'transfer_stats': 
