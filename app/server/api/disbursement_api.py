@@ -94,7 +94,8 @@ class MakeDisbursementAPI(MethodView):
         post_data = request.get_json()
 
         # --- Handle Parameters ---
-
+        # HANDLE PARAM : label - Name for the disbursement
+        label = post_data.get('label') or ''
         # HANDLE PARAM : search_stirng - Any search string. An empty string (or None) will just return everything!
         search_string = post_data.get('search_string') or ''
         # HANDLE PARAM : params - Standard filter object. Exact same as the ones Metrics uses!
@@ -121,6 +122,7 @@ class MakeDisbursementAPI(MethodView):
         # --- Build Disbursement Object ---
         d = Disbursement(
             creator_user = g.user,
+            label = label,
             search_string = search_string,
             search_filter_params = encoded_filters,
             include_accounts = include_accounts,

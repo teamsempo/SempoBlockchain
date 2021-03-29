@@ -14,6 +14,7 @@ class Disbursement(ModelBase):
 
     creator_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
 
+    label = db.Column(db.String)
     search_string = db.Column(db.String)
     search_filter_params = db.Column(db.String)
     include_accounts = db.Column(db.ARRAY(db.Integer))
