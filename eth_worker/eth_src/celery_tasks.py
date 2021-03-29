@@ -74,22 +74,22 @@ processor_task_config = {
 #           + kwargs.get('einfo').traceback)
 
 @app.task(**base_task_config)
-def get_third_party_sync_metrics(self):
+def get_third_party_sync_metrics(name=eth_endpoint('get_third_party_sync_metrics'), self):
     return blockchain_sync.get_metrics()
 
 @app.task(**base_task_config)
-def get_failed_block_fetches(self):
+def get_failed_block_fetches(name=eth_endpoint('get_failed_block_fetches'), self):
     return blockchain_sync.get_failed_block_fetches()
 
 @app.task(**base_task_config)
-def get_failed_callbacks(self):
+def get_failed_callbacks(name=eth_endpoint('get_failed_callbacks'),self):
     return blockchain_sync.get_failed_callbacks()
 
-@app.task(**base_task_config)
+@app.task(name=eth_endpoint('force_fetch_block_range'), **base_task_config)
 def force_fetch_block_range(self, filter_address, floor, ceiling):
     return blockchain_sync.force_fetch_block_range(filter_address, floor, ceiling)
 
-@app.task(**base_task_config)
+@app.task(name=eth_endpoint('force_recall_webhook'), **base_task_config)
 def force_recall_webhook(self, transaction_hash):
     return blockchain_sync.force_recall_webhook(transaction_hash)
 
