@@ -237,7 +237,6 @@ workflows:
             branches:
               only:
                 - master
-                - fix-external-tx
 
           requires:
             - build

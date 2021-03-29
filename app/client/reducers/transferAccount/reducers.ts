@@ -21,6 +21,34 @@ import {
   ReclamationCreditTransfer
 } from "../creditTransfer/types";
 
+const initialIdListState: number[] = [];
+
+const IdList = (state = initialIdListState, action: TransferAccountAction) => {
+  switch (action.type) {
+    case TransferAccountActionTypes.UPDATE_TRANSFER_ACCOUNT_ID_LIST:
+      return action.payload;
+    default:
+      return state;
+  }
+};
+
+export interface Pagination {
+  items: number,
+}
+
+const initialPaginationState: Pagination = {
+  items: 0,
+};
+
+const pagination = (state = initialPaginationState, action: TransferAccountAction) => {
+  switch (action.type) {
+    case TransferAccountActionTypes.UPDATE_TRANSFER_ACCOUNT_PAGINATION:
+      return {items: action.payload};
+    default:
+      return state;
+  }
+};
+
 const initialByIdState: TransfersByUserId = {};
 
 const byId = (state = initialByIdState, action: TransferAccountAction) => {
@@ -63,7 +91,7 @@ const byId = (state = initialByIdState, action: TransferAccountAction) => {
 
 interface LoadStatusState {
   isRequesting: boolean;
-  error?: Error | null;
+  error?: Error | null | string;
   success: Boolean;
   lastQueried?: Date | null;
 }
@@ -143,6 +171,8 @@ const selected = (
 
 export const transferAccounts = combineReducers({
   byId,
+  IdList,
+  pagination,
   loadStatus,
   editStatus,
   selected

@@ -17,7 +17,7 @@ import moment from "moment";
 import { USER_FILTER_TYPE, USER_FILTER_ATTRIBUTE } from "../../constants.js";
 
 const propTypes = {
-  possibleFilters: PropTypes.object,
+  possibleFilters: PropTypes.array,
   onFiltersChanged: PropTypes.func,
   visible: PropTypes.bool,
   label: PropTypes.string
