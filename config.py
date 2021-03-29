@@ -5,7 +5,7 @@ env_loglevel = os.environ.get('LOGLEVEL', 'DEBUG')
 logging.basicConfig(level=env_loglevel)
 logg = logging.getLogger(__name__)
 
-VERSION = '1.9.0'  # Remember to bump this in every PR
+VERSION = '1.9.1'  # Remember to bump this in every PR
 
 logg.info('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
@@ -281,6 +281,7 @@ try:
     for chain in CHAIN_NAMES:
         configs = {}
         configs['HTTP_PROVIDER']       = config_parser[chain]['http_provider']
+        configs['BACKUP_HTTP_PROVIDER']= config_parser[chain].get('backup_http_provider') or configs['HTTP_PROVIDER']
         configs['WEBSOCKET_PROVIDER']  = config_parser[chain].get('websocket_provider')
         configs['CHAIN_ID']            = config_parser[chain].get('chain_id')
         configs['EXPLORER_URL']        = (config_parser[chain].get('explorer_url') or 'https://etherscan.io').strip('/')
