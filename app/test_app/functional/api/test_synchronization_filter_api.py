@@ -16,7 +16,7 @@ def test_sync_filter_api(test_client, create_ip_address, complete_admin_auth_tok
         ),
         json={
             'call': 'add_transaction_filter',
-            'contract_address': config.ETH_CONTRACT_ADDRESS,
+            'contract_address': config.CHAINS['ETHEREUM']['CONTRACT_ADDRESS'],
             'contract_type': contract_type,
             'filter_type': filter_type,
             'filter_parameters': filter_parameters
@@ -37,7 +37,7 @@ def test_refetch_block_range_api(test_client, complete_admin_auth_token):
         ),
         json={
             'call': 'refetch_block_range',
-            'filter_address': config.ETH_CONTRACT_ADDRESS,
+            'filter_address': config.CHAINS['ETHEREUM']['CONTRACT_ADDRESS'],
             'floor': '1',
             'ceiling': '100',
         })
