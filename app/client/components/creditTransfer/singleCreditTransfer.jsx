@@ -57,14 +57,6 @@ class SingleCreditTransfer extends React.Component {
         </Tag>
       );
 
-      const timeline = Object.keys(creditTransfer).filter(
-        value =>
-          value.includes("created") ||
-          value.includes("updated") ||
-          value.includes("resolved")
-      );
-      console.log("timeline", timeline);
-
       return (
         <Card
           style={{ marginTop: "16px" }}
@@ -102,11 +94,17 @@ class SingleCreditTransfer extends React.Component {
           }
         >
           <Descriptions title={"Credit Transfer Info"}>
-            {Object.keys(creditTransfer).map(key => (
-              <Descriptions.Item label={toTitleCase(replaceUnderscores(key))}>
-                {creditTransfer[key]}
-              </Descriptions.Item>
-            ))}
+            {Object.keys(creditTransfer).map(key => {
+              if (typeof creditTransfer[key] !== "object") {
+                return (
+                  <Descriptions.Item
+                    label={toTitleCase(replaceUnderscores(key))}
+                  >
+                    {creditTransfer[key]}
+                  </Descriptions.Item>
+                );
+              }
+            })}
           </Descriptions>
         </Card>
       );

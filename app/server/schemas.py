@@ -457,6 +457,21 @@ class AttributeMapSchema(Schema):
     output_name                 = fields.Str()
 
 
+class DisbursementSchema(SchemaBase):
+    recipient_count             = fields.Function(lambda obj: len(obj.transfer_accounts))
+    total_disbursement_amount   = fields.Method('_total_disbursement_amount')
+    state                       = fields.Str()
+    transfer_type               = fields.Str()
+    disbursement_amount         = fields.Int()
+    creator_email               = fields.Method('_creator_email')
+
+    def _total_disbursement_amount(self, obj):
+        return len(obj.transfer_accounts)*obj.disbursement_amount
+
+    def _creator_email(self, obj):
+        return obj.creator_user.email
+
+
 pdf_users_schema = UserSchema(many=True, only=("id", "qr", "first_name", "last_name"))
 
 user_schema = UserSchema(exclude=("qr",
@@ -510,6 +525,8 @@ synchronization_filter_schema = SynchronizationFilterSchema()
 view_credit_transfer_schema = CreditTransferSchema(exclude=(
 "sender_user", "recipient_user", "lat", "lng", "attached_images"))
 view_credit_transfers_schema = CreditTransferSchema(many=True, exclude=(
+"sender_user", "recipient_user", "lat", "lng", "attached_images"))
+view_credit_transfer_schema = CreditTransferSchema(exclude=(
 "sender_user", "recipient_user", "lat", "lng", "attached_images"))
 
 transfer_cards_schema = TransferCardSchema(many=True, exclude=("id", "created"))
@@ -571,3 +588,6 @@ me_credit_transfers_schema = CreditTransferSchema(many=True, exclude=("sender_tr
 me_exchange_schema = ExchangeSchema()
 me_exchanges_schema = ExchangeSchema(many=True)
 
+
+disbursement_schema = DisbursementSchema()
+disbursements_schema = DisbursementSchema(many=True)

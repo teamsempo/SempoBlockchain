@@ -95,18 +95,20 @@ def execute_dataset_import(dataset, header_positions, is_vendor, custom_attribut
             else:
                 db.session.flush()
             percent_complete = ((idx+1)/len(dataset))*100
+
             yield {
                 'message': 'success' if percent_complete == 100 else 'pending',
                 'percent_complete': math.floor(percent_complete),
                 'diagnostics': diagnostics
             }
+
         yield {
             'message': 'success' if percent_complete == 100 else 'pending',
             'percent_complete': math.floor(percent_complete),
             'diagnostics': diagnostics
         }
-class DatasetAPI(MethodView):
 
+class DatasetAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self):
         # get the post data

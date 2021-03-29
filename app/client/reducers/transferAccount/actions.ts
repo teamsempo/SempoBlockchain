@@ -25,6 +25,19 @@ export type SetTransferAccountAction = ActionsUnion<
   typeof SetTransferAccountAction
 >;
 
+export const updateTransferAccountIdList = (IdList: number[]) =>
+  createAction(
+    TransferAccountActionTypes.UPDATE_TRANSFER_ACCOUNT_ID_LIST,
+    IdList
+  );
+
+
+export const updateTransferAccountPagination = (items: number) =>
+  createAction(
+    TransferAccountActionTypes.UPDATE_TRANSFER_ACCOUNT_PAGINATION,
+    items
+  );
+
 export const deepUpdateTransferAccounts = (
   transfer_accounts: TransfersByUserId
 ) =>
@@ -48,9 +61,11 @@ export const updateTransferAccountsCreditTransfers = (
   );
 
 export const TransferAccountAction = {
+  updateTransferAccountIdList,
   deepUpdateTransferAccounts,
   updateTransferAccounts,
-  updateTransferAccountsCreditTransfers
+  updateTransferAccountsCreditTransfers,
+  updateTransferAccountPagination
 };
 
 export type TransferAccountAction = ActionsUnion<typeof TransferAccountAction>;
@@ -69,7 +84,7 @@ export const loadTransferAccountsSuccess = (lastQueried: Date) =>
     lastQueried
   );
 
-export const loadTransferAccountsFailure = (error: any) =>
+export const loadTransferAccountsFailure = (error: string) =>
   createAction(
     LoadTransferAccountActionTypes.LOAD_TRANSFER_ACCOUNTS_FAILURE,
     error

@@ -1,15 +1,17 @@
 import React from "react";
 import { connect } from "react-redux";
 import { ThemeProvider } from "styled-components";
+import { Card } from "antd";
 
 import { PageWrapper, WrapperDiv } from "../styledElements.js";
 import { LightTheme } from "../theme.js";
 
-import TransferAccountListWithFilterWrapper from "../transferAccount/transferAccountListWithFilterWrapper.jsx";
+import StandardTransferAccountList from "../transferAccount/StandardTransferAccountList";
 
 import { LoadTransferAccountAction } from "../../reducers/transferAccount/actions";
 import organizationWrapper from "../organizationWrapper.jsx";
 import NoDataMessage from "../NoDataMessage";
+import QueryConstructor from "../filterModule/queryConstructor";
 
 const mapStateToProps = state => {
   return {
@@ -56,9 +58,6 @@ class TransferAccountListPage extends React.Component {
     if (this.props.transferAccounts.loadStatus.lastQueried) {
       query.updated_after = this.props.transferAccounts.loadStatus.lastQueried;
     }
-
-    const path = null;
-    this.props.loadTransferAccountList(query, path);
   }
 
   render() {
@@ -70,11 +69,17 @@ class TransferAccountListPage extends React.Component {
       );
     }
 
-    let isNoData = Object.keys(transferAccountList).length === 0;
+    const isNoData = Object.keys(transferAccountList).length === 0;
+    const isNotRequesting = !this.props.transferAccounts.loadStatus
+      .isRequesting;
+    const isNotRequestSuccess = !this.props.transferAccounts.loadStatus.success;
+    const isNotNullError =
+      this.props.transferAccounts.loadStatus.error !== null;
 
     if (
       isNoData &&
-      this.props.transferAccounts.loadStatus.isRequesting !== true
+      isNotRequesting &&
+      (isNotRequestSuccess && isNotNullError)
     ) {
       return (
         <PageWrapper>
@@ -87,9 +92,9 @@ class TransferAccountListPage extends React.Component {
       <WrapperDiv>
         <PageWrapper>
           <ThemeProvider theme={LightTheme}>
-            <TransferAccountListWithFilterWrapper
-              transferAccountList={transferAccountList}
-            />
+            <Card title="All Accounts" style={{ margin: "10px" }}>
+              <StandardTransferAccountList />
+            </Card>
           </ThemeProvider>
         </PageWrapper>
       </WrapperDiv>
