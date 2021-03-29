@@ -1,6 +1,6 @@
 import * as React from "react";
 import { connect } from "react-redux";
-import { Modal, Button, InputNumber, Space, Select } from "antd";
+import { Modal, Button, InputNumber, Space, Select, Input } from "antd";
 const { Option } = Select;
 
 import { ReduxState, sempoObjects } from "../../reducers/rootReducer";
@@ -55,6 +55,7 @@ interface ComponentState {
   bulkTransferModalVisible: boolean;
   amount: numberInput;
   transferType: TransferTypes;
+  label: string;
   selectedRowKeys: React.Key[];
   unselectedRowKeys: React.Key[];
   allSelected: boolean;
@@ -111,6 +112,7 @@ class StandardTransferAccountList extends React.Component<
       unselectedRowKeys: [],
       allSelected: false,
       params: "",
+      label: "",
       searchString: "",
       awaitingEditSuccess: false,
       page: 1,
@@ -235,6 +237,7 @@ class StandardTransferAccountList extends React.Component<
     this.props.createBulkTransferRequest({
       disbursement_amount: amount,
       transfer_type: this.state.transferType,
+      label: this.state.label,
       params: this.state.params,
       search_string: this.state.searchString,
       include_accounts: include_accounts,
@@ -244,7 +247,8 @@ class StandardTransferAccountList extends React.Component<
 
   render() {
     const { transferAccounts, bulkTransfers } = this.props;
-    const { importModalVisible, amount } = this.state;
+    const { importModalVisible, amount, label } = this.state;
+
     let numberSet = typeof amount === "number" && amount !== 0;
 
     const actionButtons = [
@@ -325,6 +329,13 @@ class StandardTransferAccountList extends React.Component<
           ]}
         >
           <Space direction="vertical" size="large">
+            <Space>
+              <span>Label: </span>
+              <Input
+                placeholder="Untitled"
+                onChange={e => this.setState({ label: e.target.value })}
+              />
+            </Space>
             <Space>
               <span>Transfer Type: </span>
               <Select
