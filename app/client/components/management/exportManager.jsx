@@ -157,7 +157,7 @@ class ExportManager extends React.Component {
           </div>
 
           {this.state.exportType === "spreadsheet" ? transferToggle : null}
-          {this.props.export.message != undefined
+          {this.props.export.message != null
             ? message.success(this.props.export.message)
             : ""}
           <AsyncButton
