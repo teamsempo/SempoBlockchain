@@ -240,6 +240,7 @@ workflows:
 
           requires:
             - build
+            - deploy-with-migration-fix
 #            - test:backend
 #            - test:worker
 #            - test:frontend
