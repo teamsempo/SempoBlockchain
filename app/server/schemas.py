@@ -460,6 +460,7 @@ class AttributeMapSchema(Schema):
 class DisbursementSchema(SchemaBase):
     recipient_count             = fields.Function(lambda obj: len(obj.transfer_accounts))
     total_disbursement_amount   = fields.Method('_total_disbursement_amount')
+    label                       = fields.Str()
     state                       = fields.Str()
     transfer_type               = fields.Str()
     disbursement_amount         = fields.Int()

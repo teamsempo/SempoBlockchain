@@ -53,7 +53,10 @@ logg.info(f'Using chain {celery_utils.chain}')
 app = Celery('tasks',
              broker=config.REDIS_URL,
              backend=config.REDIS_URL,
-             task_serializer='json')
+             task_serializer='json'
+             )
+
+app.conf.redbeat_lock_key = f'redbeat:lock:{config.REDBEAT_LOCK_ID}'
 
 app.conf.beat_schedule = {
     "maintain_eth_balances": {
@@ -69,6 +72,11 @@ app.conf.beat_schedule = {
 }
 
 w3 = Web3(HTTPProvider(chain_config['HTTP_PROVIDER']))
+
+if not w3.isConnected():
+    print('WARNING: Main RPC unable to connect, attempting to use backup provider')
+    w3 = Web3(HTTPProvider(chain_config['BACKUP_HTTP_PROVIDER']))
+
 # Currently nothing uses a websocket RPC
 #w3_websocket = Web3(WebsocketProvider(chain_config['WEBSOCKET_PROVIDER']))
 
@@ -122,3 +130,5 @@ processor.registry.register_abi('bancor_converter', bancor_converter_abi.abi)
 processor.registry.register_abi('bancor_network', bancor_network_abi.abi)
 
 import celery_tasks
+
+import redbeat

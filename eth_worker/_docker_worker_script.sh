@@ -32,16 +32,16 @@ else
     cd eth_src
     if [ "$CONTAINER_TYPE" == 'BEAT' ]; then
         echo "Starting Beat Worker"
-        celery -A celery_app beat -S redbeat.RedBeatScheduler --loglevel=WARNING
+        celery beat -A celery_app -S redbeat.RedBeatScheduler --loglevel=DEBUG
     elif [ "$CONTAINER_TYPE" == 'FLOWER' ]; then
         echo "Starting Flower Worker"
         flower -A celery_app --port=5555
     elif [ "$CONTAINER_TYPE" == 'PROCESSOR' ]; then
         echo "Starting Processor Worker"
-        celery -A celery_app worker --loglevel=INFO --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=processor --without-gossip --without-mingle
+        celery worker -A celery_app --loglevel=INFO --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=processor --without-gossip --without-mingle
     elif [ "$CONTAINER_TYPE" == 'LOW_PRIORITY_WORKER' ]; then
         echo "Starting Low Priority Worker"
-        celery -A celery_app worker --loglevel=INFO --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=low-priority,celery --without-gossip --without-mingle
+        celery worker -A celery_app --loglevel=INFO --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=low-priority,celery --without-gossip --without-mingle
     elif [ "$CONTAINER_TYPE" == 'HIGH_PRIORITY_WORKER' ]; then
         echo "Starting High Priority Worker"
         cd ../

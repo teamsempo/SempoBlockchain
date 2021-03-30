@@ -116,7 +116,7 @@ const columns: ColumnsType<TransferAccount> = [
   {
     title: "Created",
     key: "created",
-    render: (text: any, record: any) => <DateTime created={record.created} />
+    render: (text: any, record: any) => <DateTime created={record.created} useRelativeTime={false} />
   },
   {
     title: "Balance",
@@ -347,6 +347,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
               defaultPageSize={10}
               total={this.props.paginationOptions.items}
               onChange={this.props.paginationOptions.onChange}
+              showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
             />
             : <></>
           }
