@@ -306,7 +306,7 @@ def _get_or_create_model_object(obj_class: db.Model, filter_kwargs: dict, **kwar
 
 
 def create_dev_data(organisation_id, data_size):
-    app = create_app()
+    app = create_app(skip_create_filters=True)
     ctx = app.app_context()
     ctx.push()
 

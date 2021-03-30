@@ -77,6 +77,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     recipient_transfer_account_id    = db.Column(db.Integer, db.ForeignKey("transfer_account.id"), index=True)
     recipient_transfer_account          = db.relationship('TransferAccount', foreign_keys=[recipient_transfer_account_id], back_populates='credit_receives', lazy='joined')
 
+    received_third_party_sync = db.Column(db.Boolean, default=False)
+    
     sender_blockchain_address_id    = db.Column(db.Integer, db.ForeignKey("blockchain_address.id"), index=True)
     recipient_blockchain_address_id = db.Column(db.Integer, db.ForeignKey("blockchain_address.id"), index=True)
 

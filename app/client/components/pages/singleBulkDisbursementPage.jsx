@@ -79,6 +79,7 @@ class SingleBulkDisbursementPage extends React.Component {
     let status = bulkItem && bulkItem.state;
     let transferType = bulkItem && bulkItem.transfer_type;
     let createdBy = bulkItem && bulkItem.creator_email;
+    let label = bulkItem && bulkItem.label;
 
     let tag;
     let info;
@@ -102,7 +103,14 @@ class SingleBulkDisbursementPage extends React.Component {
     return (
       <WrapperDiv>
         <PageWrapper>
-          <Card title={`Bulk Transfer ${bulkId}`} style={{ margin: "10px" }}>
+          <Card
+            title={label || `Bulk Transfer ${bulkId}`}
+            style={{ margin: "10px" }}
+          >
+            <p>
+              {" "}
+              <b>ID:</b> {bulkId || " "}
+            </p>
             <p>
               {" "}
               <b>Created by:</b> {createdBy || " "}

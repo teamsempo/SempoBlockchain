@@ -1,6 +1,6 @@
 import React from "react";
 import { connect } from "react-redux";
-import { Select } from "antd";
+import { Select, message } from "antd";
 const { Option } = Select;
 
 import AsyncButton from "../AsyncButton.jsx";
@@ -157,7 +157,9 @@ class ExportManager extends React.Component {
           </div>
 
           {this.state.exportType === "spreadsheet" ? transferToggle : null}
-
+          {this.props.export.message != undefined
+            ? message.success(this.props.export.message)
+            : ""}
           <AsyncButton
             onClick={() => this.attemptNewExport()}
             isLoading={this.props.export.isRequesting}
@@ -166,15 +168,6 @@ class ExportManager extends React.Component {
             label={"Export"}
           />
           <ErrorMessage>{this.props.export.error}</ErrorMessage>
-          <a
-            href={this.props.export.file_url}
-            target="_blank"
-            style={{
-              display: this.props.export.file_url === null ? "none" : ""
-            }}
-          >
-            Didn't automatically download?
-          </a>
         </div>
       </div>
     );

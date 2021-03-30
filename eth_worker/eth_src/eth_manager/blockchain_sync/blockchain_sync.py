@@ -87,17 +87,16 @@ class BlockchainSyncer(object):
             )
         for event in transaction_history:
             self.handle_event(event, filter)
+        return 'Success'
 
     # Processes newly found transaction event
     # Creates database object for transaction
     # Calls webhook
     # Sets sync status (whether or not webhook was successful)
-    # Fallback if something goes wrong at this level: `is_synchronized_with_app` flag. Can batch unsynced stuff
     def handle_event(self, transaction, filter):
-        # Check if transaction already exists (I.e. already synchronized, or first party transactions)
         transaction_object = self.persistence.get_transaction(hash=transaction.transactionHash.hex())
-        if transaction_object and transaction_object.is_synchronized_with_app:
-            return True
+        # If transaction doesn't exist, make it. Even if it does exist, and it's synchronized via first-party sync
+        # we still want to send it with third-party (here) as insurance that tx sync is running correctly.
         if not transaction_object:
             transaction_object = self.persistence.create_external_transaction(
                 status = 'SUCCESS',
@@ -165,6 +164,35 @@ class BlockchainSyncer(object):
                 filter_type, decimals,
                 block_epoch=epoch
             )
+
+    def get_metrics(self):
+        return self.persistence.get_transaction_sync_metrics()
+
+    def get_failed_block_fetches(self):
+        return self.persistence.get_failed_block_fetches()
+
+    def get_failed_callbacks(self):
+        return self.persistence.get_failed_callbacks()
+
+    def force_fetch_block_range(self, filter_address, floor, ceiling):
+        filter = self.persistence.get_synchronization_filter_by_address(filter_address)
+        if not filter:
+            raise Exception(f'{filter_address} does not have an active transaction sync filter')
+        return self.process_chunk(filter, floor, ceiling)
+
+    def force_recall_webhook(self, transaction_hash):
+        transaction = self.persistence.get_transaction_by_hash(transaction_hash)
+        if transaction:
+            webook_resp = self.call_webhook(transaction)
+            # Transactions which we fetched, but couldn't sync for whatever reason won't be marked as completed
+            # in order to be retryable later
+            if webook_resp.ok:
+                self.persistence.mark_transaction_as_completed(transaction)
+                return 'Success'
+            else:
+                raise Exception(f'Force recall webook failed for {transaction_hash}')
+        else:
+            return f'Transaction {transaction_hash} not found!'
 
     def __init__(self, w3, red, persistence):
         self.w3 = w3

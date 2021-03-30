@@ -443,7 +443,7 @@ def external_reserve_token(test_client, init_database, loaded_master_wallet_addr
 
 @pytest.fixture(scope='module')
 def test_request_context():
-    flask_app = create_app()
+    flask_app = create_app(skip_create_filters=True)
 
     # can be used in combination with the WITH statement to activate a request context temporarily.
     # with this you can access the request, g and session objects in view functions
@@ -452,7 +452,7 @@ def test_request_context():
 
 @pytest.fixture(scope='module')
 def test_client():
-    flask_app = create_app()
+    flask_app = create_app(skip_create_filters=True)
 
     # Flask provides a way to test your application by exposing the Werkzeug test Client
     # and handling the context locals for you.

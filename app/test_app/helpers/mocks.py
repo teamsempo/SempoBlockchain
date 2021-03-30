@@ -143,6 +143,26 @@ class MockBlockchainTasker(object):
         return MockBlockchainTasker._generic_task()
 
     @staticmethod
+    def get_third_party_sync_metrics(*args, **kwargs):
+        return MockBlockchainTasker._generic_task()
+
+    @staticmethod
+    def get_failed_block_fetches(*args, **kwargs):
+        return MockBlockchainTasker._generic_task()
+
+    @staticmethod
+    def get_failed_callbacks(*args, **kwargs):
+        return MockBlockchainTasker._generic_task()
+
+    @staticmethod
+    def force_fetch_block_range(*args, **kwargs):
+        return MockBlockchainTasker._generic_task()
+
+    @staticmethod
+    def force_recall_webhook(*args, **kwargs):
+        return MockBlockchainTasker._generic_task()
+
+    @staticmethod
     def _generic_task():
         return str(uuid.uuid4())
 
