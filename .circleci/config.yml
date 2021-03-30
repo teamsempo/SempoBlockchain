@@ -237,10 +237,10 @@ workflows:
             branches:
               only:
                 - master
+                - deploy-with-migration-fix
 
           requires:
             - build
-            - deploy-with-migration-fix
 #            - test:backend
 #            - test:worker
 #            - test:frontend
