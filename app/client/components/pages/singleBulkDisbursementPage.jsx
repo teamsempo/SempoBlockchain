@@ -8,10 +8,13 @@ import organizationWrapper from "../organizationWrapper.jsx";
 import { apiActions } from "../../genericState";
 import { sempoObjects } from "../../reducers/rootReducer";
 import { formatMoney, getActiveToken, toCurrency } from "../../utils";
+import QueryConstructor from "../filterModule/queryConstructor";
+import TransferAccountList from "../transferAccount/TransferAccountList";
 
 const mapStateToProps = state => ({
   bulkTransfers: state.bulkTransfers,
-  activeToken: getActiveToken(state)
+  activeToken: getActiveToken(state),
+  transferAccounts: state.transferAccounts
 });
 
 const mapDispatchToProps = dispatch => {
@@ -153,6 +156,27 @@ class SingleBulkDisbursementPage extends React.Component {
             </Space>
 
             {info}
+          </Card>
+          <Card
+            title="Included Accounts (not editable)"
+            style={{ margin: "10px" }}
+          >
+            <QueryConstructor
+              onQueryChange={query => {}}
+              filterObject="user"
+              providedParams={bulkItem && bulkItem.search_filter_params}
+              providedSearchString={bulkItem && bulkItem.search_string}
+              disabled={true}
+            />
+            <TransferAccountList
+              orderedTransferAccounts={this.props.transferAccounts.IdList}
+              disabled={true}
+              actionButtons={[]}
+              noneSelectedbuttons={[]}
+              onSelectChange={(s, u, a) => {}}
+              providedSelectedRowKeys={bulkItem && bulkItem.include_accounts}
+              providedUnselectedRowKeys={bulkItem && bulkItem.exclude_accounts}
+            />
           </Card>
         </PageWrapper>
       </WrapperDiv>
