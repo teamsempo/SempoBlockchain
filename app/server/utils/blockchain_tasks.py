@@ -77,6 +77,21 @@ class BlockchainTasker(object):
     def force_third_party_transaction_sync(self):
         return task_runner.delay_task(self._eth_endpoint('synchronize_third_party_transactions'), queue='low-priority').id
 
+    def force_fetch_block_range(self, filter_address, floor, ceiling):
+        return self._execute_synchronous_celery(self._eth_endpoint('force_fetch_block_range'), { 'filter_address': filter_address, 'floor': floor, 'ceiling': ceiling })
+
+    def force_recall_webhook(self, transaction_hash):
+        return self._execute_synchronous_celery(self._eth_endpoint('force_recall_webhook'), { 'transaction_hash': transaction_hash })
+
+    def get_third_party_sync_metrics(self):
+        return self._execute_synchronous_celery(self._eth_endpoint('get_third_party_sync_metrics'), {})
+
+    def get_failed_block_fetches(self):
+        return self._execute_synchronous_celery(self._eth_endpoint('get_failed_block_fetches'), {})
+
+    def get_failed_callbacks(self):
+        return self._execute_synchronous_celery(self._eth_endpoint('get_failed_callbacks'), {})
+
     def get_blockchain_task(self, task_uuid):
         """
         Used to check the status of a blockchain task

@@ -14,7 +14,7 @@ CONFIG_DIR = os.path.abspath(RELATIVE_CONFIG_DIR)
 
 # ENV_DEPLOYMENT_NAME: dev, 'acmecorp-prod' etc
 ENV_DEPLOYMENT_NAME = os.environ.get('DEPLOYMENT_NAME') or 'local'
-BUILD_HASH = os.environ.get('GIT_HASH') or 'null'
+BUILD_HASH = os.environ.get('GIT_HASH') or 'None'
 
 logg.info('ENV_DEPLOYMENT_NAME: ' + ENV_DEPLOYMENT_NAME)
 logg.info('with BUILD_HASH: ' + BUILD_HASH)
@@ -133,11 +133,16 @@ MOBILE_VERSION = config_parser['APP']['MOBILE_VERSION']
 SEMPOADMIN_EMAILS = config_parser['APP'].get('sempoadmin_emails', '').split(',')
 DEFAULT_COUNTRY = config_parser['APP'].get('default_country')
 ALLOW_SELF_SIGN_UP = config_parser['APP'].getboolean('ALLOW_SELF_SIGN_UP') or False
+VERIFY_THIRD_PARTY_SYNC = config_parser['APP'].getboolean('verify_third_party_sync', True)
+THIRD_PARTY_SYNC_ERROR_DETECTION_GRACE_PERIOD = int(config_parser['APP'].get('third_party_sync_error_detection_grace_period', 1800))
+THIRD_PARTY_SYNC_ERROR_DETECTION_INTERVAL = int(config_parser['APP'].get('third_party_sync_error_detection_interval', 120))
+
 METRICS_CACHE_TIMEOUT = config_parser['APP'].getint('METRICS_CACHE_TIMEOUT', 604800) # 604800 seconds == 1 week
 FORGIVING_DEDUCT = config_parser['APP'].getboolean('FORGIVING_DEDUCT') or False
 SUPPORT_SIG_VALIDATION = config_parser['APP'].getboolean('SUPPORT_SIG_VALIDATION') or True
 
 THIRD_PARTY_SYNC_EPOCH = config_parser['APP'].get('THIRD_PARTY_SYNC_EPOCH', 'latest')
+THIRD_PARTY_SYNC_CHECK_PERIOD_SECONDS = int(config_parser['APP'].get('THIRD_PARTY_SYNC_CHECK_PERIOD_SECONDS', '60'))
 
 SINGLE_USE_TOKEN_EXPIRATION      = 60 * 60 * 24 * 1
 AUTH_TOKEN_EXPIRATION = int(config_parser['APP'].getboolean('AUTH_TOKEN_EXPIRATION', 60 * 60 * 24 * 7))  # 1 week
@@ -157,6 +162,8 @@ BASIC_AUTH_CREDENTIALS = {
 }
 
 REDIS_URL = 'redis://' + config_parser['REDIS']['URI']
+# Allows us to manually cycle the redbeat lock in the case of a bad shutdown without needing to directly modify redis
+REDBEAT_LOCK_ID = os.environ.get('REDBEAT_LOCK_ID', '1')
 
 DATABASE_USER = os.environ.get("DATABASE_USER") or secrets_parser['DATABASE'].get('user') \
                 or '{}_{}'.format(common_secrets_parser['DATABASE']['user'], DEPLOYMENT_NAME.replace("-", "_"))

@@ -53,7 +53,10 @@ logg.info(f'Using chain {celery_utils.chain}')
 app = Celery('tasks',
              broker=config.REDIS_URL,
              backend=config.REDIS_URL,
-             task_serializer='json')
+             task_serializer='json'
+             )
+
+app.conf.redbeat_lock_key = f'redbeat:lock:{config.REDBEAT_LOCK_ID}'
 
 app.conf.beat_schedule = {
     "maintain_eth_balances": {
@@ -127,3 +130,5 @@ processor.registry.register_abi('bancor_converter', bancor_converter_abi.abi)
 processor.registry.register_abi('bancor_network', bancor_network_abi.abi)
 
 import celery_tasks
+
+import redbeat
