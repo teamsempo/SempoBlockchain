@@ -1,6 +1,7 @@
 import datetime
 from typing import Tuple
 from sqlalchemy import and_, or_
+from sqlalchemy.sql import func
 
 from sempo_types import UUID, UUIDList
 
@@ -489,6 +490,9 @@ class SQLPersistenceInterface(object):
         self.session.commit()
         return transaction
 
+    def get_transaction_by_hash(self, hash):
+        return self.session.query(BlockchainTransaction).filter(BlockchainTransaction.hash == hash).first()
+
     def create_new_blockchain_wallet(self, wei_target_balance=0, wei_topup_threshold=0, private_key=None):
 
         if private_key:
@@ -532,6 +536,75 @@ class SQLPersistenceInterface(object):
             return False
         return filter
 
+    def get_transaction_sync_metrics(self):
+        def __query_tuple_list_to_dict__(result):
+            return { key: value for (key, value) in result }
+
+        unsynchronized_transaction_count = self.session.query(
+            BlockchainTransaction.contract_address, func.count(BlockchainTransaction.id))\
+            .group_by(BlockchainTransaction.contract_address)\
+            .filter(BlockchainTransaction.is_synchronized_with_app == False)\
+            .all()
+
+        synchronized_transaction_count = self.session.query(
+            BlockchainTransaction.contract_address, func.count(BlockchainTransaction.id))\
+            .group_by(BlockchainTransaction.contract_address)\
+            .filter(BlockchainTransaction.is_synchronized_with_app == True)\
+            .all()
+
+        unsynchronized_block_count = self.session.query(
+            SynchronizationFilter.contract_address, func.count(SynchronizedBlock.id))\
+            .group_by(SynchronizationFilter.contract_address)\
+            .filter(SynchronizedBlock.status != 'SUCCESS')\
+            .join(SynchronizationFilter)\
+            .all()
+
+        synchronized_block_count = self.session.query(
+            SynchronizationFilter.contract_address, func.count(SynchronizedBlock.id))\
+            .group_by(SynchronizationFilter.contract_address)\
+            .filter(SynchronizedBlock.status == 'SUCCESS')\
+            .join(SynchronizationFilter)\
+            .all()
+
+        max_synchronized_blocks = self.session.query(SynchronizationFilter.contract_address, SynchronizationFilter.max_block).all()
+        
+        last_time_synchronized = self.session.query(SynchronizationFilter.contract_address, SynchronizationFilter.updated).all()
+
+        return {
+            'unsynchronized_transaction_count': __query_tuple_list_to_dict__(unsynchronized_transaction_count),
+            'synchronized_transaction_count': __query_tuple_list_to_dict__(synchronized_transaction_count),
+            'unsynchronized_block_count': __query_tuple_list_to_dict__(unsynchronized_block_count),
+            'synchronized_block_count': __query_tuple_list_to_dict__(synchronized_block_count),
+            'max_synchronized_blocks': __query_tuple_list_to_dict__(max_synchronized_blocks),
+            'last_time_synchronized': __query_tuple_list_to_dict__(last_time_synchronized)
+        }
+        
+    # Utility function for get_failed_block_fetches and get_failed_callbacks
+    def __aggregate_tuple_list__(self, response):
+        result = {}
+        for address, hash in response:
+            if hash:
+                if address in result:
+                    result[address].append(hash)
+                else:
+                    result[address] = [hash]
+        return result
+
+    def get_failed_block_fetches(self):
+        failed_block_fetches = self.session.query(
+            SynchronizationFilter.contract_address, SynchronizedBlock.block_number)\
+            .filter(SynchronizedBlock.status != 'SUCCESS')\
+            .join(SynchronizationFilter)\
+            .all()
+        return self.__aggregate_tuple_list__(failed_block_fetches)
+
+    def get_failed_callbacks(self):
+        failed_callbacks = self.session.query(
+            BlockchainTransaction.contract_address, BlockchainTransaction.hash)\
+            .filter(BlockchainTransaction.is_synchronized_with_app == False)\
+            .all()
+        return self.__aggregate_tuple_list__(failed_callbacks)
+
     def add_transaction_filter(self, contract_address, contract_type, filter_parameters, filter_type, decimals, block_epoch):
         filter = SynchronizationFilter(contract_address=contract_address, contract_type=contract_type, filter_parameters=filter_parameters, max_block=block_epoch, filter_type=filter_type, decimals=decimals)
         self.session.add(filter)
@@ -544,8 +617,11 @@ class SQLPersistenceInterface(object):
         self.session.commit()
         return True
 
-    def get_synchronization_filter(self, filter_id):
+    def get_synchronization_filter_by_id(self, filter_id):
         return self.session.query(SynchronizationFilter).filter(SynchronizationFilter.id == filter_id).first()
+
+    def get_synchronization_filter_by_address(self, address):
+        return self.session.query(SynchronizationFilter).filter(SynchronizationFilter.contract_address == address).first()
 
     def get_all_synchronization_filters(self):
         return self.session.query(SynchronizationFilter).all()

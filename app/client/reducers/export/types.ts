@@ -15,7 +15,7 @@ export interface ExportPayload {
 }
 
 export interface ExportSuccessPayload {
-  file_url?: string;
+  message?: string;
 }
 
 export enum ExportActionTypes {

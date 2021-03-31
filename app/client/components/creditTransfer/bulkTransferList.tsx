@@ -26,6 +26,7 @@ interface OuterProps {}
 interface ComponentState {}
 
 export interface BulkTransfer {
+  label: string;
   key: number;
   disbursement_amount: number;
   recipient_count: number;
@@ -49,14 +50,21 @@ const columns: ColumnsType<BulkTransfer> = [
           fontWeight: 400
         }}
       >
-        {`Bulk Transfer #${record.key}`}
+        {`${record.key}`}
       </Link>
     )
   },
   {
+    title: "Label",
+    key: "Label",
+    render: (text: any, record: any) => record.label
+  },
+  {
     title: "Created",
     key: "created",
-    render: (text: any, record: any) => <DateTime created={record.created} />
+    render: (text: any, record: any) => (
+      <DateTime created={record.created} useRelativeTime={false} />
+    )
   },
   {
     title: "Recipient Count",
@@ -130,6 +138,7 @@ class BulkTransferList extends React.Component<Props, ComponentState> {
 
         return {
           key: id,
+          label: bulkTransfer.label,
           disbursement_amount: bulkTransfer.disbursement_amount,
           recipient_count: bulkTransfer.recipient_count,
           state: bulkTransfer.state,

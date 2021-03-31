@@ -8,10 +8,13 @@ import organizationWrapper from "../organizationWrapper.jsx";
 import { apiActions } from "../../genericState";
 import { sempoObjects } from "../../reducers/rootReducer";
 import { formatMoney, getActiveToken, toCurrency } from "../../utils";
+import QueryConstructor from "../filterModule/queryConstructor";
+import TransferAccountList from "../transferAccount/TransferAccountList";
 
 const mapStateToProps = state => ({
   bulkTransfers: state.bulkTransfers,
-  activeToken: getActiveToken(state)
+  activeToken: getActiveToken(state),
+  transferAccounts: state.transferAccounts
 });
 
 const mapDispatchToProps = dispatch => {
@@ -76,6 +79,7 @@ class SingleBulkDisbursementPage extends React.Component {
     let status = bulkItem && bulkItem.state;
     let transferType = bulkItem && bulkItem.transfer_type;
     let createdBy = bulkItem && bulkItem.creator_email;
+    let label = bulkItem && bulkItem.label;
 
     let tag;
     let info;
@@ -99,7 +103,14 @@ class SingleBulkDisbursementPage extends React.Component {
     return (
       <WrapperDiv>
         <PageWrapper>
-          <Card title={`Bulk Transfer ${bulkId}`} style={{ margin: "10px" }}>
+          <Card
+            title={label || `Bulk Transfer ${bulkId}`}
+            style={{ margin: "10px" }}
+          >
+            <p>
+              {" "}
+              <b>ID:</b> {bulkId || " "}
+            </p>
             <p>
               {" "}
               <b>Created by:</b> {createdBy || " "}
@@ -145,6 +156,27 @@ class SingleBulkDisbursementPage extends React.Component {
             </Space>
 
             {info}
+          </Card>
+          <Card
+            title="Included Accounts (not editable)"
+            style={{ margin: "10px" }}
+          >
+            <QueryConstructor
+              onQueryChange={query => {}}
+              filterObject="user"
+              providedParams={bulkItem && bulkItem.search_filter_params}
+              providedSearchString={bulkItem && bulkItem.search_string}
+              disabled={true}
+            />
+            <TransferAccountList
+              orderedTransferAccounts={this.props.transferAccounts.IdList}
+              disabled={true}
+              actionButtons={[]}
+              noneSelectedbuttons={[]}
+              onSelectChange={(s, u, a) => {}}
+              providedSelectedRowKeys={bulkItem && bulkItem.include_accounts}
+              providedUnselectedRowKeys={bulkItem && bulkItem.exclude_accounts}
+            />
           </Card>
         </PageWrapper>
       </WrapperDiv>

@@ -24,6 +24,8 @@ from eth_utils import to_checksum_address
 import sys
 import os
 from web3 import Web3, HTTPProvider
+import atexit
+from apscheduler.schedulers.background import BackgroundScheduler
 
 from server.sempo_types import ExecutorJobList
 
@@ -53,7 +55,7 @@ class ExtendedJSONEncoder(json.JSONEncoder):
 
         return json.JSONEncoder.default(self, obj)
 
-def create_app():
+def create_app(skip_create_filters = False):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
 
@@ -73,20 +75,21 @@ def create_app():
 
     app.json_encoder = ExtendedJSONEncoder
 
-    # On app start, we send token addresses to the worker
-    try:
-        with app.app_context():
-            from server.utils.synchronization_filter import add_transaction_filter
-            from server.models.token import Token
-            tokens = db.session.query(Token)
-            for t in tokens:
-                print(f'Creating transaction filter for {t.address}')
-                if t.address:
-                    add_transaction_filter(t.address, 'ERC20', None, 'TRANSFER', decimals = t.decimals, block_epoch = config.THIRD_PARTY_SYNC_EPOCH)
-    except:
-        print('Unable to automatically create filters')
-    
+    if not skip_create_filters:
+        # On app start, we send token addresses to the worker
+        try:
+            with app.app_context():
+                from server.utils.synchronization_filter import add_transaction_filter
+                from server.models.token import Token
+                tokens = db.session.query(Token)
+                for t in tokens:
+                    print(f'Creating transaction filter for {t.address}')
+                    if t.address:
+                        add_transaction_filter(t.address, 'ERC20', None, 'TRANSFER', decimals = t.decimals, block_epoch = config.THIRD_PARTY_SYNC_EPOCH)
+        except:
+            print('Unable to automatically create filters')
     return app
+
 
 def register_extensions(app):
     db.init_app(app)
@@ -343,3 +346,17 @@ mt = MiscTasker()
 
 from server.utils.ussd.ussd_tasks import UssdTasker
 ussd_tasker = UssdTasker()
+
+if config.VERIFY_THIRD_PARTY_SYNC:
+    print('Launching transaction sync checker scheduler')
+    try:
+        from server.utils.credit_transfer import check_recent_transaction_sync_status
+        interval_time = config.THIRD_PARTY_SYNC_ERROR_DETECTION_INTERVAL
+        time_to_error = config.THIRD_PARTY_SYNC_ERROR_DETECTION_GRACE_PERIOD
+        scheduler = BackgroundScheduler()
+        scheduler.add_job(func=check_recent_transaction_sync_status, trigger="interval", seconds=interval_time, args=[interval_time, time_to_error])
+        scheduler.start()
+        # Shut down the scheduler when exiting the app
+        atexit.register(lambda: scheduler.shutdown())
+    except:
+            print('Unable to launch scheduler')

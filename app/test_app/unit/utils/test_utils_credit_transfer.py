@@ -1,5 +1,8 @@
+from datetime import datetime, timedelta
 import pytest
 from server.utils import credit_transfer as CreditTransferUtils
+from server import db
+from server.utils.transfer_enums import BlockchainStatus
 from server.exceptions import (
     UserNotFoundError,
     NoTransferAccountError,
@@ -61,3 +64,37 @@ def test_make_payment_transfer_error(test_client, init_database, create_transfer
             require_recipient_approved=require_recipient_approved,
             require_sufficient_balance=require_sufficient_balance,
         )
+
+def test_check_recent_transaction_sync_status(new_credit_transfer):
+    interval_time = 60
+    time_to_error = 600
+
+    # Create conditions to fail
+    # Place new transfer in rolling time window where it should fail
+    new_credit_transfer.updated = datetime.utcnow() - timedelta(seconds=630)
+    new_credit_transfer.blockchain_status = BlockchainStatus.SUCCESS
+    new_credit_transfer.received_third_party_sync = False
+    db.session.commit()
+    with pytest.raises(Exception):
+        CreditTransferUtils._check_recent_transaction_sync_status(interval_time, time_to_error)
+
+    # Don't fail becasue it's before the time window
+    new_credit_transfer.updated = datetime.utcnow() - timedelta(seconds=300)
+    new_credit_transfer.blockchain_status = BlockchainStatus.SUCCESS
+    new_credit_transfer.received_third_party_sync = False
+    db.session.commit()
+    assert CreditTransferUtils._check_recent_transaction_sync_status(interval_time, time_to_error) == []
+
+    # Don't fail because third party sync DID work!
+    new_credit_transfer.updated = datetime.utcnow() - timedelta(seconds=630)
+    new_credit_transfer.blockchain_status = BlockchainStatus.SUCCESS
+    new_credit_transfer.received_third_party_sync = True
+    db.session.commit()
+    assert CreditTransferUtils._check_recent_transaction_sync_status(interval_time, time_to_error) == []
+
+    # Don't fail because the first party sync didn't return a SUCCESS yet
+    new_credit_transfer.updated = datetime.utcnow() - timedelta(seconds=630)
+    new_credit_transfer.blockchain_status = BlockchainStatus.PENDING
+    new_credit_transfer.received_third_party_sync = False
+    db.session.commit()
+    assert CreditTransferUtils._check_recent_transaction_sync_status(interval_time, time_to_error) == []
