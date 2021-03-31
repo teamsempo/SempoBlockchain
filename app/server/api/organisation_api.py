@@ -126,9 +126,9 @@ class OrganisationAPI(MethodView):
             if at not in ASSIGNABLE_TIERS.keys():
                 raise Exception(f'{at} not an assignable role')
 
-        if organisation_name is None or token_id is None or country_code is None or timezone is None:
+        if organisation_name is None or country_code is None or timezone is None:
             return make_response(
-                jsonify({'message': 'Must provide organisation_name, token_id, country_code and timezone to create organisation.'})), 400
+                jsonify({'message': 'Must provide organisation_name, country_code and timezone to create organisation.'})), 400
 
         existing_organisation = Organisation.query.filter_by(name=organisation_name).execution_options(
             show_all=True).first()

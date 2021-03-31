@@ -56,7 +56,7 @@ class Organisation(ModelBase):
         secondary=organisation_association_table,
         back_populates="organisations")
 
-    token_id            = db.Column(db.Integer, db.ForeignKey('token.id'), nullable=False)
+    token_id            = db.Column(db.Integer, db.ForeignKey('token.id'))
 
     org_level_transfer_account_id = db.Column(db.Integer,
                                                 db.ForeignKey('transfer_account.id',
