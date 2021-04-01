@@ -1,6 +1,7 @@
 import datetime
 from typing import List
 from decimal import Decimal
+import time 
 
 from sqlalchemy.dialects.postgresql import JSON, JSONB
 from flask import current_app, g
@@ -17,6 +18,7 @@ from server.models.token import Token
 from server.models.transfer_account import TransferAccount
 from server.utils.access_control import AccessControl
 from server.utils.metrics.metrics_cache import clear_metrics_cache
+from server.utils.executor import standard_executor_job, add_after_request_executor_job
 
 from server.exceptions import (
     TransferLimitError,
@@ -303,10 +305,21 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         if message:
             self.add_message(message)
 
+    @standard_executor_job
+    def async_update_balances(self):
+        # Sleep for 1s to make sure simultaneous transactions can resolve
+        time.sleep(1)
+        from server.models.transfer_account import TransferAccount
+        sender = db.session.query(TransferAccount).filter(TransferAccount.id == self.sender_transfer_account_id).first()
+        recipient = db.session.query(TransferAccount).filter(TransferAccount.id == self.recipient_transfer_account_id).first()
+        sender.update_balance()
+        recipient.update_balance()
+        db.session.commit()
+
     def update_balances(self):
         self.sender_transfer_account.update_balance()
         self.recipient_transfer_account.update_balance()
-
+        add_after_request_executor_job(self.async_update_balances, [self])
 
     def get_transfer_limits(self):
         from server.utils.transfer_limits import (LIMIT_IMPLEMENTATIONS, get_applicable_transfer_limits)
