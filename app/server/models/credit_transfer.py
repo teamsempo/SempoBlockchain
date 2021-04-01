@@ -312,8 +312,10 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         from server.models.transfer_account import TransferAccount
         sender = db.session.query(TransferAccount).filter(TransferAccount.id == self.sender_transfer_account_id).first()
         recipient = db.session.query(TransferAccount).filter(TransferAccount.id == self.recipient_transfer_account_id).first()
-        sender.update_balance()
-        recipient.update_balance()
+        if sender:
+            sender.update_balance()
+        if recipient:
+            recipient.update_balance()
         db.session.commit()
 
     def update_balances(self):
