@@ -165,7 +165,7 @@ def test_get_credit_transfer(test_client, complete_admin_auth_token, create_cred
         assert isinstance(response.json['data']['credit_transfers'], list)
 
 
-def test_credit_transfer_internal_callback(mocker, test_client, authed_sempo_admin_user, create_organisation):
+def test_credit_transfer_internal_callback(mocker, test_client, authed_sempo_admin_user, create_organisation, new_credit_transfer):
     # For this, we want to test 5 permutations of third-party transactions to add:
     # 1. Existing User A -> Existing User B
     # 2. Existing User A -> Stranger A
@@ -176,7 +176,7 @@ def test_credit_transfer_internal_callback(mocker, test_client, authed_sempo_adm
     # (Do nothing-- we don't care about transfers between strangers who aren't members)
     # 7. Stranger C -> Stranger D To ensure we're not tracking transactions between strangers who are NOT in the system
     # (Do nothing-- we don't care about transfers between strangers who aren't members)
-
+    # 8. Existing Credit Transfer. 200 response, and received_third_party_sync becomes True 
     send_to_worker_called = []
     def mock_send_blockchain_payload_to_worker(is_retry=False, queue='high_priority'):
         send_to_worker_called.append([is_retry, queue])
@@ -259,6 +259,13 @@ def test_credit_transfer_internal_callback(mocker, test_client, authed_sempo_adm
     assert transfer.recipient_transfer_account.blockchain_address == fake_user_a_address
     assert transfer.recipient_transfer_account.account_type == TransferAccountType.EXTERNAL
     assert transfer.sender_user_id == existing_user_a.id
+
+    # Check that a blockchain task isn't created for outside transactions 
+    assert transfer.blockchain_task_uuid == None
+    # Check that a transfer made through TX sync can't be resolved as completed
+    with pytest.raises(Exception):
+        transfer.resolve_as_complete()
+
 
     # 3. Existing User A -> Stranger A (to ensure we don't give Stranger A two ghost accounts)
     made_up_hash = '0x000011112322d396649ed2fa2b7e0a944474b65cfab2c4b1435c81bb16697ecb'

@@ -5,14 +5,14 @@ interface RequestingState {
   isRequesting: boolean;
   success: boolean;
   error: null | string;
-  file_url?: null | string;
+  message?: null | string;
 }
 
 export const initialExportState: RequestingState = {
   isRequesting: false,
   success: false,
   error: null,
-  file_url: null
+  message: null
 };
 
 export const ExportReducer = (
@@ -29,7 +29,7 @@ export const ExportReducer = (
         ...state,
         isRequesting: false,
         success: true,
-        file_url: action.payload.file_url
+        message: action.payload.message
       };
     case ExportActionTypes.NEW_EXPORT_FAILURE:
       return {
