@@ -62,8 +62,8 @@ def make_transfers(disbursement_id, auto_resolve=False):
                 )
 
         disbursement.credit_transfers.append(transfer)
-
-        if auto_resolve:
+        transfer.approvers = disbursement.approvers
+        if auto_resolve and disbursement.state == 'APPROVED':
             # See below comment on batching issues
             transfer.resolve_as_complete_and_trigger_blockchain(batch_uuid=None)
 

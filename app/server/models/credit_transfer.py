@@ -12,7 +12,7 @@ from uuid import uuid4
 
 from server import db, bt
 from server.models.utils import BlockchainTaskableBase, ManyOrgBase, credit_transfer_transfer_usage_association_table,\
-    disbursement_credit_transfer_association_table
+    disbursement_credit_transfer_association_table, credit_transfer_approver_user_association_table
 from server.models.token import Token
 from server.models.transfer_account import TransferAccount
 from server.utils.access_control import AccessControl
@@ -106,6 +106,12 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         secondary=disbursement_credit_transfer_association_table,
         back_populates="credit_transfers",
         uselist=False
+    )
+
+    approvers = db.relationship(
+        "User",
+        secondary=credit_transfer_approver_user_association_table,
+        lazy=True
     )
 
     def add_message(self, message):

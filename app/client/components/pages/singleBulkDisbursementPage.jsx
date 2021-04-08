@@ -91,6 +91,8 @@ class SingleBulkDisbursementPage extends React.Component {
           />
         </div>
       );
+    } else if (status === "PARTIAL") {
+      tag = <Tag color="#ecec28">Partial</Tag>;
     } else if (status === "PENDING") {
       tag = <Tag color="#e2a963">Pending</Tag>;
     } else {
@@ -137,7 +139,7 @@ class SingleBulkDisbursementPage extends React.Component {
             <Space>
               <Button
                 onClick={() => this.onReject()}
-                disabled={status !== "PENDING"}
+                disabled={status == "APPROVED"}
                 loading={this.props.bulkTransfers.modifyStatus.isRequesting}
               >
                 Reject
@@ -145,7 +147,7 @@ class SingleBulkDisbursementPage extends React.Component {
 
               <Button
                 onClick={() => this.onComplete()}
-                disabled={status !== "PENDING"}
+                disabled={status == "APPROVED"}
                 loading={this.props.bulkTransfers.modifyStatus.isRequesting}
               >
                 Approve
