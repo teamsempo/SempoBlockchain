@@ -132,7 +132,7 @@ class CreditTransferAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 404
 
-        if credit_transfer.transfer_status.value != 'PENDING':
+        if credit_transfer.transfer_status.value not in ['PENDING', 'PARTIAL']:
             response_object = {
                 'message': 'Transfer status is {}. Must be PENDING to modify'
                     .format(credit_transfer.transfer_status.value)
@@ -148,7 +148,7 @@ class CreditTransferAPI(MethodView):
 
         try:
             if action == 'COMPLETE':
-                credit_transfer.resolve_as_complete_and_trigger_blockchain()
+                credit_transfer.add_approver_and_resolve_as_completed()
 
             elif action == 'REJECT':
                 credit_transfer.resolve_as_rejected()
@@ -312,7 +312,7 @@ class CreditTransferAPI(MethodView):
                         transfer_use=transfer_use,
                         transfer_mode=TransferModeEnum.WEB,
                         uuid=uuid,
-                        automatically_resolve_complete=auto_resolve,
+                        automatically_resolve_complete=False,
                         queue=queue,
                         batch_uuid=batch_uuid,
                         transfer_card=transfer_card
@@ -327,7 +327,7 @@ class CreditTransferAPI(MethodView):
                         transfer_subtype=TransferSubTypeEnum.RECLAMATION,
                         transfer_mode=TransferModeEnum.WEB,
                         require_recipient_approved=False,
-                        automatically_resolve_complete=auto_resolve,
+                        automatically_resolve_complete=False,
                         queue=queue,
                         batch_uuid=batch_uuid
                     )
@@ -341,7 +341,7 @@ class CreditTransferAPI(MethodView):
                         uuid=uuid,
                         transfer_subtype=TransferSubTypeEnum.DISBURSEMENT,
                         transfer_mode=TransferModeEnum.WEB,
-                        automatically_resolve_complete=auto_resolve,
+                        automatically_resolve_complete=False,
                         queue=queue,
                         batch_uuid=batch_uuid
                     )
@@ -351,10 +351,12 @@ class CreditTransferAPI(MethodView):
                         target_balance,
                         recipient_user,
                         uuid=uuid,
-                        automatically_resolve_complete=auto_resolve,
+                        automatically_resolve_complete=False,
                         transfer_mode=TransferModeEnum.WEB,
                         queue=queue,
                     )
+                if auto_resolve:
+                    transfer.add_approver_and_resolve_as_completed()
 
             except (InsufficientBalanceError,
                     AccountNotApprovedError,

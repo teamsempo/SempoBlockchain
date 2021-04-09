@@ -62,10 +62,9 @@ def make_transfers(disbursement_id, auto_resolve=False):
                 )
 
         disbursement.credit_transfers.append(transfer)
-        transfer.approvers = disbursement.approvers
         if auto_resolve and disbursement.state == 'APPROVED':
-            # See below comment on batching issues
-            transfer.resolve_as_complete_and_trigger_blockchain(batch_uuid=None)
+            transfer.approvers = disbursement.approvers
+            transfer.add_approver_and_resolve_as_completed()
 
         db.session.commit()
         percent_complete = ((idx + 1) / len(disbursement.transfer_accounts)) * 100
@@ -217,9 +216,12 @@ class DisbursementAPI(MethodView):
                 disbursement.approve()
                 db.session.commit()
                 auto_resolve = AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'superadmin')
-                task_uuid = add_after_request_checkable_executor_job(
-                    make_transfers, kwargs={'disbursement_id': disbursement.id, 'auto_resolve': auto_resolve}
-                )
+                # A disbursement isn't necessarily approved after approve() is called, since we can require multiple approvers
+                task_uuid = None
+                if disbursement.state == 'APPROVED':
+                    task_uuid = add_after_request_checkable_executor_job(
+                        make_transfers, kwargs={'disbursement_id': disbursement.id, 'auto_resolve': auto_resolve}
+                    )
 
                 data = disbursement_schema.dump(disbursement).data
                 return {

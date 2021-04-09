@@ -245,6 +245,29 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         # Remove any possible duplicates
         return set(required_priors)
 
+    def add_approver_and_resolve_as_completed(self, user=None):
+        # Adds approver to transfer, resolves as complete if it can!
+        if not user:
+            user = g.user
+        if user not in self.approvers:
+            self.approvers.append(user)
+        if len(self.approvers) == 1:
+
+            if g.active_organisation.require_multiple_transfer_approvals:
+                self.transfer_status = TransferStatusEnum.PARTIAL
+        if self.check_if_fully_approved():
+            self.resolve_as_complete_and_trigger_blockchain()
+
+    def check_if_fully_approved(self):
+        # Checks if the credit transfer is approved and ready to be resolved as complete
+        if g.active_organisation.require_multiple_transfer_approvals:
+            if len(self.approvers) <=1:
+                return False
+            else:
+                return True
+        else:
+            return True
+
     def resolve_as_complete_with_existing_blockchain_transaction(self, transaction_hash):
 
         self.resolve_as_complete()
@@ -266,7 +289,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
             g.pending_transactions.append((self, queue))
 
     def resolve_as_complete(self, batch_uuid=None):
-        if self.transfer_status not in [None, TransferStatusEnum.PENDING]:
+        if self.transfer_status not in [None, TransferStatusEnum.PENDING, TransferStatusEnum.PARTIAL]:
             raise Exception(f'Resolve called multiple times for transfer {self.id}')
         try:
             self.check_sender_transfer_limits()
