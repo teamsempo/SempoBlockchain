@@ -165,7 +165,8 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
     this.state = {
       selectedRowKeys: [],
       unselectedRowKeys: [],
-      allSelected: false
+      allSelected: false,
+      loadedPages: []
     };
   }
 
@@ -190,43 +191,21 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
   }
 
   componentDidUpdate(prevProps: Props) {
-
-    if (prevProps.providedSelectedRowKeys != this.props.providedSelectedRowKeys) {
-      this.setState({selectedRowKeys: this.props.providedSelectedRowKeys || this.state.selectedRowKeys})
-    }
-
-    if (prevProps.providedUnselectedRowKeys != this.props.providedUnselectedRowKeys) {
-      let unselectedKeys = this.props.providedUnselectedRowKeys || this.state.unselectedRowKeys;
-      this.setState({
-        unselectedRowKeys: unselectedKeys,
-        allSelected: unselectedKeys.length > 0,
-      })
-
-      if (unselectedKeys.length > 0) {
-        let selected = this.props.orderedTransferAccounts.filter(
-            (accountId: number) => (
-              this.props.transferAccounts.byId[accountId] != undefined && !unselectedKeys.includes(accountId)
-            )
-        );
-
-        this.setState({selectedRowKeys: selected})
-
-      }
-
-
+    if (this.state.allSelected && !this.state.loadedPages.includes(this.props.paginationOptions?.currentPage)){
+      this.setState({loadedPages: [...this.state.loadedPages, this.props.paginationOptions?.currentPage]})
+      this.setState({selectedRowKeys: [...new Set([...this.state.selectedRowKeys, ...this.props.transferAccounts.IdList])]})
     }
   }
-
 
   onChange = (
     selectedRowKeys: React.Key[],
     selectedRows: TransferAccount[]
   ) => {
-
     if (this.props.disabled) {
       return
     }
 
+    // Note: This should be nuked soon since it wipes unselected rows on page change 
     let unselectedRowKeys: React.Key[] = [];
 
     if (this.state.allSelected) {
@@ -328,7 +307,8 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
     const rowSelection = {
       onChange: this.onChange,
       selectedRowKeys: selectedRowKeys,
-      columnTitle: headerCheckbox
+      columnTitle: headerCheckbox,
+      preserveSelectedRowKeys: true,
     };
 
     let actionButtonElems = actionButtons.map((button: ActionButton) => (
