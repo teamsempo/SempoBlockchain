@@ -6,12 +6,21 @@ import React from "react";
 
 import { connect } from "react-redux";
 import { CSVLink } from "react-csv";
-import { DownloadOutlined } from "@ant-design/icons";
+import { DownloadOutlined, FilePdfOutlined } from "@ant-design/icons";
 
 import { isMobileQuery, withMediaQuery } from "../helpers/responsive";
 import { toCurrency } from "../../utils";
 import { VALUE_TYPES } from "../../constants";
 import { Card, Divider, Tooltip, Space } from "antd";
+import {
+  pdf,
+  Document,
+  Page,
+  View,
+  StyleSheet,
+  Image
+} from "@react-pdf/renderer";
+import html2canvas from "html2canvas";
 
 import VolumeChart from "./card/VolumeChart";
 import GroupByChart from "./card/GroupByChart";
@@ -50,6 +59,61 @@ class MetricsCard extends React.Component {
     this.setState({ selectedTimeSeries: tsName });
   }
 
+  pdfDownloadButton = title => {
+    return (
+      <Tooltip title={title}>
+        <FilePdfOutlined />
+      </Tooltip>
+    );
+  };
+
+  generatePDFDoc = img => {
+    let a = document.createElement("a");
+    document.body.appendChild(a);
+    a.style = "display: none";
+
+    // Create PDF styles
+    const styles = StyleSheet.create({
+      page: {
+        flexDirection: "row",
+        backgroundColor: "#ffffff"
+      },
+      section: {
+        margin: 10,
+        padding: 10,
+        flexGrow: 1
+      }
+    });
+
+    const doc = (
+      <Document>
+        <Page size="A4" style={styles.page} orientation={"landscape"}>
+          <View style={styles.section}>
+            <Image src={img} />
+          </View>
+        </Page>
+      </Document>
+    );
+    pdf(doc)
+      .toBlob()
+      .then(blob => {
+        let url = window.URL.createObjectURL(blob);
+        a.href = url;
+        a.download =
+          this.props.cardTitle + "_" + this.state.selectedTimeSeries + ".pdf";
+        a.click();
+        window.URL.revokeObjectURL(url);
+      });
+  };
+
+  div2PDF = () => {
+    let input = window.document.getElementsByClassName("div2PDF")[0];
+    return html2canvas(input).then(canvas => {
+      const img = canvas.toDataURL("image/png");
+      this.generatePDFDoc(img);
+    });
+  };
+
   render() {
     let {
       timeSeriesNameLabels,
@@ -60,6 +124,14 @@ class MetricsCard extends React.Component {
       defaultGroupBy,
       isMobile
     } = this.props;
+
+    const pdfLink = (
+      <Tooltip title={"Download PDF"}>
+        <a href="#" onClick={() => this.div2PDF()}>
+          <FilePdfOutlined />
+        </a>
+      </Tooltip>
+    );
 
     const selectedData = metrics[this.state.selectedTimeSeries];
 
@@ -183,35 +255,37 @@ class MetricsCard extends React.Component {
     }
 
     return (
-      <Card
-        title={
-          <Space>
-            {cardTitle} {csvLink}
-          </Space>
-        }
-        bordered={false}
-        extra={extra}
-      >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            marginBottom: "1em",
-            justifyContent: "space-between"
-          }}
+      <div className="div2PDF">
+        <Card
+          title={
+            <Space>
+              {cardTitle} {csvLink} {pdfLink}
+            </Space>
+          }
+          bordered={false}
+          extra={extra}
         >
-          <FilterModule
-            defaultGroupBy={defaultGroupBy}
-            filterObject={filterObject}
-            dateRange={this.state.dateRange}
-          />
-        </div>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: "1em",
+              justifyContent: "space-between"
+            }}
+          >
+            <FilterModule
+              defaultGroupBy={defaultGroupBy}
+              filterObject={filterObject}
+              dateRange={this.state.dateRange}
+            />
+          </div>
 
-        <Divider dashed />
+          <Divider dashed />
 
-        {dataModule}
-      </Card>
+          {dataModule}
+        </Card>
+      </div>
     );
   }
 }
