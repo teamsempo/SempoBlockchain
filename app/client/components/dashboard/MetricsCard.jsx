@@ -107,8 +107,9 @@ class MetricsCard extends React.Component {
   };
 
   div2PDF = () => {
-    let input = window.document.getElementsByClassName("div2PDF")[0];
-    return html2canvas(input).then(canvas => {
+    const className = "div2PDF-" + this.props.cardTitle;
+    let input = window.document.getElementsByClassName(className)[0];
+    return html2canvas(input, { scrollY: -window.scrollY }).then(canvas => {
       const img = canvas.toDataURL("image/png");
       this.generatePDFDoc(img);
     });
@@ -255,7 +256,7 @@ class MetricsCard extends React.Component {
     }
 
     return (
-      <div className="div2PDF">
+      <div className={"div2PDF-" + cardTitle}>
         <Card
           title={
             <Space>
