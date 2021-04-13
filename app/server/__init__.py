@@ -205,6 +205,7 @@ def register_blueprints(app):
     from server.api.vendor_payout_api import vendor_payout
     from server.api.disbursement_api import disbursement_blueprint 
     from server.api.async_api import async_blueprint 
+    from server.api.master_wallet_api import master_wallet_blueprint 
 
     versioned_url = '/api/v1'
 
@@ -242,6 +243,7 @@ def register_blueprints(app):
     app.register_blueprint(vendor_payout, url_prefix=versioned_url)
     app.register_blueprint(disbursement_blueprint, url_prefix=versioned_url)
     app.register_blueprint(async_blueprint, url_prefix=versioned_url)
+    app.register_blueprint(master_wallet_blueprint, url_prefix=versioned_url)
 
     # 404 handled in react
     @app.errorhandler(404)
