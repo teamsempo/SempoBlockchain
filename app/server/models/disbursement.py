@@ -40,11 +40,12 @@ class Disbursement(ModelBase):
 
     @hybrid_property
     def recipient_count(self):
-        return db.session.query(func.count(disbursement_transfer_account_association_table.c.disbursement_id==self.id)).first()[0]
+        return db.session.query(func.count(disbursement_transfer_account_association_table.c.disbursement_id))\
+            .filter(disbursement_transfer_account_association_table.c.disbursement_id==self.id).first()[0]
 
     @hybrid_property
     def total_disbursement_amount(self):
-        return db.session.query(func.count(disbursement_transfer_account_association_table.c.disbursement_id==self.id)).first()[0] * self._disbursement_amount_wei
+        return self.recipient_count * self.disbursement_amount 
 
     @hybrid_property
     def disbursement_amount(self):
