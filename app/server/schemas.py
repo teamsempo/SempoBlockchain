@@ -463,8 +463,8 @@ class DisbursementSchema(SchemaBase):
     include_accounts            = fields.List(fields.Int())
     exclude_accounts            = fields.List(fields.Int())
 
-    recipient_count             = fields.Function(lambda obj: len(obj.transfer_accounts))
-    total_disbursement_amount   = fields.Method('_total_disbursement_amount')
+    recipient_count             = fields.Str()
+    total_disbursement_amount   = fields.Str()
     label                       = fields.Str()
     state                       = fields.Str()
     transfer_type               = fields.Str()

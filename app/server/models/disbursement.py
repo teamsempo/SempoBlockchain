@@ -1,4 +1,6 @@
 from server import db
+from sqlalchemy import func
+
 from server.models.utils import ModelBase, OneOrgBase, disbursement_transfer_account_association_table,\
     disbursement_credit_transfer_association_table
 from sqlalchemy.types import ARRAY
@@ -35,6 +37,14 @@ class Disbursement(ModelBase):
         "CreditTransfer",
         secondary=disbursement_credit_transfer_association_table,
         back_populates="disbursement")
+
+    @hybrid_property
+    def recipient_count(self):
+        return db.session.query(func.count(disbursement_transfer_account_association_table.c.disbursement_id==self.id)).first()[0]
+
+    @hybrid_property
+    def total_disbursement_amount(self):
+        return db.session.query(func.count(disbursement_transfer_account_association_table.c.disbursement_id==self.id)).first()[0] * self._disbursement_amount_wei
 
     @hybrid_property
     def disbursement_amount(self):
