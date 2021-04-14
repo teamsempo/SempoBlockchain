@@ -166,14 +166,14 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
       selectedRowKeys: [],
       unselectedRowKeys: [],
       allSelected: false,
-      loadedPages: []
+      loadedPages: [1],
+      allLoadedRows: []
     };
   }
 
   componentDidMount() {
     let unselectedKeys = this.props.providedUnselectedRowKeys || this.state.unselectedRowKeys;
     let selectedKeys = this.props.providedSelectedRowKeys || this.state.selectedRowKeys;
-
     if (unselectedKeys.length > 0) {
       selectedKeys = this.props.orderedTransferAccounts.filter(
           (accountId: number) => (
@@ -181,8 +181,6 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
           )
       );
     }
-
-
 
     this.setState({
       selectedRowKeys:  selectedKeys,
@@ -194,6 +192,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
     if (this.props.transferAccounts.IdList !== prevProps.transferAccounts.IdList) {
       if (this.state.allSelected && !this.state.loadedPages.includes(this.props.paginationOptions?.currentPage)) {
         this.setState({loadedPages: [...this.state.loadedPages, this.props.paginationOptions?.currentPage]})
+        this.setState({allLoadedRows: [...new Set([...this.state.allLoadedRows, ...this.props.orderedTransferAccounts])]})
         this.setState({selectedRowKeys: [...new Set([...this.state.selectedRowKeys, ...this.props.transferAccounts.IdList])]})
       }
     }
@@ -206,17 +205,14 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
     if (this.props.disabled) {
       return
     }
-
-    // Note: This should be nuked soon since it wipes unselected rows on page change 
+    const allLoadedRows = [...new Set([...this.state.allLoadedRows, ...this.props.orderedTransferAccounts])]
     let unselectedRowKeys: React.Key[] = [];
 
     if (this.state.allSelected) {
       // We only define the unselected rows when the "select all" box has been flagged as true (ie a "default selected" state),
       // because unselected rows isn't specific enough when you start from a "default unselected" state
       let selectedSet = new Set(selectedRowKeys);
-      unselectedRowKeys = this.props.orderedTransferAccounts.filter(
-        id => !selectedSet.has(id)
-      );
+      unselectedRowKeys = allLoadedRows.filter(row => !selectedSet.has(row));
     }
 
     this.setState(
@@ -233,6 +229,8 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
     if (keys.length === data.length) {
       this.setState(
         {
+          loadedPages: [1],
+          allLoadedRows: [],
           selectedRowKeys: [],
           unselectedRowKeys: [],
           allSelected: false
@@ -242,6 +240,8 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
     } else {
       this.setState(
         {
+          loadedPages: [1],
+          allLoadedRows: [],
           selectedRowKeys: data.map(r => r.key),
           unselectedRowKeys: [],
           allSelected: true
