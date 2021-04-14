@@ -191,9 +191,11 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
   }
 
   componentDidUpdate(prevProps: Props) {
-    if (this.state.allSelected && !this.state.loadedPages.includes(this.props.paginationOptions?.currentPage)){
-      this.setState({loadedPages: [...this.state.loadedPages, this.props.paginationOptions?.currentPage]})
-      this.setState({selectedRowKeys: [...new Set([...this.state.selectedRowKeys, ...this.props.transferAccounts.IdList])]})
+    if (this.props.transferAccounts.IdList !== prevProps.transferAccounts.IdList) {
+      if (this.state.allSelected && !this.state.loadedPages.includes(this.props.paginationOptions?.currentPage)) {
+        this.setState({loadedPages: [...this.state.loadedPages, this.props.paginationOptions?.currentPage]})
+        this.setState({selectedRowKeys: [...new Set([...this.state.selectedRowKeys, ...this.props.transferAccounts.IdList])]})
+      }
     }
   }
 
