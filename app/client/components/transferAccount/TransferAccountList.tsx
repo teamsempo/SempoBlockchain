@@ -343,6 +343,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
     );
 
     const hasSelected = selectedRowKeys.length > 0;
+    const numberSelected = this.props.paginationOptions?.items ? allSelected ? this.props.paginationOptions?.items - unselectedRowKeys.length : selectedRowKeys.length : selectedRowKeys.length
     return (
       <div style={{opacity: this.props.disabled? 0.6 : 1}}>
         <div
@@ -367,9 +368,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
             {hasSelected ? (
               <span style={{ marginRight: "10px", minHeight: "25px" }}>
                 {" "}
-                {`${
-                  allSelected ? "All" : selectedRowKeys.length
-                } Selected`}{" "}
+                {`${numberSelected} Selected`}{" "}
               </span>
             ) : (
               noneSelectedButtonElems
