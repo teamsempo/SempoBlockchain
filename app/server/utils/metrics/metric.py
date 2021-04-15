@@ -65,7 +65,8 @@ class Metric(object):
                         date_filters.append(date_filter_attribute >= start_date)
                     if end_date:
                         date_filters.append(date_filter_attribute <=  datetime.datetime.strptime(end_date, "%Y-%m-%d") + datetime.timedelta(days=1)  )
-                    filtered_query = filtered_query.filter(*date_filters)
+                    if not self.bypass_user_filters:
+                        filtered_query = filtered_query.filter(*date_filters)
 
             # Handle start_day and end_day queries so we can have a percentage change for the whole day range
             if query in ['start_day_query', 'end_day_query']:
