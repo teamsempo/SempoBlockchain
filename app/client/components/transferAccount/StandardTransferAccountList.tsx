@@ -288,6 +288,8 @@ class StandardTransferAccountList extends React.Component<
           }}
         />
         <TransferAccountList
+          params={this.state.params}
+          searchString={this.state.searchString}
           orderedTransferAccounts={transferAccounts.IdList}
           actionButtons={actionButtons}
           noneSelectedbuttons={noneSelectedButtons}

@@ -45,6 +45,8 @@ interface stringIndexable {
 }
 
 interface OuterProps extends stringIndexable {
+  params: string;
+  searchString: string;
   orderedTransferAccounts: number[];
   users: any;
   actionButtons: ActionButton[];
@@ -167,7 +169,9 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
       unselectedRowKeys: [],
       allSelected: false,
       loadedPages: [1],
-      allLoadedRows: []
+      allLoadedRows: [],
+      params: "",
+      searchString: "",
     };
   }
 
@@ -184,7 +188,9 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
 
     this.setState({
       selectedRowKeys:  selectedKeys,
-      unselectedRowKeys: unselectedKeys
+      unselectedRowKeys: unselectedKeys,
+      params: this.props.params,
+      searchString: this.props.searchString
     })
   }
 
@@ -195,6 +201,9 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
         this.setState({allLoadedRows: [...new Set([...this.state.allLoadedRows, ...this.props.orderedTransferAccounts])]})
         this.setState({selectedRowKeys: [...new Set([...this.state.selectedRowKeys, ...this.props.transferAccounts.IdList])]})
       }
+    }
+    if (this.props.params !== prevProps.params || this.props.searchString !== prevProps.searchString) {
+      this.setState({allSelected: false, selectedRowKeys: [], unselectedRowKeys: [], loadedPages: [1], allLoadedRows: []})
     }
   }
 
