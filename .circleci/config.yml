@@ -237,7 +237,6 @@ workflows:
             branches:
               only:
                 - master
-                - fix-export
 
           requires:
             - build
