@@ -308,9 +308,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
     const headerCheckbox = (
       <Checkbox
         checked={selectedRowKeys.length > 0}
-        indeterminate={
-          selectedRowKeys.length > 0 && selectedRowKeys.length < data.length
-        }
+        indeterminate={allSelected ? unselectedRowKeys.length > 0 : false}
         onChange={e => this.toggleSelectAll(selectedRowKeys, data)}
       />
     );
