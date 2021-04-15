@@ -25,7 +25,6 @@ export_blueprint = Blueprint('export', __name__)
 
 @standard_executor_job
 def generate_export(post_data):
-    print('AAAAA')
     from server.models.credit_transfer import CreditTransfer
     from server.models.transfer_account import TransferAccount
     from server.models.user import User
