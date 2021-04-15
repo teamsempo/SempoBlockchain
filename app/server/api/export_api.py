@@ -19,12 +19,13 @@ from server.utils.amazon_s3 import upload_local_file_to_s3
 from server.utils.date_magic import find_last_period_dates
 from server.utils.amazon_ses import send_export_email
 from server.utils.export import generate_pdf_export, export_workbook_via_s3
-from server.utils.executor import standard_executor_job
+from server.utils.executor import standard_executor_job, add_after_request_executor_job
 
 export_blueprint = Blueprint('export', __name__)
 
 @standard_executor_job
 def generate_export(post_data):
+    print('AAAAA')
     from server.models.credit_transfer import CreditTransfer
     from server.models.transfer_account import TransferAccount
     from server.models.user import User
@@ -355,7 +356,7 @@ class ExportAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self):
         post_data = request.get_json()
-        generate_export.submit(post_data)
+        add_after_request_executor_job(generate_export, [post_data])
         return {
             'status': 'success',
             'data': {
