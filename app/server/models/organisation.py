@@ -37,7 +37,7 @@ class Organisation(ModelBase):
     # 0 means don't shard, units are kilometers
     card_shard_distance = db.Column(db.Integer, default=0) 
 
-    _timezone = db.Column(db.String, default='UTC')
+    _timezone = db.Column(db.String, default='UTC', nullable=False)
     _country_code = db.Column(db.String, nullable=False)
     _default_disbursement_wei = db.Column(db.Numeric(27), default=0)
     require_transfer_card = db.Column(db.Boolean, default=False)

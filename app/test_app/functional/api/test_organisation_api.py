@@ -19,6 +19,7 @@ def test_create_organisation(test_client, complete_admin_auth_token, external_re
         ),
         json={
             'organisation_name': name,
+            'timezone': 'GMT',
             'token_id': token_selector_func(external_reserve_token),
             'country_code': country_code,
             'default_disbursement': default_disbursement,
