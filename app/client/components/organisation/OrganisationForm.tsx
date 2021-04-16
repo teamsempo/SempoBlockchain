@@ -298,7 +298,7 @@ const NewOrganisationForm = (props: OuterProps) => {
         <Switch />
       </Form.Item>
       <Form.Item
-        tooltip="Whether disbursements and transfers require two administrators to approve them"
+        tooltip="Whether disbursements and transfers require two admins to approve them"
         valuePropName="checked"
         name="requireMultipleTransferApprovals"
         label="Require Multiple Transfer Approvals"

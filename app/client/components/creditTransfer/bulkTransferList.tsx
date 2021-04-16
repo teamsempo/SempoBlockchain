@@ -97,7 +97,7 @@ const columns: ColumnsType<BulkTransfer> = [
       } else if (record.state === "PENDING") {
         return <Tag color="#e2a963">Pending</Tag>;
       } else if (record.state === "PARTIAL") {
-        return <Tag color="#ecec28">Partial</Tag>;
+        return <Tag color="#d48806">Partial</Tag>;
       } else {
         return <Tag color="#f16853">Rejected</Tag>;
       }

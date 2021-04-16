@@ -106,7 +106,7 @@ class SingleBulkDisbursementPage extends React.Component {
         </div>
       );
     } else if (status === "PARTIAL") {
-      tag = <Tag color="#ecec28">Partial</Tag>;
+      tag = <Tag color="#d48806">Partial</Tag>;
     } else if (status === "PENDING") {
       tag = <Tag color="#e2a963">Pending</Tag>;
     } else {
