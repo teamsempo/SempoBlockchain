@@ -1,5 +1,6 @@
 from server import db
 from flask import g 
+from sqlalchemy import func
 
 from server.models.utils import ModelBase, OneOrgBase, disbursement_transfer_account_association_table,\
     disbursement_credit_transfer_association_table, disbursement_approver_user_association_table
@@ -48,6 +49,15 @@ class Disbursement(ModelBase):
         "User",
         secondary=disbursement_approver_user_association_table,
     )
+
+    @hybrid_property
+    def recipient_count(self):
+        return db.session.query(func.count(disbursement_transfer_account_association_table.c.disbursement_id))\
+            .filter(disbursement_transfer_account_association_table.c.disbursement_id==self.id).first()[0]
+
+    @hybrid_property
+    def total_disbursement_amount(self):
+        return self.recipient_count * self.disbursement_amount 
 
     @hybrid_property
     def disbursement_amount(self):

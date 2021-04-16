@@ -2,7 +2,7 @@ import boto3, jinja2, os
 from urllib import parse
 from flask import request, current_app
 from server import pusher_client
-from server.utils.executor import standard_executor_job
+from server.utils.executor import standard_executor_job, add_after_request_executor_job
 
 def send_transfer_update_email(email_address, transfer_info, latest_status):
     TEXT_TEMPLATE_FILE = 'transfer_update_email.txt'
@@ -22,8 +22,7 @@ def send_transfer_update_email(email_address, transfer_info, latest_status):
         currency=transfer_info['sourceCurrency'],
         status=latest_status['statusDetail'],
     )
-
-    ses_email_handler.submit(email_address, 'Sempo: Transfer Update', textbody, htmlbody)
+    add_after_request_executor_job(ses_email_handler, [email_address, 'Sempo: Transfer Update', textbody, htmlbody])
 
 
 def send_bank_transfer_email(email_address, charge_info):
@@ -58,7 +57,7 @@ def send_bank_transfer_email(email_address, charge_info):
         beneficiary=bank['beneficiary']
     )
 
-    ses_email_handler.submit(email_address, 'Sempo: Fund your wallet', textbody, htmlbody)
+    add_after_request_executor_job(ses_email_handler, [email_address, 'Sempo: Fund your wallet', textbody, htmlbody])
 
 def send_invite_email(invite, organisation):
 
@@ -70,7 +69,7 @@ def send_invite_email(invite, organisation):
                            referral_code=invite.referral_code,
                            email=email)
 
-    ses_email_handler.submit(invite.email, 'Sempo: Invite to Join!', body)
+    add_after_request_executor_job(ses_email_handler, [invite.email, 'Sempo: Invite to Join!', body])
 
 def send_invite_email_to_existing_user(organisation, email_address):
 
@@ -79,7 +78,7 @@ def send_invite_email_to_existing_user(organisation, email_address):
     body = template.render(host=request.url_root,
                            organisation_name=organisation.name)
 
-    ses_email_handler.submit(email_address, 'Sempo: Added to new Organisation!', body)
+    add_after_request_executor_job(ses_email_handler, [email_address, 'Sempo: Added to new Organisation!', body])
 
 def send_export_email(file_url, email_address):
 
@@ -87,7 +86,7 @@ def send_export_email(file_url, email_address):
     template = get_email_template(TEMPLATE_FILE)
     body = template.render(file_url=file_url, deployment=current_app.config['DEPLOYMENT_NAME'])
 
-    ses_email_handler.submit(email_address, 'Sempo: Your export is ready!', body)
+    add_after_request_executor_job(ses_email_handler, [email_address, 'Sempo: Your export is ready!', body])
 
 def send_activation_email(activation_token, email_address):
 
@@ -99,14 +98,13 @@ def send_activation_email(activation_token, email_address):
     html_template = get_email_template(HTML_TEMPLATE_FILE)
     htmlbody = html_template.render(host=request.url_root, activation_token=activation_token)
 
-    ses_email_handler.submit(email_address, 'Sempo: Activate your account', textbody, htmlbody)
+    add_after_request_executor_job(ses_email_handler, [email_address, 'Sempo: Activate your account', textbody, htmlbody])
 
 def send_reset_email(reset_token, email_address):
-
     TEMPLATE_FILE = 'password_reset_email.txt'
     template = get_email_template(TEMPLATE_FILE)
     body = template.render(host=request.url_root, reset_token=reset_token)
-    ses_email_handler.submit(email_address, 'Sempo Password Reset', body)
+    add_after_request_executor_job(ses_email_handler, [email_address, 'Sempo Password Reset', body])
 
 def get_email_template(TEMPLATE_FILE):
     searchpath = os.path.join(current_app.config['BASEDIR'], "templates")

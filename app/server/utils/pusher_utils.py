@@ -2,7 +2,7 @@ import sentry_sdk
 
 from flask import current_app
 from server import pusher_client
-from server.utils.executor import standard_executor_job
+from server.utils.executor import standard_executor_job, add_after_request_executor_job
 from server.schemas import credit_transfer_schema
 from server.utils import credit_transfer
 from server.utils import misc
@@ -38,18 +38,17 @@ def push_admin_credit_transfer(transfers):
     # Break the list of prepared transfers into MAX_BATCH_SIZE chunks and send each batch to the API
     for pusher_payload_chunk in misc.chunk_list(pusher_batch_payload, PUSHER_MAX_BATCH_SIZE):
         try:
-            async_pusher_trigger_batch.submit(pusher_payload_chunk)
+            add_after_request_executor_job(async_pusher_trigger_batch, [pusher_payload_chunk])
         except Exception as e:
             print(e)
             sentry_sdk.capture_exception(e)
 
 def push_user_transfer_confirmation(receive_user, transfer_random_key):
     try:
-        async_pusher_trigger.submit(
-            'private-user-{}-{}'.format(current_app.config['DEPLOYMENT_NAME'], receive_user.id),
-            'payment_confirmed',
-            {'transfer_random_key': transfer_random_key}
-        )
+        add_after_request_executor_job(async_pusher_trigger, ['private-user-{}-{}'.format(current_app.config['DEPLOYMENT_NAME'], receive_user.id),\
+             'payment_confirmed',\
+                {'transfer_random_key': transfer_random_key}])
+
     except Exception as e:
         print(e)
         sentry_sdk.capture_exception(e)
