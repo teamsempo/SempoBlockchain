@@ -27,6 +27,17 @@ def upgrade():
     op.create_index(op.f('ix_credit_transfer_approver_user_association_table_credit_transfer_id'), 'credit_transfer_approver_user_association_table', ['credit_transfer_id'], unique=False)
     op.create_index(op.f('ix_credit_transfer_approver_user_association_table_user_id'), 'credit_transfer_approver_user_association_table', ['user_id'], unique=False)
     op.add_column('organisation', sa.Column('require_multiple_transfer_approvals', sa.Boolean(), nullable=True))
+
+    op.create_table('disbursement_approver_user_association_table',
+    sa.Column('user_id', sa.Integer(), nullable=True),
+    sa.Column('disbursement_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['disbursement_id'], ['disbursement.id'], ),
+    sa.ForeignKeyConstraint(['user_id'], ['user.id'], )
+    )
+    op.create_index(op.f('ix_disbursement_approver_user_association_table_disbursement_id'), 'disbursement_approver_user_association_table', ['disbursement_id'], unique=False)
+    op.create_index(op.f('ix_disbursement_approver_user_association_table_user_id'), 'disbursement_approver_user_association_table', ['user_id'], unique=False)
+
+    op.execute("ALTER TYPE transferstatusenum ADD VALUE 'PARTIAL'")
     # ### end Alembic commands ###
 
 
@@ -37,3 +48,5 @@ def downgrade():
     op.drop_index(op.f('ix_credit_transfer_approver_user_association_table_credit_transfer_id'), table_name='credit_transfer_approver_user_association_table')
     op.drop_table('credit_transfer_approver_user_association_table')
     # ### end Alembic commands ###
+
+    op.drop_table('disbursement_approver_user_association_table')
