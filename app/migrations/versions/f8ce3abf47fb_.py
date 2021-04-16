@@ -37,7 +37,7 @@ def upgrade():
     op.create_index(op.f('ix_disbursement_approver_user_association_table_disbursement_id'), 'disbursement_approver_user_association_table', ['disbursement_id'], unique=False)
     op.create_index(op.f('ix_disbursement_approver_user_association_table_user_id'), 'disbursement_approver_user_association_table', ['user_id'], unique=False)
 
-    op.execute("ALTER TYPE transferstatusenum ADD VALUE 'PARTIAL'")
+    op.execute("ALTER TYPE transferstatusenum ADD VALUE IF NOT EXISTS 'PARTIAL'")
     # ### end Alembic commands ###
 
 
