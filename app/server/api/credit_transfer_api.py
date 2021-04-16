@@ -134,7 +134,7 @@ class CreditTransferAPI(MethodView):
 
         if credit_transfer.transfer_status.value not in ['PENDING', 'PARTIAL']:
             response_object = {
-                'message': 'Transfer status is {}. Must be PENDING to modify'
+                'message': 'Transfer status is {}. Must be PENDING or PARTIAL to modify'
                     .format(credit_transfer.transfer_status.value)
             }
             return make_response(jsonify(response_object)), 400

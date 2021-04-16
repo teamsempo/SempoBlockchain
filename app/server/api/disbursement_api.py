@@ -215,7 +215,9 @@ class DisbursementAPI(MethodView):
             if action == 'APPROVE':
                 disbursement.approve()
                 db.session.commit()
-                auto_resolve = AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'superadmin')
+                auto_resolve = False
+                if g.active_organisation.require_multiple_transfer_approvals or AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'superadmin'):
+                    auto_resolve = True
                 # A disbursement isn't necessarily approved after approve() is called, since we can require multiple approvers
                 task_uuid = None
                 if disbursement.state == 'APPROVED':

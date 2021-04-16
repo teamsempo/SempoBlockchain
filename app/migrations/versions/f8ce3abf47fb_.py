@@ -1,4 +1,4 @@
-"""empty message
+"""Add require_multiple_transfer_approvals
 
 Revision ID: f8ce3abf47fb
 Revises: ea2d658b1695

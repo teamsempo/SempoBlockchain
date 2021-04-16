@@ -1,4 +1,4 @@
-"""empty message
+"""Create disbursement_approver_user_association_table
 
 Revision ID: 9a0ec8ac3881
 Revises: f8ce3abf47fb
