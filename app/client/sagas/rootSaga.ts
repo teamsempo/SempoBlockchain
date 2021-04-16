@@ -17,6 +17,7 @@ import transferCardSagas from "./transferCardSagas";
 import tokenSagas from "./tokenSaga";
 import { generatedSagas } from "../reducers/rootReducer";
 import bulkTransferSagas from "./bulkTransferSagas";
+import masterWalletSagas from "./masterWalletSagas";
 
 export default function* rootSaga() {
   yield all([
@@ -36,6 +37,7 @@ export default function* rootSaga() {
     transferCardSagas(),
     tokenSagas(),
     bulkTransferSagas(),
+    masterWalletSagas(),
     generatedSagas()
   ]);
 }
