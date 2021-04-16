@@ -4,6 +4,7 @@ from flask import g
 
 @pytest.mark.parametrize("data, expected_response_code, expected_response", [
     ({'recipient_blockchain_address': '0x4Cb79e45A25e7cD8004793e593dAC4212bE3c9E4', 'transfer_amount': 1234}, 201, {}),
+    ({'recipient_blockchain_address': '0x4Cb79e45A25e7cD8004793e593dAC4212bE3c9E4', 'transfer_amount': '0'}, 201, {}),
     ({'recipient_blockchain_address': '1234'}, 400, {'message': '"transfer_amount" parameter required'}),
     ({'transfer_amount': 1234}, 400, {'message': '"recipient_blockchain_address" parameter required'})
 ])
