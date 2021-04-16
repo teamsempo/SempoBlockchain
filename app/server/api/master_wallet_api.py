@@ -23,10 +23,13 @@ class MasterWalletAPI(MethodView):
         receive_transfer_account = create_transfer_account_if_required(recipient_blockchain_address, g.active_organisation.token, TransferAccountType.EXTERNAL)
 
         error_message = None
+        transfer_amount = int(transfer_amount)
         if not recipient_blockchain_address:
             error_message = '"recipient_blockchain_address" parameter required'
         if not transfer_amount:
             error_message = '"transfer_amount" parameter required'
+        if not isinstance(transfer_amount, int):
+            error_message = '"transfer_amount must be an integer'
         if not master_wallet:
             error_message = f'Organisation {g.active_organisation.id} has no master wallet'
         if error_message:

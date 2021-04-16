@@ -1,145 +1,144 @@
 import React, { Suspense, lazy } from "react";
+import { connect } from "react-redux";
+import { sempoObjects } from "../../reducers/rootReducer";
 import {
   Modal,
   Typography,
   Button,
   Tooltip,
   Descriptions,
-  Steps,
   Space,
-  Form,
-  Input
+  Breadcrumb,
+  Input,
+  Form
 } from "antd";
 const { Paragraph } = Typography;
-const { Step } = Steps;
 
-import { DollarCircleOutlined, QrcodeOutlined } from "@ant-design/icons";
+import { DollarCircleOutlined } from "@ant-design/icons";
+import DateTime from "../dateTime";
+import { apiActions } from "../../genericState";
 const QRCode = lazy(() => import("qrcode.react"));
 
+const mapStateToProps = state => {
+  return {
+    masterWallet: state.masterWallet
+  };
+};
+
+const mapDispatchToProps = dispatch => {
+  return {
+    createWithdrawal: body =>
+      dispatch(apiActions.create(sempoObjects.masterWallet, body))
+  };
+};
+
 const MasterWalletManagementModal = props => {
-  const [form] = Form.useForm();
   const [visible, setVisible] = React.useState(false);
   const [current, setCurrent] = React.useState(0);
+  const [form] = Form.useForm();
 
   const orgName = "Reserve";
 
-  const next = () => {
-    setCurrent(current + 1);
-  };
-
-  const prev = () => {
-    setCurrent(current - 1);
-  };
-
   const onFinish = values => {
+    const { recipient_blockchain_address, transfer_amount } = values;
     console.log("Success:", values);
+    props.createWithdrawal({
+      recipient_blockchain_address,
+      transfer_amount: transfer_amount * 100
+    });
   };
 
   const onFinishFailed = errorInfo => {
     console.log("Failed:", errorInfo);
   };
 
-  const steps = [
-    {
-      title: "Home",
-      content: (
-        <Descriptions
-          title={orgName}
-          column={1}
-          bordered
-          extra={
-            <Space>
-              <Tooltip
-                title={`Withdraw from ${orgName.toLowerCase()} master wallet to external address`}
-              >
-                <Button onClick={() => next()}>Withdraw</Button>
-              </Tooltip>
-            </Space>
+  const next = value => {
+    setCurrent(value);
+  };
+
+  const back = value => {
+    setCurrent(value);
+  };
+
+  const depositQr = (
+    <Descriptions.Item label="Wallet QR">
+      {visible ? (
+        <Suspense fallback={<div>Loading QR Code...</div>}>
+          <QRCode size={256} value={window.master_wallet_address} />
+        </Suspense>
+      ) : null}
+    </Descriptions.Item>
+  );
+
+  const depositAddress = (
+    <Descriptions.Item label="Wallet Address">
+      <Paragraph
+        style={{ margin: 0 }}
+        copyable={{
+          text: window.master_wallet_address,
+          tooltip: "Copy deposit address"
+        }}
+      >
+        {window.master_wallet_address}
+      </Paragraph>
+    </Descriptions.Item>
+  );
+
+  const withdrawal = (
+    <div>
+      <Form.Item
+        label="Address"
+        name="recipient_blockchain_address"
+        rules={[
+          {
+            required: true,
+            message: "Please input your withdrawal address!"
           }
-        >
-          <Descriptions.Item label="Wallet Address">
-            {visible ? (
-              <Suspense fallback={<div>Loading QR Code...</div>}>
-                <QRCode
-                  style={{ margin: "1em" }}
-                  size={256}
-                  value={window.master_wallet_address}
-                />
-              </Suspense>
-            ) : null}
-            <Paragraph
-              style={{ margin: 0 }}
-              copyable={{
-                text: window.master_wallet_address,
-                tooltip: "Copy deposit address"
-              }}
-            >
-              {window.master_wallet_address}{" "}
-              <Tooltip title={"Deposit address QR code"}>
-                <a onClick={() => setVisible(!visible)}>
-                  <QrcodeOutlined />
-                </a>
-              </Tooltip>
-            </Paragraph>
-          </Descriptions.Item>
-          <Descriptions.Item label="Wallet Balance">
-            <Paragraph style={{ margin: 0 }}>{props.currentBalance}</Paragraph>
-          </Descriptions.Item>
-          <Descriptions.Item label="Token Name">
-            <Paragraph style={{ margin: 0 }}>
-              {props.activeToken.name}
-            </Paragraph>
-          </Descriptions.Item>
-          <Descriptions.Item label="Token Created">
-            <Paragraph style={{ margin: 0 }}>
-              {props.activeToken.created}
-            </Paragraph>
-          </Descriptions.Item>
-        </Descriptions>
-      )
+        ]}
+      >
+        <Input />
+      </Form.Item>
+
+      <Form.Item
+        label="Amount"
+        name="transfer_amount"
+        rules={[
+          {
+            required: true,
+            message: "Please input the amount you would like to withdraw!"
+          }
+        ]}
+      >
+        <Input type={"number"} />
+      </Form.Item>
+    </div>
+  );
+
+  const otherDetails = [
+    {
+      label: "Wallet Balance",
+      value: props.currentBalance
     },
     {
-      title: "Withdraw",
-      content: (
-        <Form
-          form={form}
-          name="basic"
-          initialValues={{ remember: true }}
-          onFinish={onFinish}
-          onFinishFailed={onFinishFailed}
-        >
-          <Form.Item
-            label="Address"
-            name="address"
-            rules={[
-              {
-                required: true,
-                message: "Please input your withdrawal address!"
-              }
-            ]}
-          >
-            <Input />
-          </Form.Item>
-
-          <Form.Item
-            label="Amount"
-            name="amount"
-            rules={[
-              {
-                required: true,
-                message: "Please input the amount you would like to withdraw!"
-              }
-            ]}
-          >
-            <Input type={"number"} />
-          </Form.Item>
-        </Form>
+      label: "Token Name",
+      value: props.activeToken.name
+    },
+    {
+      label: "Token Created",
+      value: (
+        <DateTime useRelativeTime={false} created={props.activeToken.created} />
       )
     }
   ];
 
   return (
-    <div>
+    <Form
+      form={form}
+      name="basic"
+      initialValues={{ remember: true }}
+      onFinish={onFinish}
+      onFinishFailed={onFinishFailed}
+    >
       <Tooltip title={"Manage Master Wallet"}>
         <a onClick={props.onClick}>
           <DollarCircleOutlined translate={""} />
@@ -152,7 +151,7 @@ const MasterWalletManagementModal = props => {
         onCancel={props.handleCancel}
         footer={[
           current > 0 && (
-            <Button style={{ margin: "0 8px" }} onClick={() => prev()}>
+            <Button style={{ margin: "0 8px" }} onClick={() => back(0)}>
               Back
             </Button>
           ),
@@ -161,27 +160,78 @@ const MasterWalletManagementModal = props => {
               Ok
             </Button>
           ),
-          current === steps.length - 1 && (
-            <Button type="primary" onClick={() => form.submit()}>
+          current === 1 && (
+            <Button
+              type="primary"
+              onClick={() => form.submit()}
+              loading={props.masterWallet.createStatus.isRequesting}
+            >
               Withdraw
             </Button>
           )
         ]}
       >
-        {current === 0 ? null : (
-          <Steps
-            onChange={setCurrent}
-            current={current}
-            style={{ marginBottom: "24px" }}
-          >
-            {steps.map(item => (
-              <Step key={item.title} title={item.title} />
-            ))}
-          </Steps>
-        )}
-        <div className="steps-content">{steps[current].content}</div>
+        <Descriptions
+          title={
+            <Breadcrumb>
+              <Breadcrumb.Item>{orgName}</Breadcrumb.Item>
+              {current > 0 ? (
+                <Breadcrumb.Item>
+                  {current === 1 ? "Withdraw" : "Deposit"}
+                </Breadcrumb.Item>
+              ) : null}
+            </Breadcrumb>
+          }
+          column={1}
+          bordered
+          extra={
+            current === 0 ? (
+              <Space>
+                <Tooltip
+                  title={`Withdraw from ${orgName.toLowerCase()} master wallet to external address`}
+                >
+                  <Button onClick={() => next(1)}>Withdraw</Button>
+                </Tooltip>
+                <Tooltip
+                  title={`Deposit from external address to ${orgName.toLowerCase()} master wallet`}
+                >
+                  <Button
+                    type="primary"
+                    onClick={() => {
+                      next(2);
+                      setVisible(true);
+                    }}
+                  >
+                    Deposit
+                  </Button>
+                </Tooltip>
+              </Space>
+            ) : (
+              false
+            )
+          }
+        >
+          {current === 2 ? depositQr : null}
+          {current === 0 || current === 2 ? depositAddress : null}
+          {current === 0
+            ? otherDetails.map(item => {
+                return (
+                  <Descriptions.Item label={item.label}>
+                    <Paragraph style={{ margin: 0 }}>{item.value}</Paragraph>
+                  </Descriptions.Item>
+                );
+              })
+            : false}
+          {current === 1 ? (
+            <Descriptions.Item>{withdrawal}</Descriptions.Item>
+          ) : null}
+          {current === 0}
+        </Descriptions>
       </Modal>
-    </div>
+    </Form>
   );
 };
-export default MasterWalletManagementModal;
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(MasterWalletManagementModal);
