@@ -366,7 +366,8 @@ def create_master_organisation(app, reserve_token):
             print('Binding to reserve token')
         master_organisation = Organisation(
             name='Reserve', is_master=True,
-            token=reserve_token, country_code=app.config.get('DEFAULT_COUNTRY', 'AU')
+            token=reserve_token, country_code=app.config.get('DEFAULT_COUNTRY', 'AU'),
+            timezone='UTC'
         )
         db.session.add(master_organisation)
 
@@ -399,7 +400,7 @@ def create_float_transfer_account(app):
 
 # from app folder: python ./migations/seed.py
 if __name__ == '__main__':
-    current_app = create_app()
+    current_app = create_app(skip_create_filters=True)
     ctx = current_app.app_context()
     ctx.push()
 

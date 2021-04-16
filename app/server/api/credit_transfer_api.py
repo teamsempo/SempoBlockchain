@@ -448,8 +448,9 @@ class InternalCreditTransferAPI(MethodView):
         contract_address = post_data.get('contract_address')
 
         transfer = CreditTransfer.query.execution_options(show_all=True).filter_by(blockchain_hash=blockchain_transaction_hash).first()
-        # Case 1: Transfer exists in the database already. Just fetech it and return it in that case
+        # Case 1: Transfer exists in the database already. Mark received_third_party_sync as true, fetech it, and return it in that case
         if transfer:
+            transfer.received_third_party_sync = True
             credit_transfer = credit_transfer_schema.dump(transfer).data
             response_object = {
                 'message': 'Transfer Successful',

@@ -1,4 +1,6 @@
 from server import db
+from sqlalchemy import func
+
 from server.models.utils import ModelBase, OneOrgBase, disbursement_transfer_account_association_table,\
     disbursement_credit_transfer_association_table
 from sqlalchemy.types import ARRAY
@@ -14,6 +16,7 @@ class Disbursement(ModelBase):
 
     creator_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
 
+    label = db.Column(db.String)
     search_string = db.Column(db.String)
     search_filter_params = db.Column(db.String)
     include_accounts = db.Column(db.ARRAY(db.Integer))
@@ -34,6 +37,15 @@ class Disbursement(ModelBase):
         "CreditTransfer",
         secondary=disbursement_credit_transfer_association_table,
         back_populates="disbursement")
+
+    @hybrid_property
+    def recipient_count(self):
+        return db.session.query(func.count(disbursement_transfer_account_association_table.c.disbursement_id))\
+            .filter(disbursement_transfer_account_association_table.c.disbursement_id==self.id).first()[0]
+
+    @hybrid_property
+    def total_disbursement_amount(self):
+        return self.recipient_count * self.disbursement_amount 
 
     @hybrid_property
     def disbursement_amount(self):
