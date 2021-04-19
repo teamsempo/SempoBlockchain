@@ -15,6 +15,7 @@ export interface IOrganisation {
   cardShardDistance: number;
   minimumVendorPayoutWithdrawal: number;
   requireTransferCard: boolean;
+  requireMultipleTransferApprovals: boolean;
   countryCode: string;
   accountTypes: string[];
   timezone: string;
@@ -83,6 +84,8 @@ const NewOrganisationForm = (props: OuterProps) => {
               minimumVendorPayoutWithdrawal:
                 activeOrganisation.minimum_vendor_payout_withdrawal / 100,
               requireTransferCard: activeOrganisation.require_transfer_card,
+              requireMultipleTransferApprovals:
+                activeOrganisation.require_multiple_transfer_approvals,
               cardShardDistance: activeOrganisation.card_shard_distance,
               countryCode: countryCode,
               timezone: activeOrganisation.timezone,
@@ -294,7 +297,14 @@ const NewOrganisationForm = (props: OuterProps) => {
       >
         <Switch />
       </Form.Item>
-
+      <Form.Item
+        tooltip="Whether disbursements and transfers require two admins to approve them"
+        valuePropName="checked"
+        name="requireMultipleTransferApprovals"
+        label="Require Multiple Transfer Approvals"
+      >
+        <Switch />
+      </Form.Item>
       <Form.Item>
         <Button type="primary" htmlType="submit" loading={loading}>
           Save
