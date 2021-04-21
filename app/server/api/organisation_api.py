@@ -59,6 +59,7 @@ class OrganisationAPI(MethodView):
         default_disbursement = put_data.get('default_disbursement')
         minimum_vendor_payout_withdrawal = put_data.get('minimum_vendor_payout_withdrawal')
         require_transfer_card = put_data.get('require_transfer_card')
+        require_multiple_transfer_approvals = put_data.get('require_multiple_transfer_approvals')
         default_lat = put_data.get('default_lat')
         default_lng = put_data.get('default_lng')
         account_types = put_data.get('account_types', [])
@@ -86,6 +87,8 @@ class OrganisationAPI(MethodView):
             organisation.country_code = country_code
         if require_transfer_card is not None:
             organisation.require_transfer_card = require_transfer_card
+        if require_multiple_transfer_approvals is not None:
+            organisation.require_multiple_transfer_approvals = require_multiple_transfer_approvals
         if default_lat is not None:
             organisation.default_lat = default_lat
         if default_lng is not None:
@@ -115,6 +118,7 @@ class OrganisationAPI(MethodView):
         default_disbursement = post_data.get('default_disbursement')
         minimum_vendor_payout_withdrawal = post_data.get('minimum_vendor_payout_withdrawal')
         require_transfer_card = post_data.get('require_transfer_card')
+        require_multiple_transfer_approvals = post_data.get('require_multiple_transfer_approvals')
         default_lat = post_data.get('default_lat')
         default_lng = post_data.get('default_lng')
         account_types = post_data.get('account_types', [])
@@ -126,9 +130,9 @@ class OrganisationAPI(MethodView):
             if at not in ASSIGNABLE_TIERS.keys():
                 raise Exception(f'{at} not an assignable role')
 
-        if organisation_name is None or country_code is None:
+        if organisation_name is None or country_code is None or timezone is None:
             return make_response(
-                jsonify({'message': 'Must provide name and ISO 2 country_code to create organisation.'})), 400
+                jsonify({'message': 'Must provide organisation_name, country_code and timezone to create organisation.'})), 400
 
         existing_organisation = Organisation.query.filter_by(name=organisation_name).execution_options(
             show_all=True).first()
@@ -149,6 +153,7 @@ class OrganisationAPI(MethodView):
                 default_disbursement=default_disbursement,
                 minimum_vendor_payout_withdrawal=minimum_vendor_payout_withdrawal,
                 require_transfer_card=require_transfer_card,
+                require_multiple_transfer_approvals=require_multiple_transfer_approvals,
                 default_lat=default_lat,
                 default_lng=default_lng,
                 valid_roles=account_types

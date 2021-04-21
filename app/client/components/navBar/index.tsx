@@ -144,6 +144,7 @@ class NavBar extends React.Component<Props, State> {
               key="sub2"
               icon={<DollarOutlined translate={""} />}
               title="Transfers"
+              disabled={isMultiOrg || false}
             >
               <Menu.Item
                 key="/transfers"

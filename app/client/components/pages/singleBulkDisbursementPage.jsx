@@ -29,8 +29,19 @@ const mapDispatchToProps = dispatch => {
 class SingleBulkDisbursementPage extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = {
+      page: 1,
+      per_page: 10
+    };
   }
+
+  onPaginateChange = (page, pageSize) => {
+    let per_page = pageSize || 10;
+    this.setState({
+      page,
+      per_page
+    });
+  };
 
   componentDidMount() {
     let bulkId = this.props.match.params.bulkId;
@@ -94,6 +105,8 @@ class SingleBulkDisbursementPage extends React.Component {
           />
         </div>
       );
+    } else if (status === "PARTIAL") {
+      tag = <Tag color="#d48806">Partial</Tag>;
     } else if (status === "PENDING") {
       tag = <Tag color="#e2a963">Pending</Tag>;
     } else {
@@ -140,7 +153,7 @@ class SingleBulkDisbursementPage extends React.Component {
             <Space>
               <Button
                 onClick={() => this.onReject()}
-                disabled={status !== "PENDING"}
+                disabled={status == "APPROVED"}
                 loading={this.props.bulkTransfers.modifyStatus.isRequesting}
               >
                 Reject
@@ -148,7 +161,7 @@ class SingleBulkDisbursementPage extends React.Component {
 
               <Button
                 onClick={() => this.onComplete()}
-                disabled={status !== "PENDING"}
+                disabled={status == "APPROVED"}
                 loading={this.props.bulkTransfers.modifyStatus.isRequesting}
               >
                 Approve
@@ -166,6 +179,10 @@ class SingleBulkDisbursementPage extends React.Component {
               filterObject="user"
               providedParams={bulkItem && bulkItem.search_filter_params}
               providedSearchString={bulkItem && bulkItem.search_string}
+              pagination={{
+                page: this.state.page,
+                per_page: this.state.per_page
+              }}
               disabled={true}
             />
             <TransferAccountList
@@ -176,6 +193,12 @@ class SingleBulkDisbursementPage extends React.Component {
               onSelectChange={(s, u, a) => {}}
               providedSelectedRowKeys={bulkItem && bulkItem.include_accounts}
               providedUnselectedRowKeys={bulkItem && bulkItem.exclude_accounts}
+              paginationOptions={{
+                currentPage: this.state.page,
+                items: this.props.transferAccounts.pagination.items,
+                onChange: (page, perPage) =>
+                  this.onPaginateChange(page, perPage)
+              }}
             />
           </Card>
         </PageWrapper>

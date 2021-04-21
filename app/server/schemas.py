@@ -426,6 +426,7 @@ class OrganisationSchema(SchemaBase):
     valid_roles = fields.Raw()
 
     require_transfer_card = fields.Boolean(default=False)
+    require_multiple_transfer_approvals = fields.Boolean(default=False)
     default_disbursement = fields.Function(lambda obj: int(obj.default_disbursement))
     minimum_vendor_payout_withdrawal = fields.Function(lambda obj: int(obj.minimum_vendor_payout_withdrawal))
     country_code = fields.Function(lambda obj: str(obj.country_code))
@@ -463,20 +464,15 @@ class DisbursementSchema(SchemaBase):
     include_accounts            = fields.List(fields.Int())
     exclude_accounts            = fields.List(fields.Int())
 
-    recipient_count             = fields.Function(lambda obj: len(obj.transfer_accounts))
-    total_disbursement_amount   = fields.Method('_total_disbursement_amount')
+    recipient_count             = fields.Int()
+    total_disbursement_amount   = fields.Int()
     label                       = fields.Str()
     state                       = fields.Str()
     transfer_type               = fields.Str()
     disbursement_amount         = fields.Int()
     creator_email               = fields.Method('_creator_email')
-
-    def _total_disbursement_amount(self, obj):
-        return len(obj.transfer_accounts)*obj.disbursement_amount
-
     def _creator_email(self, obj):
         return obj.creator_user.email
-
 
 pdf_users_schema = UserSchema(many=True, only=("id", "qr", "first_name", "last_name"))
 

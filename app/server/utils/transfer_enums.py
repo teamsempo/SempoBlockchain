@@ -35,6 +35,7 @@ class TransferStatusEnum(enum.Enum):
     PENDING = 'PENDING'
     REJECTED = 'REJECTED'
     COMPLETE = 'COMPLETE'
+    PARTIAL = 'PARTIAL'
     # PENDING = 0
     # INTERNAL_REJECTED = -1
     # INTERNAL_COMPLETE = 1
