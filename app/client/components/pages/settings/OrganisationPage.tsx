@@ -113,6 +113,7 @@ class OrganisationPage extends React.Component<IProps, IState> {
       token_id: form.token,
       organisation_name: form.organisationName,
       country_code: form.countryCode,
+      timezone: form.timezone,
       default_disbursement: form.defaultDisbursement * 100,
       card_shard_distance: form.cardShardDistance,
       minimum_vendor_payout_withdrawal:
