@@ -91,7 +91,7 @@ def test_agent_recipient(test_client, init_database):
     user.phone = phone()
 
     agent_recipient = UserFactory(phone=make_kenyan_phone(phone()))
-    agent_recipient.set_held_role('TOKEN_AGENT', 'grassroots_token_agent')
+    agent_recipient.set_held_role('TOKEN_AGENT', 'token_agent')
 
     state_machine = KenyaUssdStateMachine(session, user)
     state_machine.feed_char(agent_recipient.phone)
@@ -103,7 +103,7 @@ def test_agent_recipient(test_client, init_database):
 def test_exchange_token(mocker, test_client, init_database, create_transfer_account_user):
     agent_recipient = create_transfer_account_user
     agent_recipient.phone = make_kenyan_phone(agent_recipient.phone)
-    agent_recipient.set_held_role('TOKEN_AGENT', 'grassroots_token_agent')
+    agent_recipient.set_held_role('TOKEN_AGENT', 'token_agent')
 
     exchange_token_confirmation = UssdSessionFactory(
         state="exchange_token_confirmation",

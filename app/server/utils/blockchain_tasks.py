@@ -1,3 +1,5 @@
+from flask import g
+import config
 from typing import Optional, List, Dict
 from functools import partial
 from flask import current_app
@@ -14,19 +16,19 @@ from server.utils.exchange import (
     bonding_curve_reserve_to_tokens,
     bonding_curve_token1_to_token2
 )
-
+from server.utils.multi_chain import get_chain
 
 class BlockchainTasker(object):
+    
     def _eth_endpoint(self, endpoint):
-        eth_worker_name = 'eth_manager'
         celery_tasks_name = 'celery_tasks'
-        return f'{eth_worker_name}.{celery_tasks_name}.{endpoint}'
+        return f'{get_chain()}.{celery_tasks_name}.{endpoint}'
 
     def _execute_synchronous_celery(self, task, kwargs=None, args=None, timeout=None, queue='high-priority'):
         async_result = task_runner.delay_task(task, kwargs, args, queue=queue)
         try:
             response = async_result.get(
-                timeout=timeout or current_app.config['SYNCRONOUS_TASK_TIMEOUT'],
+                timeout=timeout or current_app.config['CHAINS'][get_chain()]['SYNCRONOUS_TASK_TIMEOUT'],
                 propagate=True,
                 interval=0.3)
         except Exception as e:
@@ -75,6 +77,21 @@ class BlockchainTasker(object):
     def force_third_party_transaction_sync(self):
         return task_runner.delay_task(self._eth_endpoint('synchronize_third_party_transactions'), queue='low-priority').id
 
+    def force_fetch_block_range(self, filter_address, floor, ceiling):
+        return self._execute_synchronous_celery(self._eth_endpoint('force_fetch_block_range'), { 'filter_address': filter_address, 'floor': floor, 'ceiling': ceiling })
+
+    def force_recall_webhook(self, transaction_hash):
+        return self._execute_synchronous_celery(self._eth_endpoint('force_recall_webhook'), { 'transaction_hash': transaction_hash })
+
+    def get_third_party_sync_metrics(self):
+        return self._execute_synchronous_celery(self._eth_endpoint('get_third_party_sync_metrics'), {})
+
+    def get_failed_block_fetches(self):
+        return self._execute_synchronous_celery(self._eth_endpoint('get_failed_block_fetches'), {})
+
+    def get_failed_callbacks(self):
+        return self._execute_synchronous_celery(self._eth_endpoint('get_failed_callbacks'), {})
+
     def get_blockchain_task(self, task_uuid):
         """
         Used to check the status of a blockchain task
@@ -95,7 +112,7 @@ class BlockchainTasker(object):
         elapsed = 0
 
         if timeout is None:
-            timeout = current_app.config['SYNCRONOUS_TASK_TIMEOUT']
+            timeout = current_app.config['CHAINS'][get_chain()]['SYNCRONOUS_TASK_TIMEOUT']
 
         while timeout is None or elapsed <= timeout:
             task = self.get_blockchain_task(task_uuid)
@@ -122,6 +139,18 @@ class BlockchainTasker(object):
     def deduplicate(self, min_task_id, max_task_id):
         return self._execute_synchronous_celery(
             self._eth_endpoint('deduplicate'), {'min_task_id': min_task_id, 'max_task_id': max_task_id}
+        )
+
+    def remove_prior_task_dependency(self, task_uuid, prior_task_uuid):
+        return self._execute_synchronous_celery(
+            self._eth_endpoint('remove_prior_task_dependency'),
+            {'task_uuid': task_uuid, 'prior_task_uuid': prior_task_uuid}
+        )
+
+    def remove_all_posterior_dependencies(self, prior_task_uuid):
+        return self._execute_synchronous_celery(
+            self._eth_endpoint('remove_all_posterior_dependencies'),
+            {'prior_task_uuid': prior_task_uuid}
         )
 
     # TODO: dynamically set topups according to current app gas price (currently at 2 gwei)
@@ -432,7 +461,7 @@ class BlockchainTasker(object):
         return self._execute_synchronous_celery(
             self._eth_endpoint('deploy_exchange_network'),
             args=[deploying_address],
-            timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 25
+            timeout=current_app.config['CHAINS'][get_chain()]['SYNCRONOUS_TASK_TIMEOUT'] * 25
         )
 
     def deploy_and_fund_reserve_token(self, deploying_address, name, symbol, fund_amount_wei):
@@ -440,7 +469,7 @@ class BlockchainTasker(object):
         return self._execute_synchronous_celery(
             self._eth_endpoint('deploy_and_fund_reserve_token'),
             args=args,
-            timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 20
+            timeout=current_app.config['CHAINS'][get_chain()]['SYNCRONOUS_TASK_TIMEOUT'] * 20
         )
 
     def deploy_smart_token(self,
@@ -463,7 +492,7 @@ class BlockchainTasker(object):
         return self._execute_synchronous_celery(
             self._eth_endpoint('deploy_smart_token'),
             args=args,
-            timeout=current_app.config['SYNCRONOUS_TASK_TIMEOUT'] * 15
+            timeout=current_app.config['CHAINS'][get_chain()]['SYNCRONOUS_TASK_TIMEOUT'] * 15
         )
 
     def topup_wallet_if_required(self, wallet_address, queue='high-priority'):

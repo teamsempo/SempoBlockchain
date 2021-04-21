@@ -7,12 +7,14 @@ sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..")))
 
 from server import db, create_app
 from server.models.ussd import UssdMenu
+from server.models.user import User
 from server.models.transfer_usage import TransferUsage
 from server.models.transfer_account import TransferAccount, TransferAccountType
 from server.models.organisation import Organisation
 from server.models.token import Token, TokenType
 from server.exceptions import TransferUsageNameDuplicateException
 
+from server.utils.location import _set_user_gps_from_location
 
 def print_section_title(text):
     print(text)
@@ -272,28 +274,30 @@ def create_ussd_menus():
     print_section_conclusion('Done creating USSD Menus')
 
 
-def create_business_categories():
+def create_business_categories(only_if_none_exist=True):
+
+    if only_if_none_exist:
+        usages = db.session.query(TransferUsage).all()
+        if len(usages) > 0:
+            print("Business Categories already exist! Skipping.")
+            return
 
     print_section_title('Creating Business Categories')
     business_categories = [
-        {'name': 'Food/Water', 'icon': 'message', 'translations': {
-            'en': 'Food/Water', 'sw': 'Chakula/Maji'}},
-        {'name': 'Fuel/Energy', 'icon': 'message', 'translations': {
-            'en': 'Fuel/Energy', 'sw': 'Kuni/Makaa/Mafuta'}},
-        {'name': 'Education', 'icon': 'message', 'translations': {
-            'en': 'Education', 'sw': 'Elimu'}},
-        {'name': 'Health', 'icon': 'message', 'translations': {
-            'en': 'Health', 'sw': 'Afya'}},
-        {'name': 'Shop', 'icon': 'message', 'translations': {
-            'en': 'Shop', 'sw': 'Duka'}},
-        {'name': 'Environment', 'icon': 'message', 'translations': {
-            'en': 'Environment', 'sw': 'Mazingira'}},
-        {'name': 'Transport', 'icon': 'message', 'translations': {
-            'en': 'Transport', 'sw': 'Usafiri'}},
-        {'name': 'Farming/Labour', 'icon': 'message', 'translations': {
-            'en': 'Farming/Labour', 'sw': 'Mkulima/Mfanyikazi'}},
-        {'name': 'Savings Group', 'icon': 'message', 'translations': {
-            'en': 'Savings Group', 'sw': 'Chama'}}
+        {'name': 'Fresh Food', 'icon': 'food-apple', 'translations': {
+            'en': 'Fresh Food'}},
+        {'name': 'Long Life Food', 'icon': 'food-variant', 'translations': {
+            'en': 'Long Life Food'}},
+        {'name': 'Water/Sanitation/Hygiene', 'icon': 'water', 'translations': {
+            'en': 'Water/Sanitation/Hygiene'}},
+        {'name': 'Health/Medicine', 'icon': 'medical-bag', 'translations': {
+            'en': 'Health/Medicine'}},
+        {'name': 'Clothing', 'icon': 'tshirt-crew', 'translations': {
+            'en': 'Clothing'}},
+        {'name': 'Household Items', 'icon': 'home', 'translations': {
+            'en': 'Household Items'}},
+        {'name': 'Other', 'icon': 'star', 'translations': {
+            'en': 'Other'}}
     ]
     for index, business_category in enumerate(business_categories):
         name = business_category['name']
@@ -316,9 +320,11 @@ def create_reserve_token(app):
 
     print_section_title("Setting up Reserve Token")
 
-    reserve_token_address = app.config.get('RESERVE_TOKEN_ADDRESS')
-    reserve_token_name = app.config.get('RESERVE_TOKEN_NAME')
-    reserve_token_symbol = app.config.get('RESERVE_TOKEN_SYMBOL')
+    chain_config = app.config['CHAINS'][app.config['DEFAULT_CHAIN']]
+
+    reserve_token_address = chain_config.get('RESERVE_TOKEN_ADDRESS')
+    reserve_token_name = chain_config.get('RESERVE_TOKEN_NAME')
+    reserve_token_symbol = chain_config.get('RESERVE_TOKEN_SYMBOL')
     # reserve_token_decimals = app.config.get('RESERVE_TOKEN_DECIMALS')
 
     if reserve_token_address:
@@ -331,8 +337,11 @@ def create_reserve_token(app):
                 address=reserve_token_address,
                 name=reserve_token_name,
                 symbol=reserve_token_symbol,
-                token_type=TokenType.RESERVE
+                token_type=TokenType.RESERVE,
+                chain=app.config['DEFAULT_CHAIN']
             )
+
+            reserve_token.decimals = 18
 
             db.session.add(reserve_token)
             db.session.commit()
@@ -357,7 +366,8 @@ def create_master_organisation(app, reserve_token):
             print('Binding to reserve token')
         master_organisation = Organisation(
             name='Reserve', is_master=True,
-            token=reserve_token, country_code=app.config.get('DEFAULT_COUNTRY', 'AU')
+            token=reserve_token, country_code=app.config.get('DEFAULT_COUNTRY', 'AU'),
+            timezone='UTC'
         )
         db.session.add(master_organisation)
 
@@ -365,28 +375,32 @@ def create_master_organisation(app, reserve_token):
 
     print_section_conclusion('Done creating master organisation')
 
-def create_float_wallet(app):
-    print_section_title('Creating/Updating Float Wallet')
-    float_wallet = TransferAccount.query.execution_options(show_all=True).filter(
-        TransferAccount.account_type == TransferAccountType.FLOAT
-    ).first()
+# Creates float transfer accounts for any transfer account that doesn't have one already
+def create_float_transfer_account(app):
+    print_section_title('Creating/Updating Float Transfer Accounts')
+    tokens = db.session.query(Token).execution_options(show_all=True)
+    for t in tokens:
+        if t.float_account is None:
+            print(f'Creating Float Account for {t.name}')
+            chain_config = app.config['CHAINS'][app.config['DEFAULT_CHAIN']]
 
-    if float_wallet is None:
-        print('Creating Float Wallet')
-        float_wallet = TransferAccount(
-            private_key=app.config['ETH_FLOAT_PRIVATE_KEY'],
-            account_type=TransferAccountType.FLOAT,
-            is_approved=True
-        )
-        db.session.add(float_wallet)
-
+            float_transfer_account = TransferAccount(
+                private_key=chain_config['FLOAT_PRIVATE_KEY'],
+                account_type=TransferAccountType.FLOAT,
+                token=t,
+                is_approved=True
+            )
+            db.session.add(float_transfer_account)
+            db.session.flush()
+            t.float_account = float_transfer_account
+        t.float_account.is_public = True
         db.session.commit()
-
     print_section_conclusion('Done Creating/Updating Float Wallet')
+        
 
 # from app folder: python ./migations/seed.py
 if __name__ == '__main__':
-    current_app = create_app()
+    current_app = create_app(skip_create_filters=True)
     ctx = current_app.app_context()
     ctx.push()
 
@@ -396,6 +410,6 @@ if __name__ == '__main__':
     reserve_token = create_reserve_token(current_app)
     create_master_organisation(current_app, reserve_token)
 
-    create_float_wallet(current_app)
+    create_float_transfer_account(current_app)
 
     ctx.pop()

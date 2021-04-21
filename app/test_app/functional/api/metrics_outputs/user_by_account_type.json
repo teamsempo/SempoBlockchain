@@ -1,0 +1,87 @@
+{
+  "active_filters": [],
+  "active_group_by": "sender,account_type",
+  "active_users": {
+    "aggregate": {
+      "ORGANISATION": 1,
+      "USER": 5,
+      "percent_change": 100,
+      "total": 6
+    },
+    "timeseries": {
+      "ORGANISATION": [
+        {
+          "date": "2021-01-22T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-04T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-09T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-11T00:00:00",
+          "value": 1
+        }
+      ],
+      "USER": [
+        {
+          "date": "2021-02-05T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-07T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-10T00:00:00",
+          "value": 2
+        },
+        {
+          "date": "2021-02-11T00:00:00",
+          "value": 1
+        }
+      ]
+    },
+    "type": {
+      "display_decimals": 0,
+      "value_type": "count"
+    }
+  },
+  "mandatory_filter": {},
+  "master_wallet_balance": -1517,
+  "users_created": {
+    "aggregate": {
+      "USER": 6,
+      "percent_change": 300,
+      "total": 7
+    },
+    "timeseries": {
+      "USER": [
+        {
+          "date": "2021-02-01T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-07T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-10T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-11T00:00:00",
+          "value": 3
+        }
+      ]
+    },
+    "type": {
+      "display_decimals": 0,
+      "value_type": "count"
+    }
+  }
+}

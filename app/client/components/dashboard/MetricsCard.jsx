@@ -5,14 +5,13 @@
 import React from "react";
 
 import { connect } from "react-redux";
-import moment from "moment";
+import { CSVLink } from "react-csv";
+import { DownloadOutlined } from "@ant-design/icons";
 
 import { isMobileQuery, withMediaQuery } from "../helpers/responsive";
-
-import { Card, Divider } from "antd";
-
-import { LoadMetricAction } from "../../reducers/metric/actions";
-import { AllowedFiltersAction } from "../../reducers/allowedFilters/actions";
+import { toCurrency } from "../../utils";
+import { VALUE_TYPES } from "../../constants";
+import { Card, Divider, Tooltip, Space } from "antd";
 
 import VolumeChart from "./card/VolumeChart";
 import GroupByChart from "./card/GroupByChart";
@@ -20,10 +19,6 @@ import CustomTabs from "./card/CustomTabs";
 import DateRangeSelector from "./dateRangeSelector";
 import FilterModule from "../filterModule/FilterModule";
 import LoadingSpinner from "../loadingSpinner.jsx";
-
-import { reduxState } from "./FakeState";
-
-const dateFormat = "DD/MM/YYYY";
 
 const mapStateToProps = (state, ownProps) => {
   return {
@@ -68,50 +63,114 @@ class MetricsCard extends React.Component {
 
     const selectedData = metrics[this.state.selectedTimeSeries];
 
+    // Prep data for CSV export
+    if (selectedData) {
+      // Map values to dates
+      const headers = Object.keys(selectedData["timeseries"]);
+      var datesToValues = {};
+      headers.forEach(header => {
+        selectedData["timeseries"][header].forEach(data => {
+          var a = datesToValues[data["date"]]
+            ? datesToValues[data["date"]]
+            : {};
+          if (selectedData["type"]["value_type"] == VALUE_TYPES.CURRENCY) {
+            a[header] = toCurrency(data["value"]);
+          } else {
+            a[header] = data["value"];
+          }
+          datesToValues[data["date"]] = a;
+        });
+      });
+      // Add zeros
+      Object.keys(datesToValues).forEach(date => {
+        headers.forEach(header => {
+          if (!(header in datesToValues[date])) {
+            datesToValues[date][header] = 0;
+          }
+        });
+      });
+      // Make 2d array in the shape of the CSV we want!
+      const sheetHeaders = headers.length == 1 ? ["Value"] : headers;
+      var sheetArray = [["Date", ...sheetHeaders]];
+      Object.keys(datesToValues).forEach(date => {
+        const row = headers.map(header => {
+          return datesToValues[date][header];
+        });
+        sheetArray.push([date, ...row]);
+      });
+    }
+
+    const csvLink = (
+      <Tooltip title={"Download CSV"}>
+        <CSVLink
+          filename={cardTitle + "_" + this.state.selectedTimeSeries + ".csv"}
+          data={sheetArray || [[]]}
+        >
+          <DownloadOutlined />
+        </CSVLink>
+      </Tooltip>
+    );
+
     const filter = <DateRangeSelector onChange={this.setDateRange} />;
+    const extra = <div>{filter}</div>;
 
     let dataModule;
 
     if (metricsLoadStatus.success && selectedData) {
       dataModule = (
         <div>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: isMobile ? "column" : "row",
-              alignItems: "center"
-            }}
+          <LoadingSpinner
+            spinning={metricsLoadStatus.isRequesting ? "true" : ""}
           >
-            <div style={{ height: 200, width: isMobile ? "100%" : "60%" }}>
-              <VolumeChart
-                data={selectedData}
-                selected={this.state.selectedTimeSeries}
-              />
-            </div>
-
-            <img
-              src="/static/media/BigArrow.svg"
-              style={{
-                height: 150,
-                padding: "0 1em",
-                margin: isMobile ? "-3em0" : "0 0 3em",
-                transform: isMobile ? "rotate(90deg)" : null
-              }}
-            />
-
-            {/*  need to offset the arrow width + padding */}
             <div
               style={{
-                height: 200,
-                width: isMobile ? "100%" : "calc(40% - 2em - 22px)"
+                display: "flex",
+                flexDirection: isMobile ? "column" : "row",
+                alignItems: "center"
               }}
             >
-              <GroupByChart
-                data={selectedData}
-                selected={this.state.selectedTimeSeries}
+              <div
+                style={{
+                  height: this.props.chartHeight,
+                  width: isMobile ? "100%" : "60%"
+                }}
+              >
+                <VolumeChart
+                  chartHeight={this.props.chartHeight}
+                  data={selectedData}
+                  selected={this.state.selectedTimeSeries}
+                  filter_dates={this.state.dateRange}
+                />
+              </div>
+
+              <img
+                alt={
+                  "Elongated right-arrow dividing primary chart and group by chart"
+                }
+                src="/static/media/BigArrow.svg"
+                style={{
+                  height: this.props.chartHeight - 50,
+                  padding: "0 1em",
+                  margin: isMobile ? "-3em 0" : "0 0 3em",
+                  transform: isMobile ? "rotate(90deg)" : null
+                }}
               />
+
+              {/*  need to offset the arrow width + padding */}
+              <div
+                style={{
+                  height: this.props.chartHeight,
+                  width: isMobile ? "100%" : "calc(40% - 2em - 22px)"
+                }}
+              >
+                <GroupByChart
+                  chartHeight={this.props.chartHeight}
+                  data={selectedData}
+                  selected={this.state.selectedTimeSeries}
+                />
+              </div>
             </div>
-          </div>
+          </LoadingSpinner>
           <CustomTabs
             metrics={metrics}
             timeSeriesNameLabels={timeSeriesNameLabels}
@@ -124,7 +183,15 @@ class MetricsCard extends React.Component {
     }
 
     return (
-      <Card title={cardTitle} bordered={false} extra={filter}>
+      <Card
+        title={
+          <Space>
+            {cardTitle} {csvLink}
+          </Space>
+        }
+        bordered={false}
+        extra={extra}
+      >
         <div
           style={{
             display: "flex",
@@ -152,4 +219,4 @@ class MetricsCard extends React.Component {
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(MetricsCard);
+)(withMediaQuery([isMobileQuery])(MetricsCard));

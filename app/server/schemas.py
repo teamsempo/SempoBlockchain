@@ -1,15 +1,24 @@
+import base64
+from io import BytesIO
 from flask import g
-
 from marshmallow import Schema, fields, post_dump
 import toastedmarshmallow
+import qrcode
 
 from server.models.custom_attribute import CustomAttribute
 from server.utils.amazon_s3 import get_file_url
 from server.models.user import User
 from server.models.exchange import Exchange
-from server.constants import GE_FILTER_ATTRIBUTES
 from server.exceptions import SubexchangeNotFound
 
+
+def gen_qr(data):
+    out = BytesIO()
+    img = qrcode.make(data)
+    img.save(out, "PNG")
+    out.seek(0)
+
+    return u"data:image/png;base64," + base64.b64encode(out.getvalue()).decode("ascii")
 
 class LowerCase(fields.Field):
     """Field that deserializes to a lower case string.
@@ -18,6 +27,13 @@ class LowerCase(fields.Field):
     def _deserialize(self, value, attr, data, **kwargs):
         return value.lower()
 
+class QR(fields.Field):
+    """
+    Field that serializes to a QR code
+    """
+
+    def _serialize(self, value, attr, obj):
+        return gen_qr(value)
 
 class SchemaBase(Schema):
     class Meta:
@@ -33,6 +49,7 @@ class BlockchainTaskableSchemaBase(SchemaBase):
     blockchain_status   = fields.Function(lambda obj: obj.blockchain_status.name)
 
 class UserSchema(SchemaBase):
+
     first_name              = fields.Str()
     last_name               = fields.Str()
     preferred_language      = fields.Str()
@@ -52,6 +69,7 @@ class UserSchema(SchemaBase):
     is_activated            = fields.Boolean()
     is_disabled             = fields.Boolean()
 
+    roles                   = fields.Dict(keys=fields.Str(), values=fields.Str())
     is_beneficiary          = fields.Boolean(attribute='has_beneficiary_role')
     is_vendor               = fields.Boolean(attribute='has_vendor_role')
     is_tokenagent           = fields.Boolean(attribute='has_token_agent_role')
@@ -67,10 +85,16 @@ class UserSchema(SchemaBase):
     custom_attributes        = fields.Method("get_json_data")
     matched_profile_pictures = fields.Method("get_profile_url")
     referred_by              = fields.Method("get_referrer_phone")
+    qr                       = fields.Method("get_qr_code")
 
     transfer_accounts        = fields.Nested('TransferAccountSchema',
                                              many=True,
                                              exclude=('users', 'credit_sends', 'credit_receives'))
+
+    transfer_card = fields.Nested('TransferCardSchema', only=('is_disabled', 'public_serial_number'))
+
+    def get_qr_code(self, obj):
+        return gen_qr(f'{obj.id}: {obj.first_name} {obj.last_name}')
 
     def get_json_data(self, obj):
 
@@ -79,9 +103,7 @@ class UserSchema(SchemaBase):
         parsed_dict = {}
 
         for attribute in custom_attributes:
-            # todo: is there a reason only GE attributes are returned??
-            if attribute.value and attribute.name in GE_FILTER_ATTRIBUTES:
-                parsed_dict[attribute.name] = attribute.value.strip('"')
+            parsed_dict[attribute.key] = attribute.value
 
         return parsed_dict
 
@@ -165,25 +187,29 @@ class CreditTransferSchema(BlockchainTaskableSchemaBase):
 
     transfer_use            = fields.Function(lambda obj: obj.transfer_use)
 
-    transfer_metadata       = fields.Function(lambda obj: obj.transfer_metadata)
-    token                   = fields.Nested(TokenSchema, only=('id', 'symbol'))
+    transfer_metadata = fields.Function(lambda obj: obj.transfer_metadata)
+    token = fields.Nested(TokenSchema, only=('id', 'symbol'))
 
-    sender_transfer_account_id      = fields.Int()
-    recipient_transfer_account_id   = fields.Int()
+    sender_transfer_account_id = fields.Int()
+    recipient_transfer_account_id = fields.Int()
 
-    sender_user             = fields.Nested(UserSchema, attribute='sender_user', only=("id", "first_name", "last_name"))
-    recipient_user          = fields.Nested(UserSchema, attribute='recipient_user', only=("id", "first_name", "last_name"))
+    sender_user = fields.Nested(UserSchema, attribute='sender_user', only=("id", "first_name", "last_name"))
+    recipient_user = fields.Nested(UserSchema, attribute='recipient_user', only=("id", "first_name", "last_name"))
 
-    sender_transfer_account    = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance", "token", "blockchain_address"))
-    recipient_transfer_account = fields.Nested("server.schemas.TransferAccountSchema", only=("id", "balance", "token", "blockchain_address"))
+    sender_transfer_account = fields.Nested("server.schemas.TransferAccountSchema",
+                                            only=("id", "balance", "token", "blockchain_address", "is_vendor"))
+    recipient_transfer_account = fields.Nested("server.schemas.TransferAccountSchema",
+                                               only=("id", "balance", "token", "blockchain_address", "is_vendor"))
+
+    sender_transfer_card_id = fields.Int()
 
     from_exchange_to_transfer_id = fields.Function(lambda obj: obj.from_exchange.to_transfer.id)
 
-    attached_images         = fields.Nested(UploadedResourceSchema, many=True)
+    attached_images = fields.Nested(UploadedResourceSchema, many=True)
 
-    lat                     = fields.Function(lambda obj: obj.recipient_transfer_account.primary_user.lat)
-    lng                     = fields.Function(lambda obj: obj.recipient_transfer_account.primary_user.lng)
-    is_sender               = fields.Function(lambda obj: obj.sender_transfer_account in g.user.transfer_accounts)
+    lat = fields.Function(lambda obj: obj.recipient_transfer_account.primary_user.lat)
+    lng = fields.Function(lambda obj: obj.recipient_transfer_account.primary_user.lng)
+    is_sender = fields.Function(lambda obj: obj.sender_transfer_account in g.user.transfer_accounts)
 
     def get_authorising_user_email(self, obj):
         authorising_user_id = obj.authorising_user_id
@@ -263,6 +289,7 @@ class TransferAccountSchema(SchemaBase):
     payable_period_type     = fields.Str()
     payable_period_length   = fields.Int()
     payable_epoch           = fields.Str()
+    notes                   = fields.Str()
     payable_period_epoch    = fields.DateTime()
 
     blockchain_address      = fields.Str()
@@ -306,6 +333,8 @@ class TransferAccountSchema(SchemaBase):
 class TransferCardSchema(SchemaBase):
     public_serial_number    = fields.Str()
     nfc_serial_number       = fields.Function(lambda obj: obj.nfc_serial_number.upper())
+    is_disabled             = fields.Boolean()
+
 
     symbol                  = fields.Method('get_symbol')
 
@@ -392,15 +421,22 @@ class OrganisationSchema(SchemaBase):
     default_lat = fields.Float()
     default_lng = fields.Float()
 
+    card_shard_distance = fields.Int() # Kilometers
+
+    valid_roles = fields.Raw()
+
     require_transfer_card = fields.Boolean(default=False)
+    require_multiple_transfer_approvals = fields.Boolean(default=False)
     default_disbursement = fields.Function(lambda obj: int(obj.default_disbursement))
+    minimum_vendor_payout_withdrawal = fields.Function(lambda obj: int(obj.minimum_vendor_payout_withdrawal))
     country_code = fields.Function(lambda obj: str(obj.country_code))
+    timezone = fields.Function(lambda obj: str(obj.timezone))
 
     token               = fields.Nested('server.schemas.TokenSchema')
 
-    users               = fields.Nested('server.schemas.UserSchema', many=True)
-    transfer_accounts   = fields.Nested('server.schemas.TransferAccountSchema', many=True)
-    credit_transfers    = fields.Nested('server.schemas.CreditTransferSchema', many=True)
+    #users               = fields.Nested('server.schemas.UserSchema', many=True)
+    #transfer_accounts   = fields.Nested('server.schemas.TransferAccountSchema', many=True)
+    #credit_transfers    = fields.Nested('server.schemas.CreditTransferSchema', many=True)
 
 
 class TransferUsageSchema(Schema):
@@ -417,10 +453,35 @@ class SynchronizationFilterSchema(Schema):
     created                     = fields.DateTime(dump_only=True)
     updated                     = fields.DateTime(dump_only=True)
 
-user_schema = UserSchema(exclude=("transfer_accounts.credit_sends",
+class AttributeMapSchema(Schema):
+    input_name                  = fields.Str()
+    output_name                 = fields.Str()
+
+
+class DisbursementSchema(SchemaBase):
+    search_string               = fields.Str()
+    search_filter_params        = fields.Str()
+    include_accounts            = fields.List(fields.Int())
+    exclude_accounts            = fields.List(fields.Int())
+
+    recipient_count             = fields.Int()
+    total_disbursement_amount   = fields.Int()
+    label                       = fields.Str()
+    state                       = fields.Str()
+    transfer_type               = fields.Str()
+    disbursement_amount         = fields.Int()
+    creator_email               = fields.Method('_creator_email')
+    def _creator_email(self, obj):
+        return obj.creator_user.email
+
+pdf_users_schema = UserSchema(many=True, only=("id", "qr", "first_name", "last_name"))
+
+user_schema = UserSchema(exclude=("qr",
+                                  "transfer_accounts.credit_sends",
                                   "transfer_accounts.credit_receives"))
 
-users_schema = UserSchema(many=True, exclude=("transfer_accounts.credit_sends",
+users_schema = UserSchema(many=True, exclude=("qr",
+                                              "transfer_accounts.credit_sends",
                                               "transfer_accounts.credit_receives"))
 
 transfer_account_schema = TransferAccountSchema(
@@ -463,10 +524,16 @@ credit_transfers_schema = CreditTransferSchema(many=True)
 
 synchronization_filter_schema = SynchronizationFilterSchema()
 
+view_credit_transfer_schema = CreditTransferSchema(exclude=(
+"sender_user", "recipient_user", "lat", "lng", "attached_images"))
 view_credit_transfers_schema = CreditTransferSchema(many=True, exclude=(
+"sender_user", "recipient_user", "lat", "lng", "attached_images"))
+view_credit_transfer_schema = CreditTransferSchema(exclude=(
 "sender_user", "recipient_user", "lat", "lng", "attached_images"))
 
 transfer_cards_schema = TransferCardSchema(many=True, exclude=("id", "created"))
+transfer_card_schema = TransferCardSchema(exclude=("id", "created"))
+
 
 uploaded_resource_schema = UploadedResourceSchema()
 
@@ -485,6 +552,10 @@ kyc_application_state_schema = KycApplicationSchema(
 me_organisation_schema = OrganisationSchema(exclude=("users", "transfer_accounts", "credit_transfers"))
 organisation_schema = OrganisationSchema()
 organisations_schema = OrganisationSchema(many=True, exclude=("users", "transfer_accounts", "credit_transfers"))
+
+attribute_map_schema = AttributeMapSchema()
+attribute_maps_schema = AttributeMapSchema(many=True)
+
 
 token_schema = TokenSchema()
 tokens_schema = TokenSchema(many=True)
@@ -519,3 +590,6 @@ me_credit_transfers_schema = CreditTransferSchema(many=True, exclude=("sender_tr
 me_exchange_schema = ExchangeSchema()
 me_exchanges_schema = ExchangeSchema(many=True)
 
+
+disbursement_schema = DisbursementSchema()
+disbursements_schema = DisbursementSchema(many=True)

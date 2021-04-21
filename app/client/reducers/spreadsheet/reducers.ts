@@ -50,15 +50,13 @@ interface SaveDatasetState {
   error?: Error | null;
   saved?: boolean;
   message?: string;
-  diagnostics: object | null;
 }
 
 const intialSaveDatasetState: SaveDatasetState = {
   isRequesting: false,
   error: null,
   saved: false,
-  message: "",
-  diagnostics: []
+  message: ""
 };
 
 export const datasetSave = (
@@ -78,8 +76,7 @@ export const datasetSave = (
         isRequesting: false,
         saved: true,
         error: null,
-        message: action.payload.save_result.message,
-        diagnostics: action.payload.save_result.diagnostics
+        message: action.payload.save_result.message
       };
 
     case SpreadsheetActionTypes.SAVE_DATASET_FAILURE:

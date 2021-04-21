@@ -5,22 +5,25 @@ import { connect } from "react-redux";
 import MapGL from "react-map-gl";
 import DeckGLOverlay from "./deckglOverlay.jsx";
 
-// Set your mapbox token here
-const MAPBOX_TOKEN =
-  "pk.eyJ1Ijoic2VtcG9uaWNrIiwiYSI6ImNqZnJtNHkybzA0OWMyd25lczcyeXJwMTYifQ.0CJmw4sMU_VuX4wsPlb53Q"; // eslint-disable-line
-
-// Source data CSV
-const DATA_URL =
-  "https://raw.githubusercontent.com/uber-common/deck.gl-data/master/examples/3d-heatmap/heatmap-data.csv"; // eslint-disable-line
-
 const mapStateToProps = state => {
+  const transactionCounts = state.metrics.metricsState.daily_transaction_count
+    ? state.metrics.metricsState.daily_transaction_count.aggregate
+    : [];
+  let coords = [];
+  Object.keys(transactionCounts).forEach(coordonate => {
+    if (!["None", "percent_change", "total", null].includes(coordonate)) {
+      const parsedCoordinate = coordonate
+        .split(",")
+        .map(pc => parseFloat(pc))
+        .reverse();
+      coords = [
+        ...coords,
+        ...Array(transactionCounts[coordonate]).fill(parsedCoordinate)
+      ];
+    }
+  });
   return {
-    creditTransferLocationList: Object.keys(state.creditTransfers.byId)
-      .map(id => state.creditTransfers.byId[id])
-      // .filter(d => d.transfer_type === "PAYMENT")
-      .filter(d => !isNaN(d.lng))
-      .filter(d => !isNaN(d.lat))
-      .map(d => [Number(d.lng), Number(d.lat)]),
+    metrics: coords,
     activeOrganisation: state.organisations.byId[state.login.organisationId]
   };
 };
@@ -33,8 +36,8 @@ class HeatMap extends Component {
         ...DeckGLOverlay.defaultViewport,
         width: 500,
         height: 500,
-        longitude: this.props.activeOrganisation.default_lng || 144,
-        latitude: this.props.activeOrganisation.default_lat || -1
+        latitude: this.props.activeOrganisation.default_lat || -17.73,
+        longitude: this.props.activeOrganisation.default_lng || 168.29
       },
       data: null
     };
@@ -60,19 +63,14 @@ class HeatMap extends Component {
 
   render() {
     const viewport = this.state.viewport;
-
-    var data = this.props.creditTransferLocationList;
-
-    data.push([0, 0]);
-
     return (
       <MapGL
         {...viewport}
         mapStyle="mapbox://styles/mapbox/dark-v9"
         onViewportChange={this._onViewportChange.bind(this)}
-        mapboxApiAccessToken={MAPBOX_TOKEN}
+        mapboxApiAccessToken={window.MAPBOX_TOKEN}
       >
-        <DeckGLOverlay viewport={viewport} data={data || []} />
+        <DeckGLOverlay viewport={viewport} data={this.props.metrics || []} />
       </MapGL>
     );
   }

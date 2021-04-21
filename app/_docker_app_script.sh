@@ -16,7 +16,7 @@ if [ "$ret" -ne 0 ]; then
 fi
 
 if [ "$CONTAINER_MODE" == 'TEST' ]; then
-   coverage run -m pytest test_app -x -v
+   coverage run -m pytest test_app -v
    ret=$?
    if [ "$ret" -ne 0 ]; then
      exit $ret
@@ -33,6 +33,6 @@ else
 
   python manage.py update_data
 
-  uwsgi --socket 0.0.0.0:9000 --protocol http  --processes 4 --enable-threads --module=server.wsgi:app --stats :3031 --stats-http
+  uwsgi --socket 0.0.0.0:9000 --protocol http  --processes 4 --enable-threads --module=server.wsgi:app --stats :3031 --stats-http --lazy-apps
 fi
 

@@ -1,0 +1,206 @@
+{
+  "active_filters": [],
+  "active_group_by": "transfer_type",
+  "all_payments_volume": {
+    "aggregate": {
+      "DISBURSEMENT": 1517,
+      "PAYMENT": 170,
+      "percent_change": 397.029702970297,
+      "total": 1687
+    },
+    "timeseries": {
+      "DISBURSEMENT": [
+        {
+          "date": "2021-01-22T00:00:00",
+          "value": 202
+        },
+        {
+          "date": "2021-02-04T00:00:00",
+          "value": 201
+        },
+        {
+          "date": "2021-02-09T00:00:00",
+          "value": 210
+        },
+        {
+          "date": "2021-02-11T00:00:00",
+          "value": 904
+        }
+      ],
+      "PAYMENT": [
+        {
+          "date": "2021-02-05T00:00:00",
+          "value": 20
+        },
+        {
+          "date": "2021-02-07T00:00:00",
+          "value": 20
+        },
+        {
+          "date": "2021-02-10T00:00:00",
+          "value": 30
+        },
+        {
+          "date": "2021-02-11T00:00:00",
+          "value": 100
+        }
+      ]
+    },
+    "type": {
+      "currency_name": "AUD Reserve Token",
+      "currency_symbol": "AUD",
+      "display_decimals": 2,
+      "value_type": "currency"
+    }
+  },
+  "daily_transaction_count": {
+    "aggregate": {
+      "PAYMENT": 5,
+      "percent_change": null,
+      "total": 5
+    },
+    "timeseries": {
+      "PAYMENT": [
+        {
+          "date": "2021-02-05T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-07T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-10T00:00:00",
+          "value": 2
+        },
+        {
+          "date": "2021-02-11T00:00:00",
+          "value": 1
+        }
+      ]
+    },
+    "type": {
+      "display_decimals": 0,
+      "value_type": "count"
+    }
+  },
+  "mandatory_filter": {},
+  "master_wallet_balance": -1517,
+  "total_distributed": 1517,
+  "total_reclaimed": 0,
+  "total_withdrawn": 0,
+  "trades_per_user": {
+    "aggregate": {
+      "PAYMENT": 0.7142857142857143,
+      "percent_change": null,
+      "total": 0.7142857142857143
+    },
+    "timeseries": {
+      "PAYMENT": [
+        {
+          "date": "2021-02-05T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-07T00:00:00",
+          "value": 0.5
+        },
+        {
+          "date": "2021-02-10T00:00:00",
+          "value": 0.6666666666666666
+        },
+        {
+          "date": "2021-02-11T00:00:00",
+          "value": 0.14285714285714285
+        }
+      ]
+    },
+    "type": {
+      "display_decimals": 2,
+      "value_type": "count_average"
+    }
+  },
+  "transfer_amount_per_user": {
+    "aggregate": {
+      "PAYMENT": 24.285714285714285,
+      "percent_change": null,
+      "total": 24.285714285714285
+    },
+    "timeseries": {
+      "PAYMENT": [
+        {
+          "date": "2021-02-05T00:00:00",
+          "value": 20
+        },
+        {
+          "date": "2021-02-07T00:00:00",
+          "value": 10
+        },
+        {
+          "date": "2021-02-10T00:00:00",
+          "value": 10
+        },
+        {
+          "date": "2021-02-11T00:00:00",
+          "value": 14.285714285714286
+        }
+      ]
+    },
+    "type": {
+      "currency_name": "AUD Reserve Token",
+      "currency_symbol": "AUD",
+      "display_decimals": 2,
+      "value_type": "currency"
+    }
+  },
+  "users_who_made_purchase": {
+    "aggregate": {
+      "DISBURSEMENT": 1,
+      "PAYMENT": 5,
+      "percent_change": 100,
+      "total": 6
+    },
+    "timeseries": {
+      "DISBURSEMENT": [
+        {
+          "date": "2021-01-22T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-04T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-09T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-11T00:00:00",
+          "value": 1
+        }
+      ],
+      "PAYMENT": [
+        {
+          "date": "2021-02-05T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-07T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2021-02-10T00:00:00",
+          "value": 2
+        },
+        {
+          "date": "2021-02-11T00:00:00",
+          "value": 1
+        }
+      ]
+    },
+    "type": {
+      "display_decimals": 0,
+      "value_type": "count"
+    }
+  }
+}

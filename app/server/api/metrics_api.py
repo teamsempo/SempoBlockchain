@@ -6,9 +6,10 @@ from flask import Blueprint, request, make_response, jsonify, g
 import json
 
 from server.utils.metrics.metrics import calculate_transfer_stats
-from server.utils.metrics import metrics_const, group
+from server.utils.metrics import metrics_const, metrics_cache
+from server.utils.metrics.group import Groups
 from flask.views import MethodView
-from server.utils.transfer_filter import ALL_FILTERS, TRANSFER_FILTERS, USER_FILTERS, process_transfer_filters
+from server.utils.transfer_filter import Filters, process_transfer_filters
 from server.utils.auth import requires_auth, multi_org
 
 metrics_blueprint = Blueprint('metrics', __name__)
@@ -31,19 +32,20 @@ class CreditTransferStatsApi(MethodView):
             - disable_cache: (Default: False) Force-disables cache
             - metric_type: (Default: 'all') Allows the user to swtich between `transfer`, `participant`, and `all`
             - timeseries_unit: (Default: 'day') Allows the user to swtich between `day`, `week`, `month` and `year`
-            - group_by: (Default: 'gender') Allows the user to swtich choose group_by category. See /metrics/filters for all options
+            - group_by: (Default: 'ungrouped') Allows the user to swtich choose group_by category. See /metrics/filters for all options
             - token_id: (Default: None) If multi-org is being used, and the orgs have different tokens, this lets the user choose
                 which token's stats to present
         """
-
+        
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')
         encoded_filters = request.args.get('params')
 
         disable_cache = request.args.get('disable_cache', 'False').lower() in ['true', '1']  # Defaults to bool false
         metric_type = request.args.get('metric_type', metrics_const.ALL)
+        requested_metric = request.args.get('requested_metric', metrics_const.ALL)
         timeseries_unit = request.args.get('timeseries_unit', metrics_const.DAY)
-        group_by = request.args.get('group_by', metrics_const.GENDER)
+        group_by = request.args.get('group_by', metrics_const.UNGROUPED)
         token_id = request.args.get('token_id', None)
 
         if timeseries_unit not in metrics_const.TIMESERIES_UNITS:
@@ -52,8 +54,9 @@ class CreditTransferStatsApi(MethodView):
         if metric_type not in metrics_const.METRIC_TYPES:
             raise Exception(f'{metric_type} not a valid metric type. Please choose one of the following: {", ".join(metrics_const.METRIC_TYPES)}')
 
-        if group_by not in metrics_const.GROUP_BY_TYPES:
-            raise Exception(f'{group_by} not a valid grouping type. Please choose one of the following: {", ".join(metrics_const.GROUP_BY_TYPES)}')
+        groups = Groups()
+        if group_by not in groups.GROUP_TYPES.keys():
+            raise Exception(f'{group_by} not a valid grouping type. Please choose one of the following: {", ".join(groups.GROUP_TYPES.keys())}')
 
 
         filters = process_transfer_filters(encoded_filters)
@@ -63,6 +66,7 @@ class CreditTransferStatsApi(MethodView):
             end_date=end_date,
             user_filter=filters,
             metric_type=metric_type,
+            requested_metric=requested_metric,
             disable_cache=disable_cache,
             timeseries_unit = timeseries_unit,
             group_by = group_by,
@@ -80,6 +84,7 @@ class CreditTransferStatsApi(MethodView):
         return make_response(jsonify(response_object)), 200
 
 class FiltersApi(MethodView):
+    @multi_org
     @requires_auth(allowed_roles={'ADMIN': 'any'})
     def get(self):
         """
@@ -91,28 +96,55 @@ class FiltersApi(MethodView):
         metric_type = request.args.get('metric_type', metrics_const.ALL)
         if metric_type not in metrics_const.METRIC_TYPES:
             raise Exception(f'{metric_type} not a valid type. Please choose one of the following: {", ".join(metrics_const.METRIC_TYPES)}')
+        filters = Filters()
         METRIC_TYPES_FILTERS = {
-            metrics_const.ALL: ALL_FILTERS,
-            metrics_const.USER: USER_FILTERS,
-            metrics_const.TRANSFER: TRANSFER_FILTERS,
+            metrics_const.ALL: filters.ALL_FILTERS,
+            metrics_const.USER: filters.USER_FILTERS,
+            metrics_const.TRANSFER: filters.TRANSFER_FILTERS,
         }
 
+        group_objects = Groups()
         GROUP_TYPES_FILTERS = {
-            metrics_const.ALL: group.GROUP_TYPES,
-            metrics_const.USER: group.USER_GROUPS,
-            metrics_const.TRANSFER: group.TRANSFER_GROUPS,
+            metrics_const.ALL: group_objects.GROUP_TYPES,
+            metrics_const.USER: group_objects.USER_GROUPS,
+            metrics_const.TRANSFER: group_objects.TRANSFER_GROUPS,
         }
         groups = {}
         group_filters = GROUP_TYPES_FILTERS[metric_type]
         for f in group_filters:
-            groups[f] = group_filters[f].get_api_representation()
-
+            # Filter out coordinates at the API level, since we don't want to show them as groupable options
+            # But we do require them to be groupable in practice for the map page
+            if f in ['sender,coordinates', 'recipient,coordinates']:
+                continue
+            if group_filters[f]:
+                groups[f] = group_filters[f].get_api_representation()
+            else:
+                groups[f] = {'name': 'Ungrouped'}
         response_object = {
             'status' : 'success',
             'message': 'Successfully Loaded.',
             'data': {
                 'filters': METRIC_TYPES_FILTERS[metric_type],
                 'groups': groups
+            }
+        }
+
+        return make_response(jsonify(response_object)), 200
+
+class CacheApi(MethodView):
+    @requires_auth(allowed_roles={'ADMIN': 'sempoadmin'})
+    def post(self):
+        """
+        This endpoint erases the cache for the current org. 
+        Use this after you alter the past so the cache can rebuild itself 
+        """
+        count = metrics_cache.clear_metrics_cache()
+
+        response_object = {
+            'status' : 'success',
+            'message': 'Cache erased',
+            'data': {
+                'removed_entries': count,
             }
         }
         return make_response(jsonify(response_object)), 200
@@ -127,4 +159,10 @@ metrics_blueprint.add_url_rule(
     '/metrics/filters/',
     view_func=FiltersApi.as_view('metrics_filters_view'),
     methods=['GET']
+)
+
+metrics_blueprint.add_url_rule(
+    '/metrics/clear_cache/',
+    view_func=CacheApi.as_view('metrics_cache_view'),
+    methods=['POST']
 )

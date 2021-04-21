@@ -3,7 +3,7 @@ from sqlalchemy.sql import func
 
 from server import db
 from server.utils.phone import send_message
-from server.utils.i18n import i18n_for
+from server.utils.internationalization import i18n_for
 from server.models.user import User
 from server.models.transfer_account import TransferAccount
 from server.models.transfer_usage import TransferUsage
@@ -15,7 +15,7 @@ from server.constants import NUMBER_OF_DIRECTORY_LISTING_RESULTS
 
 
 def user_directory_listing(user: User) -> str:
-    bio = next(filter(lambda x: x.name == 'bio', user.custom_attributes), None)
+    bio = next(filter(lambda x: x.key == 'bio', user.custom_attributes), None)
     if bio is None:
         return user.phone
     else:

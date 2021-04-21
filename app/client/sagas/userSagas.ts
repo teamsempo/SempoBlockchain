@@ -1,5 +1,6 @@
 import { put, takeEvery, call, all, select } from "redux-saga/effects";
 import { normalize } from "normalizr";
+import { message } from "antd";
 import { handleError } from "../utils";
 
 import { userSchema } from "../schemas";
@@ -14,7 +15,6 @@ import {
 
 import { TransferAccountAction } from "../reducers/transferAccount/actions";
 import { browserHistory } from "../createStore";
-import { MessageAction } from "../reducers/message/actions";
 
 import {
   CreateUserAction,
@@ -44,7 +44,7 @@ import { ReduxState } from "../reducers/rootReducer";
 import { TransferAccountByIDs } from "../reducers/transferAccount/types";
 
 function* updateStateFromUser(data: UserData) {
-  //Schema expects a list of credit transfer objects
+  //Schema expects a list of complete user objects
   if (data.users) {
     var user_list = data.users;
   } else {
@@ -55,7 +55,7 @@ function* updateStateFromUser(data: UserData) {
 
   const users = normalizedData.entities.users;
 
-  yield put(UserListAction.deepUpdateUserList(users));
+  yield put(UserListAction.updateUserList(users));
 }
 
 function* loadUser(
@@ -90,21 +90,19 @@ function* editUser(
   try {
     const edit_response = yield call(editUserAPI, action.payload);
 
+    console.log("updating state from user");
+
     yield call(updateStateFromUser, edit_response.data);
 
     yield put(EditUserAction.editUserSuccess());
 
-    yield put(
-      MessageAction.addMessage({ error: false, message: edit_response.message })
-    );
+    message.success(edit_response.message);
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
     yield put(EditUserAction.editUserFailure(error.message));
 
-    yield put(
-      MessageAction.addMessage({ error: true, message: error.message })
-    );
+    message.error(error.message);
   }
 }
 
@@ -139,24 +137,17 @@ function* deleteUser(
     let users = { ...userState };
     delete users[action.payload.path];
 
-    yield put(UserListAction.updateUserList(users));
+    yield put(UserListAction.replaceUserList(users));
     yield put(TransferAccountAction.updateTransferAccounts(transferAccounts));
 
-    yield put(
-      MessageAction.addMessage({
-        error: false,
-        message: delete_response.message
-      })
-    );
+    message.success(delete_response.message);
     browserHistory.push("/accounts");
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
     yield put(DeleteUserAction.deleteUserFailure(error.message));
 
-    yield put(
-      MessageAction.addMessage({ error: true, message: error.message })
-    );
+    message.error(error.message);
   }
 }
 
@@ -177,20 +168,13 @@ function* resetPin(
 
     yield put(ResetPinAction.resetPinSuccess());
 
-    yield put(
-      MessageAction.addMessage({
-        error: false,
-        message: reset_response.message
-      })
-    );
+    message.success(reset_response.message);
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
     yield put(ResetPinAction.resetPinFailure(error.message));
 
-    yield put(
-      MessageAction.addMessage({ error: true, message: error.message })
-    );
+    message.error(error.message);
   }
 }
 

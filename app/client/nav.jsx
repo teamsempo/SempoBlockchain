@@ -1,7 +1,6 @@
 import "babel-polyfill";
-import "react-dates/initialize";
 
-import React, { lazy, Suspense } from "react";
+import React, { lazy } from "react";
 import { connect } from "react-redux";
 
 import { Switch, Route, Router, Redirect } from "react-router-dom";
@@ -23,6 +22,9 @@ const singleUserPage = lazy(() =>
 const creditTransferListPage = lazy(() =>
   import("./components/pages/creditTransferListPage.jsx")
 );
+const singleCreditTransferPage = lazy(() =>
+  import("./components/pages/singleCreditTransferPage.jsx")
+);
 const settingsPage = lazy(() =>
   import("./components/pages/settings/settingsPage.jsx")
 );
@@ -40,6 +42,13 @@ const FundWalletPage = lazy(() =>
 const createUserPage = lazy(() =>
   import("./components/pages/createUserPage.jsx")
 );
+const bulkTransferListPage = lazy(() =>
+  import("./components/pages/bulkTransferListPage.jsx")
+);
+const singleBulkDisbursementPage = lazy(() =>
+  import("./components/pages/singleBulkDisbursementPage.jsx")
+);
+
 const exportPage = lazy(() => import("./components/pages/exportPage.jsx"));
 const authPage = lazy(() => import("./components/pages/authPage.jsx"));
 const resetPasswordPage = lazy(() =>
@@ -49,8 +58,6 @@ const OrganisationPage = lazy(() =>
   import("./components/pages/settings/OrganisationPage.tsx")
 );
 import notFoundPage from "./components/pages/notFoundPage.jsx";
-import MessageBar from "./components/messageBar.jsx";
-import ErrorBoundary from "./components/errorBoundary.jsx";
 
 import { ThemeProvider } from "styled-components";
 import { DefaultTheme } from "./components/theme.js";
@@ -82,6 +89,8 @@ class Nav extends React.Component {
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
               isAntDesign={true}
+              title={"Dashboard"}
+              isMultiOrg={true}
             />
             <PrivateRoute
               exact
@@ -90,6 +99,8 @@ class Nav extends React.Component {
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
               footer={false}
+              title={"Map"}
+              isMultiOrg={true}
             />
             <PrivateRoute
               exact
@@ -97,6 +108,7 @@ class Nav extends React.Component {
               component={transferAccountListPage}
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
+              title={"Accounts"}
             />
             <PrivateRoute
               exact
@@ -104,6 +116,7 @@ class Nav extends React.Component {
               component={singleTransferAccountPage}
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
+              title={`Single Transfer Account`}
             />
             <PrivateRoute
               exact
@@ -111,6 +124,7 @@ class Nav extends React.Component {
               component={singleUserPage}
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
+              title={`Single User`}
             />
             <PrivateRoute
               exact
@@ -118,6 +132,7 @@ class Nav extends React.Component {
               component={BusinessVerificationPage}
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
+              title={`User Verification`}
             />
             <PrivateRoute
               exact
@@ -125,6 +140,16 @@ class Nav extends React.Component {
               component={creditTransferListPage}
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
+              title={`Transfers`}
+            />
+            <PrivateRoute
+              exact
+              path="/transfers/:creditTransferId"
+              component={singleCreditTransferPage}
+              isLoggedIn={isLoggedIn}
+              isReAuthing={isReAuthing}
+              title={`Single Transfer`}
+              isAntDesign={true}
             />
             <PrivateRoute
               exact
@@ -132,6 +157,7 @@ class Nav extends React.Component {
               component={settingsPage}
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
+              title={`Settings`}
             />
             <PrivateRoute
               exact
@@ -139,6 +165,7 @@ class Nav extends React.Component {
               component={InvitePage}
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
+              title={`Invite Admins`}
             />
             <PrivateRoute
               exact
@@ -146,6 +173,7 @@ class Nav extends React.Component {
               component={internalChangePasswordPage}
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
+              title={`Change Password`}
             />
             <PrivateRoute
               exact
@@ -153,6 +181,7 @@ class Nav extends React.Component {
               component={BusinessVerificationPage}
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
+              title={`Organisation Verification`}
             />
             <PrivateRoute
               exact
@@ -160,6 +189,7 @@ class Nav extends React.Component {
               component={FundWalletPage}
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
+              title={`Fund Wallet`}
             />
             <PrivateRoute
               exact
@@ -167,13 +197,26 @@ class Nav extends React.Component {
               component={tfaPage}
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
+              title={`Two Factor Authentication`}
             />
             <PrivateRoute
               exact
-              path="/settings/organisation"
+              path="/settings/project"
               component={OrganisationPage}
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
+              title={`Project Settings`}
+              isAntDesign={true}
+            />
+            <PrivateRoute
+              exact
+              path="/settings/project/new"
+              component={OrganisationPage}
+              isLoggedIn={isLoggedIn}
+              isReAuthing={isReAuthing}
+              title={`New Project`}
+              isAntDesign={true}
+              isNewOrg={true}
             />
 
             <PrivateRoute
@@ -181,24 +224,47 @@ class Nav extends React.Component {
               component={uploadPage}
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
+              title={`Upload`}
             />
             <PrivateRoute
               path="/create"
               component={createUserPage}
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
+              title={`Create User`}
+            />
+            <PrivateRoute
+              exact
+              path="/bulk/"
+              component={bulkTransferListPage}
+              isLoggedIn={isLoggedIn}
+              isReAuthing={isReAuthing}
+              title={`Bulk Transfers`}
+            />
+            <PrivateRoute
+              exact
+              path="/bulk/:bulkId"
+              component={singleBulkDisbursementPage}
+              isLoggedIn={isLoggedIn}
+              isReAuthing={isReAuthing}
+              title={`Bulk Disbursement`}
             />
             <PrivateRoute
               path="/export"
               component={exportPage}
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
+              title={`Export Data`}
             />
 
             {/* PUBLIC PAGES */}
-            <PublicRoute path="/reset-password" component={resetPasswordPage} />
-            <PublicRoute path="/login" component={authPage} />
-            <PublicRoute component={notFoundPage} />
+            <PublicRoute
+              path="/reset-password"
+              component={resetPasswordPage}
+              title={`Reset Password`}
+            />
+            <PublicRoute path="/login" component={authPage} title={`Login`} />
+            <PublicRoute component={notFoundPage} title={`Not Found`} />
           </Switch>
         </ThemeProvider>
       </Router>
@@ -223,20 +289,6 @@ const LoadingSpinnerWrapper = () => {
   );
 };
 
-const PageWrapper = ({ noNav, component: Component, ...props }) => {
-  return (
-    <ErrorBoundary>
-      <MessageBar />
-
-      <Page noNav={noNav} {...props}>
-        <Suspense fallback={<LoadingSpinnerWrapper />}>
-          <Component {...props} />
-        </Suspense>
-      </Page>
-    </ErrorBoundary>
-  );
-};
-
 const PrivateRoute = ({
   noNav,
   isLoggedIn,
@@ -248,7 +300,7 @@ const PrivateRoute = ({
     {...props}
     render={() =>
       isLoggedIn ? (
-        <PageWrapper component={Component} noNav={noNav || false} {...props} />
+        <Page component={Component} noNav={noNav || false} {...props} />
       ) : isReAuthing ? (
         <LoadingSpinnerWrapper />
       ) : (
@@ -266,9 +318,7 @@ const PrivateRoute = ({
 const PublicRoute = ({ component: Component, ...rest }) => (
   <Route
     {...rest}
-    render={props => (
-      <PageWrapper component={Component} noNav={true} {...props} />
-    )}
+    render={props => <Page component={Component} noNav={true} {...props} />}
   />
 );
 

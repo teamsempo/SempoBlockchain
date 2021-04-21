@@ -11,10 +11,10 @@ export default class InvitePage extends React.Component {
         <PageWrapper style={{ display: "flex", flexDirection: "column" }}>
           <Row>
             <ModuleBox>
-              <ModuleHeader>INVITE NEW USERS</ModuleHeader>
+              <ModuleHeader>INVITE NEW ADMINS</ModuleHeader>
               <p style={{ margin: "1em" }}>
-                Enter the email addresses of the users you'd like to invite, and
-                choose the role they should have.
+                Enter the email addresses of the administrators you'd like to
+                invite, and choose the role they should have.
               </p>
               <InviteForm />
             </ModuleBox>

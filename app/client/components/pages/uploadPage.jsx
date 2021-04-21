@@ -7,69 +7,29 @@ import UploadedTable from "../uploader/uploadedTable.jsx";
 
 const mapStateToProps = state => {
   return {
-    loggedIn: state.login.token != null,
     spreadsheetData: state.spreadsheetUpload.data
   };
 };
 
-const mapDispatchToProps = dispatch => {
-  return {};
-};
-
-const uploadPage = ({ loggedIn, spreadsheetData, location }) => {
+const uploadPage = ({ spreadsheetData, location }) => {
   const is_vendor = location.search.indexOf("type=vendor") !== -1;
 
   if (spreadsheetData) {
-    var inner_div = (
-      <UploadedTable data={spreadsheetData} is_vendor={is_vendor} />
-    );
+    return <UploadedTable data={spreadsheetData} is_vendor={is_vendor} />;
   } else {
-    inner_div = (
+    return (
       <PageWrapper>
-        <UploadButton uploadButtonText="Upload Spreadsheet" />
+        <UploadButton uploadButtonText={<span>Upload Spreadsheet</span>} />
       </PageWrapper>
-    );
-  }
-
-  if (loggedIn) {
-    return (
-      <WrapperDiv>
-        <Break />
-
-        {inner_div}
-      </WrapperDiv>
-    );
-  } else {
-    return (
-      <WrapperDiv>
-        <div style={{ margin: "1em" }}>Please log in</div>
-      </WrapperDiv>
     );
   }
 };
 
 export default connect(
   mapStateToProps,
-  mapDispatchToProps
+  null
 )(uploadPage);
 
-const WrapperDiv = styled.div`
-  //width: 100vw;
-  //min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  position: relative;
-`;
-
-const Break = styled.div`
-  margin: 1em;
-`;
-
 const PageWrapper = styled.div`
-  margin-left: 234px;
-  width: calc(100vw - 234px);
-  justify-content: center;
-  display: flex;
+  margin: 1em;
 `;

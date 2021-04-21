@@ -8,7 +8,7 @@ import { ResetPasswordAction } from "../../reducers/auth/actions";
 
 import AsyncButton from "./../AsyncButton.jsx";
 
-import { Input, ErrorMessage, StyledButton } from "./../styledElements";
+import { Input, ErrorMessage } from "./../styledElements";
 
 import { parseQuery } from "../../utils";
 
@@ -158,6 +158,7 @@ const ResetPasswordForm = function(props) {
           type="password"
           onKeyUp={props.onOldPasswordFieldKeyPress}
           placeholder="Password"
+          aria-label="Password"
         />
       </div>
     );
@@ -170,7 +171,7 @@ const ResetPasswordForm = function(props) {
       {oldPasswordSection}
       Enter a new password:
       <ReactPasswordStrength
-        minLength={6}
+        minLength={8}
         type="password"
         changeCallback={data => props.onNewPasswordFieldKeyPress(data)}
         inputProps={{ placeholder: "Password" }}
@@ -180,13 +181,15 @@ const ResetPasswordForm = function(props) {
         type="password"
         onKeyUp={props.onReenterPasswordFieldKeyPress}
         placeholder="Retype Password"
+        aria-label="Retype Password"
       />
       <ErrorMessage>{error_message}</ErrorMessage>
       <AsyncButton
         onClick={props.onClick}
         isLoading={props.isRegistering}
         buttonStyle={{ width: "calc(100% - 1em)", display: "flex" }}
-        buttonText="Change Password"
+        buttonText={<span>Change Password</span>}
+        label={"Change Password"}
       />
     </div>
   );

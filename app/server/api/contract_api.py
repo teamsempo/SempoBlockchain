@@ -172,6 +172,8 @@ class ReserveTokenAPI(MethodView):
             _token = Token.query.get(_token_id)
             _token.address = reserve_token_address
 
+            _token.get_decimals()
+
             master_org = Organisation.query.filter_by(is_master=True).execution_options(show_all=True).first()
             master_org.bind_token(_token)
             master_org.org_level_transfer_account.set_balance_offset(int(_deploy_data['fund_amount_wei'] / 1e16))

@@ -17,7 +17,6 @@ then
 echo "[WARN] PGPASSWORD environment variable not set, defaulting to postgres password 'password'"
 fi
 
-
 echo "This will wipe ALL local Sempo data"
 
 echo "Reset Local Secrets? y/N"
@@ -26,21 +25,21 @@ read resetSecretsInput
 echo "Persist Ganache? y/N"
 read ganachePersistInput
 
-echo "Create Dev Data? (s)mall/(m)edium/(l)arge/(N)o"
-read testDataInput
+echo "Create Mock Data? (s)mall/(m)edium/(l)arge/(N)o"
+read mockDataInput
 
-if [ "$testDataInput" == 's' ]; then
-    echo "Will create Small Dev Dataset"
-    testdata='small'
-elif [ "$testDataInput" == 'm' ]; then
-    echo "Will create Medium Dev Dataset"
-    testdata='medium'
-elif [ "$testDataInput" == 'l' ]; then
-    echo "Will create Large Dev Dataset"
-    testdata='large'
+if [ "mockDataInput" == 's' ]; then
+    echo "Will create Small Mock Dataset"
+    mockData='small'
+elif [ "mockDataInput" == 'm' ]; then
+    echo "Will create Medium Mock Dataset"
+    mockData='medium'
+elif [ "mockDataInput" == 'l' ]; then
+    echo "Will create Large Mock Dataset"
+    mockData='large'
 else
-    echo "Will not create Dev Dataset"
-    testdata='none'
+    echo "Will not create Mock Dataset"
+    mockData='none'
 fi
 
 if [ "$resetSecretsInput" == "y" ]; then
@@ -68,18 +67,20 @@ echo If this section hangs, you might have a bunch of idle postgres connections.
 echo "sudo kill -9 \$(ps aux | grep '[p]ostgres .* idle' | awk '{print \$2}')"
 
 db_server=postgres://${PGUSER:-postgres}:${PGPASSWORD:-password}@localhost:5432
-app_db=$db_server/${APP_DB:-sempo_app}
-eth_worker_db=$db_server/${WORKER_DB:-eth_worker}
+maintainence_db_uri=$db_server/postgres
+app_db_uri=$db_server/${APP_DB:-sempo_app}
+eth_worker_db_uri=$db_server/${WORKER_DB:-eth_worker}
 
 set -e
-psql $db_server -c ''
+#Checks to ensure login credentials are valid
+psql $maintainence_db_uri -c ''
 
 set +e
 
-psql $db_server -c "DROP DATABASE IF EXISTS ${APP_DB:-sempo_app}"
-psql $db_server -c "DROP DATABASE IF EXISTS ${WORKER_DB:-sempo_eth_worker}"
-psql $db_server -c "CREATE DATABASE ${APP_DB:-sempo_app}"
-psql $db_server -c "CREATE DATABASE ${WORKER_DB:-sempo_eth_worker}"
+psql $maintainence_db_uri -c "DROP DATABASE IF EXISTS ${APP_DB:-sempo_app}"
+psql $maintainence_db_uri -c "DROP DATABASE IF EXISTS ${WORKER_DB:-sempo_eth_worker}"
+psql $maintainence_db_uri -c "CREATE DATABASE ${APP_DB:-sempo_app}"
+psql $maintainence_db_uri -c "CREATE DATABASE ${WORKER_DB:-sempo_eth_worker}"
 
 cd app
 python manage.py db upgrade
@@ -106,12 +107,12 @@ sleep 5
 set -e
 
 echo ~~~Starting worker
-cd eth_worker
-celery -A eth_manager worker --loglevel=INFO --concurrency=8 --pool=gevent -Q processor,celery,low-priority,high-priority &
+cd eth_worker/eth_src
+celery worker -A celery_app --loglevel=INFO --concurrency=8 --pool=eventlet -Q processor,celery,low-priority,high-priority &
 sleep 5
 
 echo ~~~Seeding Data
-cd ../app/migrations/
+cd ../../app/migrations/
 python -u seed.py
 
 echo ~~~Starting App
@@ -122,16 +123,16 @@ sleep 10
 
 echo ~~~Creating Default Account
 curl 'http://localhost:9000/api/v1/auth/register/'  -H 'Content-Type: application/json' -H 'Origin: http://localhost:9000' --data-binary '{"username":"admin@acme.org","password":"C0rrectH0rse","referral_code":null}' --compressed --insecure
-psql $app_db -c 'UPDATE public."user" SET is_activated=TRUE'
+psql $app_db_uri -c 'UPDATE public."user" SET is_activated=TRUE'
 
 echo ~~~Setting up Contracts
 cd ../
 python -u devtools/contract_setup_script.py
 
-if [[ "$testdata" != 'none' ]]; then
-    echo ~~~Creating test data
-    cd ./app/migrations/
-    python -u dev_data.py ${testdata}
+if [[ "mockData" != 'none' ]]; then
+    echo ~~~Creating mock data
+    cd ./app/server/utils
+    python -u mock_data.py ${testdata}
 fi
 
 echo ~~~Generating Auth Token

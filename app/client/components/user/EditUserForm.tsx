@@ -3,6 +3,10 @@ import { connect } from "react-redux";
 
 import { reduxForm, InjectedFormProps, formValueSelector } from "redux-form";
 
+import { Tooltip } from "antd";
+
+import { StopOutlined } from "@ant-design/icons";
+
 import { GenderTypes } from "./types";
 import {
   Wrapper,
@@ -13,16 +17,16 @@ import {
   Row,
   SubRow
 } from "../styledElements";
-import AsyncButton from "./../AsyncButton.jsx";
-import ProfilePicture from "../profilePicture.jsx";
-import GetVerified from "../GetVerified.jsx";
+import AsyncButton from "./../AsyncButton";
+import ProfilePicture from "../profilePicture";
+import GetVerified from "../GetVerified";
 
 import InputField from "../form/InputField";
 import SelectField from "../form/SelectField";
 import { TransferUsage } from "../../reducers/transferUsage/types";
 import { ReduxState } from "../../reducers/rootReducer";
-import { TransferAccountTypes } from "../transferAccount/types";
-import QrReadingModal from "../qrReadingModal.jsx";
+import { Organisation } from "../../reducers/organisation/types";
+import QrReadingModal from "../qrReadingModal";
 import { replaceUnderscores } from "../../utils";
 
 export interface IEditUser {
@@ -37,7 +41,7 @@ export interface IEditUser {
   usageOtherSpecific?: string;
   oneTimeCode: number;
   failedPinAttempts: number;
-  accountType: TransferAccountTypes;
+  accountTypes: string[];
   [key: string]: any;
 }
 
@@ -47,11 +51,13 @@ interface OuterProps {
   transferUsages: TransferUsage[];
   onResetPin: () => void;
   onDeleteUser: () => void;
+  onDisableCard: () => void;
 }
 
 interface StateProps {
-  accountType: TransferAccountTypes;
+  accountTypes: string[];
   businessUsageValue?: string;
+  activeOrganisation: Organisation;
 }
 
 type Props = OuterProps & StateProps;
@@ -74,7 +80,7 @@ class EditUserForm extends React.Component<
   InjectedFormProps<IEditUser, Props> & Props
 > {
   _updateForm() {
-    let account_type;
+    let account_types = [];
     let { selectedUser, transferUsages } = this.props;
     let transferUsage = transferUsages.filter(
       t => t.id === selectedUser.business_usage_id
@@ -82,17 +88,11 @@ class EditUserForm extends React.Component<
     let transferUsageName = transferUsage && transferUsage.name;
     let customAttributes = selectedUser && selectedUser.custom_attributes;
 
-    if (selectedUser.is_beneficiary) {
-      account_type = TransferAccountTypes.USER;
-    } else if (selectedUser.is_vendor) {
-      account_type = TransferAccountTypes.VENDOR;
-    } else if (selectedUser.is_tokenagent) {
-      account_type = TransferAccountTypes.TOKENAGENT;
-    } else if (selectedUser.is_groupaccount) {
-      account_type = TransferAccountTypes.GROUPACCOUNT;
-    }
+    account_types = Object.values(selectedUser.roles || []);
+    account_types = account_types.map((role: any) => role);
 
-    let custom_attr_keys = customAttributes && Object.keys(customAttributes);
+    let custom_attr_keys =
+      (customAttributes && Object.keys(customAttributes)) || [];
     let attr_dict = {};
     custom_attr_keys.map(key => {
       (attr_dict as attr_dict)[key] = customAttributes[key];
@@ -105,7 +105,7 @@ class EditUserForm extends React.Component<
       publicSerialNumber: selectedUser.public_serial_number,
       phone: selectedUser.phone,
       location: selectedUser.location,
-      accountType: account_type,
+      accountTypes: account_types,
       oneTimeCode: selectedUser.one_time_code,
       failedPinAttempts: selectedUser.failed_pin_attempts,
       businessUsage: transferUsageName,
@@ -147,13 +147,14 @@ class EditUserForm extends React.Component<
       selectedUser,
       transferUsages,
       businessUsageValue,
-      users
+      users,
+      accountTypes
     } = this.props;
     let transferUsage = transferUsages.filter(
       t => t.id === selectedUser.business_usage_id
     )[0];
 
-    let accountTypes = Object.keys(TransferAccountTypes);
+    let validRoles = this.props.activeOrganisation.valid_roles;
     let customAttributes = selectedUser && selectedUser.custom_attributes;
     let businessUsageName = transferUsage && transferUsage.name;
 
@@ -244,7 +245,7 @@ class EditUserForm extends React.Component<
                       height: "25px"
                     }}
                     isLoading={users.editStatus.isRequesting}
-                    buttonText="SAVE"
+                    buttonText={<span>SAVE</span>}
                   />
                 </ButtonWrapper>
               </TopRow>
@@ -268,27 +269,53 @@ class EditUserForm extends React.Component<
                 </SubRow>
               </Row>
               <Row>
-                <SubRow>
+                <SubRow
+                  style={{
+                    color:
+                      selectedUser.transfer_card &&
+                      selectedUser.transfer_card.is_disabled
+                        ? "#c53631"
+                        : "#555"
+                  }}
+                >
                   <InputField name="publicSerialNumber" label={"ID Number"}>
-                    {/*
-                  // @ts-ignore */}
-                    <QrReadingModal
-                      updateData={(data: string) => this.setSerialNumber(data)}
-                    />
+                    {/* // @ts-ignore */}
+
+                    <div style={{ display: "flex", alignItems: "flex-end" }}>
+                      <QrReadingModal
+                        updateData={(data: string) =>
+                          this.setSerialNumber(data)
+                        }
+                      />
+                      {selectedUser.public_serial_number ? (
+                        <Tooltip title="Disable Card">
+                          <StopOutlined
+                            translate={""}
+                            style={{
+                              fontSize: "20px",
+                              margin: "2px",
+                              color: "#555"
+                            }}
+                            onClick={() => this.props.onDisableCard()}
+                          />
+                        </Tooltip>
+                      ) : (
+                        <></>
+                      )}
+                    </div>
                   </InputField>
                 </SubRow>
                 <SubRow>
                   <InputField name="location" label="Location" />
                 </SubRow>
-                <SubRow>
-                  <SelectField
-                    name="accountType"
-                    label="Account Type"
-                    options={accountTypes}
-                    hideNoneOption={true}
-                    isLowercase={false}
-                  />
-                </SubRow>
+                <InputField
+                  {...accountTypes}
+                  name="accountTypes"
+                  label={"Account Types"}
+                  isMultipleChoice={true}
+                  options={validRoles}
+                  style={{ minWidth: "200px" }}
+                />
               </Row>
               <Row>
                 {selectedUser.one_time_code !== "" ? (
@@ -320,7 +347,7 @@ class EditUserForm extends React.Component<
                         height: "25px"
                       }}
                       isLoading={users.pinStatus.isRequesting}
-                      buttonText="Reset Pin"
+                      buttonText={<span>Reset Pin</span>}
                     />
                   </InputField>
                 </SubRow>
@@ -352,7 +379,7 @@ class EditUserForm extends React.Component<
                       height: "25px"
                     }}
                     isLoading={users.deleteStatus.isRequesting}
-                    buttonText="Delete User"
+                    buttonText={<span>Delete Participant</span>}
                   />
                 </SubRow>
               </Row>
@@ -365,7 +392,7 @@ class EditUserForm extends React.Component<
                 <TopRow>
                   <ModuleHeader>OTHER ATTRIBUTES</ModuleHeader>
                 </TopRow>
-                <Row style={{ margin: "0em 1em" }}>
+                <Row style={{ margin: "0em 1em", flexWrap: "wrap" }}>
                   {custom_attribute_list || null}
                 </Row>
                 <Row style={{ margin: "0em 1em" }}>
@@ -388,12 +415,14 @@ const EditUserFormReduxForm = reduxForm<IEditUser, Props>({
   validate
 })(EditUserForm);
 
-export default connect(
-  (state: ReduxState): StateProps => {
-    const selector = formValueSelector("editUser");
-    return {
-      accountType: selector(state, "accountType"),
-      businessUsageValue: selector(state, "businessUsage")
-    };
-  }
-)(EditUserFormReduxForm);
+const mapStateToProps = (state: ReduxState): StateProps => {
+  const selector = formValueSelector("editUser");
+  return {
+    accountTypes: selector(state, "accountTypes"),
+    businessUsageValue: selector(state, "businessUsage"),
+    // @ts-ignore
+    activeOrganisation: state.organisations.byId[state.login.organisationId]
+  };
+};
+
+export default connect(mapStateToProps)(EditUserFormReduxForm);

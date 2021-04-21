@@ -84,6 +84,7 @@ def deploy_cic_token(post_data, creating_org=None):
         master_org.org_level_transfer_account.set_balance_offset(current_bal_offset - load_amount)
 
     token = Token(name=name, symbol=symbol, token_type=TokenType.LIQUID)
+    token.decimals = 18
     db.session.add(token)
     db.session.flush()
 

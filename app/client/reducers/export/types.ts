@@ -1,8 +1,12 @@
+type ExportTypes = "spreadsheet" | "pdf";
+type UserTypes = "beneficiary" | "vendor" | "all" | "selected";
+
 export interface ExportPayload {
   body: {
-    export_type: string;
+    export_type: ExportTypes;
     include_transfers: boolean;
-    user_type: string;
+    include_custom_attributes: boolean;
+    user_type: UserTypes;
     date_range: string;
     payable_period_start_date?: string;
     payable_period_end_date?: string;
@@ -11,7 +15,7 @@ export interface ExportPayload {
 }
 
 export interface ExportSuccessPayload {
-  file_url?: string;
+  message?: string;
 }
 
 export enum ExportActionTypes {

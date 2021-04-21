@@ -3,6 +3,7 @@ import * as React from "react";
 import * as styles from "./styles.module.css";
 
 import { AdaptedPhoneInput } from "./Phone";
+import { MultipleChoice } from "./MultipleChoice";
 
 export const WrappedInput = (field: React.ReactNode, props: any) => {
   const { label, isRequired, meta, children } = props;
@@ -28,8 +29,20 @@ export const WrappedInput = (field: React.ReactNode, props: any) => {
 };
 
 export const AdaptedInput = (props: any) => {
-  const { name, type, input, placeholder, disabled, isPhoneNumber } = props;
-  const field = isPhoneNumber ? (
+  const {
+    name,
+    type,
+    input,
+    placeholder,
+    disabled,
+    isPhoneNumber,
+    isMultipleChoice,
+    style
+  } = props;
+
+  const field = isMultipleChoice ? (
+    <MultipleChoice {...props} />
+  ) : isPhoneNumber ? (
     <AdaptedPhoneInput {...props} />
   ) : (
     <input
@@ -38,6 +51,7 @@ export const AdaptedInput = (props: any) => {
       name={name}
       disabled={disabled}
       type={type}
+      style={style}
       {...input}
     />
   );

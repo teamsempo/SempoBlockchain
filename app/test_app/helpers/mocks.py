@@ -56,6 +56,20 @@ class MockBlockchainTasker(object):
         pass
 
     @staticmethod
+    def remove_all_posterior_dependencies(*args, **kwargs):
+        return {
+            'message': 'Removing Prior Task Dependency',
+            'data': 'resp'
+        }
+
+    @staticmethod
+    def remove_prior_task_dependency(*args, **kwargs):
+        return {
+            'message': 'Removing Prior Task Dependency',
+            'data': 'resp'
+        }
+
+    @staticmethod
     def retry_failed(*args, **kwargs):
         return {
             'failed_count': 10,
@@ -126,6 +140,26 @@ class MockBlockchainTasker(object):
 
     @staticmethod
     def topup_wallet_if_required(*args, **kwargs):
+        return MockBlockchainTasker._generic_task()
+
+    @staticmethod
+    def get_third_party_sync_metrics(*args, **kwargs):
+        return MockBlockchainTasker._generic_task()
+
+    @staticmethod
+    def get_failed_block_fetches(*args, **kwargs):
+        return MockBlockchainTasker._generic_task()
+
+    @staticmethod
+    def get_failed_callbacks(*args, **kwargs):
+        return MockBlockchainTasker._generic_task()
+
+    @staticmethod
+    def force_fetch_block_range(*args, **kwargs):
+        return MockBlockchainTasker._generic_task()
+
+    @staticmethod
+    def force_recall_webhook(*args, **kwargs):
         return MockBlockchainTasker._generic_task()
 
     @staticmethod

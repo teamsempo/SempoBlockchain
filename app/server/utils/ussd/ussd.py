@@ -3,7 +3,7 @@ from typing import Optional
 from server import db
 from server.models.user import User
 from server.models.ussd import UssdMenu, UssdSession
-from server.utils.i18n import i18n_for
+from server.utils.internationalization import i18n_for
 
 
 def menu_display_text_in_lang(current_menu: UssdMenu, user: Optional[User]) -> str:

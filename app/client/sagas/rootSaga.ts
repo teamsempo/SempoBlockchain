@@ -6,7 +6,6 @@ import credit_transferSagas from "./creditTransferSagas";
 import transferAccountSagas from "./transferAccountSagas";
 import newExportSaga from "./exportSaga";
 import userSagas from "./userSagas";
-import messageSagas from "./messageSaga";
 import filterSagas from "./filterSaga";
 import businessVerificationSaga from "./businessVerificationSaga";
 import wyreSaga from "./wyreSaga";
@@ -14,13 +13,17 @@ import transferUsageSagas from "./transferUsageSagas";
 import organisationSagas from "./organisationSagas";
 import metricSaga from "./metricSaga";
 import allowedFilterSaga from "./allowedFilterSaga";
+import transferCardSagas from "./transferCardSagas";
+import tokenSagas from "./tokenSaga";
+import { generatedSagas } from "../reducers/rootReducer";
+import bulkTransferSagas from "./bulkTransferSagas";
+import masterWalletSagas from "./masterWalletSagas";
 
 export default function* rootSaga() {
   yield all([
     authSagas(),
     spreadsheetSagas(),
     credit_transferSagas(),
-    messageSagas(),
     transferAccountSagas(),
     newExportSaga(),
     userSagas(),
@@ -30,6 +33,11 @@ export default function* rootSaga() {
     transferUsageSagas(),
     organisationSagas(),
     metricSaga(),
-    allowedFilterSaga()
+    allowedFilterSaga(),
+    transferCardSagas(),
+    tokenSagas(),
+    bulkTransferSagas(),
+    masterWalletSagas(),
+    generatedSagas()
   ]);
 }

@@ -1,7 +1,6 @@
 import datetime
 import pendulum
 from typing import Optional, Tuple, Type
-from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.sql import func
 
 from server import db
@@ -25,7 +24,7 @@ from server.utils.phone import send_message
 from server.utils.misc import round_to_decimals, rounded_dollars, round_to_sig_figs
 from server.utils.credit_transfer import make_payment_transfer
 from server.models.utils import ephemeral_alchemy_object
-from server.utils.i18n import i18n_for
+from server.utils.internationalization import i18n_for
 from server.utils.user import default_token, default_transfer_account
 from server.utils.credit_transfer import cents_to_dollars
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferModeEnum

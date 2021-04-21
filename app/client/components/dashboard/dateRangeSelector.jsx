@@ -3,19 +3,18 @@
 // Unauthorized copying of this file, via any medium is strictly prohibited
 
 import React from "react";
-import { Card, DatePicker, Space, Select, Typography, Divider } from "antd";
+import { DatePicker, Space, Typography } from "antd";
 
 import moment from "moment";
 
-import { RightOutlined } from "@ant-design/icons";
+import { isMobileQuery, withMediaQuery } from "../helpers/responsive";
 
 const { RangePicker } = DatePicker;
-const { Option } = Select;
-const { Text, Link } = Typography;
+const { Link } = Typography;
 
 const dateFormat = "DD/MM/YYYY";
 
-export default class DateRangeSelector extends React.Component {
+class DateRangeSelector extends React.Component {
   constructor() {
     super();
     this.state = {
@@ -52,16 +51,31 @@ export default class DateRangeSelector extends React.Component {
   }
 
   render() {
+    const { isMobile } = this.props;
+    const mobileStyle = { display: isMobile ? "none" : undefined };
+
     return (
       <div>
         <Space size={"middle"}>
-          <Link type="link" onClick={() => this.setFromSelection("today")}>
+          <Link
+            type="link"
+            onClick={() => this.setFromSelection("today")}
+            style={mobileStyle}
+          >
             Today
           </Link>
-          <Link type="link" onClick={() => this.setFromSelection("isoweek")}>
+          <Link
+            type="link"
+            onClick={() => this.setFromSelection("isoweek")}
+            style={mobileStyle}
+          >
             This Week
           </Link>
-          <Link type="link" onClick={() => this.setFromSelection("month")}>
+          <Link
+            type="link"
+            onClick={() => this.setFromSelection("month")}
+            style={mobileStyle}
+          >
             This Month
           </Link>
           <RangePicker
@@ -78,3 +92,5 @@ export default class DateRangeSelector extends React.Component {
     );
   }
 }
+
+export default withMediaQuery([isMobileQuery])(DateRangeSelector);

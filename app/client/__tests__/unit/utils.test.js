@@ -49,18 +49,18 @@ describe("test localStorage", () => {
   const sessionToken = "asfdasfd91234pfa";
 
   describe("orgId", () => {
-    test("test setOrgId", () => {
-      utils.storeOrgid(orgId);
-      expect(localStorage).toHaveProperty("orgId", orgId);
+    test("test setOrgIds", () => {
+      utils.storeOrgIds(orgId);
+      expect(localStorage).toHaveProperty("orgIds", orgId);
     });
 
-    test("test getOrgId", () => {
-      expect(utils.getOrgId()).toEqual(orgId);
+    test("test getOrgIds", () => {
+      expect(utils.getOrgIds()).toEqual(orgId);
     });
 
-    test("test removeOrgId", () => {
-      utils.removeOrgId();
-      expect(localStorage).not.toHaveProperty("orgId", orgId);
+    test("test removeOrgIds", () => {
+      utils.removeOrgIds();
+      expect(localStorage).not.toHaveProperty("orgIds", orgId);
     });
   });
 
@@ -117,4 +117,27 @@ test("toTitleCase", () => {
 
 test("hexToRgb", () => {
   expect(utils.hexToRgb("#30a4a6")).toStrictEqual({ r: 48, g: 164, b: 166 });
+});
+
+test("get_zero_filled_values", () => {
+  const value_array = [
+    { date: "2020-07-03T00:00:00", value: 11 },
+    {
+      date: "2020-07-05T00:00:00",
+      value: 1
+    },
+    { date: "2020-07-08T00:00:00", value: 1 }
+  ];
+  const date_values = [
+    "2020-07-03T00:00:00",
+    "2020-07-04T00:00:00",
+    "2020-07-05T00:00:00",
+    "2020-07-06T00:00:00",
+    "2020-07-07T00:00:00",
+    "2020-07-08T00:00:00"
+  ];
+  const date_array = date_values.map(date => new Date(date));
+  expect(
+    utils.get_zero_filled_values("value", value_array, date_array)
+  ).toStrictEqual([11, 0, 1, 0, 0, 1]);
 });

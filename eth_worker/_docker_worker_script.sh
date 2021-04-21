@@ -29,34 +29,39 @@ if [ "$CONTAINER_MODE" == 'ETH_WORKER_TEST' ]; then
         sleep infinity
     fi
 else
+    cd eth_src
     if [ "$CONTAINER_TYPE" == 'BEAT' ]; then
         echo "Starting Beat Worker"
-        celery beat -S redbeat.RedBeatScheduler -A eth_manager --loglevel=WARNING
+        celery beat -A celery_app -S redbeat.RedBeatScheduler --loglevel=DEBUG
     elif [ "$CONTAINER_TYPE" == 'FLOWER' ]; then
         echo "Starting Flower Worker"
-        flower -A worker --port=5555
+        flower -A celery_app --port=5555
     elif [ "$CONTAINER_TYPE" == 'PROCESSOR' ]; then
         echo "Starting Processor Worker"
-        celery -A eth_manager worker --loglevel=INFO --concurrency=$WORKER_CONCURRENCY --pool=gevent -Q=processor --without-gossip --without-mingle
+        celery worker -A celery_app --loglevel=INFO --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=processor --without-gossip --without-mingle
     elif [ "$CONTAINER_TYPE" == 'LOW_PRIORITY_WORKER' ]; then
         echo "Starting Low Priority Worker"
-        celery -A eth_manager worker --loglevel=INFO --concurrency=$WORKER_CONCURRENCY --pool=gevent -Q=low-priority,celery --without-gossip --without-mingle
+        celery worker -A celery_app --loglevel=INFO --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=low-priority,celery --without-gossip --without-mingle
     elif [ "$CONTAINER_TYPE" == 'HIGH_PRIORITY_WORKER' ]; then
         echo "Starting High Priority Worker"
+        cd ../
         alembic upgrade head
-        celery -A eth_manager worker --loglevel=INFO --concurrency=$WORKER_CONCURRENCY --pool=gevent -Q=high-priority --without-gossip --without-mingle
+        cd eth_src
+        celery -A celery_app worker --loglevel=INFO --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=high-priority --without-gossip --without-mingle
     elif [ "$CONTAINER_TYPE" == 'ANY_PRIORITY_WORKER' ]; then
         echo "Starting Any Priority Worker"
-        celery -A eth_manager worker --loglevel=INFO --concurrency=$WORKER_CONCURRENCY --pool=gevent -Q=low-priority,celery,high-priority,processor --without-gossip --without-mingle
+        celery -A celery_app worker --loglevel=INFO --concurrency=$WORKER_CONCURRENCY --pool=eventlet -Q=low-priority,celery,high-priority,processor --without-gossip --without-mingle
     else
 #       Default to primary worker configuration - running alembic upgrade twice is fine.
+        cd ../
         echo "Running alembic upgrade (Default)"
         alembic upgrade head
         ret=$?
         if [ "$ret" -ne 0 ]; then
             exit $ret
         fi
+        cd eth_src
         echo "Starting Generic Worker (Default)"
-        celery -A eth_manager worker --loglevel=INFO --concurrency=10 --pool=gevent -Q=low-priority,celery,high-priority --without-gossip --without-mingle
+        celery -A celery_app worker --loglevel=INFO --concurrency=10 --pool=eventlet -Q=low-priority,celery,high-priority --without-gossip --without-mingle
     fi
 fi

@@ -4,7 +4,8 @@ import sentry_sdk
 from phonenumbers.phonenumberutil import NumberParseException
 
 from flask import current_app, g
-from server import twilio_client, messagebird_client, africastalking_client, executor
+from server import twilio_client, messagebird_client, africastalking_client
+from server.utils.executor import standard_executor_job
 
 def proccess_phone_number(phone_number, region=None, ignore_region=False):
     """
@@ -57,7 +58,7 @@ def channel_for_number(phone):
         # what should fallback be?
         return ChannelType.TWILIO
 
-@executor.job
+@standard_executor_job
 def _send_twilio_message(to_phone, message):
     if to_phone:
         twilio_client.api.account.messages.create(
@@ -65,12 +66,12 @@ def _send_twilio_message(to_phone, message):
             from_=current_app.config['TWILIO_PHONE'],
             body=message)
 
-@executor.job
+@standard_executor_job
 def _send_messagebird_message(to_phone, message):
     if to_phone:
         messagebird_client.message_create(current_app.config['MESSAGEBIRD_PHONE'], to_phone, message)
 
-@executor.job
+@standard_executor_job
 def _send_at_message(to_phone, message):
     if to_phone:
         # First try with custom sender Id
@@ -89,14 +90,15 @@ def _send_at_message(to_phone, message):
                 [to_phone])
 
 def send_message(to_phone, message):
-    if current_app.config['IS_TEST'] or current_app.config['IS_PRODUCTION']:
-        channel = channel_for_number(to_phone)
-        print(f'Sending SMS via {channel}')
-        if channel == ChannelType.TWILIO:
-            _send_twilio_message.submit(to_phone, message)
-        if channel == ChannelType.MESSAGEBIRD:
-            _send_messagebird_message.submit(to_phone, message)
-        if channel == ChannelType.AFRICAS_TALKING:
-            _send_at_message.submit(to_phone, message)
-    else:
-        print(f'"IS NOT PRODUCTION", not sending SMS:\n{message}')
+    if to_phone:
+        if current_app.config['IS_TEST'] or current_app.config['IS_PRODUCTION']:
+            channel = channel_for_number(to_phone)
+            print(f'Sending SMS via {channel}')
+            if channel == ChannelType.TWILIO:
+                _send_twilio_message.submit(to_phone, message)
+            if channel == ChannelType.MESSAGEBIRD:
+                _send_messagebird_message.submit(to_phone, message)
+            if channel == ChannelType.AFRICAS_TALKING:
+                _send_at_message.submit(to_phone, message)
+        else:
+            print(f'"IS NOT PRODUCTION", not sending SMS:\n{message}')

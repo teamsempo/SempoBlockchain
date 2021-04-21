@@ -3,7 +3,6 @@
 // Unauthorized copying of this file, via any medium is strictly prohibited
 
 import React from "react";
-import PropTypes from "prop-types";
 
 import { Tabs, Statistic, Typography } from "antd";
 import {
@@ -12,12 +11,15 @@ import {
   MinusOutlined
 } from "@ant-design/icons";
 
+import { VALUE_TYPES } from "../../../constants";
+
 const { TabPane } = Tabs;
 const { Text } = Typography;
 
-import { replaceUnderscores, toTitleCase } from "../../../utils";
+import { replaceUnderscores, toTitleCase, toCurrency } from "../../../utils";
 
 import "./Tabs.css";
+import { TooltipWrapper } from "../TooltipWrapper";
 
 export default class CustomTabs extends React.Component {
   render() {
@@ -34,45 +36,55 @@ export default class CustomTabs extends React.Component {
         {timeSeriesNameLabels.map((ts, i) => {
           let tsName = ts[0];
           let tsLabel = ts[1];
+          let tsPrompt = ts[2];
 
           const timeseries = metrics[tsName].timeseries;
-          let startValue = 0;
-          let endValue = 0;
-          Object.keys(timeseries).map(key => {
-            startValue += timeseries[key][0].value;
-            endValue += timeseries[key][timeseries[key].length - 1].value;
-          });
 
+          const percentage_change = metrics[tsName].aggregate.percent_change;
+          let suffix = metrics[tsName].type.currency_symbol
+            ? " " + metrics[tsName].type.currency_symbol
+            : "";
           let color;
           let arrow;
-          if (endValue > startValue) {
-            color = "#3f8600";
+          if (percentage_change > 0) {
+            color = "#3f8600"; // green
             arrow = (
               <CaretUpOutlined style={{ color: color, marginRight: 0 }} />
             );
-          } else if (startValue > endValue) {
-            color = "#cf1322";
+          } else if (percentage_change < 0) {
+            color = "#cf1322"; // red
             arrow = (
               <CaretDownOutlined style={{ color: color, marginRight: 0 }} />
             );
           } else {
-            color = "#485465";
+            color = "#485465"; // grey
             arrow = <MinusOutlined style={{ color: color, marginRight: 0 }} />;
           }
 
           let percentChange = "--";
-          if (endValue && startValue) {
-            percentChange = Math.round((endValue / startValue - 1) * 100);
+          if (percentage_change) {
+            percentChange = Math.round(percentage_change);
           }
+
+          const total =
+            metrics[tsName].type.value_type == VALUE_TYPES.CURRENCY
+              ? toCurrency(metrics[tsName].aggregate.total)
+              : metrics[tsName].aggregate.total;
 
           return (
             <TabPane
               key={tsName}
               tab={
                 <Statistic
-                  title={toTitleCase(replaceUnderscores(tsLabel))}
-                  value={metrics[tsName].aggregate.total}
-                  precision={2}
+                  title={
+                    <TooltipWrapper
+                      label={replaceUnderscores(tsLabel)}
+                      prompt={tsPrompt}
+                    />
+                  }
+                  value={total}
+                  suffix={suffix}
+                  precision={metrics[tsName].type.display_decimals}
                   prefix={
                     <div
                       style={{
@@ -96,8 +108,3 @@ export default class CustomTabs extends React.Component {
     );
   }
 }
-//
-// Tabs.PropTypes = {
-//   possibleTimeseries: PropTypes.arrayOf(PropTypes.string),
-//   changeTimeseries: () => fn()
-// };

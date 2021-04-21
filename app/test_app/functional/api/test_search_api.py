@@ -8,62 +8,65 @@ from server.utils.user import create_transfer_account_user, set_custom_attribute
 from server import db
 
 def test_prep_search_api(test_client, complete_admin_auth_token, create_organisation):
-    # This is a hack because the test DB isn't being built with migrations (and thus doesn't have tsvectors)
-    db.session.execute("drop table search_view;")
-    db.session.commit()
+    # This is a hack because the test DB isn't being built with migrations (and thus doesn't have trigrams)
     db.session.execute('''
-        CREATE MATERIALIZED VIEW search_view AS (
-            SELECT
-                u.id,
-                u.email,
-                u._phone,
-                u.first_name,
-                u.last_name,
-                u._public_serial_number,
-                u._location,
-                u.primary_blockchain_address,
-                u.default_transfer_account_id,
-                to_tsvector(u.email) AS tsv_email,
-                to_tsvector(u._phone) AS tsv_phone,
-                to_tsvector(u.first_name) AS tsv_first_name,
-                to_tsvector(u.last_name) AS tsv_last_name,
-                to_tsvector(u._public_serial_number) AS tsv_public_serial_number,
-                to_tsvector(u._location) AS tsv_location,
-                to_tsvector(u.primary_blockchain_address) AS tsv_primary_blockchain_address,
-                to_tsvector(CAST (u.default_transfer_account_id AS VARCHAR(10))) AS tsv_default_transfer_account_id
-            FROM "user" u
-        );
+        CREATE EXTENSION IF NOT EXISTS pg_trgm;
+        CREATE INDEX trgm_first_name ON "user" USING gist (first_name gist_trgm_ops);
+        CREATE INDEX trgm_last_name ON "user" USING gist (last_name gist_trgm_ops);
+        CREATE INDEX trgm_phone ON "user" USING gist (_phone gist_trgm_ops);
+        CREATE INDEX trgm_public_serial_number ON "user" USING gist (_public_serial_number gist_trgm_ops);
+        CREATE INDEX trgm_primary_blockchain_address ON "user" USING gist (primary_blockchain_address gist_trgm_ops);
+        CREATE INDEX trgm_location ON "user" USING gist (_location gist_trgm_ops);
     ''')
 
     # Adds users we're searching for
     create_transfer_account_user(first_name='Michiel',
                                     last_name='deRoos',
-                                    phone="+19025551234",
+                                    phone='+19025551234',
                                     organisation=create_organisation,
-                                    initial_disbursement = 100)
-
+                                    initial_disbursement = 100).location = 'Halifax'
 
     create_transfer_account_user(first_name='Francine',
                                     last_name='deRoos',
-                                    phone="+19025552345",
+                                    phone='+19025552345',
                                     organisation=create_organisation,
-                                    initial_disbursement = 200)
+                                    initial_disbursement = 200).location = 'Dartmouth'
 
     create_transfer_account_user(first_name='Roy',
                                     last_name='Donk',
-                                    phone="+19025553456",
+                                    phone='+12345678901',
                                     organisation=create_organisation,
-                                    initial_disbursement = 200)
+                                    initial_disbursement = 200).location = 'Burbank'
+
+    create_transfer_account_user(first_name='Paul',
+                                    last_name='Bufano',
+                                    phone='+98765432123',
+                                    organisation=create_organisation,
+                                    initial_disbursement = 200).location = 'California'
 
     db.session.commit()
-    # Manually refresh tsvectors because the test DB has no triggers either
-    db.session.execute("REFRESH MATERIALIZED VIEW search_view;")
 
 @pytest.mark.parametrize("search_term, results", [
-    ('', ['Roy', 'Francine', 'Michiel']), # Empty string should return everyone
-    ('fra', ['Francine']), # Only user starting with 'fra' substring is Francine
-    ('fra der', ['Francine', "Michiel"]), # 'fra der' should return Francine first. Michiel 2nd, because it still matches _something_
-    ('mic der', ['Michiel', "Francine"]), # 'fra der' should return Michiel first. Francine 2nd, because it still matches _something_(
+    # Empty string should return everyone
+    ('', ['Paul', 'Roy', 'Francine', 'Michiel']), 
+    # First/Last Matching
+    # Francine should be only result!
+    ('fr', ['Francine']), 
+    # Substrings match for all three, but this is clearly the right order!
+    ('fra der', ['Francine', 'Michiel', 'Roy']), 
+    # 'mic der' should return Michiel first. Francine 2nd, because it still matches _something_
+    ('mic der', ['Michiel', "Francine", "Roy"]), 
+    # Phone Matching
+    # Roy is top dog here since this matches his phone number best, and phone number match is top priority
+    ('12345678901 mic', ['Roy', 'Michiel', 'Francine', 'Paul']), 
+    # 902 area code should float Michiel and Francine to the top
+    # M added to query since the ranks were tied and I had to make one pull ahead for consistency!
+    ('902 Mic f', ['Michiel', 'Francine', 'Paul']), 
+    # Location matching
+    # Michiel is from Halifax, so Michiel should be first here!
+    ('Halifax', ['Michiel', 'Paul']), 
+    # Michiel is from Halifax and Francine is from Dartmouth, so they should be at the top
+    ('Dartmouth Halifax', ['Francine', 'Michiel', 'Paul', 'Roy']), 
 ])
 def test_normal_search(search_term, results, test_client, complete_admin_auth_token, create_organisation):
     """
@@ -71,10 +74,11 @@ def test_normal_search(search_term, results, test_client, complete_admin_auth_to
     check that the results are in the correct order
     """
 
-    response = test_client.get('/api/v1/search/?search_string={}&search_type=transfer_accounts'.format(search_term),
+    response = test_client.get(f'/api/v1/search/?search_string={search_term}',
                             headers=dict(
                             Authorization=complete_admin_auth_token, Accept='application/json'),
                             follow_redirects=True)
+
     transfer_accounts = response.json['data']['transfer_accounts']
     assert response.status_code == 200
     user_names = []
@@ -83,18 +87,22 @@ def test_normal_search(search_term, results, test_client, complete_admin_auth_to
             user_names.append(transfer_account['users'][0]['first_name'])
     assert results == user_names
 
-# TODO: the first one isn't passing, but seems to be returning the correct result??
-@pytest.mark.xfail
 @pytest.mark.parametrize("search_term, filters, results", [
-    ('', "rounded_account_balance(GT)(2)", ['Roy', 'Francine', 'Michiel']),
-    ('', "rounded_account_balance(GT)(100)", []),
+    # Location filter with query string
+    ('902', "_location(IN)(Halifax)", ['Michiel']),
+    ('902', "_location(IN)(Dartmouth)", ['Francine']),
+    ('902', "_location(IN)(Halifax,Dartmouth)", ['Michiel', 'Francine']),
+    # Location filter without query string
+    ('', "_location(IN)(Halifax)", ['Michiel']),
+    ('', "_location(IN)(Dartmouth)", ['Francine']),
+    ('', "_location(IN)(Halifax,Dartmouth)", ['Michiel', 'Francine']),
 ])
 def test_filtered_search(search_term, filters, results, test_client, complete_admin_auth_token, create_organisation):
     """
     When the '/api/v1/search/' page is requested with filters
     check that the results are in the correct order
     """
-    response = test_client.get('/api/v1/search/?search_string={}&search_type=transfer_accounts&params={}'.format(search_term, filters),
+    response = test_client.get(f'/api/v1/search/?search_string={search_term}&search_type=transfer_accounts&params={filters}',
                         headers=dict(
                         Authorization=complete_admin_auth_token, Accept='application/json'),
                         follow_redirects=True)
@@ -104,10 +112,5 @@ def test_filtered_search(search_term, filters, results, test_client, complete_ad
     for transfer_account in transfer_accounts:
         if transfer_account['users']:
             user_names.append(transfer_account['users'][0]['first_name'])
-    assert results == user_names
-
-def test_tear_down():
-    db.session.execute('DROP MATERIALIZED VIEW search_view CASCADE;')
-    db.session.flush()
-    db.session.commit()
+    assert results.sort() == user_names.sort()
 

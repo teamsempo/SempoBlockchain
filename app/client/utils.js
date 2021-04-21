@@ -4,6 +4,12 @@ import { LoginAction } from "./reducers/auth/actions";
 import store from "./createStore.js";
 import { USER_FILTER_TYPE } from "./constants";
 
+export const getActiveToken = state =>
+  state.tokens.byId[
+    state.organisations.byId[state.login.organisationId] &&
+      state.organisations.byId[state.login.organisationId].token
+  ];
+
 export function formatMoney(
   amount,
   decimalCount,
@@ -32,13 +38,16 @@ export function formatMoney(
             .toFixed(decimalCount)
             .slice(2)
         : "") +
-      " " +
-      currency
+      (currency ? " " + currency : "")
     );
   } catch (e) {
     console.log(e);
   }
 }
+
+export const toCurrency = amount => {
+  return Math.round((amount / 100) * 100) / 100;
+};
 
 const overwriteMerge = (destinationArray, sourceArray) => sourceArray;
 
@@ -67,9 +76,13 @@ export const generateQueryString = query => {
     });
   }
 
-  let orgId = getOrgId();
+  let orgId = getOrgIds();
+  let orgIds = orgId && orgId.split(",");
   var response_string = query_string;
-  if (orgId !== null && typeof orgId !== "undefined") {
+  if (orgIds && orgIds.length > 1) {
+    response_string =
+      query_string + `query_organisations=${orgIds.toString()}&`;
+  } else if (orgId !== null && typeof orgId !== "undefined") {
     response_string = query_string + `org=${orgId}&`;
   }
 
@@ -150,19 +163,19 @@ const extractJson = error => {
   return error.json();
 };
 
-export const storeOrgid = orgId => {
-  localStorage.setItem("orgId", orgId);
+export const storeOrgIds = orgIds => {
+  localStorage.setItem("orgIds", orgIds);
 };
 
-export const removeOrgId = orgId => {
-  localStorage.removeItem("orgId");
+export const removeOrgIds = orgId => {
+  localStorage.removeItem("orgIds");
 };
 
-export const getOrgId = () => {
+export const getOrgIds = () => {
   try {
-    return localStorage.getItem("orgId");
+    return localStorage.getItem("orgIds");
   } catch (err) {
-    removeOrgId();
+    removeOrgIds();
     return null;
   }
 };
@@ -253,7 +266,7 @@ export const get_zero_filled_values = (key, value_array, date_array) => {
 
   let transaction_volume = date_array.map(date => {
     if (value_dict[date] !== undefined) {
-      return value_dict[date] / 100;
+      return value_dict[date];
     } else {
       return 0;
     }
@@ -301,6 +314,43 @@ export const processFiltersForQuery = filters => {
   encoded_filters = encoded_filters.slice(0, -delimiter.length);
 
   return encoded_filters;
+};
+
+export const parseEncodedParams = (allowedFilters, params) => {
+  let inequalityMapper = {
+    'EQ': '=',
+    'LT': '<',
+    'GT': '>',
+  };
+
+  return params
+    .split(":")
+    .filter(item => item)
+    .map((param, i) => {
+      //Tokenize across parentheses
+      let [attribute, comparator, value] = param.split(/[()]+/).filter(e => e);
+
+      let matchedFilter = allowedFilters[attribute];
+      if (!matchedFilter) {
+        throw `Allowed Filter not found for attribute ${attribute}. Allowed filters are: ${allowedFilters}`
+      }
+
+      if (comparator === 'IN') {
+        return {
+          type: matchedFilter.type,
+          attribute: decodeURIComponent(attribute),
+          allowedValues: value.split(',').map(decodeURIComponent),
+          id: i+1
+        }
+      }
+
+      return {
+        type: inequalityMapper[comparator] || inequalityMapper['EQ'],
+        attribute: decodeURIComponent(attribute),
+        threshold: value,
+        id: i+1
+      }
+  })
 };
 
 export function hexToRgb(hex) {

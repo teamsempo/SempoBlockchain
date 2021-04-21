@@ -95,6 +95,7 @@ const InviteForm = function(props) {
           id="EmailField"
           onKeyUp={props.onEmailFieldKeyPress}
           placeholder="Email"
+          aria-label="Email"
         />
 
         <RoleTypeWrapper>
@@ -107,6 +108,7 @@ const InviteForm = function(props) {
                   value={tier}
                   checked={props.tier === tier}
                   onChange={props.handleToggle}
+                  aria-label={`Tier ${tier}`}
                 />
                 <LabelCheckmark checked={props.tier === tier} />
               </LabelContainer>
@@ -121,7 +123,8 @@ const InviteForm = function(props) {
         onClick={props.onClick}
         isLoading={props.isLoggingIn}
         buttonStyle={{ width: "calc(100% - 1em)", display: "flex" }}
-        buttonText="Invite"
+        buttonText={<span>Invite</span>}
+        label={"Invite"}
       />
     </div>
   );

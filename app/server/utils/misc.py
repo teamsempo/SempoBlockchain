@@ -1,12 +1,12 @@
+from typing import Dict
 import datetime
 from math import log10, floor
 import base64
-import re
 from flask import current_app, request
 from eth_utils import keccak
 from cryptography.fernet import Fernet
-from server.models.settings import Settings
 import itertools
+from decimal import Decimal
 
 last_marker = datetime.datetime.utcnow()
 
@@ -43,7 +43,7 @@ def round_to_decimals(amount, decimals=2):
         return None
 
     # Add a small amount before round to override rounding half to even
-    return round(amount + 0.000001, decimals)
+    return round(amount + Decimal(0.000001), decimals)
 
 
 def rounded_dollars(amount):
@@ -54,8 +54,8 @@ def rounded_dollars(amount):
     if amount is None:
         return None
 
-    rounded = round_to_decimals(float(amount) / 100)
-    if int(rounded) == float(rounded) and int(rounded) > 1000:
+    rounded = round_to_decimals(Decimal(amount) / 100)
+    if int(rounded) == Decimal(rounded) and int(rounded) > 1000:
         # It's a large whole amount like 1200.00, so return as 1200
         return str(int(rounded))
 
@@ -95,53 +95,7 @@ def encrypt_string(raw_string):
     return cipher_suite.encrypt(raw_string.encode('utf-8')).decode('utf-8')
 
 
-class AttributeDictProccessor(object):
+def attach_host(response: Dict) -> Dict:
+    response['host_url'] = current_app.config['APP_HOST']
 
-    def force_attribute_dict_keys_to_lowercase(self):
-        return dict(zip(map(str.lower, self.attribute_dict.keys()), self.attribute_dict.values()))
-
-    def strip_kobo_preslashes(self):
-        self.attribute_dict = dict(zip(map(lambda key: key[self._return_index_of_slash_or_neg1(key) + 1:], self.attribute_dict.keys()),
-                        self.attribute_dict.values()))
-
-    def insert_settings_from_databse(self, settings_list):
-        for setting in settings_list:
-            if setting not in self.attribute_dict:
-                stored_setting = Settings.query.filter_by(name=setting).first()
-
-                if stored_setting is not None:
-                    self.attribute_dict[setting] = stored_setting.value
-
-    def attempt_to_truthy_dict_values(self):
-        self.attribute_dict = dict(zip(self.attribute_dict.keys(), map(self._convert_yes_no_string_to_bool, self.attribute_dict.values())))
-
-    def strip_weirdspace_characters(self):
-        """
-        'weirdspace' (tm nick 2019) characters are tabs, newlines and returns
-        """
-
-        self.attribute_dict = dict(zip(map(self._remove_whitespace_from_string, self.attribute_dict.keys()),
-                        map(self._remove_whitespace_from_string, self.attribute_dict.values())))
-
-    def _return_index_of_slash_or_neg1(self, string):
-        try:
-            return str(string).index("/")
-        except ValueError:
-            return -1
-
-    def _convert_yes_no_string_to_bool(self, test_string):
-        if str(test_string).lower() in ["yes", "true"]:
-            return True
-        elif str(test_string).lower() in ["no", "false"]:
-            return False
-        else:
-            return test_string
-
-    def _remove_whitespace_from_string(self, maybe_string):
-        if isinstance(maybe_string, str):
-            return re.sub(r'[\t\n\r]', '', maybe_string)
-        else:
-            return maybe_string
-
-    def __init__(self, attribute_dict: dict):
-        self.attribute_dict = attribute_dict
+    return response

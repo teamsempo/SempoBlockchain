@@ -209,7 +209,10 @@ class AdminUserList extends React.Component {
             })
           }
         >
-          <IconSVG src="/static/media/action-icon.svg" />
+          <IconSVG
+            src="/static/media/action-icon.svg"
+            alt={"Actions for " + item.email}
+          />
         </IconWrapper>
         <CloseWrapper
           onClick={() =>
@@ -252,7 +255,7 @@ class AdminUserList extends React.Component {
       return (
         <Wrapper>
           <TopRow>
-            <ModuleHeader>USERS</ModuleHeader>
+            <ModuleHeader>Admins</ModuleHeader>
             <div>
               <UploadButtonWrapper style={{ marginRight: 0, marginLeft: 0 }}>
                 <StyledButton
@@ -263,8 +266,9 @@ class AdminUserList extends React.Component {
                     lineHeight: "25px",
                     height: "25px"
                   }}
+                  label={"Add New Admin"}
                 >
-                  + New User
+                  + New Admin
                 </StyledButton>
               </UploadButtonWrapper>
             </div>

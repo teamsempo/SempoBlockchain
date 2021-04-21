@@ -1,14 +1,20 @@
 import * as React from "react";
 import { connect } from "react-redux";
-import styled from "styled-components";
 import { NavLink } from "react-router-dom";
 import { Layout, Menu } from "antd";
+import { IntercomChat } from "../intercom/IntercomChat";
+import { HelpCentre } from "../intercom/HelpCentre";
 
 import {
   DesktopOutlined,
   SendOutlined,
   TeamOutlined,
-  SettingOutlined
+  SettingOutlined,
+  QuestionCircleOutlined,
+  StockOutlined,
+  CompassOutlined,
+  UnorderedListOutlined,
+  DollarOutlined
 } from "@ant-design/icons";
 
 const { Sider } = Layout;
@@ -19,6 +25,7 @@ import { replaceSpaces } from "../../utils";
 import OrgSwitcher from "./OrgSwitcher";
 import { Organisation } from "../../reducers/organisation/types";
 import { LoginState } from "../../reducers/auth/loginReducer";
+import { isMobileQuery, withMediaQuery } from "../helpers/responsive";
 
 interface StateProps {
   loggedIn: boolean;
@@ -32,12 +39,14 @@ interface DispatchProps {}
 
 interface ComponentProps {
   pathname: string;
+  isMobile: boolean;
+  onCollapse: (collapsed: boolean) => any;
+  collapsed: boolean;
 }
 
 const initialState = Object.freeze({
   iconURL: "/static/media/sempo_icon.svg",
-  isOrgSwitcherActive: false,
-  collapsed: false
+  isOrgSwitcherActive: false
 });
 
 type Props = DispatchProps & StateProps & ComponentProps;
@@ -46,10 +55,7 @@ type State = typeof initialState;
 declare global {
   interface Window {
     DEPLOYMENT_NAME: string;
-    ETH_EXPLORER_URL: string;
-    USING_EXTERNAL_ERC20: boolean;
-    master_wallet_address: string;
-    ETH_CONTRACT_ADDRESS: string;
+    INTERCOM_APP_ID: string;
   }
 }
 
@@ -64,11 +70,7 @@ class NavBar extends React.Component<Props, State> {
 
     //TODO: Allow setting of region for this
     let s3_region = "https://sempo-logos.s3-ap-southeast-2.amazonaws.com";
-    let custom_url = `${s3_region}/${orgName}.${
-      deploymentName === "dev" ? "svg" : "png"
-    }`;
-
-    console.log("Custom URL is", custom_url);
+    let custom_url = `${s3_region}/${orgName}.png`;
 
     this.imageExists(custom_url, exists => {
       if (exists) {
@@ -90,60 +92,114 @@ class NavBar extends React.Component<Props, State> {
     img.src = url;
   }
 
-  onCollapse = (collapsed: boolean) => {
-    this.setState({ collapsed });
-  };
-
   render() {
-    var tracker_link =
-      window.ETH_EXPLORER_URL +
-      "/address/" +
-      (window.USING_EXTERNAL_ERC20
-        ? window.master_wallet_address
-        : window.ETH_CONTRACT_ADDRESS);
-
-    let { loggedIn, email, pathname } = this.props;
-    let { iconURL, collapsed } = this.state;
+    let { loggedIn, pathname, isMobile, collapsed, login } = this.props;
+    let { iconURL } = this.state;
+    const isMultiOrg =
+      login && login.organisationIds && login.organisationIds.length > 1;
 
     let activePath = pathname && "/" + pathname.split("/")[1];
 
     if (loggedIn) {
       return (
-        <Sider collapsible collapsed={collapsed} onCollapse={this.onCollapse}>
+        <Sider
+          collapsible={!isMobile}
+          collapsed={collapsed}
+          onCollapse={collapsed => this.props.onCollapse(collapsed)}
+          breakpoint={isMobile ? "md" : undefined}
+          collapsedWidth={isMobile ? "0" : undefined}
+          style={{ position: "fixed", zIndex: 99, height: "100%" }}
+        >
           <OrgSwitcher icon={iconURL} collapsed={collapsed}></OrgSwitcher>
-          <Menu theme="dark" selectedKeys={[activePath]} mode="inline">
+          <Menu
+            theme="dark"
+            selectedKeys={[activePath]}
+            mode={isMobile ? "inline" : "vertical"}
+          >
             <SubMenu
               key="sub1"
               icon={<DesktopOutlined translate={""} />}
               title="Dashboard"
             >
               <Menu.Item key="/">
-                <NavLink to="/">Analytics</NavLink>
+                <NavLink to="/">
+                  <StockOutlined translate={""} /> Analytics
+                </NavLink>
               </Menu.Item>
               <Menu.Item key="/map">
-                <NavLink to="/map">Map</NavLink>
+                <NavLink to="/map">
+                  <CompassOutlined translate={""} /> Map
+                </NavLink>
               </Menu.Item>
             </SubMenu>
-            <Menu.Item key="/accounts" icon={<TeamOutlined translate={""} />}>
+            <Menu.Item
+              key="/accounts"
+              icon={<TeamOutlined translate={""} />}
+              disabled={isMultiOrg || false}
+            >
               <NavLink to="/accounts">Accounts</NavLink>
             </Menu.Item>
-            <Menu.Item key="/transfers" icon={<SendOutlined translate={""} />}>
-              <NavLink to="/transfers">Transfers</NavLink>
-            </Menu.Item>
+
+            <SubMenu
+              key="sub2"
+              icon={<DollarOutlined translate={""} />}
+              title="Transfers"
+              disabled={isMultiOrg || false}
+            >
+              <Menu.Item
+                key="/transfers"
+                icon={<UnorderedListOutlined translate={""} />}
+                disabled={isMultiOrg || false}
+              >
+                <NavLink to="/transfers">Transfers List</NavLink>
+              </Menu.Item>
+              <Menu.Item
+                key="/bulk/"
+                icon={<SendOutlined translate={""} />}
+                disabled={isMultiOrg || false}
+              >
+                <NavLink to="/bulk/">Bulk Transfers</NavLink>
+              </Menu.Item>
+            </SubMenu>
+
             <Menu.Item
               key="/settings"
               icon={<SettingOutlined translate={""} />}
+              disabled={isMultiOrg || false}
             >
               <NavLink to="/settings">Settings</NavLink>
             </Menu.Item>
           </Menu>
-          {this.state.collapsed ? null : (
-            <ContractAddress href={tracker_link} target="_blank">
-              {window.USING_EXTERNAL_ERC20
-                ? "Master Wallet Tracker"
-                : "Contract Tracker"}
-            </ContractAddress>
-          )}
+
+          <Menu
+            theme="dark"
+            mode={isMobile ? "inline" : "vertical"}
+            style={
+              isMobile
+                ? undefined
+                : {
+                    position: "fixed",
+                    bottom: "60px",
+                    width: collapsed ? 80 : 200
+                  }
+            }
+            selectable={false}
+          >
+            <SubMenu
+              key="help"
+              icon={<QuestionCircleOutlined translate={""} />}
+              title="Help"
+            >
+              <Menu.Item key="help-centre">
+                <HelpCentre />
+              </Menu.Item>
+              {window.INTERCOM_APP_ID ? (
+                <Menu.Item key="contact-support">
+                  <IntercomChat />
+                </Menu.Item>
+              ) : null}
+            </SubMenu>
+          </Menu>
         </Sider>
       );
     } else {
@@ -165,14 +221,6 @@ const mapStateToProps = (state: ReduxState): StateProps => {
   };
 };
 
-export default connect(mapStateToProps)(NavBar);
-
-const ContractAddress = styled.a`
-  color: #fff;
-  margin: auto 2em;
-  font-size: 12px;
-  text-decoration: none;
-  font-weight: 400;
-  position: fixed;
-  bottom: 60px;
-`;
+export default connect(mapStateToProps)(
+  withMediaQuery([isMobileQuery])(NavBar)
+);

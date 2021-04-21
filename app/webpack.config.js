@@ -37,7 +37,7 @@ module.exports = {
     // chunkFilename: '[name].bundle.[contenthash].js',
     filename: "[name].bundle.[contenthash].js"
   },
-  devtool: "#cheap-module-source-map.", // #eval-source-map" #cheap-module-source-map."
+  devtool: "inline-source-map", // #eval-source-map" #cheap-module-source-map."
   resolve: {
     extensions: [".ts", ".tsx", ".js", ".jsx", ".json", ".css", ".less"]
   },
@@ -82,8 +82,9 @@ module.exports = {
       {
         test: /\.(ts|tsx)?$/,
         exclude: /node_modules/,
-        loader: "awesome-typescript-loader",
+        loader: "ts-loader",
         options: {
+          transpileOnly: true,
           getCustomTransformers: () => ({
             before: [
               tsImportPluginFactory([
@@ -114,5 +115,10 @@ module.exports = {
         ]
       }
     ]
+  },
+  optimization: {
+    splitChunks: {
+      chunks: "all"
+    }
   }
 };

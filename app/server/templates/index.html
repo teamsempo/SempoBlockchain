@@ -9,7 +9,6 @@
     />
 
     <link rel="stylesheet" href="/static/css/styles.css" />
-    <link rel="stylesheet" href="/static/css/react-date-styles.css" />
     <link rel="stylesheet" href="/static/css/react-table.css" />
     <link
       href="https://api.tiles.mapbox.com/mapbox-gl-js/v0.42.2/mapbox-gl.css"
@@ -114,22 +113,29 @@
       window.BUILD_HASH = "{{ config.BUILD_HASH }}";
       window.PUSHER_KEY = "{{ config.PUSHER_KEY }}";
       window.PUSHER_ENV_CHANNEL = "{{ config.PUSHER_ENV_CHANNEL }}";
-      window.ETH_CONTRACT_ADDRESS = "{{ config.ETH_CONTRACT_ADDRESS }}";
-      window.master_wallet_address = "{{ config.MASTER_WALLET_ADDRESS }}";
-      window.ETH_EXPLORER_URL = "{{ config.ETH_EXPLORER_URL }}";
+      window.INTERCOM_APP_ID = "{{ config.INTERCOM_APP_ID }}";
+      window.MAPBOX_TOKEN = "{{ config.MAPBOX_TOKEN }}";
+      window.ETH_CONTRACT_ADDRESS =
+        "{{ config.CHAINS[chain]['CONTRACT_ADDRESS'] }}";
+      window.master_wallet_address =
+        "{{ config.CHAINS[chain]['MASTER_WALLET_ADDRESS'] }}";
+      window.ETH_EXPLORER_URL = "{{ config.CHAINS[chain]['EXPLORER_URL'] }}";
       window.USING_EXTERNAL_ERC20 =
         "{{ config.USING_EXTERNAL_ERC20 }}" === "True";
       window.SENTRY_REACT_DSN = "{{ config.SENTRY_REACT_DSN }}";
-      window.IS_USING_BITCOIN = "{{ config.IS_USING_BITCOIN }}" === "True";
-      window.IS_BITCOIN_TESTNET = "{{ config.IS_BITCOIN_TESTNET }}" === "True";
-      window.BITCOIN_MASTER_WALLET_ADDRESS =
-        "{{config.BITCOIN_MASTER_WALLET_ADDRESS}}";
+      window.IS_USING_BITCOIN =
+        "{{ config.CHAINS[chain]['IS_USING_BITCOIN'] }}" === "True";
+      window.CHAIN_NAMES = "{{ config.WINDOW_CHAIN_NAMES }}";
     </script>
 
     <div id="app" class="site-wrapper"></div>
 
     <script
       src="/static/javascript/dist/{{ js_bundle_main }}"
+      type="text/javascript"
+    ></script>
+    <script
+      src="/static/javascript/dist/{{ js_bundle_vendor }}"
       type="text/javascript"
     ></script>
   </body>

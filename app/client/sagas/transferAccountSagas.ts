@@ -1,5 +1,6 @@
 import { put, takeEvery, call, all } from "redux-saga/effects";
 import { normalize } from "normalizr";
+import { message } from "antd";
 import { handleError } from "../utils";
 
 import { transferAccountSchema } from "../schemas";
@@ -9,6 +10,9 @@ import {
   TransferAccountAction,
   EditTransferAccountAction
 } from "../reducers/transferAccount/actions";
+import { CreditTransferAction } from "../reducers/creditTransfer/actions";
+import { UserListAction } from "../reducers/user/actions";
+import { TokenListAction } from "../reducers/token/actions";
 
 import {
   LoadTransferAccountActionTypes,
@@ -17,21 +21,16 @@ import {
   TransferAccountLoadApiResult
 } from "../reducers/transferAccount/types";
 
-import { CreditTransferAction } from "../reducers/creditTransfer/actions";
-
-import {
-  loadTransferAccountListAPI,
-  editTransferAccountAPI
-} from "../api/transferAccountAPI";
-
-import { MessageAction } from "../reducers/message/actions";
-import { UserListAction } from "../reducers/user/actions";
-
 import {
   TransferAccountData,
   SingularTransferAccountData,
   MultipleTransferAccountData
 } from "../reducers/transferAccount/types";
+
+import {
+  loadTransferAccountListAPI,
+  editTransferAccountAPI
+} from "../api/transferAccountAPI";
 
 function* updateStateFromTransferAccount(data: TransferAccountData) {
   //Schema expects a list of transfer account objects
@@ -47,6 +46,11 @@ function* updateStateFromTransferAccount(data: TransferAccountData) {
     transfer_account_list,
     transferAccountSchema
   );
+
+  const tokens = normalizedData.entities.tokens;
+  if (tokens) {
+    yield put(TokenListAction.updateTokenList(tokens));
+  }
 
   const users = normalizedData.entities.users;
   if (users) {
@@ -73,14 +77,34 @@ function* updateStateFromTransferAccount(data: TransferAccountData) {
       TransferAccountAction.deepUpdateTransferAccounts(transfer_accounts)
     );
   }
+
+  return normalizedData;
 }
 
 function* loadTransferAccounts({ payload }: TransferAccountLoadApiResult) {
   try {
     const load_result = yield call(loadTransferAccountListAPI, payload);
 
-    yield call(updateStateFromTransferAccount, load_result.data);
+    const normalized = yield call(
+      updateStateFromTransferAccount,
+      load_result.data
+    );
 
+    //ordered ID list with full overwrite (rather than set addition) preserves search information
+    const transfer_account_id_list = normalized.result;
+    if (transfer_account_id_list) {
+      yield put(
+        TransferAccountAction.updateTransferAccountIdList(
+          transfer_account_id_list
+        )
+      );
+    }
+
+    if (load_result.items) {
+      yield put(
+        TransferAccountAction.updateTransferAccountPagination(load_result.items)
+      )
+    }
     yield put(
       LoadTransferAccountAction.loadTransferAccountsSuccess(
         load_result.query_time
@@ -91,9 +115,7 @@ function* loadTransferAccounts({ payload }: TransferAccountLoadApiResult) {
 
     yield put(LoadTransferAccountAction.loadTransferAccountsFailure(error));
 
-    yield put(
-      MessageAction.addMessage({ error: true, message: error.message })
-    );
+    message.error(error.message);
   }
 }
 
@@ -108,21 +130,17 @@ function* editTransferAccount({ payload }: TransferAccountEditApiResult) {
   try {
     const edit_response = yield call(editTransferAccountAPI, payload);
 
-    yield call(updateStateFromTransferAccount, edit_response.data);
+    if (edit_response.data) {
+      yield call(updateStateFromTransferAccount, edit_response.data);
+    }
 
     yield put(EditTransferAccountAction.editTransferAccountSuccess());
-
-    yield put(
-      MessageAction.addMessage({ error: false, message: edit_response.message })
-    );
+    message.success(edit_response.message);
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
     yield put(EditTransferAccountAction.editTransferAccountFailure(error));
-
-    yield put(
-      MessageAction.addMessage({ error: true, message: error.message })
-    );
+    message.error(error.message);
   }
 }
 

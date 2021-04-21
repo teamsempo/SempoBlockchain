@@ -1,9 +1,10 @@
 import json
 from typing import Union
-from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.dialects.postgresql import JSON, JSONB
 from sqlalchemy.orm.attributes import flag_modified
-from sqlalchemy import text, Table
+from sqlalchemy import text, Table, cast, String
+from sqlalchemy.sql.functions import func
 from itsdangerous import TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired
 from cryptography.fernet import Fernet
 import pyotp
@@ -11,10 +12,12 @@ import config
 from flask import current_app, g
 import datetime
 import bcrypt
+import math
 import jwt
 import random
 import string
 import sentry_sdk
+from sqlalchemy import or_, and_
 
 from server import db, celery_app, bt
 from server.utils.misc import encrypt_string, decrypt_string
@@ -68,6 +71,9 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
     """
     __tablename__ = 'user'
 
+    # override ModelBase deleted to add an index
+    created = db.Column(db.DateTime, default=datetime.datetime.utcnow, index=True)
+
     first_name = db.Column(db.String())
     last_name = db.Column(db.String())
     preferred_language = db.Column(db.String())
@@ -79,6 +85,8 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
     email = db.Column(db.String())
     _phone = db.Column(db.String(), unique=True, index=True)
     _public_serial_number = db.Column(db.String())
+    uuid = db.Column(db.String(), index=True)
+
     nfc_serial_number = db.Column(db.String())
 
     password_hash = db.Column(db.String(200))
@@ -93,9 +101,9 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
 
     default_currency = db.Column(db.String())
 
-    _location = db.Column(db.String())
-    lat = db.Column(db.Float())
-    lng = db.Column(db.Float())
+    _location = db.Column(db.String(), index=True)
+    lat = db.Column(db.Float(), index=True)
+    lng = db.Column(db.Float(), index=True)
 
     _held_roles = db.Column(JSONB)
 
@@ -119,15 +127,14 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         secondary=user_transfer_account_association_table,
         back_populates="users")
 
-    default_transfer_account_id = db.Column(db.Integer, db.ForeignKey('transfer_account.id'))
+    default_transfer_account_id = db.Column(db.Integer, db.ForeignKey('transfer_account.id'), index=True)
 
     default_transfer_account = db.relationship('TransferAccount',
                                            primaryjoin='TransferAccount.id == User.default_transfer_account_id',
                                            lazy=True,
                                            uselist=False)
 
-    default_organisation_id = db.Column(
-        db.Integer, db.ForeignKey('organisation.id'))
+    default_organisation_id = db.Column( db.Integer, db.ForeignKey('organisation.id'), index=True)
 
     default_organisation = db.relationship('Organisation',
                                            primaryjoin=Organisation.id == default_organisation_id,
@@ -172,10 +179,19 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
 
     exchanges = db.relationship("Exchange", backref="user")
 
+    @hybrid_property
+    def coordinates(self):
+        return str(self.lat) + ', ' + str(self.lng)
+
+    @coordinates.expression
+    def coordinates(cls):
+        return cast(cls.lat, String) + ', ' + cast(cls.lng, String)
+
     def delete_user_and_transfer_account(self):
         """
         Soft deletes a User and default Transfer account if no other users associated to it.
         Removes User PII
+        Disables transfer card
         """
         try:
             ta = self.default_transfer_account
@@ -187,6 +203,16 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
             self.first_name = None
             self.last_name = None
             self.phone = None
+
+            transfer_card = None
+
+            try:
+                transfer_card = TransferCard.get_transfer_card(self.public_serial_number)
+            except NoTransferCardError as e:
+                pass
+
+            if transfer_card and not transfer_card.is_disabled:
+                transfer_card.disable()
 
         except (ResourceAlreadyDeletedError, TransferAccountDeletionError) as e:
             raise e
@@ -260,19 +286,23 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
 
     @location.setter
     def location(self, location):
-        from server.utils.location import async_set_user_gps_from_location
 
         self._location = location
 
-        if location is not None and location is not '':
+    def attempt_update_gps_location(self):
+        from server.utils.location import async_set_user_gps_from_location
+        if self._location is not None and self._location is not '':
             # Delay execution until after request to avoid race condition with db
             # We still need to flush to get user id though
             db.session.flush()
             add_after_request_executor_job(
                 async_set_user_gps_from_location,
-                kwargs={'user_id': self.id, 'location': location}
+                kwargs={'user_id': self.id, 'location': self._location}
             )
-
+        add_after_request_executor_job(
+            async_set_user_gps_from_location,
+            kwargs={'user_id': self.id, 'location': self._location}
+        )
     @hybrid_property
     def roles(self):
         if self._held_roles is None:
@@ -367,9 +397,45 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         # TODO: Review if this could have a better concept of a default?
         return self.get_transfer_account_for_organisation(active_organisation)
 
+    @hybrid_method
+    def great_circle_distance(self, lat, lng):
+        """
+        Tries to calculate the great circle distance between
+        the two locations in km by using the Haversine formula.
+        """
+        return self._haversine(math, self, lat, lng)
+
+    @great_circle_distance.expression
+    def great_circle_distance(cls, lat, lng):
+        return cls._haversine(func, cls, lat, lng)
+
+    @staticmethod
+    def _haversine(lib, selfref, lat, lng):
+        return 6371 * lib.acos(
+            lib.cos(lib.radians(selfref.lat))
+            * lib.cos(lib.radians(lat))
+            * lib.cos(lib.radians(selfref.lng) - lib.radians(lng))
+            + lib.sin(lib.radians(selfref.lat))
+            * lib.sin(lib.radians(lat))
+        )
+
+    def get_users_within_radius(self, radius):
+        if not (self.lat or self.lng):
+            raise Exception('Cannot get users within radius-- User location undefined')
+
+        return db.session.query(User).filter(self.users_within_radius_filter(radius)).all()
+
+    def users_within_radius_filter(self, radius):
+        return or_(
+            and_(User.lat==None, User.lng==None),
+            and_(User.lat==self.lat, User.lng==self.lng),
+            User.great_circle_distance(self.lat, self.lng) < radius,
+            and_(self._location is not None, User._location == self._location)
+        )
+
     def get_transfer_account_for_organisation(self, organisation):
         for ta in self.transfer_accounts:
-            if ta in organisation.transfer_accounts:
+            if ta.organisation.id == organisation.id:
                 return ta
 
         raise Exception(
@@ -389,13 +455,14 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         return self.organisations[0]
 
     def update_last_seen_ts(self):
-        cur_time = datetime.datetime.utcnow()
-        if self._last_seen:
-            # default to 1 minute intervals
-            if cur_time - self._last_seen >= datetime.timedelta(minutes=1):
-                self._last_seen = cur_time
-        else:
-            self._last_seen = cur_time
+        pass
+        # cur_time = datetime.datetime.utcnow()
+        # if self._last_seen:
+        #     # default to 1 minute intervals
+        #     if cur_time - self._last_seen >= datetime.timedelta(minutes=1):
+        #         self._last_seen = cur_time
+        # else:
+        #     self._last_seen = cur_time
 
     @staticmethod
     def salt_hash_secret(password):
@@ -404,6 +471,8 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
 
     @staticmethod
     def check_salt_hashed_secret(password, hashed_password):
+        if not hashed_password:
+            return False
         f = Fernet(config.PASSWORD_PEPPER)
         hashed_password = f.decrypt(hashed_password.encode())
         return bcrypt.checkpw(password.encode(), hashed_password)
@@ -433,11 +502,12 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
                 'id': self.id
             }
 
-            return jwt.encode(
+            tfa = jwt.encode(
                 payload,
                 current_app.config['SECRET_KEY'],
                 algorithm='HS256'
             )
+            return bytes(tfa, 'utf-8') if isinstance(tfa, str) else tfa
         except Exception as e:
             return e
 
@@ -449,17 +519,20 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         try:
 
             payload = {
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(days=7, seconds=0),
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(
+                    seconds=current_app.config['AUTH_TOKEN_EXPIRATION']
+                ),
                 'iat': datetime.datetime.utcnow(),
                 'id': self.id,
                 'roles': self.roles
             }
 
-            return jwt.encode(
+            token = jwt.encode(
                 payload,
                 current_app.config['SECRET_KEY'],
                 algorithm='HS256'
             )
+            return bytes(token, 'utf-8') if isinstance(token, str) else token
         except Exception as e:
             return e
 
@@ -471,13 +544,20 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         :return: integer|string
         """
         try:
-            payload = jwt.decode(auth_token, current_app.config.get(
-                'SECRET_KEY'), algorithms='HS256')
+            payload = jwt.decode(
+                auth_token,
+                current_app.config['SECRET_KEY'],
+                algorithms='HS256',
+                options={
+                    'verify_exp': current_app.config['VERIFY_JWT_EXPIRY']
+                }
+            )
+
             is_blacklisted_token = BlacklistToken.check_blacklist(auth_token)
             if is_blacklisted_token:
                 return 'Token blacklisted. Please log in again.'
             else:
-                return payload
+                return bytes(payload, 'utf-8') if isinstance(payload, str) else payload
 
         except jwt.ExpiredSignatureError:
             return '{} Token Signature expired.'.format(token_type)
@@ -487,7 +567,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
     def encode_single_use_JWS(self, token_type):
 
         s = TimedJSONWebSignatureSerializer(current_app.config['SECRET_KEY'],
-                                            expires_in=current_app.config['TOKEN_EXPIRATION'])
+                                            expires_in=current_app.config['SINGLE_USE_TOKEN_EXPIRATION'])
 
         return s.dumps({'id': self.id, 'type': token_type}).decode("utf-8")
 
@@ -640,7 +720,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         else:
             pin = supplied_pin
 
-        self.hash_password(pin)
+        self.hash_pin(pin)
 
     def has_valid_pin(self):
         # not in the process of resetting pin and has a pin

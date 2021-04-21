@@ -5,20 +5,21 @@ from functools import partial
 
 import pytest
 
+from helpers.model_factories import (
+    UserFactory,
+    OrganisationFactory,
+    TokenFactory,
+    TransferAccountFactory,
+    fake
+)
 
-# REDACTED: USERS NOW HAVE MULTIPLE TRANSFER ACCOUNTS
-# def test_create_transfer_account_user(create_transfer_account_user):
-#     """
-#     GIVEN create_transfer_account_user function
-#     WHEN called with first_name, last_name, phone
-#     THEN assert one_time_code, transfer account exists,
-#         transfer_account approval is equal to config
-#     """
-#     import config
-#     assert create_transfer_account_user.one_time_code is not None
-#     assert create_transfer_account_user.transfer_account is not None
-from helpers.model_factories import UserFactory, OrganisationFactory, TokenFactory, TransferAccountFactory, fake
-from server.utils.user import transfer_usages_for_user, send_onboarding_sms_messages, admin_reset_user_pin, proccess_create_or_modify_user_request
+from server.utils.user import (
+    transfer_usages_for_user,
+    send_onboarding_sms_messages,
+    admin_reset_user_pin,
+    proccess_create_or_modify_user_request,
+    set_location_conditionally
+)
 
 @pytest.mark.parametrize("last_name, location, lat, lng, initial_disbursement", [
     ('Hound', 'Melbourne, Victoria Australia', -37.8104277, 144.9629153, 400),
@@ -98,8 +99,6 @@ def test_admin_reset_user_pin(mocker, test_client, init_database, create_transfe
     assert user.failed_pin_attempts == 0
     assert isinstance(user.pin_reset_tokens, list)
     assert len(user.pin_reset_tokens) == 1
-    messages = mock_sms_apis
-    assert messages == [{'phone': user.phone, 'message': 'Dial *384*96# Safaricom or *483*46# Airtel to change your PIN'}]
 
 @pytest.mark.parametrize("preferred_language, org_key, expected_welcome, expected_terms, phone", [
 
@@ -125,7 +124,7 @@ def test_send_welcome_sms(mocker, test_client, init_database, mock_sms_apis,
     from flask import g
     from server import db
 
-    token = TokenFactory(name='Sarafu', symbol='SARAFU')
+    token = TokenFactory(name='Sarafu', symbol='Sarafu')
     organisation = OrganisationFactory(custom_welcome_message_key=org_key, token=token, country_code='AU')
     g.active_organisation = organisation
     transfer_account = TransferAccountFactory(token=token, organisation=organisation)
@@ -141,3 +140,45 @@ def test_send_welcome_sms(mocker, test_client, init_database, mock_sms_apis,
     messages = mock_sms_apis
     assert messages == [{'phone': f'+61{phone}', 'message': expected_welcome},
                         {'phone': f'+61{phone}', 'message': expected_terms},]
+
+
+@pytest.fixture(scope="function")
+def mock_add_after_request_executor_job(mocker):
+    fn_inputs = []
+
+    def mock_execution(*args, **kwargs):
+        fn_inputs.append([args, kwargs])
+
+    mocker.patch('server.models.user.add_after_request_executor_job', mock_execution)
+
+    return fn_inputs
+
+@pytest.mark.parametrize(
+    "location, gps_location, expected_user_location, expected_user_lat, expected_user_lng, should_lookup_location",
+    [
+        ("FooTown", None, "FooTown", None, None, True),
+        ("BooTown", "20.1 Lots of junk text", "BooTown", None, None, True),
+        ("BooTown", "123.22 45.66", "BooTown", 123.22, 45.66, False),
+        ("FooTown", "123.22 -45.66", "FooTown", 123.22, -45.66, False)
+    ]
+)
+def test_set_location_conditionally(
+        mock_add_after_request_executor_job,
+        create_user_with_existing_transfer_account,
+        location, gps_location, expected_user_location, expected_user_lat, expected_user_lng, should_lookup_location
+):
+
+    user = create_user_with_existing_transfer_account
+
+    set_location_conditionally(user, location, gps_location)
+
+    assert user.location == expected_user_location
+    assert user.lat == expected_user_lat
+    assert user.lng == expected_user_lng
+
+    # Check that we're calling the gps location fetching job when required, and passing the right data to it
+    if should_lookup_location:
+        assert mock_add_after_request_executor_job[0][1]['kwargs'] == {'user_id': user.id, 'location': location}
+
+    else:
+        assert len(mock_add_after_request_executor_job) == 0

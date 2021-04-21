@@ -2,13 +2,14 @@ import React from "react";
 import { connect } from "react-redux";
 import styled from "styled-components";
 import ReactTable from "react-table";
+import { Link } from "react-router-dom";
 
 import { TopRow, StyledSelect } from "../styledElements.js";
 
 import { ModifyCreditTransferAction } from "../../reducers/creditTransfer/actions";
 
 import LoadingSpinner from "../loadingSpinner.jsx";
-import DateTime from "../dateTime.jsx";
+import DateTime from "../dateTime.tsx";
 import AsyncButton from "../AsyncButton.jsx";
 import { formatMoney } from "../../utils";
 import { ModuleBox } from "../styledElements";
@@ -18,7 +19,8 @@ const mapStateToProps = state => {
     login: state.login,
     transferAccounts: state.transferAccounts,
     creditTransfers: state.creditTransfers,
-    users: state.users
+    users: state.users,
+    tokens: state.tokens
   };
 };
 
@@ -204,7 +206,20 @@ class CreditTransferList extends React.Component {
       senderTransferAccount && senderTransferAccount.blockchain_address;
 
     if (this.props.login.adminTier === "view") {
-      return blockchainAddress;
+      let viewTransferAccountName =
+        senderTransferAccount && senderTransferAccount.is_vendor
+          ? "Vendor "
+          : window.BENEFICIARY_TERM + " ";
+      return (
+        <a
+          style={{ cursor: "pointer" }}
+          onClick={() =>
+            this.navigateToAccount(creditTransfer.sender_transfer_account_id)
+          }
+        >
+          {viewTransferAccountName + blockchainAddress}
+        </a>
+      );
     } else if (sender && (firstName || lastName)) {
       return (
         <a
@@ -240,7 +255,20 @@ class CreditTransferList extends React.Component {
       recipientTransferAccount && recipientTransferAccount.blockchain_address;
 
     if (this.props.login.adminTier === "view") {
-      return blockchainAddress;
+      let viewTransferAccountName =
+        recipientTransferAccount && recipientTransferAccount.is_vendor
+          ? "Vendor "
+          : window.BENEFICIARY_TERM + " ";
+      return (
+        <a
+          style={{ cursor: "pointer" }}
+          onClick={() =>
+            this.navigateToAccount(creditTransfer.recipient_transfer_account_id)
+          }
+        >
+          {viewTransferAccountName + blockchainAddress}
+        </a>
+      );
     } else if (recipient && (firstName || lastName)) {
       return (
         <a
@@ -310,7 +338,8 @@ class CreditTransferList extends React.Component {
                   height: "25px"
                 }}
                 isLoading={this.props.isApproving}
-                buttonText="NEXT"
+                buttonText={<span>NEXT</span>}
+                label={"Next action"}
               />
               <StyledSelect
                 style={{
@@ -365,6 +394,15 @@ class CreditTransferList extends React.Component {
           <option name="transfer_type" value="RECLAMATION">
             RECLAMATION
           </option>
+          <option name="transfer_type" value="WITHDRAWAL">
+            WITHDRAWAL
+          </option>
+          <option name="transfer_type" value="DEPOSIT">
+            DEPOSIT
+          </option>
+          <option name="transfer_type" value="FEE">
+            FEE
+          </option>
         </StyledSelect>
       );
     }
@@ -402,7 +440,18 @@ class CreditTransferList extends React.Component {
                   Header: "Type",
                   accessor: "transfer_type",
                   headerClassName: "react-table-header",
-                  className: "react-table-first-cell"
+                  className: "react-table-first-cell",
+                  Cell: cellInfo => (
+                    <Link
+                      to={"/transfers/" + cellInfo.original.id}
+                      style={{
+                        textDecoration: "underline",
+                        color: "#000000a6"
+                      }}
+                    >
+                      {cellInfo.original.transfer_type}
+                    </Link>
+                  )
                 },
                 {
                   Header: "Created",
@@ -416,7 +465,9 @@ class CreditTransferList extends React.Component {
                   headerClassName: "react-table-header",
                   Cell: cellInfo => {
                     let currency =
-                      cellInfo.original.token && cellInfo.original.token.symbol;
+                      cellInfo.original.token &&
+                      this.props.tokens.byId[cellInfo.original.token] &&
+                      this.props.tokens.byId[cellInfo.original.token].symbol;
                     const money = formatMoney(
                       cellInfo.value / 100,
                       undefined,
@@ -450,6 +501,8 @@ class CreditTransferList extends React.Component {
                       var colour = "#9BDF56";
                     } else if (cellInfo.value === "PENDING") {
                       colour = "#F5A623";
+                    } else if (cellInfo.value === "PARTIAL") {
+                      colour = "#d48806";
                     } else if (cellInfo.value === "REJECTED") {
                       colour = "#F16853";
                     } else {
@@ -494,6 +547,10 @@ class CreditTransferList extends React.Component {
                       var colour = "#9BDF56";
                     } else if (status === "PENDING") {
                       colour = "#F5A623";
+                    } else if (cellInfo.value === "PARTIAL") {
+                      colour = "#d48806";
+                    } else if (status === "UNSTARTED") {
+                      colour = "#F16853";
                     } else if (status === "ERROR") {
                       colour = "#F16853";
                     } else {

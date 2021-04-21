@@ -1,7 +1,9 @@
 from flask import current_app
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.dialects.postgresql import ARRAY
 import pendulum
 import secrets
+from decimal import Decimal
 
 from server import db, bt
 from server.models.utils import ModelBase, organisation_association_table
@@ -10,7 +12,7 @@ from server.utils.misc import encrypt_string, decrypt_string
 from server.utils.access_control import AccessControl
 import server.models.transfer_account
 from server.utils.misc import encrypt_string
-from server.constants import ISO_COUNTRIES
+from server.constants import ISO_COUNTRIES, ASSIGNABLE_TIERS
 
 
 class Organisation(ModelBase):
@@ -24,16 +26,22 @@ class Organisation(ModelBase):
     name                = db.Column(db.String)
 
     external_auth_username = db.Column(db.String)
-    
+
+    valid_roles = db.Column(ARRAY(db.String, dimensions=1))
+
     _external_auth_password = db.Column(db.String)
 
     default_lat = db.Column(db.Float())
     default_lng = db.Column(db.Float())
+    
+    # 0 means don't shard, units are kilometers
+    card_shard_distance = db.Column(db.Integer, default=0) 
 
-    _timezone = db.Column(db.String)
+    _timezone = db.Column(db.String, default='UTC', nullable=False)
     _country_code = db.Column(db.String, nullable=False)
     _default_disbursement_wei = db.Column(db.Numeric(27), default=0)
     require_transfer_card = db.Column(db.Boolean, default=False)
+    require_multiple_transfer_approvals = db.Column(db.Boolean, default=False)
 
     # TODO: Create a mixin so that both user and organisation can use the same definition here
     # This is the blockchain address used for transfer accounts, unless overridden
@@ -41,6 +49,8 @@ class Organisation(ModelBase):
 
     # This is the 'behind the scenes' blockchain address used for paying gas fees
     system_blockchain_address = db.Column(db.String)
+
+    auto_approve_externally_created_users = db.Column(db.Boolean, default=False)
 
     users               = db.relationship(
         "User",
@@ -52,6 +62,8 @@ class Organisation(ModelBase):
     org_level_transfer_account_id = db.Column(db.Integer,
                                                 db.ForeignKey('transfer_account.id',
                                                 name="fk_org_level_account"))
+
+    _minimum_vendor_payout_withdrawal_wei = db.Column(db.Numeric(27), default=0)
 
     # We use this weird join pattern because SQLAlchemy
     # doesn't play nice when doing multiple joins of the same table over different declerative bases
@@ -67,13 +79,21 @@ class Organisation(ModelBase):
 
     @timezone.setter
     def timezone(self, val):
-        if val is not None and val not in pendulum.timezones:
+        # Make the timezone case insensitive
+        lower_zones = dict(zip([tz.lower() for tz in pendulum.timezones], pendulum.timezones))
+        if val is not None and val.lower() not in lower_zones:
             raise Exception(f"{val} is not a valid timezone")
-        self._timezone = val
+        self._timezone = lower_zones[val.lower()]
 
     @hybrid_property
     def country_code(self):
         return self._country_code
+
+    @hybrid_property
+    def country(self):
+        if self._country_code not in ISO_COUNTRIES:
+            raise Exception(f"{self._country_code} is not a valid timezone")
+        return ISO_COUNTRIES[self._country_code]
 
     @country_code.setter
     def country_code(self, val):
@@ -88,12 +108,21 @@ class Organisation(ModelBase):
 
     @property
     def default_disbursement(self):
-        return float((self._default_disbursement_wei or 0) / int(1e16))
+        return Decimal((self._default_disbursement_wei or 0) / int(1e16))
 
     @default_disbursement.setter
     def default_disbursement(self, val):
         if val is not None:
             self._default_disbursement_wei = int(val) * int(1e16)
+
+    @property
+    def minimum_vendor_payout_withdrawal(self):
+        return Decimal((self._minimum_vendor_payout_withdrawal_wei or 0) / int(1e16))
+
+    @minimum_vendor_payout_withdrawal.setter
+    def minimum_vendor_payout_withdrawal(self, val):
+        if val is not None:
+            self._minimum_vendor_payout_withdrawal_wei = int(val) * int(1e16)
 
     # TODO: This is a hack to get around the fact that org level TAs don't always show up. Super not ideal
     @property
@@ -128,6 +157,9 @@ class Organisation(ModelBase):
     kyc_applications = db.relationship('KycApplication', backref='organisation',
                                        lazy=True, foreign_keys='KycApplication.organisation_id')
 
+    attribute_maps = db.relationship('AttributeMap', backref='organisation',
+                                       lazy=True, foreign_keys='AttributeMap.organisation_id')
+
     custom_welcome_message_key = db.Column(db.String)
 
     @staticmethod
@@ -151,19 +183,19 @@ class Organisation(ModelBase):
         self.token = token
         self._setup_org_transfer_account()
 
-    def __init__(self, token=None, is_master=False, **kwargs):
+    def __init__(self, token=None, is_master=False, valid_roles=None, timezone=None, **kwargs):
         super(Organisation, self).__init__(**kwargs)
-    
+        self.timezone = timezone if timezone else 'UTC'
+        chain = self.token.chain if self.token else current_app.config['DEFAULT_CHAIN']
         self.external_auth_username = 'admin_'+ self.name.lower().replace(' ', '_')
         self.external_auth_password = secrets.token_hex(16)
-
+        self.valid_roles = valid_roles or list(ASSIGNABLE_TIERS.keys())
         if is_master:
             if Organisation.query.filter_by(is_master=True).first():
                 raise Exception("A master organisation already exists")
-
             self.is_master = True
             self.system_blockchain_address = bt.create_blockchain_wallet(
-                private_key=current_app.config['MASTER_WALLET_PRIVATE_KEY'],
+                private_key=current_app.config['CHAINS'][chain]['MASTER_WALLET_PRIVATE_KEY'],
                 wei_target_balance=0,
                 wei_topup_threshold=0,
             )
@@ -174,8 +206,8 @@ class Organisation(ModelBase):
             self.is_master = False
 
             self.system_blockchain_address = bt.create_blockchain_wallet(
-                wei_target_balance=current_app.config['SYSTEM_WALLET_TARGET_BALANCE'],
-                wei_topup_threshold=current_app.config['SYSTEM_WALLET_TOPUP_THRESHOLD'],
+                wei_target_balance=current_app.config['CHAINS'][chain]['SYSTEM_WALLET_TARGET_BALANCE'],
+                wei_topup_threshold=current_app.config['CHAINS'][chain]['SYSTEM_WALLET_TOPUP_THRESHOLD'],
             )
 
             self.primary_blockchain_address = bt.create_blockchain_wallet()

@@ -19,7 +19,7 @@ phone = partial(fake.msisdn)
 def standard_user(test_client, init_database):
     from flask import g
 
-    token = TokenFactory(name='Sarafu', symbol='SARAFU')
+    token = TokenFactory(name='Sarafu', symbol='Sarafu')
     organisation = OrganisationFactory(token=token, country_code='AU')
     g.active_organisation = organisation
 
@@ -147,7 +147,7 @@ def test_agent_recipient(test_client, init_database, standard_user):
     session = send_enter_recipient_state()
 
     agent_recipient = UserFactory(phone=make_kenyan_phone(phone()))
-    agent_recipient.set_held_role('TOKEN_AGENT', 'grassroots_token_agent')
+    agent_recipient.set_held_role('TOKEN_AGENT', 'token_agent')
 
     state_machine = KenyaUssdStateMachine(session, standard_user)
     state_machine.feed_char(agent_recipient.phone)

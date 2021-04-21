@@ -12,7 +12,7 @@ from server import create_app, db
 from migrations.seed import (
     create_ussd_menus,
     create_business_categories,
-    create_float_wallet,
+    create_float_transfer_account,
     create_reserve_token,
     create_master_organisation
 )
@@ -27,13 +27,13 @@ class UpdateData(Command):
             create_business_categories()
             reserve_token = create_reserve_token(app)
             create_master_organisation(app, reserve_token)
-            create_float_wallet(app)
+            create_float_transfer_account(app)
 
 
 app = create_app()
 manager = Manager(app)
 
-migrate = Migrate(app, db)
+migrate = Migrate(app, db, compare_type=True)
 
 manager.add_command('db', MigrateCommand)
 

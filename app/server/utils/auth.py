@@ -10,7 +10,7 @@ from server.models.user import User
 from server.models.ip_address import IpAddress
 from server.models.organisation import Organisation
 from server.utils.access_control import AccessControl
-import config, hmac, hashlib, json, urllib
+import config, hmac, hashlib, json
 from typing import Optional, Tuple, Dict
 
 from server.utils.blockchain_transaction import get_usd_to_satoshi_rate
@@ -133,6 +133,7 @@ def requires_auth(f=None,
                     required_password = None
                     auth_type = None
 
+            g.auth_type = auth_type
             if required_password is None or required_password != password:
                 response_object = {
                     'message': 'invalid basic auth username or password'
@@ -348,30 +349,29 @@ def get_user_organisations(user):
     return organisations
 
 
-def get_denominations():
-    currency_name = current_app.config['CURRENCY_NAME']
-    return DENOMINATION_DICT.get(currency_name, {})
+def get_denominations(currency_symbol=None):
+    return DENOMINATION_DICT.get(currency_symbol, {})
 
 
 def create_user_response_object(user, auth_token, message):
-    if current_app.config['IS_USING_BITCOIN']:
-        try:
+    try:
+        if current_app.config['CHAINS'][user.default_organisation.token.chain]['IS_USING_BITCOIN']:
             usd_to_satoshi_rate = get_usd_to_satoshi_rate()
-        except Exception:
+        else:
             usd_to_satoshi_rate = None
-    else:
+    except Exception:
         usd_to_satoshi_rate = None
 
     conversion_rate = 1
-    currency_name = current_app.config['CURRENCY_NAME']
+    currency_symbol = user.default_organisation.token.symbol if user.default_organisation and user.default_organisation.token else None
+    display_decimals = user.default_organisation.token.display_decimals if user.default_organisation and user.default_organisation.token else None
     if user.default_currency:
         conversion = CurrencyConversion.query.filter_by(code=user.default_currency).first()
         if conversion is not None:
             conversion_rate = conversion.rate
-            currency_name = user.default_currency
 
     transfer_usages = []
-    usage_objects = TransferUsage.query.filter_by(default=True).order_by(TransferUsage.priority).limit(11).all()
+    usage_objects = TransferUsage.query.filter_by(default=True).order_by(TransferUsage.priority).all()
     for usage in usage_objects:
         if ((usage.is_cashout and user.cashout_authorised) or not usage.is_cashout):
             transfer_usages.append({
@@ -394,19 +394,20 @@ def create_user_response_object(user, auth_token, message):
         'server_time': int(time.time() * 1000),
         'ecdsa_public': current_app.config['ECDSA_PUBLIC'],
         'pusher_key': current_app.config['PUSHER_KEY'],
-        # todo: (used on mobile) Deprecate. Currency should be based on active organization/TA account token
-        'currency_decimals': current_app.config['CURRENCY_DECIMALS'],
-        'currency_name': currency_name,
+        'display_decimals': display_decimals,
+        'currency_symbol': currency_symbol,
         'currency_conversion_rate': conversion_rate,
         'secret': user.secret,
         'first_name': user.first_name,
         'last_name': user.last_name,
         'deployment_name': current_app.config['DEPLOYMENT_NAME'],
-        'denominations': get_denominations(),
+        'denominations': get_denominations(currency_symbol=currency_symbol),
         'terms_accepted': user.terms_accepted,
         'request_feedback_questions': request_feedback_questions(user),
         'default_feedback_questions': current_app.config['DEFAULT_FEEDBACK_QUESTIONS'],
         'transfer_usages': transfer_usages,
+        'forgiving_deduct': current_app.config['FORGIVING_DEDUCT'],
+        'support_sig_validation': current_app.config['SUPPORT_SIG_VALIDATION'],
         'usd_to_satoshi_rate': usd_to_satoshi_rate,
         'kyc_active': True,  # todo; kyc active function
         'android_intercom_hash': create_intercom_secret(user_id=user.id, device_type='ANDROID'),

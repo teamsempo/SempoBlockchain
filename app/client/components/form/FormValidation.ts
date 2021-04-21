@@ -5,6 +5,10 @@ const FormValidation = {
     value !== undefined && value !== "" ? undefined : "This field is required",
   phone: (value: string) => {
     if (value) {
+      let formattedNumber = value.split(" ");
+      if (formattedNumber.length === 1) {
+        return undefined;
+      }
       const number = parsePhoneNumberFromString(value);
       if (number && number.isValid()) {
         return undefined;

@@ -8,25 +8,23 @@ const { Option, OptGroup } = Select;
 
 import { DefaultTheme } from "../theme";
 
-import { StyledSelect, Input, StyledButton } from "../styledElements.js";
 import styled from "styled-components";
 import PropTypes from "prop-types";
-import { replaceUnderscores } from "../../utils.js";
-import { SingleDatePicker } from "react-dates";
+import { replaceUnderscores, parseEncodedParams } from "../../utils";
 
 import moment from "moment";
 
 import { USER_FILTER_TYPE, USER_FILTER_ATTRIBUTE } from "../../constants.js";
 
 const propTypes = {
-  possibleFilters: PropTypes.object,
+  possibleFilters: PropTypes.array,
   onFiltersChanged: PropTypes.func,
   visible: PropTypes.bool,
   label: PropTypes.string
 };
 
 const defaultProps = {
-  possibleFilters: [],
+  possibleFilters: {},
   onFiltersChanged: () => {
     console.log("Filters changed");
   },
@@ -43,6 +41,29 @@ class Filter extends React.Component {
       selectorKeyBase: "",
       ...this.baseRuleConstructionState
     };
+  }
+
+  componentDidMount() {
+    this.checkForProvidedParams();
+  }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.possibleFilters !== this.props.possibleFilters) {
+      this.checkForProvidedParams();
+    }
+  }
+
+  checkForProvidedParams() {
+    if (
+      this.props.providedParams &&
+      Object.keys(this.props.possibleFilters).length > 0
+    ) {
+      let parsed = parseEncodedParams(
+        this.props.possibleFilters,
+        this.props.providedParams
+      );
+      this.setState({ filters: parsed });
+    }
   }
 
   baseRuleConstructionState = {
@@ -81,6 +102,72 @@ class Filter extends React.Component {
     }
   };
 
+  partition = (array, isValid) =>
+    array.reduce(
+      ([pass, fail], elem) => {
+        return isValid(elem)
+          ? [[...pass, elem], fail]
+          : [pass, [...fail, elem]];
+      },
+      [[], []]
+    );
+
+  generateOptionSubList = (keys, possibleFilters, userGroup) => {
+    if (keys.length === 0) {
+      return null;
+    }
+
+    let subList = keys.map(key => {
+      //Here we show the label without the group in the dropdown, but with the group once selected
+      let label = replaceUnderscores(possibleFilters[key]["name"] || key);
+      return (
+        <Option key={key} label={label}>
+          {label.replace(userGroup, "")}
+        </Option>
+      );
+    });
+
+    if (userGroup) {
+      return <OptGroup label={userGroup}>{subList}</OptGroup>;
+    } else {
+      return subList;
+    }
+  };
+
+  optionListGenerator = (keys, possibleFilters) => {
+    if (typeof keys === "undefined") {
+      return null;
+    }
+
+    const [recipientKeys, senderAndOtherKeys] = this.partition(
+      keys,
+      el => possibleFilters[el]["sender_or_recipient"] === "recipient"
+    );
+
+    const [senderKeys, otherKeys] = this.partition(
+      senderAndOtherKeys,
+      el => possibleFilters[el]["sender_or_recipient"] === "sender"
+    );
+
+    return (
+      <Select
+        showSearch
+        defaultValue="Select Attribute"
+        onChange={this.handleAttributeSelectorChange}
+        style={{ width: "225px" }}
+        optionLabelProp="label"
+      >
+        {this.generateOptionSubList(otherKeys, possibleFilters)}
+        {this.generateOptionSubList(senderKeys, possibleFilters, "Sender")}
+        {this.generateOptionSubList(
+          recipientKeys,
+          possibleFilters,
+          "Recipient"
+        )}
+      </Select>
+    );
+  };
+
   attributeSelector = () => {
     let { possibleFilters } = this.props;
     const keys =
@@ -98,19 +185,7 @@ class Filter extends React.Component {
           flexFlow: "row wrap"
         }}
       >
-        <Select
-          defaultValue="Select Attribute"
-          onChange={this.handleAttributeSelectorChange}
-          style={{ width: "150px" }}
-        >
-          {typeof keys !== "undefined"
-            ? keys.map((key, index) => (
-                <Option key={key}>
-                  {replaceUnderscores(possibleFilters[key]["name"] || key)}
-                </Option>
-              ))
-            : null}
-        </Select>
+        {this.optionListGenerator(keys, possibleFilters)}
       </div>
     );
   };
@@ -135,6 +210,7 @@ class Filter extends React.Component {
 
     return (
       <Select
+        disabled={this.props.disabled}
         onChange={this.comparatorChange}
         defaultValue={"="}
         style={{ width: "150px" }}
@@ -206,6 +282,7 @@ class Filter extends React.Component {
 
     return (
       <Select
+        disabled={this.props.disabled}
         mode="multiple"
         style={{ minWidth: "238px" }}
         placeholder="Please select"
@@ -293,6 +370,10 @@ class Filter extends React.Component {
   };
 
   removeFilter = id => {
+    if (this.props.disabled) {
+      return;
+    }
+
     this.setState(
       prevstate => ({
         filters: prevstate.filters.filter(filter => filter.id !== parseInt(id))
@@ -363,11 +444,15 @@ class Filter extends React.Component {
                 </BubbleLeft>
                 {filterVals}
                 <SVG
+                  style={{
+                    cursor: this.props.disabled ? "not-allowed" : "pointer"
+                  }}
                   src={
                     attributeProperties.table === "credit_transfer"
                       ? "/static/media/closePrimary.svg"
                       : "/static/media/closeAlt.svg"
                   }
+                  alt={"Remove filter " + attributeProperties.name}
                 />
               </FilterBubble>
             );
@@ -383,7 +468,7 @@ class Filter extends React.Component {
       <div style={{ display: "flex", flexDirection: "column" }}>
         <div
           style={{
-            display: "flex",
+            display: this.props.disabled ? "none" : "flex",
             flexDirection: "row",
             alignItems: "center",
             flexFlow: "row wrap"
@@ -458,5 +543,4 @@ const BubbleText = styled.p`
 const SVG = styled.img`
   width: 12px;
   height: 12px;
-  cursor: pointer;
 `;

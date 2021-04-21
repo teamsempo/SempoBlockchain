@@ -5,6 +5,8 @@
 
 from typing import List
 import config
+from decimal import Decimal
+
 from server.models.credit_transfer import CreditTransfer
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum
 from server.utils.transfer_limits.checks import (
@@ -116,7 +118,7 @@ LIMIT_IMPLEMENTATIONS = [
                          [AGENT_OUT_PAYMENT, WITHDRAWAL],
                          is_group_and_liquid_token, 30,
                          aggregation_filter=withdrawal_or_agent_out_and_not_excluded_filter,
-                         balance_fraction=0.50),
+                         balance_fraction=Decimal(0.50)),
 
     MinimumSentLimit('GE Liquid Token - Group Account User',
                      [AGENT_OUT_PAYMENT, WITHDRAWAL],

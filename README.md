@@ -18,7 +18,12 @@ Sempo Admin Dashboard and crypto financial inclusion infrastructure with USSD, A
 
 We use [postgres](https://www.postgresql.org/) for regular (non-blockchain) data persistance.
 
-If you plan on using the quick setup script, be sure to install the [PSQL](https://www.postgresql.org/docs/current/app-psql.html) terminal application as well
+If you plan on using the quick setup script, be sure to install the [PSQL](https://www.postgresql.org/docs/current/app-psql.html) terminal application as well.
+
+Sempo defaults to using postgres credentials of `username: postgres`, `password: password`. We recommend you create a new user with a fresh password and `CREATEDB` permissions. For example:
+`CREATE USER dev_sempo WITH PASSWORD 'superSecret' CREATEDB;`.
+
+Set these to the environment variables `PGUSER` and `PGPASSWORD`.
 
 **Redis**
 [Redis](https://redis.io/) is used for passing tasks to an asynchronous worker queue
@@ -31,22 +36,32 @@ You can use your preferred implementation of the Ethereum Blockchain to test thi
 npm install -g ganache-cli@6.4.1
 ```
 
+**Cairo and Pango (Optional)**
+PDF generation requires Cairo and Pango. On OSX:
+
+```
+brew install cairo && brew install pango
+```
+
 **Python**
 
-Download and install python 3.6 and its respective pip and virtualenv (**python 3.7 will break things**). Then:
+Download and install python 3.8 and its respective pip and virtualenv. Then:
+
+from devtools directory:
 
 ```
 python3 -m venv venv
 source venv/bin/activate
-./devtools/install_python_requirements.sh
+./install_python_requirements.sh
 ```
 
 **Front-End**
 
 Our frontend uses react.
 
+from app directory:
+
 ```
-cd app
 npm install
 ```
 
@@ -65,26 +80,35 @@ The platform uses three kinds of config files:
 - common secrets: things that ARE sensitive, and can be the same between all deployments
 
 There's already a reasonable set of local configs in `config_files/local_config.ini`
-To create some suitable secrets quickly:
+To create some suitable secrets quickly use the following
+(note that if you're using the quick setup script below, this is done for you):
+
+from config_files directory
 
 ```
-cd config files
 python generate_secrets.py
 ```
 
 ### Quick Setup Script
 
 (Requires PSQL to run)
+If you're using a custom postgres user, remember to set the environment variables `PGUSER` and `PGPASSWORD` first!
 
-For quick setup, run `./devtools/quick_setup_script.sh` with `MASTER_WALLET_PK` set as an environment variable to the master private key found in `/config_files/secret/local_secrets.ini/`.
+For quick setup, use the quick setup script in devtools
+
+From devtools directory
 
 ```
-quick_setup_script.sh [activation path for your python env]
+./quick_setup_script.sh [activation path for your python env]
 ```
+
+For example:
+`./quick_setup_script.sh /venvs/sempo/bin/activate`
 
 The script will:
 
 - Reset your local Sempo state
+- Generate new secrets
 - Launch Ganache and Redis
 - Create an adminstrator account with email `admin@acme.org` and password `C0rrectH0rse`
 - Create a reserve token and bonded token
@@ -94,8 +118,9 @@ When the script has finished running\*, you can start your own app and worker pr
 
 ### Run the app in a Virtual Env
 
+From app directory:
+
 ```
-cd app
 python ./run.py
 ```
 
@@ -103,9 +128,10 @@ python ./run.py
 
 Transaction on the blockchain are made using asynchronous workers that consume a celery task-queue.
 
+From eth_worker directory:
+
 ```
-cd eth_worker
-celery -A eth_manager worker --loglevel=INFO --concurrency=8 --pool=gevent -Q processor,celery,low-priority,high-priority
+celery worker -A celery_app --loglevel=INFO --concurrency=8 --pool=gevent -Q processor,celery,low-priority,high-priority
 ```
 
 ## Details and Other Options
@@ -154,9 +180,10 @@ If you get some message about `Creating Server TCP listening socket *:6379: bind
 
 Start celery:
 
+From eth_worker directory
+
 ```
-cd eth_worker
-celery -A eth_manager worker --loglevel=INFO --concurrency=8 --pool=gevent -Q processor,celery,low-priority,high-priority
+celery worker -A celery_app --loglevel=INFO --concurrency=8 --pool=gevent -Q processor,celery,low-priority,high-priority
 ```
 
 You can also add a runtime configuration with the `script path` set as the path to your virtual env `[path-to-your-python-env]/bin/celery`.
@@ -235,7 +262,7 @@ Ensure your test_config.ini and test_secrets.ini files are up to date. Test secr
 
 ```
 cd config files
-python generate_secrets.py test
+python generate_secrets.py -n test
 ```
 
 Create the test databases:

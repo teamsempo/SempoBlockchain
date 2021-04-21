@@ -8,7 +8,11 @@ export type Method =
   | "delete"
   | "DELETE";
 
-interface Body {
+export interface Body {
+  [key: string]: any;
+}
+
+export interface Query {
   [key: string]: any;
 }
 
@@ -18,8 +22,8 @@ export interface ApiClientType {
   isAuthed?: boolean;
   isTFA?: boolean;
   isForm?: boolean;
-  query?: null | object;
+  query?: null | Query;
   body?: null | Body;
-  path?: null | number;
+  path?: null | number | string;
   errorHandling?: boolean;
 }

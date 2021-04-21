@@ -22,11 +22,12 @@ import { DEEEEEEP } from "../../utils";
 
 const byId = (state: UserByIDs = {}, action: UserListAction) => {
   switch (action.type) {
+    case UserListActionTypes.REPLACE_USER_LIST:
+      return action.payload;
+    case UserListActionTypes.UPDATE_USER_LIST:
+      return { ...state, ...action.payload };
     case UserListActionTypes.DEEP_UPDATE_USER_LIST:
       return DEEEEEEP(state, action.payload);
-
-    case UserListActionTypes.UPDATE_USER_LIST:
-      return action.payload;
 
     default:
       return state;

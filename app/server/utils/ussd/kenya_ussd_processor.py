@@ -5,7 +5,7 @@ from server.models.ussd import UssdMenu, UssdSession
 from server.models.user import User
 from server.utils.user import get_user_by_phone, default_token
 from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine, ITEMS_PER_MENU, USSD_MAX_LENGTH
-from server.utils.i18n import i18n_for
+from server.utils.internationalization import i18n_for
 from server.utils.credit_transfer import cents_to_dollars
 
 

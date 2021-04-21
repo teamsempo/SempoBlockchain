@@ -3,7 +3,7 @@ import pytest, json, config, base64
 from server import bt
 
 @pytest.mark.parametrize("contract_address, contract_type, filter_type, filter_parameters, status_code", [
-    (config.ETH_CONTRACT_ADDRESS, "ERC20", 'TRANSFER', None, 201),
+    (config.CHAINS['ETHEREUM']['CONTRACT_ADDRESS'], "ERC20", 'TRANSFER', None, 201),
 ])
 def test_sync_filter_api(test_client, create_ip_address, complete_admin_auth_token, contract_address, contract_type, filter_type, filter_parameters, status_code):
     # Super basic test for creation of sync filters
@@ -15,7 +15,8 @@ def test_sync_filter_api(test_client, create_ip_address, complete_admin_auth_tok
             Accept='application/json'
         ),
         json={
-            'contract_address': config.ETH_CONTRACT_ADDRESS,
+            'call': 'add_transaction_filter',
+            'contract_address': config.CHAINS['ETHEREUM']['CONTRACT_ADDRESS'],
             'contract_type': contract_type,
             'filter_type': filter_type,
             'filter_parameters': filter_parameters
@@ -25,4 +26,34 @@ def test_sync_filter_api(test_client, create_ip_address, complete_admin_auth_tok
     assert response.json['contract_type'] == contract_type
     assert response.json['filter_parameters'] == filter_parameters
     assert response.json['filter_type'] == filter_type
+    assert response.status_code == 201
 
+def test_refetch_block_range_api(test_client, complete_admin_auth_token):
+    response = test_client.post(
+        '/api/v1/synchronization_filter/',
+        headers=dict(
+            Authorization=complete_admin_auth_token,
+            Accept='application/json'
+        ),
+        json={
+            'call': 'refetch_block_range',
+            'filter_address': config.CHAINS['ETHEREUM']['CONTRACT_ADDRESS'],
+            'floor': '1',
+            'ceiling': '100',
+        })
+
+    assert response.status_code == 201
+
+def test_force_recall_webhook(test_client, complete_admin_auth_token):
+    response = test_client.post(
+        '/api/v1/synchronization_filter/',
+        headers=dict(
+            Authorization=complete_admin_auth_token,
+            Accept='application/json'
+        ),
+        json={
+            'call': 'force_recall_webhook',
+            'transaction_hash': '0xdeadbeef2322d396649ed2fa2b7e0a944474b65cfab2c4b1435c81bb16697ecb',
+        })
+
+    assert response.status_code == 201

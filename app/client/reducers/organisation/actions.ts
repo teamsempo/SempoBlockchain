@@ -1,4 +1,6 @@
 import {
+  CreateOrganisationActionTypes,
+  CreateOrganisationPayload,
   EditOrganisationActionTypes,
   EditOrganisationPayload,
   LoadOrganisationActionTypes,
@@ -41,4 +43,22 @@ export const EditOrganisationAction = {
 };
 export type EditOrganisationAction = ActionsUnion<
   typeof EditOrganisationAction
+>;
+
+export const CreateOrganisationAction = {
+  createOrganisationRequest: (payload: CreateOrganisationPayload) =>
+    createAction(
+      CreateOrganisationActionTypes.CREATE_ORGANISATION_REQUEST,
+      payload
+    ),
+  createOrganisationSuccess: () =>
+    createAction(CreateOrganisationActionTypes.CREATE_ORGANISATION_SUCCESS),
+  createOrganisationFailure: (error: string) =>
+    createAction(
+      CreateOrganisationActionTypes.CREATE_ORGANISATION_FAILURE,
+      error
+    )
+};
+export type CreateOrganisationAction = ActionsUnion<
+  typeof CreateOrganisationAction
 >;

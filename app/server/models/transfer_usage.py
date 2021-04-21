@@ -28,7 +28,6 @@ class TransferUsage(ModelBase):
         "CreditTransfer",
         secondary=credit_transfer_transfer_usage_association_table,
         back_populates="transfer_usages",
-        lazy='joined'
     )
 
     @hybrid_property
@@ -38,7 +37,7 @@ class TransferUsage(ModelBase):
     @icon.setter
     def icon(self, icon):
         if icon not in MATERIAL_COMMUNITY_ICONS:
-            raise IconNotSupportedException('Icon {} not supported or found')
+            raise IconNotSupportedException(f'Icon {icon} not supported or found')
         self._icon = icon
 
     @hybrid_property
@@ -65,3 +64,6 @@ class TransferUsage(ModelBase):
             usage = cls(name=name, default=default, **kwargs)
             db.session.add(usage)
         return usage
+
+    def __repr__(self):
+        return f'<Transfer Usage {self.id}: {self.name}>'
