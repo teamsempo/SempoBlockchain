@@ -153,7 +153,7 @@ class SingleBulkDisbursementPage extends React.Component {
             <Space>
               <Button
                 onClick={() => this.onReject()}
-                disabled={status == "APPROVED"}
+                disabled={status == "APPROVED" || status == "REJECTED"}
                 loading={this.props.bulkTransfers.modifyStatus.isRequesting}
               >
                 Reject
@@ -161,7 +161,7 @@ class SingleBulkDisbursementPage extends React.Component {
 
               <Button
                 onClick={() => this.onComplete()}
-                disabled={status == "APPROVED"}
+                disabled={status == "APPROVED" || status == "REJECTED"}
                 loading={this.props.bulkTransfers.modifyStatus.isRequesting}
               >
                 Approve
