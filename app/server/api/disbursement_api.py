@@ -2,7 +2,7 @@ from decimal import Decimal
 import math
 
 from sqlalchemy.orm import joinedload
-from flask import Blueprint, request, make_response, jsonify, g
+from flask import Blueprint, request, make_response, jsonify, g, current_app
 from flask.views import MethodView
 from sqlalchemy import desc, asc
 
@@ -216,7 +216,7 @@ class DisbursementAPI(MethodView):
                 disbursement.approve()
                 db.session.commit()
                 auto_resolve = False
-                if g.active_organisation.require_multiple_transfer_approvals or AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'superadmin'):
+                if current_app.config['REQUIRE_MULTIPLE_APPROVALS'] or AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'superadmin'):
                     auto_resolve = True
                 # A disbursement isn't necessarily approved after approve() is called, since we can require multiple approvers
                 task_uuid = None

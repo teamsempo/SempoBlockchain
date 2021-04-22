@@ -100,8 +100,6 @@ class OrganisationPage extends React.Component<IProps, IState> {
         minimum_vendor_payout_withdrawal:
           form.minimumVendorPayoutWithdrawal * 100,
         require_transfer_card: form.requireTransferCard,
-        require_multiple_transfer_approvals:
-          form.requireMultipleTransferApprovals,
         account_types: form.accountTypes,
         default_lat: form.lat,
         default_lng: form.lng
@@ -121,8 +119,6 @@ class OrganisationPage extends React.Component<IProps, IState> {
       minimum_vendor_payout_withdrawal:
         form.minimumVendorPayoutWithdrawal * 100,
       require_transfer_card: form.requireTransferCard,
-      require_multiple_transfer_approvals:
-        form.requireMultipleTransferApprovals,
       account_types: form.accountTypes,
       default_lat: form.lat,
       default_lng: form.lng

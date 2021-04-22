@@ -30,7 +30,6 @@ export interface CreateUser extends User {
   gender?: string;
   initial_disbursement?: number;
   require_transfer_card_exists?: boolean;
-  require_multiple_transfer_approvals?: boolean;
   existing_vendor_phone?: string;
   existing_vendor_pin?: string;
   transfer_account_name?: string;
