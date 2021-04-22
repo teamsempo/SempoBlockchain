@@ -17,8 +17,8 @@ export interface IOrganisation {
   requireTransferCard: boolean;
   requireMultipleTransferApprovals: boolean;
   countryCode: string;
-  accountTypes: string[];
   timezone: string;
+  accountTypes: string[];
   lat: number;
   lng: number;
 }
