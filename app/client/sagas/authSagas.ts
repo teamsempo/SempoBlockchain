@@ -523,6 +523,7 @@ function* deleteInvite(
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
     yield put(DeleteInviteAction.deleteInviteFailure(error.message));
+    message.error(error.message);
   }
 }
 
@@ -543,6 +544,7 @@ function* inviteUserRequest(
     browserHistory.push("/settings");
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
+    message.error(error.message);
     yield put(InviteUserAction.inviteUserFailure(error.message));
   }
 }

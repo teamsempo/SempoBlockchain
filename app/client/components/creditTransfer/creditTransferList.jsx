@@ -501,6 +501,8 @@ class CreditTransferList extends React.Component {
                       var colour = "#9BDF56";
                     } else if (cellInfo.value === "PENDING") {
                       colour = "#F5A623";
+                    } else if (cellInfo.value === "PARTIAL") {
+                      colour = "#d48806";
                     } else if (cellInfo.value === "REJECTED") {
                       colour = "#F16853";
                     } else {
@@ -545,6 +547,8 @@ class CreditTransferList extends React.Component {
                       var colour = "#9BDF56";
                     } else if (status === "PENDING") {
                       colour = "#F5A623";
+                    } else if (cellInfo.value === "PARTIAL") {
+                      colour = "#d48806";
                     } else if (status === "UNSTARTED") {
                       colour = "#F16853";
                     } else if (status === "ERROR") {

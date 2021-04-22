@@ -185,7 +185,7 @@ class ProcessVendorPayout(MethodView):
 
             try:
                 if line['Payment Has Been Made'].upper() == 'TRUE' and line['Bank Payment Date']:
-                    transfer.resolve_as_complete_and_trigger_blockchain()
+                    transfer.add_approver_and_resolve_as_completed()
                     message = 'Transfer Success'
                 elif line['Payment Has Been Made'] == 'FALSE':
                     transfer.resolve_as_rejected()

@@ -5,6 +5,7 @@ export interface Organisation {
   name: string;
   token: number;
   require_transfer_card: boolean;
+  require_multiple_transfer_approvals: boolean;
   default_disbursement: number;
   card_shard_distance: number;
   minimum_vendor_payout_withdrawal: number;
@@ -34,6 +35,7 @@ export interface EditOrganisationPayload {
     card_shard_distance: number;
     minimum_vendor_payout_withdrawal: number;
     require_transfer_card: boolean;
+    require_multiple_transfer_approvals: boolean;
     default_lat: number;
     default_lng: number;
   };
@@ -45,6 +47,7 @@ export interface CreateOrganisationPayload {
     name: string;
     token_id: number;
     require_transfer_card: boolean;
+    require_multiple_transfer_approvals: boolean;
     default_disbursement: number;
     card_shard_distance: number;
     minimum_vendor_payout_withdrawal: number;
