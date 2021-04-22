@@ -166,6 +166,7 @@ class Nav extends React.Component {
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
               title={`Invite Admins`}
+              isAntDesign={true}
             />
             <PrivateRoute
               exact

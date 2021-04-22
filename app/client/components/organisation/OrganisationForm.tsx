@@ -16,8 +16,8 @@ export interface IOrganisation {
   minimumVendorPayoutWithdrawal: number;
   requireTransferCard: boolean;
   countryCode: string;
-  accountTypes: string[];
   timezone: string;
+  accountTypes: string[];
   lat: number;
   lng: number;
 }
