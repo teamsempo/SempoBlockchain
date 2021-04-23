@@ -252,15 +252,14 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         if user not in self.approvers:
             self.approvers.append(user)
         if len(self.approvers) == 1:
-
-            if g.active_organisation.require_multiple_transfer_approvals:
+            if current_app.config['REQUIRE_MULTIPLE_APPROVALS']:
                 self.transfer_status = TransferStatusEnum.PARTIAL
         if self.check_if_fully_approved():
             self.resolve_as_complete_and_trigger_blockchain()
 
     def check_if_fully_approved(self):
         # Checks if the credit transfer is approved and ready to be resolved as complete
-        if g.active_organisation.require_multiple_transfer_approvals:
+        if current_app.config['REQUIRE_MULTIPLE_APPROVALS']:
             if len(self.approvers) <=1:
                 return False
             else:

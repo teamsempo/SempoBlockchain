@@ -1,5 +1,5 @@
 from server import db
-from flask import g 
+from flask import g, current_app
 from sqlalchemy import func
 
 from server.models.utils import ModelBase, OneOrgBase, disbursement_transfer_account_association_table,\
@@ -80,7 +80,7 @@ class Disbursement(ModelBase):
         self.state = new_state
 
     def approve(self):
-        if g.active_organisation.require_multiple_transfer_approvals:
+        if current_app.config['REQUIRE_MULTIPLE_APPROVALS']:
             if g.user not in self.approvers:
                 self.approvers.append(g.user)
             if len(self.approvers) <=1:
