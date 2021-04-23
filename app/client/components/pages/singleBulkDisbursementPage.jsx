@@ -1,6 +1,6 @@
 import React from "react";
 import { connect } from "react-redux";
-import { Card, Button, Space, Tag, Alert } from "antd";
+import { Card, Button, Space, Tag, Alert, Input } from "antd";
 
 import { PageWrapper, WrapperDiv } from "../styledElements";
 
@@ -10,6 +10,7 @@ import { sempoObjects } from "../../reducers/rootReducer";
 import { formatMoney, getActiveToken, toCurrency } from "../../utils";
 import QueryConstructor from "../filterModule/queryConstructor";
 import TransferAccountList from "../transferAccount/TransferAccountList";
+const { TextArea } = Input;
 
 const mapStateToProps = state => ({
   bulkTransfers: state.bulkTransfers,
@@ -50,14 +51,18 @@ class SingleBulkDisbursementPage extends React.Component {
 
   onComplete() {
     let bulkId = this.props.match.params.bulkId;
-
-    this.props.modifyBulkDisbursement(bulkId, { action: "APPROVE" });
+    this.props.modifyBulkDisbursement(bulkId, {
+      action: "APPROVE",
+      notes: this.state.notes
+    });
   }
 
   onReject() {
     let bulkId = this.props.match.params.bulkId;
-
-    this.props.modifyBulkDisbursement(bulkId, { action: "REJECT" });
+    this.props.modifyBulkDisbursement(bulkId, {
+      action: "REJECT",
+      notes: this.state.notes
+    });
   }
 
   render() {
@@ -91,6 +96,7 @@ class SingleBulkDisbursementPage extends React.Component {
     let transferType = bulkItem && bulkItem.transfer_type;
     let createdBy = bulkItem && bulkItem.creator_email;
     let label = bulkItem && bulkItem.label;
+    let notes = bulkItem && bulkItem.notes;
 
     let tag;
     let info;
@@ -148,6 +154,17 @@ class SingleBulkDisbursementPage extends React.Component {
             <p>
               {" "}
               <b>Total amount transferred:</b> {totalAmount || ""}{" "}
+            </p>
+            <p>
+              {" "}
+              <b>Notes: </b>
+              <TextArea
+                style={{ maxWidth: "460px" }}
+                value={notes || this.state.notes}
+                placeholder=""
+                autoSize
+                onChange={e => this.setState({ notes: e.target.value })}
+              />
             </p>
 
             <Space>
