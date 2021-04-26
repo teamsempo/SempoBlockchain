@@ -1,9 +1,9 @@
-# --- Modified from https://github.com/edoburu/docker-pgbouncer ---
 FROM alpine:3.13
+ARG VERSION=1.15.0
 
+# Inspiration from https://github.com/gmr/alpine-pgbouncer/blob/master/Dockerfile
 RUN \
   # Download
-  VERSION=1.11.0 && \
   apk --update add python3 python3-dev autoconf autoconf-doc automake udns udns-dev curl gcc libc-dev libevent libevent-dev libtool make openssl-dev pkgconfig postgresql-client && \
   curl -o  /tmp/pgbouncer-$VERSION.tar.gz -L https://pgbouncer.github.io/downloads/files/$VERSION/pgbouncer-$VERSION.tar.gz && \
   cd /tmp && \
@@ -31,5 +31,7 @@ COPY ./config_files/* /config_files/
 
 ADD ./pgbouncer/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+USER postgres
+EXPOSE 5432
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/usr/bin/pgbouncer", "/etc/pgbouncer/pgbouncer.ini"]
