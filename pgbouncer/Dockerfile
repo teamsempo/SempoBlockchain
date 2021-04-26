@@ -28,7 +28,7 @@ RUN \
 
 # Install requirements
 ADD ./pgbouncer/requirements.txt /requirements.txt
-RUN pip3 install -r requirements.txt
+RUN pip install -r requirements.txt
 
 # Prepare and use config.py
 ADD ./pgbouncer/generate_pgbouncer_config.py /generate_pgbouncer_config.py
