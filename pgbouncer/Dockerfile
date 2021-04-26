@@ -14,8 +14,9 @@ RUN \
   make && \
   # Manual install
   cp pgbouncer /usr/bin && \
+  adduser -D -S pgbouncer && \
+  chown pgbouncer /var/run/pgbouncer && \
   mkdir -p /etc/pgbouncer /var/log/pgbouncer /var/run/pgbouncer && \
-  chown -R postgres /var/run/pgbouncer /etc/pgbouncer
 
 # Install requirements
 ADD ./pgbouncer/requirements.txt /requirements.txt
