@@ -16,8 +16,8 @@ export interface IOrganisation {
   minimumVendorPayoutWithdrawal: number;
   requireTransferCard: boolean;
   countryCode: string;
-  accountTypes: string[];
   timezone: string;
+  accountTypes: string[];
   lat: number;
   lng: number;
 }
@@ -294,7 +294,6 @@ const NewOrganisationForm = (props: OuterProps) => {
       >
         <Switch />
       </Form.Item>
-
       <Form.Item>
         <Button type="primary" htmlType="submit" loading={loading}>
           Save

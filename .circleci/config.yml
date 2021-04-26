@@ -237,6 +237,7 @@ workflows:
             branches:
               only:
                 - master
+                - multi-approval
 
           requires:
             - build

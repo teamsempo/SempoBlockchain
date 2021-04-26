@@ -40,6 +40,8 @@ const organisation = new schema.Entity("organisations", {
 
 const bulk_transfer = new schema.Entity("disbursements");
 
+const master_wallet = new schema.Entity("master_wallets");
+
 export const transferAccountSchema = [transfer_account];
 
 export const creditTransferSchema = [credit_transfer];
@@ -57,3 +59,5 @@ export const inviteUserSchema = [invite];
 export const organisationSchema = [organisation];
 
 export const bulkTransferSchema = [bulk_transfer];
+
+export const masterWalletSchema = [master_wallet];

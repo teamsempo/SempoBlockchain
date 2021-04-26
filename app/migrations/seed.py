@@ -366,7 +366,8 @@ def create_master_organisation(app, reserve_token):
             print('Binding to reserve token')
         master_organisation = Organisation(
             name='Reserve', is_master=True,
-            token=reserve_token, country_code=app.config.get('DEFAULT_COUNTRY', 'AU')
+            token=reserve_token, country_code=app.config.get('DEFAULT_COUNTRY', 'AU'),
+            timezone='UTC'
         )
         db.session.add(master_organisation)
 
