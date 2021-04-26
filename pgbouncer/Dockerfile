@@ -14,9 +14,17 @@ RUN \
   make && \
   # Manual install
   cp pgbouncer /usr/bin && \
-  adduser -D -S pgbouncer && \
-  chown pgbouncer /var/run/pgbouncer && \
   mkdir -p /etc/pgbouncer /var/log/pgbouncer /var/run/pgbouncer && \
+  # entrypoint installs the configuation, allow to write as postgres user
+  cp etc/pgbouncer.ini /etc/pgbouncer/pgbouncer.ini.example && \
+  cp etc/userlist.txt /etc/pgbouncer/userlist.txt.example && \
+  addgroup -g 70 -S postgres 2>/dev/null && \
+  adduser -u 70 -S -D -H -h /var/lib/postgresql -g "Postgres user" -s /bin/sh -G postgres postgres 2>/dev/null && \
+  chown -R postgres /var/run/pgbouncer /etc/pgbouncer && \
+  # Cleanup
+  cd /tmp && \
+  rm -rf /tmp/pgbouncer*  && \
+  apk del --purge autoconf autoconf-doc automake udns-dev curl gcc libc-dev libevent-dev libtool make libressl-dev pkgconfig
 
 # Install requirements
 ADD ./pgbouncer/requirements.txt /requirements.txt
