@@ -96,13 +96,14 @@ class SingleBulkDisbursementPage extends React.Component {
     let creator_user = bulkItem && bulkItem.creator_user;
     let approvers = (bulkItem && bulkItem.approvers) || [];
     let label = bulkItem && bulkItem.label;
-    const approversList = approvers.map(approver => {
+    const approversList = approvers.map((approver, index, approversList) => {
+      const spacer = index + 1 == approversList.length ? "" : ", ";
       return (
         <a
           style={{ cursor: "pointer" }}
           onClick={() => this.navigateToUser(approver && approver.id)}
         >
-          {approver && " " + approver.email + " "}
+          {approver && " " + approver.email + spacer}
         </a>
       );
     });
@@ -153,7 +154,7 @@ class SingleBulkDisbursementPage extends React.Component {
             </p>
             <p>
               {" "}
-              <b>Approved by:</b>
+              <b>Reviewed By:</b>
               {approversList}
             </p>
             <p>
