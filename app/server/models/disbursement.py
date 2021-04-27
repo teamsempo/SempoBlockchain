@@ -89,6 +89,7 @@ class Disbursement(ModelBase):
                 self._transition_state(APPROVED)
                 return APPROVED
         else:
+            self.approvers.append(g.user)
             self._transition_state(APPROVED)
 
     def reject(self):
