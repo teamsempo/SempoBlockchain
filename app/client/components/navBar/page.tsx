@@ -99,7 +99,12 @@ const Page: React.FunctionComponent<OuterProps> = props => {
     routes = routes.map((route: string) => {
       if (route === "") {
         return { path: "", breadcrumbName: "Home" };
-      } else if (route.split("")[0] === ":") {
+      }
+      if (route === "users") {
+        // Todo: refactor /users/:id into a navigatible path
+        return { path: "", breadcrumbName: toTitleCase(route) };
+      }
+      if (route.split("")[0] === ":") {
         const id = location.pathname.split("/").pop();
         return { path: location.pathname, breadcrumbName: title + " " + id };
       } else {
