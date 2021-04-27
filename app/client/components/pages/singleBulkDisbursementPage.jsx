@@ -158,13 +158,17 @@ class SingleBulkDisbursementPage extends React.Component {
             <p>
               {" "}
               <b>Notes: </b>
-              <TextArea
-                style={{ maxWidth: "460px" }}
-                value={this.state.notes || notes}
-                placeholder=""
-                autoSize
-                onChange={e => this.setState({ notes: e.target.value })}
-              />
+              {status == "APPROVED" || status == "REJECTED" ? (
+                this.state.notes || notes
+              ) : (
+                <TextArea
+                  style={{ maxWidth: "460px" }}
+                  value={this.state.notes || notes}
+                  placeholder=""
+                  autoSize
+                  onChange={e => this.setState({ notes: e.target.value })}
+                />
+              )}
             </p>
 
             <Space>
