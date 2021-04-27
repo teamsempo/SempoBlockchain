@@ -160,7 +160,7 @@ class SingleBulkDisbursementPage extends React.Component {
               <b>Notes: </b>
               <TextArea
                 style={{ maxWidth: "460px" }}
-                value={notes || this.state.notes}
+                value={this.state.notes || notes}
                 placeholder=""
                 autoSize
                 onChange={e => this.setState({ notes: e.target.value })}
