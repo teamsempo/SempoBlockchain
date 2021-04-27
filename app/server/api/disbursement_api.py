@@ -172,18 +172,15 @@ class DisbursementAPI(MethodView):
         d = db.session.query(Disbursement).filter_by(id=disbursement_id).first()
 
         disbursement = disbursement_schema.dump(d).data
-
         response_object = {
             'status': 'success',
             'message': 'Successfully Loaded.',
-            'items': total_items,
-            'pages': total_pages,
-            'last_fetched': new_last_fetched,
             'data': {
                 'transfer_accounts': transfer_accounts,
                 'disbursement': disbursement
             }
         }
+
         return make_response(jsonify(response_object)), 200
 
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
