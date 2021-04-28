@@ -28,6 +28,10 @@ const mapDispatchToProps = dispatch => {
 };
 
 class SingleBulkDisbursementPage extends React.Component {
+  navigateToUser = accountId => {
+    window.location.assign("/users/" + accountId);
+  };
+
   constructor(props) {
     super(props);
     this.state = {
@@ -94,9 +98,21 @@ class SingleBulkDisbursementPage extends React.Component {
 
     let status = bulkItem && bulkItem.state;
     let transferType = bulkItem && bulkItem.transfer_type;
-    let createdBy = bulkItem && bulkItem.creator_email;
+    let creator_user = bulkItem && bulkItem.creator_user;
+    let approvers = (bulkItem && bulkItem.approvers) || [];
     let label = bulkItem && bulkItem.label;
     let notes = bulkItem && bulkItem.notes;
+    const approversList = approvers.map((approver, index, approversList) => {
+      const spacer = index + 1 == approversList.length ? "" : ", ";
+      return (
+        <a
+          style={{ cursor: "pointer" }}
+          onClick={() => this.navigateToUser(approver && approver.id)}
+        >
+          {approver && " " + approver.email + spacer}
+        </a>
+      );
+    });
 
     let tag;
     let info;
@@ -132,7 +148,20 @@ class SingleBulkDisbursementPage extends React.Component {
             </p>
             <p>
               {" "}
-              <b>Created by:</b> {createdBy || " "}
+              <b>Created by:</b>
+              <a
+                style={{ cursor: "pointer" }}
+                onClick={() =>
+                  this.navigateToUser(creator_user && creator_user.id)
+                }
+              >
+                {creator_user && " " + creator_user.email}
+              </a>
+            </p>
+            <p>
+              {" "}
+              <b>Reviewed By:</b>
+              {approversList}
             </p>
             <p>
               {" "}
