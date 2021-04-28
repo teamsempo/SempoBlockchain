@@ -7,7 +7,7 @@ from flask.views import MethodView
 from sqlalchemy import desc, asc
 
 from server import db, red
-from server.schemas import credit_transfers_schema, disbursement_schema, disbursements_schema
+from server.schemas import transfer_accounts_schema, disbursement_schema, disbursements_schema, credit_transfers_schema
 from server.models.disbursement import Disbursement
 from server.models.transfer_account import TransferAccount
 from server.models.credit_transfer import CreditTransfer
@@ -155,17 +155,32 @@ class MakeDisbursementAPI(MethodView):
 class DisbursementAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def get(self, disbursement_id):
-        d = db.session.query(Disbursement).filter_by(id=disbursement_id).first()
+        accounts = db.session.query(TransferAccount)\
+            .filter(TransferAccount.disbursements.any(id=disbursement_id))\
+            .options(joinedload(TransferAccount.disbursements))
+        accounts, total_items, total_pages, new_last_fetched = paginate_query(accounts)
+        if accounts is None:
+            response_object = {
+                'message': 'No transfer accounts',
+            }
 
+            return make_response(jsonify(response_object)), 400
+
+        transfer_accounts = transfer_accounts_schema.dump(accounts).data
+        d = db.session.query(Disbursement).filter_by(id=disbursement_id).first()
         disbursement = disbursement_schema.dump(d).data
+
         response_object = {
             'status': 'success',
             'message': 'Successfully Loaded.',
+            'items': total_items,
+            'pages': total_pages,
+            'last_fetched': new_last_fetched,
             'data': {
+                'transfer_accounts': transfer_accounts,
                 'disbursement': disbursement
             }
         }
-
         return make_response(jsonify(response_object)), 200
 
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
