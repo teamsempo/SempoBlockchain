@@ -173,9 +173,6 @@ class DisbursementAPI(MethodView):
         response_object = {
             'status': 'success',
             'message': 'Successfully Loaded.',
-            'items': total_items,
-            'pages': total_pages,
-            'last_fetched': new_last_fetched,
             'data': {
                 'transfer_accounts': transfer_accounts,
                 'disbursement': disbursement
@@ -187,6 +184,7 @@ class DisbursementAPI(MethodView):
     def put(self, disbursement_id):
         put_data = request.get_json()
         action = put_data.get('action', '').upper()
+        notes = put_data.get('notes') or ''
 
         if not disbursement_id:
             return { 'message': 'Please provide a disbursement_id'}, 400
@@ -201,7 +199,7 @@ class DisbursementAPI(MethodView):
             disbursement = Disbursement.query.filter(Disbursement.id == disbursement_id)\
                 .options(joinedload(Disbursement.credit_transfers))\
                 .first()
-
+            disbursement.notes = notes
             if not disbursement:
                 return { 'message': f'Disbursement with ID \'{disbursement_id}\' not found' }, 400
 
