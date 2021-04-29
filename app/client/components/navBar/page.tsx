@@ -185,7 +185,6 @@ const Page: React.FunctionComponent<OuterProps> = props => {
             >
               <PageHeader
                 className="site-page-header"
-                title={title}
                 breadcrumb={{ routes, itemRender }}
               />
             </Header>
