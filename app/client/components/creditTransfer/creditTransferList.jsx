@@ -446,13 +446,14 @@ class CreditTransferList extends React.Component {
                     const customRoutes = transfer_account_id
                       ? [
                           { path: "", breadcrumbName: "Home" },
+                          { path: "accounts/", breadcrumbName: "Accounts" },
                           {
                             path: `accounts/${transfer_account_id}`,
                             breadcrumbName: `Transfer Account ${transfer_account_id}`
                           },
                           {
                             path: `transfers/${transferId}`,
-                            breadcrumbName: `User ${transferId}`
+                            breadcrumbName: `Transfer ${transferId}`
                           }
                         ]
                       : undefined;

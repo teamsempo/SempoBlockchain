@@ -124,6 +124,7 @@ class UserList extends React.Component {
                         rowInfo.original.default_transfer_account_id;
                       const customRoutes = [
                         { path: "", breadcrumbName: "Home" },
+                        { path: "accounts/", breadcrumbName: "Accounts" },
                         {
                           path: `accounts/${primaryTransferAccount}`,
                           breadcrumbName: `Transfer Account ${primaryTransferAccount}`
