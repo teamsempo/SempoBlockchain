@@ -62,6 +62,8 @@ const Page: React.FunctionComponent<OuterProps> = props => {
   } = props;
 
   const [collapsed, setCollapsed] = React.useState(false);
+  const [routes, setRoutes] = React.useState<Route[] | undefined>();
+  const [prevPath, setPrevPath] = React.useState("");
 
   const login: LoginState = useSelector((state: ReduxState) => state.login);
   const { organisationIds } = login;
@@ -91,29 +93,37 @@ const Page: React.FunctionComponent<OuterProps> = props => {
     localStorage.setItem("sideBarCollapsed", collapsed.toString());
   };
 
-  let routes;
-  if (customRoutes) {
-    routes = customRoutes;
-  } else if (path) {
-    routes = path.split("/");
-    routes = routes.map((route: string) => {
-      if (route === "") {
-        return { path: "", breadcrumbName: "Home" };
-      }
-      if (route === "users") {
-        // Todo: refactor /users/:id into a navigatible path
-        return { path: "", breadcrumbName: toTitleCase(route) };
-      }
-      if (route.split("")[0] === ":") {
-        const id = location.pathname.split("/").pop();
-        return { path: location.pathname, breadcrumbName: title + " " + id };
+  React.useEffect(() => {
+    if (location.pathname !== prevPath) {
+      let tempRoutes;
+      if (customRoutes) {
+        setRoutes(customRoutes);
+        setPrevPath(location.pathname);
+      } else if (location.state && location.state.customRoutes) {
+        setRoutes(location.state.customRoutes);
+        setPrevPath(location.pathname);
+      } else if (path) {
+        tempRoutes = path.split("/").map((route: string) => {
+          if (route === "") {
+            return { path: "", breadcrumbName: "Home" };
+          } else if (route.split("")[0] === ":") {
+            const id = location.pathname.split("/").pop();
+            return {
+              path: location.pathname,
+              breadcrumbName: title + " " + id
+            };
+          } else {
+            return { path: route, breadcrumbName: toTitleCase(route) };
+          }
+        });
+        setRoutes(tempRoutes);
+        setPrevPath(location.pathname);
       } else {
-        return { path: route, breadcrumbName: toTitleCase(route) };
+        setRoutes(undefined);
+        setPrevPath(location.pathname);
       }
-    });
-  } else {
-    routes = undefined;
-  }
+    }
+  }, [customRoutes, location, path]);
 
   function itemRender(route: Route, params: any, routes: any, paths: any) {
     const last = routes.indexOf(route) === routes.length - 1;

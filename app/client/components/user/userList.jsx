@@ -120,7 +120,22 @@ class UserList extends React.Component {
                 return {
                   onClick: (e, handleOriginal) => {
                     if (rowInfo && rowInfo.row) {
-                      browserHistory.push("/users/" + rowInfo.row.id);
+                      const primaryTransferAccount =
+                        rowInfo.original.default_transfer_account_id;
+                      const customRoutes = [
+                        { path: "", breadcrumbName: "Home" },
+                        {
+                          path: `accounts/${primaryTransferAccount}`,
+                          breadcrumbName: `Transfer Account ${primaryTransferAccount}`
+                        },
+                        {
+                          path: `users/${rowInfo.row.id}`,
+                          breadcrumbName: `User ${rowInfo.row.id}`
+                        }
+                      ];
+                      browserHistory.push("/users/" + rowInfo.row.id, {
+                        customRoutes
+                      });
                     }
                     if (handleOriginal) {
                       handleOriginal();
