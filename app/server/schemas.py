@@ -460,6 +460,7 @@ class AttributeMapSchema(Schema):
 class DisbursementSchema(SchemaBase):
     search_string               = fields.Str()
     search_filter_params        = fields.Str()
+    notes                       = fields.Str()
     include_accounts            = fields.List(fields.Int())
     exclude_accounts            = fields.List(fields.Int())
 
@@ -469,9 +470,8 @@ class DisbursementSchema(SchemaBase):
     state                       = fields.Str()
     transfer_type               = fields.Str()
     disbursement_amount         = fields.Int()
-    creator_email               = fields.Method('_creator_email')
-    def _creator_email(self, obj):
-        return obj.creator_user.email
+    creator_user = fields.Nested(UserSchema, attribute='creator_user', only=("id", "first_name", "last_name", "email"))
+    approvers = fields.Nested(UserSchema, attribute='approvers', many=True, only=("id", "first_name", "last_name", "email"))
 
 pdf_users_schema = UserSchema(many=True, only=("id", "qr", "first_name", "last_name"))
 

@@ -1,6 +1,6 @@
 import React from "react";
 import { connect } from "react-redux";
-import { Card, Button, Space, Tag, Alert } from "antd";
+import { Card, Button, Space, Tag, Alert, Input } from "antd";
 
 import { PageWrapper, WrapperDiv } from "../styledElements";
 
@@ -10,6 +10,7 @@ import { sempoObjects } from "../../reducers/rootReducer";
 import { formatMoney, getActiveToken, toCurrency } from "../../utils";
 import QueryConstructor from "../filterModule/queryConstructor";
 import TransferAccountList from "../transferAccount/TransferAccountList";
+const { TextArea } = Input;
 
 const mapStateToProps = state => ({
   bulkTransfers: state.bulkTransfers,
@@ -27,6 +28,10 @@ const mapDispatchToProps = dispatch => {
 };
 
 class SingleBulkDisbursementPage extends React.Component {
+  navigateToUser = accountId => {
+    window.location.assign("/users/" + accountId);
+  };
+
   constructor(props) {
     super(props);
     this.state = {
@@ -50,14 +55,18 @@ class SingleBulkDisbursementPage extends React.Component {
 
   onComplete() {
     let bulkId = this.props.match.params.bulkId;
-
-    this.props.modifyBulkDisbursement(bulkId, { action: "APPROVE" });
+    this.props.modifyBulkDisbursement(bulkId, {
+      action: "APPROVE",
+      notes: this.state.notes
+    });
   }
 
   onReject() {
     let bulkId = this.props.match.params.bulkId;
-
-    this.props.modifyBulkDisbursement(bulkId, { action: "REJECT" });
+    this.props.modifyBulkDisbursement(bulkId, {
+      action: "REJECT",
+      notes: this.state.notes
+    });
   }
 
   render() {
@@ -89,8 +98,21 @@ class SingleBulkDisbursementPage extends React.Component {
 
     let status = bulkItem && bulkItem.state;
     let transferType = bulkItem && bulkItem.transfer_type;
-    let createdBy = bulkItem && bulkItem.creator_email;
+    let creator_user = bulkItem && bulkItem.creator_user;
+    let approvers = (bulkItem && bulkItem.approvers) || [];
     let label = bulkItem && bulkItem.label;
+    let notes = bulkItem && bulkItem.notes;
+    const approversList = approvers.map((approver, index, approversList) => {
+      const spacer = index + 1 == approversList.length ? "" : ", ";
+      return (
+        <a
+          style={{ cursor: "pointer" }}
+          onClick={() => this.navigateToUser(approver && approver.id)}
+        >
+          {approver && " " + approver.email + spacer}
+        </a>
+      );
+    });
 
     let tag;
     let info;
@@ -126,7 +148,20 @@ class SingleBulkDisbursementPage extends React.Component {
             </p>
             <p>
               {" "}
-              <b>Created by:</b> {createdBy || " "}
+              <b>Created by:</b>
+              <a
+                style={{ cursor: "pointer" }}
+                onClick={() =>
+                  this.navigateToUser(creator_user && creator_user.id)
+                }
+              >
+                {creator_user && " " + creator_user.email}
+              </a>
+            </p>
+            <p>
+              {" "}
+              <b>Reviewed By:</b>
+              {approversList}
             </p>
             <p>
               {" "}
@@ -148,6 +183,21 @@ class SingleBulkDisbursementPage extends React.Component {
             <p>
               {" "}
               <b>Total amount transferred:</b> {totalAmount || ""}{" "}
+            </p>
+            <p>
+              {" "}
+              <b>Notes: </b>
+              {status == "APPROVED" || status == "REJECTED" ? (
+                this.state.notes || notes
+              ) : (
+                <TextArea
+                  style={{ maxWidth: "460px" }}
+                  value={this.state.notes || notes}
+                  placeholder=""
+                  autoSize
+                  onChange={e => this.setState({ notes: e.target.value })}
+                />
+              )}
             </p>
 
             <Space>
