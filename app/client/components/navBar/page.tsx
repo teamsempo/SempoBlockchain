@@ -186,7 +186,6 @@ const Page: React.FunctionComponent<OuterProps> = props => {
               <PageHeader
                 className="site-page-header"
                 title={title}
-                onBack={() => browserHistory.goBack()}
                 breadcrumb={{ routes, itemRender }}
               />
             </Header>
