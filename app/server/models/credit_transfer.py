@@ -259,7 +259,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
     def check_if_fully_approved(self):
         # Checks if the credit transfer is approved and ready to be resolved as complete
-        if current_app.config['REQUIRE_MULTIPLE_APPROVALS']:
+        if current_app.config['REQUIRE_MULTIPLE_APPROVALS'] and not AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'sempoadmin'):
             if len(self.approvers) <=1:
                 return False
             else:
