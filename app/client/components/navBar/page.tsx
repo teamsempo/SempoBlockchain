@@ -1,10 +1,12 @@
 import * as React from "react";
 import { useSelector } from "react-redux";
-import { Layout, Typography, message } from "antd";
+import { Link } from "react-router-dom";
+import { Layout, PageHeader, message } from "antd";
 import { CenterLoadingSideBarActive } from "../styledElements";
 
 import NavBar from "../navBar";
 import { isMobileQuery, withMediaQuery } from "../helpers/responsive";
+import { toTitleCase } from "../../utils";
 
 import IntercomSetup from "../intercom/IntercomSetup";
 import ErrorBoundary from "../ErrorBoundary";
@@ -13,13 +15,25 @@ import { LoginState } from "../../reducers/auth/loginReducer";
 import { ReduxState } from "../../reducers/rootReducer";
 import { browserHistory } from "../../createStore";
 
-const { Content, Footer } = Layout;
+const { Content, Header, Footer } = Layout;
+
+interface Route {
+  path: string;
+  breadcrumbName: string;
+  children?: Array<{
+    path: string;
+    breadcrumbName: string;
+  }>;
+}
 
 interface OuterProps {
   isMultiOrg?: boolean;
   noNav?: boolean;
   location?: any;
   footer?: boolean;
+  header?: boolean;
+  path: string;
+  customRoutes?: Route[];
   isAntDesign?: boolean;
   title?: string;
   isMobile?: boolean;
@@ -36,6 +50,9 @@ const Page: React.FunctionComponent<OuterProps> = props => {
   const {
     isMultiOrg = false,
     footer = true,
+    header = true,
+    path,
+    customRoutes,
     isAntDesign = false,
     noNav,
     location,
@@ -45,6 +62,8 @@ const Page: React.FunctionComponent<OuterProps> = props => {
   } = props;
 
   const [collapsed, setCollapsed] = React.useState(false);
+  const [routes, setRoutes] = React.useState<Route[] | undefined>();
+  const [prevPath, setPrevPath] = React.useState("");
 
   const login: LoginState = useSelector((state: ReduxState) => state.login);
   const { organisationIds } = login;
@@ -73,6 +92,47 @@ const Page: React.FunctionComponent<OuterProps> = props => {
     setCollapsed(collapsed);
     localStorage.setItem("sideBarCollapsed", collapsed.toString());
   };
+
+  React.useEffect(() => {
+    if (location.pathname !== prevPath) {
+      let tempRoutes;
+      if (customRoutes) {
+        setRoutes(customRoutes);
+        setPrevPath(location.pathname);
+      } else if (location.state && location.state.customRoutes) {
+        setRoutes(location.state.customRoutes);
+        setPrevPath(location.pathname);
+      } else if (path) {
+        tempRoutes = path.split("/").map((route: string) => {
+          if (route === "") {
+            return { path: "", breadcrumbName: "Home" };
+          } else if (route.split("")[0] === ":") {
+            const id = location.pathname.split("/").pop();
+            return {
+              path: location.pathname,
+              breadcrumbName: title + " " + id
+            };
+          } else {
+            return { path: route, breadcrumbName: toTitleCase(route) };
+          }
+        });
+        setRoutes(tempRoutes);
+        setPrevPath(location.pathname);
+      } else {
+        setRoutes(undefined);
+        setPrevPath(location.pathname);
+      }
+    }
+  }, [customRoutes, location, path]);
+
+  function itemRender(route: Route, params: any, routes: any, paths: any) {
+    const last = routes.indexOf(route) === routes.length - 1;
+    return last ? (
+      <span>{route.breadcrumbName}</span>
+    ) : (
+      <Link to={"/" + route.path}>{route.breadcrumbName}</Link>
+    );
+  }
 
   return (
     <ErrorBoundary>
@@ -118,6 +178,17 @@ const Page: React.FunctionComponent<OuterProps> = props => {
               : { marginLeft: "200px" }
           }
         >
+          {header && routes !== undefined ? (
+            <Header
+              className="site-layout-background"
+              style={{ padding: 0, height: "auto" }}
+            >
+              <PageHeader
+                className="site-page-header"
+                breadcrumb={{ routes, itemRender }}
+              />
+            </Header>
+          ) : null}
           <Content style={{ margin: isAntDesign ? "0 16px" : "" }}>
             <React.Suspense
               fallback={
