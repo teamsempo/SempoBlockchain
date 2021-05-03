@@ -1,6 +1,7 @@
 import pytest
 from flask import g
 from helpers.model_factories import CreditTransfer
+from decimal import Decimal
 
 def test_create_transfer_account(create_transfer_account):
     """
@@ -99,11 +100,11 @@ def test_balance_handles_partial_statuses(new_credit_transfer):
     assert sta.total_received_complete_only_wei == 0
     assert rta.total_received_complete_only_wei == 0
     
-    assert sta.total_sent_incl_pending_wei == 100
+    assert sta.total_sent_incl_pending_wei == 10000000000000000000
     assert rta.total_sent_incl_pending_wei == 0
 
     assert sta.total_received_incl_pending_wei == 0
-    assert rta.total_received_incl_pending_wei == 100
+    assert rta.total_received_incl_pending_wei == 10000000000000000000
 
     # Check balance correctness after updated in PARTIAL state (no change from PENDING)
     new_credit_transfer.transfer_status = 'PARTIAL'
@@ -118,11 +119,11 @@ def test_balance_handles_partial_statuses(new_credit_transfer):
     assert sta.total_received_complete_only_wei == 0
     assert rta.total_received_complete_only_wei == 0
 
-    assert sta.total_sent_incl_pending_wei == 100
+    assert sta.total_sent_incl_pending_wei == 10000000000000000000
     assert rta.total_sent_incl_pending_wei == 0
 
     assert sta.total_received_incl_pending_wei == 0
-    assert rta.total_received_incl_pending_wei == 100
+    assert rta.total_received_incl_pending_wei == 10000000000000000000
 
     # When COMPLETE, the 100 should be out of sender AND in rta
     new_credit_transfer.transfer_status = 'COMPLETE'
@@ -131,17 +132,17 @@ def test_balance_handles_partial_statuses(new_credit_transfer):
     assert sta.balance == 9000
     assert rta.balance == 11000
 
-    assert sta.total_sent_complete_only_wei == 100
+    assert sta.total_sent_complete_only_wei == 10000000000000000000
     assert rta.total_sent_complete_only_wei == 0
 
     assert sta.total_received_complete_only_wei == 0
-    assert rta.total_received_complete_only_wei == 100
+    assert rta.total_received_complete_only_wei == 10000000000000000000
     
-    assert sta.total_sent_incl_pending_wei == 100
+    assert sta.total_sent_incl_pending_wei == 10000000000000000000
     assert rta.total_sent_incl_pending_wei == 0
 
     assert sta.total_received_incl_pending_wei == 0
-    assert rta.total_received_incl_pending_wei == 100
+    assert rta.total_received_incl_pending_wei == 10000000000000000000
 
 def test_total_sent_amounts(new_credit_transfer):
     """
