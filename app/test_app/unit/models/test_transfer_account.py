@@ -75,6 +75,73 @@ def test_balance_handles_pending_complete_statuses(new_credit_transfer):
     assert sta.balance == 9000
     assert rta.balance == 11000
 
+def test_balance_handles_partial_statuses(new_credit_transfer):
+    """
+    Make sure that pending transfers are deducted from the sender's balance, but NOT added to the recipient's,
+    while complete transfers are deducted from the sender's AND added to the recipient's
+    """
+    sta = new_credit_transfer.sender_transfer_account
+    rta = new_credit_transfer.recipient_transfer_account
+    # Set initial balances
+    sta.set_balance_offset(10000)
+    rta.set_balance_offset(10000)
+    # Check balance correctness after updated in PENDING state
+    # Sent funds should be inaccessible from senders' account, but not yet in recipient's account
+    new_credit_transfer.transfer_status = 'PENDING'
+    rta.update_balance()
+    sta.update_balance()
+    assert sta.balance == 9000
+    assert rta.balance == 10000
+
+    assert sta.total_sent_complete_only_wei == 0
+    assert rta.total_sent_complete_only_wei == 0
+
+    assert sta.total_received_complete_only_wei == 0
+    assert rta.total_received_complete_only_wei == 0
+    
+    assert sta.total_sent_incl_pending_wei == 100
+    assert rta.total_sent_incl_pending_wei == 0
+
+    assert sta.total_received_incl_pending_wei == 0
+    assert rta.total_received_incl_pending_wei == 100
+
+    # Check balance correctness after updated in PARTIAL state (no change from PENDING)
+    new_credit_transfer.transfer_status = 'PARTIAL'
+    rta.update_balance()
+    sta.update_balance()
+    assert sta.balance == 9000
+    assert rta.balance == 10000
+
+    assert sta.total_sent_complete_only_wei == 0
+    assert rta.total_sent_complete_only_wei == 0
+
+    assert sta.total_received_complete_only_wei == 0
+    assert rta.total_received_complete_only_wei == 0
+
+    assert sta.total_sent_incl_pending_wei == 100
+    assert rta.total_sent_incl_pending_wei == 0
+
+    assert sta.total_received_incl_pending_wei == 0
+    assert rta.total_received_incl_pending_wei == 100
+
+    # When COMPLETE, the 100 should be out of sender AND in rta
+    new_credit_transfer.transfer_status = 'COMPLETE'
+    rta.update_balance()
+    sta.update_balance()
+    assert sta.balance == 9000
+    assert rta.balance == 11000
+
+    assert sta.total_sent_complete_only_wei == 100
+    assert rta.total_sent_complete_only_wei == 0
+
+    assert sta.total_received_complete_only_wei == 0
+    assert rta.total_received_complete_only_wei == 100
+    
+    assert sta.total_sent_incl_pending_wei == 100
+    assert rta.total_sent_incl_pending_wei == 0
+
+    assert sta.total_received_incl_pending_wei == 0
+    assert rta.total_received_incl_pending_wei == 100
 
 def test_total_sent_amounts(new_credit_transfer):
     """
