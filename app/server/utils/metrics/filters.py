@@ -153,3 +153,6 @@ standard_payment_filters = [
     CreditTransfer.transfer_subtype == TransferSubTypeEnum.STANDARD
 ]
 
+complete_transfer_filter = [
+    CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
+]
