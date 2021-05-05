@@ -1,4 +1,6 @@
 import React from "react";
+import moment from "moment";
+
 import { connect } from "react-redux";
 import { Card, Button, Space, Tag, Alert, Input } from "antd";
 
@@ -98,19 +100,30 @@ class SingleBulkDisbursementPage extends React.Component {
 
     let status = bulkItem && bulkItem.state;
     let transferType = bulkItem && bulkItem.transfer_type;
-    let creator_user = bulkItem && bulkItem.creator_user;
+    let creatorUser = bulkItem && bulkItem.creator_user;
+    let approvalTimes = bulkItem && bulkItem.approval_times;
     let approvers = (bulkItem && bulkItem.approvers) || [];
     let label = bulkItem && bulkItem.label;
     let notes = bulkItem && bulkItem.notes;
     const approversList = approvers.map((approver, index, approversList) => {
       const spacer = index + 1 == approversList.length ? "" : ", ";
+      const approvalTimeString = approvalTimes[index]
+        ? " at " +
+          moment
+            .utc(approvalTimes[index])
+            .local()
+            .format("YYYY-MM-DD HH:mm:ss")
+        : "";
       return (
-        <a
-          style={{ cursor: "pointer" }}
-          onClick={() => this.navigateToUser(approver && approver.id)}
-        >
-          {approver && " " + approver.email + spacer}
-        </a>
+        <div>
+          <a
+            style={{ cursor: "pointer" }}
+            onClick={() => this.navigateToUser(approver && approver.id)}
+          >
+            {approver && " " + approver.email}
+          </a>
+          {approvalTimeString + spacer}
+        </div>
       );
     });
 
@@ -152,12 +165,17 @@ class SingleBulkDisbursementPage extends React.Component {
               <a
                 style={{ cursor: "pointer" }}
                 onClick={() =>
-                  this.navigateToUser(creator_user && creator_user.id)
+                  this.navigateToUser(creatorUser && creatorUser.id)
                 }
               >
-                {creator_user && " " + creator_user.email}
+                {creatorUser && " " + creatorUser.email}
               </a>
             </p>
+            <p>
+              {" "}
+              <b>Created on:</b> {totalAmount || ""}{" "}
+            </p>
+
             <p>
               {" "}
               <b>Reviewed By:</b>

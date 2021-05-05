@@ -1,7 +1,7 @@
 from server import db
 from flask import g, current_app
 from sqlalchemy import func
-
+import datetime
 from server.models.utils import ModelBase, OneOrgBase, disbursement_transfer_account_association_table,\
     disbursement_credit_transfer_association_table, disbursement_approver_user_association_table
 from sqlalchemy.types import ARRAY
@@ -50,7 +50,8 @@ class Disbursement(ModelBase):
         "User",
         secondary=disbursement_approver_user_association_table,
     )
-
+    approval_times = db.Column(db.ARRAY(db.DateTime), default=[])
+    
     @hybrid_property
     def recipient_count(self):
         return db.session.query(func.count(disbursement_transfer_account_association_table.c.disbursement_id))\
@@ -83,6 +84,7 @@ class Disbursement(ModelBase):
         if current_app.config['REQUIRE_MULTIPLE_APPROVALS']:
             if g.user not in self.approvers:
                 self.approvers.append(g.user)
+                self.approval_times = self.approval_times + [datetime.datetime.utcnow()]               
             if len(self.approvers) <=1:
                 self._transition_state(PARTIAL)
                 return PARTIAL
@@ -90,8 +92,11 @@ class Disbursement(ModelBase):
                 self._transition_state(APPROVED)
                 return APPROVED
         else:
-            self.approvers.append(g.user)
+            if g.user not in self.approvers:
+                self.approvers.append(g.user)
+                self.approval_times = self.approval_times + [datetime.datetime.utcnow()]
             self._transition_state(APPROVED)
+            return APPROVED
 
     def reject(self):
         self._transition_state(REJECTED)
