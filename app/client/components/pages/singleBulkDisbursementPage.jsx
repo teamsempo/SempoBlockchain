@@ -101,16 +101,17 @@ class SingleBulkDisbursementPage extends React.Component {
     let status = bulkItem && bulkItem.state;
     let transferType = bulkItem && bulkItem.transfer_type;
     let creatorUser = bulkItem && bulkItem.creator_user;
-    let approvalTimes = bulkItem && bulkItem.approval_times;
+    let approvalTimes = (bulkItem && bulkItem.approval_times) || [];
     let approvers = (bulkItem && bulkItem.approvers) || [];
     let label = bulkItem && bulkItem.label;
     let notes = bulkItem && bulkItem.notes;
     const approversList = approvers.map((approver, index, approversList) => {
       const spacer = index + 1 == approversList.length ? "" : ", ";
-      const approvalTimeString = approvalTimes[index]
+      const approvalTime = approvalTimes[index];
+      const approvalTimeString = approvalTime
         ? " at " +
           moment
-            .utc(approvalTimes[index])
+            .utc(approvalTime)
             .local()
             .format("YYYY-MM-DD HH:mm:ss")
         : "";
@@ -171,11 +172,6 @@ class SingleBulkDisbursementPage extends React.Component {
                 {creatorUser && " " + creatorUser.email}
               </a>
             </p>
-            <p>
-              {" "}
-              <b>Created on:</b> {totalAmount || ""}{" "}
-            </p>
-
             <p>
               {" "}
               <b>Reviewed By:</b>
