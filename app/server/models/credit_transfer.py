@@ -317,7 +317,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
             self.fiat_ramp.resolve_as_complete()
 
     def resolve_as_rejected(self, message=None):
-        if self.transfer_status not in [None, TransferStatusEnum.PENDING]:
+        if self.transfer_status not in [None, TransferStatusEnum.PENDING, TransferStatusEnum.PARTIAL]:
             raise Exception(f'Resolve called multiple times for transfer {self.id}')
 
         if self.fiat_ramp and self.transfer_type in [TransferTypeEnum.DEPOSIT, TransferTypeEnum.WITHDRAWAL]:
