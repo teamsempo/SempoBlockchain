@@ -78,7 +78,9 @@ class SingleCreditTransfer extends React.Component {
       const recipientTransferAccountID =
         creditTransfer.recipient_transfer_account;
 
-      const actionsDisabled = creditTransfer.transfer_status !== "PENDING";
+      const actionsDisabled =
+        creditTransfer.transfer_status !== "PENDING" &&
+        creditTransfer.transfer_status !== "PARTIAL";
       const tagColor =
         creditTransfer.transfer_status === "COMPLETE"
           ? "green"
