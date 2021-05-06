@@ -80,11 +80,17 @@ class Disbursement(ModelBase):
 
         self.state = new_state
 
+    def add_approver(self):
+        if g.user not in self.approvers:
+            if not self.approval_times:
+                self.approval_times = []
+            if len(self.approvers) == len(self.approval_times):
+                self.approval_times = self.approval_times + [datetime.datetime.utcnow()] 
+            self.approvers.append(g.user)
+        
     def approve(self):
         if current_app.config['REQUIRE_MULTIPLE_APPROVALS']:
-            if g.user not in self.approvers:
-                self.approvers.append(g.user)
-                self.approval_times = self.approval_times + [datetime.datetime.utcnow()]               
+            self.add_approver()             
             if len(self.approvers) <=1:
                 self._transition_state(PARTIAL)
                 return PARTIAL
@@ -92,13 +98,12 @@ class Disbursement(ModelBase):
                 self._transition_state(APPROVED)
                 return APPROVED
         else:
-            if g.user not in self.approvers:
-                self.approvers.append(g.user)
-                self.approval_times = self.approval_times + [datetime.datetime.utcnow()]
+            self.add_approver()             
             self._transition_state(APPROVED)
             return APPROVED
 
     def reject(self):
+        self.add_approver()             
         self._transition_state(REJECTED)
 
     def __init__(self, *args, **kwargs):
