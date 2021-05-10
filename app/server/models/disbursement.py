@@ -1,7 +1,7 @@
 from server import db
 from flask import g, current_app
 from sqlalchemy import func
-
+import datetime
 from server.models.utils import ModelBase, OneOrgBase, disbursement_transfer_account_association_table,\
     disbursement_credit_transfer_association_table, disbursement_approver_user_association_table
 from sqlalchemy.types import ARRAY
@@ -51,7 +51,8 @@ class Disbursement(ModelBase):
         "User",
         secondary=disbursement_approver_user_association_table,
     )
-
+    approval_times = db.Column(db.ARRAY(db.DateTime), default=[])
+    
     @hybrid_property
     def recipient_count(self):
         return db.session.query(func.count(disbursement_transfer_account_association_table.c.disbursement_id))\
@@ -80,10 +81,17 @@ class Disbursement(ModelBase):
 
         self.state = new_state
 
+    def add_approver(self):
+        if g.user not in self.approvers:
+            if not self.approval_times:
+                self.approval_times = []
+            if len(self.approvers) == len(self.approval_times):
+                self.approval_times = self.approval_times + [datetime.datetime.utcnow()] 
+            self.approvers.append(g.user)
+        
     def approve(self):
         if current_app.config['REQUIRE_MULTIPLE_APPROVALS'] and not AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'sempoadmin'):
-            if g.user not in self.approvers:
-                self.approvers.append(g.user)
+            self.add_approver()             
             if len(self.approvers) <=1:
                 self._transition_state(PARTIAL)
                 return PARTIAL
@@ -91,10 +99,12 @@ class Disbursement(ModelBase):
                 self._transition_state(APPROVED)
                 return APPROVED
         else:
-            self.approvers.append(g.user)
+            self.add_approver()             
             self._transition_state(APPROVED)
+            return APPROVED
 
     def reject(self):
+        self.add_approver()             
         self._transition_state(REJECTED)
 
     def __init__(self, *args, **kwargs):
