@@ -472,6 +472,7 @@ class DisbursementSchema(SchemaBase):
     disbursement_amount         = fields.Int()
     creator_user = fields.Nested(UserSchema, attribute='creator_user', only=("id", "first_name", "last_name", "email"))
     approvers = fields.Nested(UserSchema, attribute='approvers', many=True, only=("id", "first_name", "last_name", "email"))
+    approval_times              = fields.List(fields.DateTime(dump_only=True))
 
 pdf_users_schema = UserSchema(many=True, only=("id", "qr", "first_name", "last_name"))
 
