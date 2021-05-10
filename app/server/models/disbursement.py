@@ -6,6 +6,7 @@ from server.models.utils import ModelBase, OneOrgBase, disbursement_transfer_acc
     disbursement_credit_transfer_association_table, disbursement_approver_user_association_table
 from sqlalchemy.types import ARRAY
 from sqlalchemy.ext.hybrid import hybrid_property
+from server.utils.access_control import AccessControl
 
 PENDING = 'PENDING'
 APPROVED = 'APPROVED'
@@ -89,7 +90,7 @@ class Disbursement(ModelBase):
             self.approvers.append(g.user)
         
     def approve(self):
-        if current_app.config['REQUIRE_MULTIPLE_APPROVALS']:
+        if current_app.config['REQUIRE_MULTIPLE_APPROVALS'] and not AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'sempoadmin'):
             self.add_approver()             
             if len(self.approvers) <=1:
                 self._transition_state(PARTIAL)
