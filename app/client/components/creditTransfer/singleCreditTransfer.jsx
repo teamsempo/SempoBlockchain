@@ -129,7 +129,7 @@ class SingleCreditTransfer extends React.Component {
             </Space>
           }
         >
-          <Descriptions title={"Transfer Status Information"}>
+          <Descriptions title={"Transfer Information"}>
             <Descriptions.Item label={"Transfer Status"}>
               {transferStatus}
             </Descriptions.Item>
