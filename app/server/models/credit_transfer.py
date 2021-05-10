@@ -259,7 +259,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
     def check_if_fully_approved(self):
         # Checks if the credit transfer is approved and ready to be resolved as complete
-        if current_app.config['REQUIRE_MULTIPLE_APPROVALS']:
+        if current_app.config['REQUIRE_MULTIPLE_APPROVALS'] and not AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'sempoadmin'):
             if len(self.approvers) <=1:
                 return False
             else:
@@ -301,6 +301,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
         self.resolved_date = datetime.datetime.utcnow()
         self.transfer_status = TransferStatusEnum.COMPLETE
+        self.blockchain_status = BlockchainStatus.PENDING
         self.update_balances()
 
         if (datetime.datetime.utcnow() - self.created).seconds > 5:
@@ -317,7 +318,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
             self.fiat_ramp.resolve_as_complete()
 
     def resolve_as_rejected(self, message=None):
-        if self.transfer_status not in [None, TransferStatusEnum.PENDING]:
+        if self.transfer_status not in [None, TransferStatusEnum.PENDING, TransferStatusEnum.PARTIAL]:
             raise Exception(f'Resolve called multiple times for transfer {self.id}')
 
         if self.fiat_ramp and self.transfer_type in [TransferTypeEnum.DEPOSIT, TransferTypeEnum.WITHDRAWAL]:
