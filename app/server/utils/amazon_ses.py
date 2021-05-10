@@ -64,7 +64,7 @@ def send_invite_email(invite, organisation):
     TEMPLATE_FILE = 'invite_email.txt'
     template = get_email_template(TEMPLATE_FILE)
     email = parse.quote(invite.email, safe='')
-    body = template.render(host=request.url_root,
+    body = template.render(host=current_app.config['APP_HOST'],
                            organisation_name=organisation.name,
                            referral_code=invite.referral_code,
                            email=email)
@@ -75,7 +75,7 @@ def send_invite_email_to_existing_user(organisation, email_address):
 
     TEMPLATE_FILE = 'invite_existing_user_email.txt'
     template = get_email_template(TEMPLATE_FILE)
-    body = template.render(host=request.url_root,
+    body = template.render(host=current_app.config['APP_HOST'],
                            organisation_name=organisation.name)
 
     add_after_request_executor_job(ses_email_handler, [email_address, 'Sempo: Added to new Organisation!', body])
@@ -92,18 +92,18 @@ def send_activation_email(activation_token, email_address):
 
     TEXT_TEMPLATE_FILE = 'account_activation_email.txt'
     text_template = get_email_template(TEXT_TEMPLATE_FILE)
-    textbody = text_template.render(host=request.url_root, activation_token=activation_token)
+    textbody = text_template.render(host=current_app.config['APP_HOST'], activation_token=activation_token)
 
     HTML_TEMPLATE_FILE = 'account_activation_email.html'
     html_template = get_email_template(HTML_TEMPLATE_FILE)
-    htmlbody = html_template.render(host=request.url_root, activation_token=activation_token)
+    htmlbody = html_template.render(host=current_app.config['APP_HOST'], activation_token=activation_token)
 
     add_after_request_executor_job(ses_email_handler, [email_address, 'Sempo: Activate your account', textbody, htmlbody])
 
 def send_reset_email(reset_token, email_address):
     TEMPLATE_FILE = 'password_reset_email.txt'
     template = get_email_template(TEMPLATE_FILE)
-    body = template.render(host=request.url_root, reset_token=reset_token)
+    body = template.render(host=current_app.config['APP_HOST'], reset_token=reset_token)
     add_after_request_executor_job(ses_email_handler, [email_address, 'Sempo Password Reset', body])
 
 def get_email_template(TEMPLATE_FILE):
