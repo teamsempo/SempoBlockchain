@@ -301,6 +301,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
         self.resolved_date = datetime.datetime.utcnow()
         self.transfer_status = TransferStatusEnum.COMPLETE
+        self.blockchain_status = BlockchainStatus.PENDING
         self.update_balances()
 
         if (datetime.datetime.utcnow() - self.created).seconds > 5:
