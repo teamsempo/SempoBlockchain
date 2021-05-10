@@ -225,6 +225,7 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
                 .filter(server.models.credit_transfer.CreditTransfer.sender_transfer_account_id == self.id)
                 .filter(or_(
                     server.models.credit_transfer.CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
+                    server.models.credit_transfer.CreditTransfer.transfer_status == TransferStatusEnum.PARTIAL,
                     server.models.credit_transfer.CreditTransfer.transfer_status == TransferStatusEnum.PENDING))
                 .first().total
         )
@@ -243,6 +244,7 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
                 .filter(server.models.credit_transfer.CreditTransfer.recipient_transfer_account_id == self.id)
                 .filter(or_(
                 server.models.credit_transfer.CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
+                server.models.credit_transfer.CreditTransfer.transfer_status == TransferStatusEnum.PARTIAL,
                 server.models.credit_transfer.CreditTransfer.transfer_status == TransferStatusEnum.PENDING))
                 .first().total
         )
