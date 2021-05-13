@@ -4,6 +4,6 @@ You have been invited to join {{ organisation_name }} on Sempo.
 
 Sign up using the link below to get started!
 
-{{ host }}login/sign-up?r=true&u={{ email }}&c={{ referral_code }}
+{{ host }}/login/sign-up?r=true&u={{ email }}&c={{ referral_code }}
 
 If you are not expecting an invitation, please ignore this message.
