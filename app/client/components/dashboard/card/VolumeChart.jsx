@@ -163,7 +163,7 @@ class VolumeChart extends React.Component {
               display: true,
               labelString: `Date`,
               fontColor: "rgba(0, 0, 0, 0.45)",
-              fontSize: "10"
+              fontSize: "12"
             },
             gridLines: {
               display: false
@@ -184,7 +184,7 @@ class VolumeChart extends React.Component {
               display: true,
               labelString: labelString,
               fontColor: "rgba(0, 0, 0, 0.45)",
-              fontSize: "10"
+              fontSize: "12"
             },
             ticks: {
               beginAtZero: true,

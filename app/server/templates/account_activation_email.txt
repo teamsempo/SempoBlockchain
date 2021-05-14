@@ -3,6 +3,6 @@ Hello,
 Thank you for registering an admin account for Sempo.
 To activate your account, please click on the following link:
 
-{{ host }}login?actok={{ activation_token }}
+{{ host }}/login?actok={{ activation_token }}
 
 If you did not mean to register for Sempo, please ignore this message.
