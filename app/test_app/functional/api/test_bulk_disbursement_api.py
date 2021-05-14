@@ -78,8 +78,8 @@ def test_disbursement(search_string, params, include_list, exclude_list, disburs
                             Authorization=complete_admin_auth_token, Accept='application/json'),
                             json=post_data,
                             follow_redirects=True)
-
-    response.status_code == response_status
+    
+    assert response.status_code == response_status
     if response_status == 201:
         transfers = CreditTransfer.query.all()
         assert response.status_code == 201

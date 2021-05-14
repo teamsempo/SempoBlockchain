@@ -460,23 +460,19 @@ class AttributeMapSchema(Schema):
 class DisbursementSchema(SchemaBase):
     search_string               = fields.Str()
     search_filter_params        = fields.Str()
+    notes                       = fields.Str()
     include_accounts            = fields.List(fields.Int())
     exclude_accounts            = fields.List(fields.Int())
 
-    recipient_count             = fields.Function(lambda obj: len(obj.transfer_accounts))
-    total_disbursement_amount   = fields.Method('_total_disbursement_amount')
+    recipient_count             = fields.Int()
+    total_disbursement_amount   = fields.Int()
     label                       = fields.Str()
     state                       = fields.Str()
     transfer_type               = fields.Str()
     disbursement_amount         = fields.Int()
-    creator_email               = fields.Method('_creator_email')
-
-    def _total_disbursement_amount(self, obj):
-        return len(obj.transfer_accounts)*obj.disbursement_amount
-
-    def _creator_email(self, obj):
-        return obj.creator_user.email
-
+    creator_user = fields.Nested(UserSchema, attribute='creator_user', only=("id", "first_name", "last_name", "email"))
+    approvers = fields.Nested(UserSchema, attribute='approvers', many=True, only=("id", "first_name", "last_name", "email"))
+    approval_times              = fields.List(fields.DateTime(dump_only=True))
 
 pdf_users_schema = UserSchema(many=True, only=("id", "qr", "first_name", "last_name"))
 

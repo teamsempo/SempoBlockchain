@@ -71,6 +71,7 @@ class TokenAPI(MethodView):
         token = Token(address=address, name=name, symbol=symbol, token_type=token_type, chain=chain)
         token.decimals = decimals
         db.session.add(token)
+        db.session.commit()
 
         response_object = {
             'message': 'success',

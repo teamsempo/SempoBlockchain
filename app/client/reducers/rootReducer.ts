@@ -29,9 +29,7 @@ import { allowedFilters } from "./allowedFilters/reducers";
 import { transferCard } from "./transferCard/reducers";
 import { tokens } from "./token/reducers";
 import { all } from "redux-saga/effects";
-import {
-  bulkTransferSchema
-} from "../schemas";
+import { bulkTransferSchema, masterWalletSchema } from "../schemas";
 import {
   createReducers,
   createSagas,
@@ -45,14 +43,14 @@ import {
   ModifyBulkTransferBody
 } from "./bulkTransfer/types";
 
+import { CreateMasterWalletWithdrawal } from "./masterWallet/types";
+
 //might be because of older version of react-redux that have to force like this...
 const form = <Reducer<FormStateMap, AnyAction>>FormReducer;
 
 interface SempoObjects extends RegistrationMapping {
-  bulkTransfers: Registration<
-    CreateBulkTransferBody,
-    ModifyBulkTransferBody
-  >;
+  bulkTransfers: Registration<CreateBulkTransferBody, ModifyBulkTransferBody>;
+  masterWallet: Registration<CreateMasterWalletWithdrawal>;
 }
 
 export const sempoObjects: SempoObjects = {
@@ -60,6 +58,11 @@ export const sempoObjects: SempoObjects = {
     name: "bulkTransfers",
     endpoint: "disbursement",
     schema: bulkTransferSchema
+  },
+  masterWallet: {
+    name: "masterWallet",
+    endpoint: "master_wallet",
+    schema: masterWalletSchema
   }
 };
 

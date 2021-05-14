@@ -84,7 +84,7 @@ class GroupByChart extends React.Component {
               display: true,
               labelString: labelString,
               fontColor: "rgba(0, 0, 0, 0.45)",
-              fontSize: "10"
+              fontSize: "12"
             },
             ticks: {
               beginAtZero: true,

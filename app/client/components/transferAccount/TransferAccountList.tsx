@@ -45,6 +45,8 @@ interface stringIndexable {
 }
 
 interface OuterProps extends stringIndexable {
+  params: string;
+  searchString: string;
   orderedTransferAccounts: number[];
   users: any;
   actionButtons: ActionButton[];
@@ -165,14 +167,17 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
     this.state = {
       selectedRowKeys: [],
       unselectedRowKeys: [],
-      allSelected: false
+      allSelected: false,
+      loadedPages: [1],
+      allLoadedRows: [],
+      params: "",
+      searchString: "",
     };
   }
 
   componentDidMount() {
     let unselectedKeys = this.props.providedUnselectedRowKeys || this.state.unselectedRowKeys;
     let selectedKeys = this.props.providedSelectedRowKeys || this.state.selectedRowKeys;
-
     if (unselectedKeys.length > 0) {
       selectedKeys = this.props.orderedTransferAccounts.filter(
           (accountId: number) => (
@@ -181,61 +186,42 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
       );
     }
 
-
-
     this.setState({
       selectedRowKeys:  selectedKeys,
-      unselectedRowKeys: unselectedKeys
+      unselectedRowKeys: unselectedKeys,
+      params: this.props.params,
+      searchString: this.props.searchString
     })
   }
 
   componentDidUpdate(prevProps: Props) {
-
-    if (prevProps.providedSelectedRowKeys != this.props.providedSelectedRowKeys) {
-      this.setState({selectedRowKeys: this.props.providedSelectedRowKeys || this.state.selectedRowKeys})
-    }
-
-    if (prevProps.providedUnselectedRowKeys != this.props.providedUnselectedRowKeys) {
-      let unselectedKeys = this.props.providedUnselectedRowKeys || this.state.unselectedRowKeys;
-      this.setState({
-        unselectedRowKeys: unselectedKeys,
-        allSelected: unselectedKeys.length > 0,
-      })
-
-      if (unselectedKeys.length > 0) {
-        let selected = this.props.orderedTransferAccounts.filter(
-            (accountId: number) => (
-              this.props.transferAccounts.byId[accountId] != undefined && !unselectedKeys.includes(accountId)
-            )
-        );
-
-        this.setState({selectedRowKeys: selected})
-
+    if (this.props.transferAccounts.IdList !== prevProps.transferAccounts.IdList) {
+      if (this.state.allSelected && !this.state.loadedPages.includes(this.props.paginationOptions?.currentPage)) {
+        this.setState({loadedPages: [...this.state.loadedPages, this.props.paginationOptions?.currentPage]})
+        this.setState({allLoadedRows: [...new Set([...this.state.allLoadedRows, ...this.props.orderedTransferAccounts])]})
+        this.setState({selectedRowKeys: [...new Set([...this.state.selectedRowKeys, ...this.props.transferAccounts.IdList])]})
       }
-
-
+    }
+    if (this.props.params !== prevProps.params || this.props.searchString !== prevProps.searchString) {
+      this.setState({allSelected: false, selectedRowKeys: [], unselectedRowKeys: [], loadedPages: [1], allLoadedRows: []})
     }
   }
-
 
   onChange = (
     selectedRowKeys: React.Key[],
     selectedRows: TransferAccount[]
   ) => {
-
     if (this.props.disabled) {
       return
     }
-
+    const allLoadedRows = [...new Set([...this.state.allLoadedRows, ...this.props.orderedTransferAccounts])]
     let unselectedRowKeys: React.Key[] = [];
 
     if (this.state.allSelected) {
       // We only define the unselected rows when the "select all" box has been flagged as true (ie a "default selected" state),
       // because unselected rows isn't specific enough when you start from a "default unselected" state
       let selectedSet = new Set(selectedRowKeys);
-      unselectedRowKeys = this.props.orderedTransferAccounts.filter(
-        id => !selectedSet.has(id)
-      );
+      unselectedRowKeys = allLoadedRows.filter(row => !selectedSet.has(row));
     }
 
     this.setState(
@@ -252,6 +238,8 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
     if (keys.length === data.length) {
       this.setState(
         {
+          loadedPages: [1],
+          allLoadedRows: [],
           selectedRowKeys: [],
           unselectedRowKeys: [],
           allSelected: false
@@ -261,6 +249,8 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
     } else {
       this.setState(
         {
+          loadedPages: [1],
+          allLoadedRows: [],
           selectedRowKeys: data.map(r => r.key),
           unselectedRowKeys: [],
           allSelected: true
@@ -318,9 +308,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
     const headerCheckbox = (
       <Checkbox
         checked={selectedRowKeys.length > 0}
-        indeterminate={
-          selectedRowKeys.length > 0 && selectedRowKeys.length < data.length
-        }
+        indeterminate={allSelected ? unselectedRowKeys.length > 0 : selectedRowKeys.length > 0}
         onChange={e => this.toggleSelectAll(selectedRowKeys, data)}
       />
     );
@@ -328,7 +316,8 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
     const rowSelection = {
       onChange: this.onChange,
       selectedRowKeys: selectedRowKeys,
-      columnTitle: headerCheckbox
+      columnTitle: headerCheckbox,
+      preserveSelectedRowKeys: true,
     };
 
     let actionButtonElems = actionButtons.map((button: ActionButton) => (
@@ -361,6 +350,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
     );
 
     const hasSelected = selectedRowKeys.length > 0;
+    const numberSelected = this.props.paginationOptions?.items ? allSelected ? this.props.paginationOptions?.items - unselectedRowKeys.length : selectedRowKeys.length : selectedRowKeys.length
     return (
       <div style={{opacity: this.props.disabled? 0.6 : 1}}>
         <div
@@ -385,9 +375,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
             {hasSelected ? (
               <span style={{ marginRight: "10px", minHeight: "25px" }}>
                 {" "}
-                {`${
-                  allSelected ? "All" : selectedRowKeys.length
-                } Selected`}{" "}
+                {`${numberSelected} Selected`}{" "}
               </span>
             ) : (
               noneSelectedButtonElems

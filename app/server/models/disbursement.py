@@ -1,12 +1,22 @@
 from server import db
+from flask import g, current_app
+from sqlalchemy import func
+import datetime
 from server.models.utils import ModelBase, OneOrgBase, disbursement_transfer_account_association_table,\
-    disbursement_credit_transfer_association_table
+    disbursement_credit_transfer_association_table, disbursement_approver_user_association_table
 from sqlalchemy.types import ARRAY
 from sqlalchemy.ext.hybrid import hybrid_property
+from server.utils.access_control import AccessControl
 
-ALLOWED_STATES = ['PENDING', 'APPROVED', 'REJECTED']
+PENDING = 'PENDING'
+APPROVED = 'APPROVED'
+PARTIAL = 'PARTIAL'
+REJECTED = 'REJECTED'
+
+ALLOWED_STATES = [PENDING, APPROVED, PARTIAL, REJECTED]
 ALLOWED_STATE_TRANSITIONS = {
-    'PENDING': ['APPROVED', 'REJECTED']
+    PENDING: [APPROVED, PARTIAL, REJECTED],
+    PARTIAL: [APPROVED, REJECTED, PARTIAL]
 }
 
 class Disbursement(ModelBase):
@@ -15,6 +25,7 @@ class Disbursement(ModelBase):
     creator_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
 
     label = db.Column(db.String)
+    notes = db.Column(db.String(), default='')
     search_string = db.Column(db.String)
     search_filter_params = db.Column(db.String)
     include_accounts = db.Column(db.ARRAY(db.Integer))
@@ -36,6 +47,21 @@ class Disbursement(ModelBase):
         secondary=disbursement_credit_transfer_association_table,
         back_populates="disbursement")
 
+    approvers = db.relationship(
+        "User",
+        secondary=disbursement_approver_user_association_table,
+    )
+    approval_times = db.Column(db.ARRAY(db.DateTime), default=[])
+    
+    @hybrid_property
+    def recipient_count(self):
+        return db.session.query(func.count(disbursement_transfer_account_association_table.c.disbursement_id))\
+            .filter(disbursement_transfer_account_association_table.c.disbursement_id==self.id).first()[0]
+
+    @hybrid_property
+    def total_disbursement_amount(self):
+        return self.recipient_count * self.disbursement_amount 
+
     @hybrid_property
     def disbursement_amount(self):
         return (self._disbursement_amount_wei or 0) / int(1e16)
@@ -55,14 +81,34 @@ class Disbursement(ModelBase):
 
         self.state = new_state
 
+    def add_approver(self):
+        if g.user not in self.approvers:
+            if not self.approval_times:
+                self.approval_times = []
+            if len(self.approvers) == len(self.approval_times):
+                self.approval_times = self.approval_times + [datetime.datetime.utcnow()] 
+            self.approvers.append(g.user)
+        
     def approve(self):
-        self._transition_state('APPROVED')
+        if current_app.config['REQUIRE_MULTIPLE_APPROVALS'] and not AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'sempoadmin'):
+            self.add_approver()             
+            if len(self.approvers) <=1:
+                self._transition_state(PARTIAL)
+                return PARTIAL
+            else:
+                self._transition_state(APPROVED)
+                return APPROVED
+        else:
+            self.add_approver()             
+            self._transition_state(APPROVED)
+            return APPROVED
 
     def reject(self):
-        self._transition_state('REJECTED')
+        self.add_approver()             
+        self._transition_state(REJECTED)
 
     def __init__(self, *args, **kwargs):
 
         super(Disbursement, self).__init__(*args, **kwargs)
 
-        self.state = 'PENDING'
+        self.state = PENDING

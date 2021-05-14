@@ -57,7 +57,7 @@ def standard_executor_job(func):
             if g and g.get('user'):
                 g.user = db.session.query(User).filter(User.id == g.user.id).first() 
                 db.session.merge(g.user)
-                func(*args, **kwargs)
+            func(*args, **kwargs)
         finally:
             after_executor_jobs()
         return True

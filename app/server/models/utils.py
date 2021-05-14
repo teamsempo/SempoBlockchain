@@ -139,6 +139,19 @@ credit_transfer_transfer_usage_association_table = db.Table(
     db.Column('transfer_usage_id', db.Integer, db.ForeignKey('transfer_usage.id'), index=True)
 )
 
+credit_transfer_approver_user_association_table = db.Table(
+    'credit_transfer_approver_user_association_table',
+    db.Model.metadata,
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), index=True),
+    db.Column('credit_transfer_id', db.Integer, db.ForeignKey('credit_transfer.id'), index=True)
+)
+
+disbursement_approver_user_association_table = db.Table(
+    'disbursement_approver_user_association_table',
+    db.Model.metadata,
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), index=True),
+    db.Column('disbursement_id', db.Integer, db.ForeignKey('disbursement.id'), index=True)
+)
 user_transfer_account_association_table = db.Table(
     'user_transfer_account_association_table',
     db.Model.metadata,

@@ -89,6 +89,7 @@ class Nav extends React.Component {
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
               isAntDesign={true}
+              header={false}
               title={"Dashboard"}
               isMultiOrg={true}
             />
@@ -99,6 +100,7 @@ class Nav extends React.Component {
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
               footer={false}
+              header={false}
               title={"Map"}
               isMultiOrg={true}
             />
@@ -116,7 +118,7 @@ class Nav extends React.Component {
               component={singleTransferAccountPage}
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
-              title={`Single Transfer Account`}
+              title={`Transfer Account`}
             />
             <PrivateRoute
               exact
@@ -124,7 +126,7 @@ class Nav extends React.Component {
               component={singleUserPage}
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
-              title={`Single User`}
+              title={`User`}
             />
             <PrivateRoute
               exact
@@ -148,7 +150,7 @@ class Nav extends React.Component {
               component={singleCreditTransferPage}
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
-              title={`Single Transfer`}
+              title={`Transfer`}
               isAntDesign={true}
             />
             <PrivateRoute
@@ -166,6 +168,7 @@ class Nav extends React.Component {
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
               title={`Invite Admins`}
+              isAntDesign={true}
             />
             <PrivateRoute
               exact
@@ -217,6 +220,12 @@ class Nav extends React.Component {
               title={`New Project`}
               isAntDesign={true}
               isNewOrg={true}
+              customRoutes={[
+                { path: "", breadcrumbName: "Home" },
+                { path: "settings", breadcrumbName: "Settings" },
+                { path: "settings/project", breadcrumbName: "Project" },
+                { path: "settings/project/new", breadcrumbName: "New" }
+              ]}
             />
 
             <PrivateRoute
@@ -235,7 +244,7 @@ class Nav extends React.Component {
             />
             <PrivateRoute
               exact
-              path="/bulk/"
+              path="/bulk"
               component={bulkTransferListPage}
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
