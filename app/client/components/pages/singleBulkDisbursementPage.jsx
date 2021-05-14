@@ -107,11 +107,10 @@ class SingleBulkDisbursementPage extends React.Component {
     let notes = bulkItem && bulkItem.notes;
     const approversList = approvers.map((approver, index, approversList) => {
       const spacer = index + 1 == approversList.length ? "" : ", ";
-      const approvalTime = approvalTimes[index];
-      const approvalTimeString = approvalTime
+      const approvalTime = approvalTimes[index]
         ? " at " +
           moment
-            .utc(approvalTime)
+            .utc(approvalTimes[index])
             .local()
             .format("YYYY-MM-DD HH:mm:ss")
         : "";
@@ -123,7 +122,7 @@ class SingleBulkDisbursementPage extends React.Component {
           >
             {approver && " " + approver.email}
           </a>
-          {approvalTimeString + spacer}
+          {approvalTime + spacer}
         </div>
       );
     });
@@ -171,6 +170,12 @@ class SingleBulkDisbursementPage extends React.Component {
               >
                 {creatorUser && " " + creatorUser.email}
               </a>
+              {" at " +
+                (bulkItem &&
+                  moment
+                    .utc(bulkItem.created)
+                    .local()
+                    .format("YYYY-MM-DD HH:mm:ss")) || ""}{" "}
             </p>
             <p>
               {" "}
