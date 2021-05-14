@@ -241,6 +241,7 @@ workflows:
 
           requires:
             - build
+            - hide-nginx-version-header
 #            - test:backend
 #            - test:worker
 #            - test:frontend
