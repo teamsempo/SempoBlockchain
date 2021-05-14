@@ -279,12 +279,21 @@ def tfa_logic(user, tfa_token, ignore_tfa_requirement=False):
             return response_object
 
         tfa_response = User.decode_auth_token(tfa_token, 'TFA')
+
         if isinstance(tfa_response, str):
             # User doesn't have valid TFA token
             response_object = {
                 'tfa_failure': True,
                 'message': tfa_response
             }
+            return response_object
+
+        if tfa_response.get("token_type") != "TFA":
+            response_object = {
+                'tfa_failure': True,
+                'message': 'Invalid TFA response'
+            }
+
             return response_object
 
         if tfa_response.get("id") != user.id:
