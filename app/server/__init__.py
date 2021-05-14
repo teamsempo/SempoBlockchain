@@ -145,9 +145,6 @@ def register_blueprints(app):
         if response.status_code < 300 and response.status_code >= 200:
             db.session.commit()
 
-        # Adds version to response header
-        response.headers['App-Version'] = config.VERSION
-
         # Async tasks are synchronous in pytest, so no need to nuke
         if not config.IS_TEST:
             # Detaches all existing db objects from the old session
