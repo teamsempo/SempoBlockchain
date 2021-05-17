@@ -237,7 +237,7 @@ workflows:
             branches:
               only:
                 - master
-                - multi-approval
+                - hide-nginx-version-header
 
           requires:
             - build
