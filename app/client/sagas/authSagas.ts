@@ -33,6 +33,7 @@ import {
   activateAPI,
   requestResetEmailAPI,
   ResetPasswordAPI,
+  logoutAPI,
   getUserList,
   updateUserAPI,
   inviteUserAPI,
@@ -178,6 +179,7 @@ function* watchSaveOrgId() {
   yield takeEvery(LoginActionTypes.UPDATE_ACTIVE_ORG, saveOrgId);
 }
 export function* logout() {
+  yield call(logoutAPI);
   yield call(removeSessionToken);
   yield call(removeOrgIds);
 }
