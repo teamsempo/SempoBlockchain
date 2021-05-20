@@ -178,8 +178,14 @@ function* saveOrgId(
 function* watchSaveOrgId() {
   yield takeEvery(LoginActionTypes.UPDATE_ACTIVE_ORG, saveOrgId);
 }
-export function* logout() {
+
+export function* apiLogout() {
   yield call(logoutAPI);
+  yield call(removeSessionToken);
+  yield call(removeOrgIds);
+}
+
+export function* logout() {
   yield call(removeSessionToken);
   yield call(removeOrgIds);
 }
@@ -284,6 +290,10 @@ function* refreshToken() {
       // ... put special cancellation handling code here
     }
   }
+}
+
+function* watchAPILogoutRequest() {
+  yield takeEvery([LoginActionTypes.API_LOGOUT], apiLogout);
 }
 
 function* watchLogoutRequest() {
@@ -589,6 +599,7 @@ export default function* authSagas() {
     watchSaveOrgId(),
     watchRegisterRequest(),
     watchLoginRequest(),
+    watchAPILogoutRequest(),
     watchLogoutRequest(),
     watchActivateRequest(),
     watchResetEmailRequest(),

@@ -79,6 +79,8 @@ export const login = (state = initialLoginState, action: LoginAction) => {
         userId: null,
         error: action.error || "unknown error"
       };
+    case LoginActionTypes.API_LOGOUT:
+      return initialLoginState;
     case LoginActionTypes.LOGOUT:
       return initialLoginState;
     default:
