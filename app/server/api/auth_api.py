@@ -624,7 +624,7 @@ class ResetPasswordAPI(MethodView):
             if not user:
                 response_object = {
                     'status': 'fail',
-                    'message': 'invalid password'
+                    'message': 'User not found'
                 }
 
                 return make_response(jsonify(response_object)), 401
