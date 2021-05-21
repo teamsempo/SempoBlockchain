@@ -480,6 +480,7 @@ class LogoutAPI(MethodView):
             auth_token = auth_header.split(" ")[0]
         else:
             auth_token = ''
+        auth_token = auth_header.split("|")[0]
         if auth_token:
             resp = User.decode_auth_token(auth_token)
             if not isinstance(resp, str):
