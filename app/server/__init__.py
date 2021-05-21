@@ -5,6 +5,9 @@ import json
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy, BaseQuery
 from flask_basicauth import BasicAuth
+from flask import Flask
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from celery import Celery
 from pusher import Pusher
 import boto3
@@ -108,7 +111,7 @@ def register_extensions(app):
                 return make_response(jsonify({'message': 'Payload too large'})), 413
             request.get_data(parse_form_data=False, cache=True)
 
-    # limiter.init_app(app)
+    limiter.init_app(app)
 
     CORS(app, resources={r"/api/*": {"origins": "*"}})
 
@@ -296,7 +299,7 @@ db = SQLAlchemy(
 basic_auth = BasicAuth()
 executor = Executor()
 
-# limiter = Limiter(key_func=get_remote_address, default_limits=["20000 per day", "2000 per hour"])
+limiter = Limiter(key_func=get_remote_address)
 
 s3 = boto3.client('s3', aws_access_key_id=config.AWS_SES_KEY_ID,
                   aws_secret_access_key=config.AWS_SES_SECRET)

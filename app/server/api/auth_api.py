@@ -1,9 +1,8 @@
 from flask import Blueprint, request, make_response, jsonify, g, current_app
-import config
 from flask.views import MethodView
 import sentry_sdk
 from server import db
-# from server import limiter
+from server import limiter
 from phonenumbers.phonenumberutil import NumberParseException
 from server.models.user import User
 from server.models.organisation import Organisation
@@ -552,7 +551,7 @@ class ResetPasswordAPI(MethodView):
     """
     Password Reset Resource
     """
-
+    decorators = [limiter.limit("1/second")]
     def post(self):
 
         # get the post data
