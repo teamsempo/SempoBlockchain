@@ -89,19 +89,33 @@ class Disbursement(ModelBase):
                 self.approval_times = self.approval_times + [datetime.datetime.utcnow()] 
             self.approvers.append(g.user)
         
-    def approve(self):
-        if current_app.config['REQUIRE_MULTIPLE_APPROVALS'] and not AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'sempoadmin'):
-            self.add_approver()             
+    def check_if_approved(self):
+        if AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'sempoadmin'):
+            return True
+        if current_app.config['REQUIRE_MULTIPLE_APPROVALS']:
+            # It always has to be approved by at least two people
             if len(self.approvers) <=1:
-                self._transition_state(PARTIAL)
-                return PARTIAL
+                return False
+            # If there's an `ALLOWED_APPROVERS` list, one of the approvers has to be in it
+            if current_app.config['ALLOWED_APPROVERS']:
+                # approve if email in list
+                for user in self.approvers:
+                    if user.email in current_app.config['ALLOWED_APPROVERS']:
+                        return True
+            # If there's not an `ALLOWED_APPROVERS` list, it just has to be approved by more than one person
             else:
-                self._transition_state(APPROVED)
-                return APPROVED
+                return True
         else:
-            self.add_approver()             
+            # Multi-approval is off, so it's approved by default
+            return True
+
+    def approve(self):
+        self.add_approver()
+        if self.check_if_approved():
             self._transition_state(APPROVED)
-            return APPROVED
+        else:
+            self._transition_state(PARTIAL)
+            return PARTIAL
 
     def reject(self):
         self.add_approver()             

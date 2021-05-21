@@ -497,6 +497,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         try:
 
             payload = {
+                'token_type': 'TFA',
                 'exp': datetime.datetime.utcnow() + datetime.timedelta(days=valid_days, seconds=30),
                 'iat': datetime.datetime.utcnow(),
                 'id': self.id

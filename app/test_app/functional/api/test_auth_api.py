@@ -367,6 +367,18 @@ def test_get_external_credentials_api(test_client, authed_sempo_admin_user):
     org = Organisation.query.filter_by(external_auth_username = response.json['username']).first()
     assert response.json['password'] == org.external_auth_password
 
+def test_tfa_token_integrity(test_client, authed_sempo_admin_user):
+    """
+    Ensure that when a phony TFA token is provided, an error is returned
+    """
+    authed_sempo_admin_user.is_activated = True
+    authed_sempo_admin_user.TFA_enabled = True
+    authed_sempo_admin_user.set_held_role('ADMIN', 'admin')
+    auth_token = authed_sempo_admin_user.encode_auth_token().decode()
+    response = test_client.get('/api/v1/auth/external/',
+                               headers=dict(Authorization=auth_token + '|' + auth_token, Accept='application/json'),
+                               content_type='application/json', follow_redirects=True)
+    assert response.json['message'] == 'Invalid TFA response'
 
 def test_logout_api(test_client, authed_sempo_admin_user):
     """

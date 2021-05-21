@@ -263,7 +263,15 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
             if len(self.approvers) <=1:
                 return False
             else:
-                return True
+                # If there's an `ALLOWED_APPROVERS` list, one of the approvers has to be in it
+                if current_app.config['ALLOWED_APPROVERS']:
+                    # approve if email in list
+                    for user in self.approvers:
+                        if user.email in current_app.config['ALLOWED_APPROVERS']:
+                            return True
+                # If there's not an `ALLOWED_APPROVERS` list, it just has to be approved by more than one person
+                else:
+                    return True
         else:
             return True
 

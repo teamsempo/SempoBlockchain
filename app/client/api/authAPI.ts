@@ -58,6 +58,9 @@ export const ValidateTFAAPI = ({ body }: ValidateTfaPayload) =>
 export const ResetPasswordAPI = ({ body }: ResetPasswordPayload) =>
   apiClient({ url: "/auth/reset_password/", method: "POST", body: body });
 
+export const logoutAPI = () =>
+  apiClient({ url: "/auth/logout/", method: "POST" });
+
 export const getUserList = () =>
   apiClient({ url: "/auth/permissions/", method: "GET" });
 
