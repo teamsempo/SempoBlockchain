@@ -5,7 +5,7 @@ env_loglevel = os.environ.get('LOGLEVEL', 'DEBUG')
 logging.basicConfig(level=env_loglevel)
 logg = logging.getLogger(__name__)
 
-VERSION = '1.10.0'  # Remember to bump this in every PR
+VERSION = '1.10.3'  # Remember to bump this in every PR
 
 logg.info('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
@@ -118,8 +118,12 @@ if IS_PRODUCTION is None:
 
 PROGRAM_NAME        = config_parser['APP']['PROGRAM_NAME']
 
+DISABLE_LIMITS = config_parser['APP'].getboolean('DISABLE_LIMITS', False)
 APP_HOST            = config_parser['APP']['APP_HOST']
 REQUIRE_MULTIPLE_APPROVALS = config_parser['APP'].getboolean('REQUIRE_MULTIPLE_APPROVALS', False)
+ALLOWED_APPROVERS = config_parser['APP'].get('allowed_approvers', None)
+if ALLOWED_APPROVERS:
+    ALLOWED_APPROVERS = ALLOWED_APPROVERS=ALLOWED_APPROVERS.split(',')
 BENEFICIARY_TERM    = config_parser['APP']['BENEFICIARY_TERM']
 BENEFICIARY_TERM_PLURAL = config_parser['APP']['BENEFICIARY_TERM_PLURAL']
 CHATBOT_REQUIRE_PIN = config_parser['APP'].getboolean('CHATBOT_REQUIRE_PIN')

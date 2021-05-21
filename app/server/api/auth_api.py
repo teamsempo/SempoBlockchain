@@ -480,6 +480,7 @@ class LogoutAPI(MethodView):
             auth_token = auth_header.split(" ")[0]
         else:
             auth_token = ''
+        auth_token = auth_header.split("|")[0]
         if auth_token:
             resp = User.decode_auth_token(auth_token)
             if not isinstance(resp, str):
@@ -575,7 +576,7 @@ class ResetPasswordAPI(MethodView):
             if not user:
                 response_object = {
                     'status': 'fail',
-                    'message': 'User not found'
+                    'message': 'invalid password'
                 }
 
                 return make_response(jsonify(response_object)), 401
@@ -624,7 +625,7 @@ class ResetPasswordAPI(MethodView):
             if not user:
                 response_object = {
                     'status': 'fail',
-                    'message': 'User not found'
+                    'message': 'invalid password'
                 }
 
                 return make_response(jsonify(response_object)), 401

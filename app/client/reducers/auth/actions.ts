@@ -41,7 +41,8 @@ export const LoginAction = {
     createAction(LoginActionTypes.LOGIN_SUCCESS, payload),
   loginFailure: (error: string) =>
     createAction(LoginActionTypes.LOGIN_FAILURE, error),
-  logout: () => createAction(LoginActionTypes.LOGOUT)
+  logout: () => createAction(LoginActionTypes.LOGOUT),
+  apiLogout: () => createAction(LoginActionTypes.API_LOGOUT)
 };
 // type declaration merging with above
 export type LoginAction = ActionsUnion<typeof LoginAction>;
