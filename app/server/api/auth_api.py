@@ -551,7 +551,7 @@ class ResetPasswordAPI(MethodView):
     """
     Password Reset Resource
     """
-    decorators = [limiter.limit("1/second")]
+    decorators = [limiter.limit("2/minute")]
     def post(self):
 
         # get the post data
