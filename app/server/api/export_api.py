@@ -3,13 +3,14 @@ from flask.views import MethodView
 from openpyxl import Workbook
 from datetime import datetime, timedelta
 import random, string, os
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, or_, desc
 from sqlalchemy.orm import joinedload
 
 from dateutil import parser
 
 from server.schemas import transfer_account_schema
 
+from server import db
 from server.models.credit_transfer import CreditTransfer
 from server.models.transfer_account import TransferAccount
 from server.utils.transfer_enums import TransferTypeEnum, TransferStatusEnum
@@ -20,6 +21,8 @@ from server.utils.date_magic import find_last_period_dates
 from server.utils.amazon_ses import send_export_email
 from server.utils.export import generate_pdf_export, export_workbook_via_s3
 from server.utils.executor import standard_executor_job, add_after_request_executor_job
+from server.utils.transfer_filter import process_transfer_filters
+from server.utils.search import generate_search_query
 
 export_blueprint = Blueprint('export', __name__)
 
@@ -33,7 +36,6 @@ def generate_export(post_data):
     include_transfers = post_data.get('include_transfers')  # True or False
     include_custom_attributes = post_data.get('include_custom_attributes')  # True or False
     user_type = post_data.get('user_type')  # Beneficiaries, Vendors, All
-    selected = post_data.get('selected')
     #  TODO: implement date_range
     date_range = post_data.get('date_range')  # last day, previous week, or all
 
@@ -132,9 +134,24 @@ def generate_export(post_data):
         ).all()
 
     elif user_type == 'selected':
-        transfer_accounts = TransferAccount.query.filter(TransferAccount.id.in_(selected)).all()
-        user_accounts = [ta.primary_user for ta in transfer_accounts]
+        # HANDLE PARAM : search_string - Any search string. An empty string (or None) will just return everything!
+        search_string = post_data.get('search_string') or ''
+        # HANDLE PARAM : params - Standard filter object. Exact same as the ones Metrics uses!
+        encoded_filters = post_data.get('params')
+        filters = process_transfer_filters(encoded_filters)
+        # HANDLE PARAM : include_accounts - Explicitly include these users
+        include_accounts = post_data.get('include_accounts', [])
+        # HANDLE PARAM : include_accounts - Explicitly exclude these users
+        exclude_accounts = post_data.get('exclude_accounts', [])
 
+        if include_accounts:
+            transfer_accounts = db.session.query(TransferAccount).filter(TransferAccount.id.in_(include_accounts)).all()
+        else:
+            search_query = generate_search_query(search_string, filters, order=desc, sort_by_arg='rank', include_user=True)
+            search_query = search_query.filter(TransferAccount.id.notin_(exclude_accounts))
+            results = search_query.all()
+            transfer_accounts = [r[0] for r in results] # Get TransferAccount (TransferAccount, searchRank, User)
+        user_accounts = [ta.primary_user for ta in transfer_accounts]
     else:
         user_accounts = User.query.filter(
             or_(User.has_beneficiary_role == True, User.has_vendor_role == True)

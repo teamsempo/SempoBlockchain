@@ -95,7 +95,7 @@ class MakeDisbursementAPI(MethodView):
         # --- Handle Parameters ---
         # HANDLE PARAM : label - Name for the disbursement
         label = post_data.get('label') or ''
-        # HANDLE PARAM : search_stirng - Any search string. An empty string (or None) will just return everything!
+        # HANDLE PARAM : search_string - Any search string. An empty string (or None) will just return everything!
         search_string = post_data.get('search_string') or ''
         # HANDLE PARAM : params - Standard filter object. Exact same as the ones Metrics uses!
         encoded_filters = post_data.get('params')
