@@ -16,8 +16,8 @@ import {
 import QueryConstructor, { Query } from "../filterModule/queryConstructor";
 import TransferAccountList from "./TransferAccountList";
 import ImportModal from "./import/importModal.jsx";
+import ExportModal from "./export/exportModal.jsx";
 
-import { browserHistory } from "../../createStore";
 import {
   CreateBulkTransferBody,
   TransferTypes
@@ -51,6 +51,7 @@ interface DispatchProps {
 interface OuterProps {}
 
 interface ComponentState {
+  exportModalVisible: boolean;
   importModalVisible: boolean;
   bulkTransferModalVisible: boolean;
   amount: numberInput;
@@ -104,6 +105,7 @@ class StandardTransferAccountList extends React.Component<
       props.organisations.byId[props.login.organisationId]
         .default_disbursement / 100 || 0;
     this.state = {
+      exportModalVisible: false,
       importModalVisible: false,
       bulkTransferModalVisible: false,
       amount: defaultDisbusement,
@@ -166,6 +168,10 @@ class StandardTransferAccountList extends React.Component<
 
   toggleImportModal() {
     this.setState({ importModalVisible: !this.state.importModalVisible });
+  }
+
+  toggleExportModal() {
+    this.setState({ exportModalVisible: !this.state.exportModalVisible });
   }
 
   showBulkTransferModal() {
@@ -247,7 +253,30 @@ class StandardTransferAccountList extends React.Component<
 
   render() {
     const { transferAccounts, bulkTransfers } = this.props;
-    const { importModalVisible, amount, label } = this.state;
+    const {
+      exportModalVisible,
+      importModalVisible,
+      amount,
+      selectedRowKeys,
+      unselectedRowKeys,
+      allSelected,
+      params,
+      searchString
+    } = this.state;
+
+    let include_accounts, exclude_accounts;
+
+    if (allSelected) {
+      //If the "select all" box is true, only specify the accounts to exclude,
+      // as leaving "include_accounts" blank defaults to everything
+      exclude_accounts = unselectedRowKeys;
+    } else {
+      //If the "select all" box is false, only specify the accounts to include.
+      include_accounts = selectedRowKeys;
+    }
+    const hasSelected =
+      allSelected || (include_accounts && include_accounts.length > 0);
+    console.log("hasSelected", hasSelected);
 
     let numberSet = typeof amount === "number" && amount !== 0;
 
@@ -266,14 +295,14 @@ class StandardTransferAccountList extends React.Component<
       }
     ];
 
-    const noneSelectedButtons = [
+    const dataButtons = [
       {
         label: "Import",
         onClick: () => this.toggleImportModal()
       },
       {
         label: "Export",
-        onClick: () => browserHistory.push("/export")
+        onClick: () => this.toggleExportModal()
       }
     ];
 
@@ -292,7 +321,7 @@ class StandardTransferAccountList extends React.Component<
           searchString={this.state.searchString}
           orderedTransferAccounts={transferAccounts.IdList}
           actionButtons={actionButtons}
-          noneSelectedbuttons={noneSelectedButtons}
+          dataButtons={dataButtons}
           onSelectChange={(s: React.Key[], u: React.Key[], a: boolean) =>
             this.onSelectChange(s, u, a)
           }
@@ -307,6 +336,17 @@ class StandardTransferAccountList extends React.Component<
           isModalVisible={importModalVisible}
           handleOk={() => this.toggleImportModal()}
           handleCancel={() => this.toggleImportModal()}
+        />
+
+        <ExportModal
+          isModalVisible={exportModalVisible}
+          handleOk={() => this.toggleExportModal()}
+          handleCancel={() => this.toggleExportModal()}
+          params={params}
+          search_string={searchString}
+          include_accounts={include_accounts}
+          exclude_accounts={exclude_accounts}
+          hasSelected={hasSelected}
         />
 
         <Modal

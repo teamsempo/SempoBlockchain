@@ -49,7 +49,6 @@ const singleBulkDisbursementPage = lazy(() =>
   import("./components/pages/singleBulkDisbursementPage.jsx")
 );
 
-const exportPage = lazy(() => import("./components/pages/exportPage.jsx"));
 const authPage = lazy(() => import("./components/pages/authPage.jsx"));
 const resetPasswordPage = lazy(() =>
   import("./components/pages/resetPasswordPage.jsx")
@@ -257,13 +256,6 @@ class Nav extends React.Component {
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
               title={`Bulk Disbursement`}
-            />
-            <PrivateRoute
-              path="/export"
-              component={exportPage}
-              isLoggedIn={isLoggedIn}
-              isReAuthing={isReAuthing}
-              title={`Export Data`}
             />
 
             {/* PUBLIC PAGES */}

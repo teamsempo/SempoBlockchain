@@ -2,7 +2,7 @@ import * as React from "react";
 
 import { Link } from "react-router-dom";
 
-import { Table, Button, Checkbox, Tag, Pagination,Space } from "antd";
+import { Table, Button, Checkbox, Tag, Pagination, Space, Alert } from "antd";
 
 import { ColumnsType } from "antd/es/table";
 
@@ -50,7 +50,7 @@ interface OuterProps extends stringIndexable {
   orderedTransferAccounts: number[];
   users: any;
   actionButtons: ActionButton[];
-  noneSelectedbuttons: NoneSelectedButton[];
+  dataButtons: DataButton[];
   onSelectChange?: OnSelectChange;
   paginationOptions?: Pagination;
   providedSelectedRowKeys?: React.Key[];
@@ -78,7 +78,7 @@ export interface ActionButton {
   loading?: boolean;
 }
 
-export interface NoneSelectedButton {
+export interface DataButton {
   label: string;
   onClick: () => void;
   loading?: boolean;
@@ -260,6 +260,19 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
     }
   };
 
+  toggleUnselect = () => {
+    this.setState(
+      {
+        loadedPages: [1],
+        allLoadedRows: [],
+        selectedRowKeys: [],
+        unselectedRowKeys: [],
+        allSelected: false
+      },
+      this.onSelectChangeCallback
+    );
+  }
+
   onSelectChangeCallback() {
     if (this.props.onSelectChange) {
       // after setting the state
@@ -276,7 +289,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
     const { selectedRowKeys, unselectedRowKeys, allSelected } = this.state;
     const {
       actionButtons,
-      noneSelectedbuttons,
+      dataButtons,
       orderedTransferAccounts,
       transferAccounts,
       users,
@@ -335,8 +348,8 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
       </Button>
     ));
 
-    let noneSelectedButtonElems = noneSelectedbuttons.map(
-      (button: NoneSelectedButton) => (
+    let dataButtonsElems = dataButtons.map(
+      (button: DataButton) => (
         <Button
           key={button.label}
           onClick={() => button.onClick()}
@@ -372,17 +385,13 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
               minHeight: "25px"
             }}
           >
-            {hasSelected ? (
-              <span style={{ marginRight: "10px", minHeight: "25px" }}>
-                {" "}
-                {`${numberSelected} Selected`}{" "}
-              </span>
-            ) : (
-              noneSelectedButtonElems
-            )}
+            {dataButtonsElems}
           </div>
         </div>
         <Space direction="vertical">
+          {hasSelected ? (
+            <Alert message={`${numberSelected} Selected`} style={{ marginLeft: "10px", marginRight: "10px" }} closeText="Clear" onClose={this.toggleUnselect}/>
+          ) : null}
           <Table
             loading={transferAccounts.loadStatus.isRequesting}
             columns={columns}
@@ -393,6 +402,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
           />
           { this.props.paginationOptions?
             <Pagination
+              style={{display: 'flex', justifyContent: 'flex-end'}}
               current={this.props.paginationOptions.currentPage}
               showSizeChanger
               defaultCurrent={1}
@@ -403,7 +413,6 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
             />
             : <></>
           }
-
         </Space>
       </div>
     );
