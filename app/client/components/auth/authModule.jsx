@@ -19,7 +19,7 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
   return {
-    logout: () => dispatch(LoginAction.logout())
+    logout: () => dispatch(LoginAction.apiLogout())
   };
 };
 
