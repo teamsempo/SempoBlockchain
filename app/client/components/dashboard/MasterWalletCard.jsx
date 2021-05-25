@@ -11,6 +11,7 @@ import { HorizontalBar } from "react-chartjs-2";
 import { formatMoney, getActiveToken } from "../../utils";
 
 import MasterWalletManagementModal from "./MasterWalletManagementModal";
+import { browserHistory } from "../../createStore";
 
 const { Text } = Typography;
 
@@ -29,7 +30,18 @@ class MasterWalletCard extends React.Component {
     };
   }
 
+  componentDidMount() {
+    if (window.location.pathname === "/manage") {
+      this.setState({ modalVisible: !this.state.modalVisible });
+    }
+  }
+
   toggleModal() {
+    if (window.location.pathname === "/manage") {
+      browserHistory.push("/");
+    } else {
+      browserHistory.push("/manage");
+    }
     this.setState({ modalVisible: !this.state.modalVisible });
   }
 

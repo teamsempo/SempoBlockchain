@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from "react";
-import { connect } from "react-redux";
+import { connect, useSelector } from "react-redux";
 import { sempoObjects } from "../../reducers/rootReducer";
 import {
   Modal,
@@ -37,7 +37,11 @@ const MasterWalletManagementModal = props => {
   const [current, setCurrent] = React.useState(0);
   const [form] = Form.useForm();
 
-  const orgName = "Reserve";
+  const activeOrganisation = useSelector(
+    state => state.organisations.byId[Number(state.login.organisationId)]
+  );
+
+  const orgName = activeOrganisation && activeOrganisation.name;
 
   const onFinish = values => {
     const { recipient_blockchain_address, transfer_amount } = values;
@@ -151,12 +155,12 @@ const MasterWalletManagementModal = props => {
         onCancel={props.handleCancel}
         footer={[
           current > 0 && (
-            <Button style={{ margin: "0 8px" }} onClick={() => back(0)}>
+            <Button style={{ margin: "0 8px" }} onClick={() => back(0)} key={1}>
               Back
             </Button>
           ),
           current === 0 && (
-            <Button type="primary" onClick={props.handleOk}>
+            <Button type="primary" onClick={props.handleOk} key={2}>
               Ok
             </Button>
           ),
@@ -165,6 +169,7 @@ const MasterWalletManagementModal = props => {
               type="primary"
               onClick={() => form.submit()}
               loading={props.masterWallet.createStatus.isRequesting}
+              key={3}
             >
               Withdraw
             </Button>
@@ -214,9 +219,9 @@ const MasterWalletManagementModal = props => {
           {current === 2 ? depositQr : null}
           {current === 0 || current === 2 ? depositAddress : null}
           {current === 0
-            ? otherDetails.map(item => {
+            ? otherDetails.map((item, i) => {
                 return (
-                  <Descriptions.Item label={item.label}>
+                  <Descriptions.Item label={item.label} key={i}>
                     <Paragraph style={{ margin: 0 }}>{item.value}</Paragraph>
                   </Descriptions.Item>
                 );
@@ -225,7 +230,6 @@ const MasterWalletManagementModal = props => {
           {current === 1 ? (
             <Descriptions.Item>{withdrawal}</Descriptions.Item>
           ) : null}
-          {current === 0}
         </Descriptions>
       </Modal>
     </Form>

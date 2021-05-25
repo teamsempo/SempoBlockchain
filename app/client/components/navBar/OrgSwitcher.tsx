@@ -24,6 +24,7 @@ import { Organisation } from "../../reducers/organisation/types";
 
 import { IntercomChat } from "../intercom/IntercomChat";
 import { getActiveToken } from "../../utils";
+import { WalletListModal } from "./WalletListModal";
 
 interface Props {
   icon: string;
@@ -37,6 +38,7 @@ declare global {
 }
 
 const OrgSwitcher: React.FunctionComponent<Props> = props => {
+  const [modalVisible, setModalVisible] = React.useState(false);
   const [switcherActive, setSwitcherActive] = React.useState(false);
 
   const activeToken = useSelector((state: ReduxState) => getActiveToken(state));
@@ -81,6 +83,10 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
     dispatch(LoginAction.updateActiveOrgRequest({ organisationIds }));
   };
 
+  const toggleModal = () => {
+    setModalVisible(!modalVisible);
+  };
+
   let menu = (
     <Menu
       style={{
@@ -93,7 +99,18 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
           : ""
       ]}
     >
-      <Menu.ItemGroup title="Your Projects">
+      <Menu.ItemGroup
+        title={
+          <span>
+            <span>Your Projects</span>
+            <WalletListModal
+              isModalVisible={modalVisible}
+              handleOk={toggleModal}
+              handleCancel={toggleModal}
+            />
+          </span>
+        }
+      >
         {Object.keys(tokenMap).map((id: string) => {
           const orgsForToken = tokenMap[id];
 

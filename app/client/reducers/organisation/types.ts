@@ -8,6 +8,7 @@ export interface Organisation {
   default_disbursement: number;
   card_shard_distance: number;
   minimum_vendor_payout_withdrawal: number;
+  master_wallet_balance: number;
   country_code: string;
   timezone: string;
   valid_roles: TransferAccountTypes[];

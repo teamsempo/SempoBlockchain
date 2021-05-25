@@ -94,6 +94,17 @@ class Nav extends React.Component {
             />
             <PrivateRoute
               exact
+              path="/manage"
+              component={dashboardPage}
+              isLoggedIn={isLoggedIn}
+              isReAuthing={isReAuthing}
+              isAntDesign={true}
+              header={false}
+              title={"Dashboard"}
+              isMultiOrg={false}
+            />
+            <PrivateRoute
+              exact
               path="/map"
               component={mapPage}
               isLoggedIn={isLoggedIn}
