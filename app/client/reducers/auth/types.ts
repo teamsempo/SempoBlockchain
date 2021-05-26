@@ -13,6 +13,7 @@ export enum LoginActionTypes {
 
 export interface UpdateActiveOrgPayload {
   organisationIds: number[];
+  isManageWallet?: boolean;
 }
 
 export interface LoginRequestPayload {

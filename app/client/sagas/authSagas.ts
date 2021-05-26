@@ -149,6 +149,7 @@ function* saveOrgId(
   >
 ) {
   try {
+    const isManageWallet = action.payload.isManageWallet;
     yield call(storeOrgIds, action.payload.organisationIds);
 
     // window.location.search = "?org=2" or "?query_organisations=1,2"
@@ -166,9 +167,13 @@ function* saveOrgId(
       action.payload.organisationIds.toString() ===
         query_params["query_organisations"]
     ) {
-      window.location.reload();
+      isManageWallet
+        ? window.location.assign("/manage")
+        : window.location.reload();
     } else {
-      window.location.assign("/");
+      isManageWallet
+        ? window.location.assign("/manage")
+        : window.location.assign("/");
     }
   } catch (e) {
     removeOrgIds();
