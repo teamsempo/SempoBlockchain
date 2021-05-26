@@ -7,7 +7,7 @@ import { grey } from "@ant-design/colors";
 import { Organisation } from "../../reducers/organisation/types";
 import { ReduxState } from "../../reducers/rootReducer";
 import { LoginAction } from "../../reducers/auth/actions";
-import { formatMoney } from "../../utils";
+import { formatMoney, getActiveToken } from "../../utils";
 
 interface OuterProps {
   isModalVisible: boolean;
@@ -22,6 +22,8 @@ export const WalletListModal = (props: OuterProps) => {
       id => state.organisations.byId[Number(id)]
     )
   );
+  const activeToken = useSelector((state: ReduxState) => getActiveToken(state));
+  const symbol = activeToken && activeToken.symbol;
 
   let selectOrg = (organisationIds: number[]) => {
     dispatch(
@@ -62,7 +64,11 @@ export const WalletListModal = (props: OuterProps) => {
               <List.Item.Meta
                 title={org.name}
                 description={`Balance: ${formatMoney(
-                  org.master_wallet_balance
+                  org.master_wallet_balance / 100,
+                  0,
+                  undefined,
+                  undefined,
+                  symbol
                 )}`}
               />
             </List.Item>
