@@ -163,10 +163,13 @@ class VolumeChart extends React.Component {
               display: true,
               labelString: `Date`,
               fontColor: "rgba(0, 0, 0, 0.45)",
-              fontSize: "12"
+              fontSize: "14"
             },
             gridLines: {
               display: false
+            },
+            ticks: {
+              autoSkipPadding: 10
             }
           }
         ],
@@ -187,6 +190,7 @@ class VolumeChart extends React.Component {
               fontSize: "12"
             },
             ticks: {
+              maxTicksLimit: 8,
               beginAtZero: true,
               callback(value) {
                 if (
