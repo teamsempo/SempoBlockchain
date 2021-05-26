@@ -169,6 +169,7 @@ class VolumeChart extends React.Component {
               display: false
             },
             ticks: {
+              autoSkip: true,
               autoSkipPadding: 10
             }
           }
