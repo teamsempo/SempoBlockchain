@@ -1,7 +1,3 @@
-# Copyright (C) Sempo Pty Ltd, Inc - All Rights Reserved
-# The code in this file is not included in the GPL license applied to this repository
-# Unauthorized copying of this file, via any medium is strictly prohibited
-
 from server.utils.metrics import filters, metrics_cache, postprocessing_actions, group
 from server.utils.metrics.metrics_const import *
 import datetime
