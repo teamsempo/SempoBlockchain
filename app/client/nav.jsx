@@ -187,6 +187,7 @@ class Nav extends React.Component {
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
               title={`Change Password`}
+              isAntDesign={true}
             />
             <PrivateRoute
               exact
@@ -211,6 +212,7 @@ class Nav extends React.Component {
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
               title={`Two Factor Authentication`}
+              isAntDesign={true}
             />
             <PrivateRoute
               exact
