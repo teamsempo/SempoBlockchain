@@ -8,7 +8,7 @@ def rate_limit(key, rate):
     
     Returns True if rate limited
     """
-    
+
     # Don't ratelimit our unit tests!
     if current_app.config['IS_TEST']:
         return False
