@@ -38,7 +38,10 @@ class SingleTransferAccountWrapper extends React.Component {
           <UserList user_ids={transferAccount.users} />
         ) : null}
 
-        <CreditTransferList credit_transfer_ids={creditTransferIds} />
+        <CreditTransferList
+          credit_transfer_ids={creditTransferIds}
+          transfer_account_id={transferAccountId}
+        />
       </Wrapper>
     );
   }

@@ -2,7 +2,7 @@ import * as React from "react";
 
 import { Link } from "react-router-dom";
 
-import { Table, Button, Checkbox, Tag, Pagination,Space } from "antd";
+import { Table, Button, Checkbox, Tag, Pagination, Space, Alert } from "antd";
 
 import { ColumnsType } from "antd/es/table";
 
@@ -40,16 +40,24 @@ export interface Pagination {
   onChange: OnPaginateChange;
 }
 
-interface OuterProps {
+interface stringIndexable {
+  [index: string]: any;
+}
+
+interface OuterProps extends stringIndexable {
+  params: string;
+  searchString: string;
   orderedTransferAccounts: number[];
   users: any;
   actionButtons: ActionButton[];
-  noneSelectedbuttons: NoneSelectedButton[];
+  dataButtons: DataButton[];
   onSelectChange?: OnSelectChange;
   paginationOptions?: Pagination;
+  providedSelectedRowKeys?: React.Key[];
+  providedUnselectedRowKeys?: React.Key[];
 }
 
-interface ComponentState {
+interface ComponentState extends stringIndexable {
   selectedRowKeys: React.Key[];
   unselectedRowKeys: React.Key[];
   allSelected: boolean;
@@ -70,7 +78,7 @@ export interface ActionButton {
   loading?: boolean;
 }
 
-export interface NoneSelectedButton {
+export interface DataButton {
   label: string;
   onClick: () => void;
   loading?: boolean;
@@ -159,23 +167,61 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
     this.state = {
       selectedRowKeys: [],
       unselectedRowKeys: [],
-      allSelected: false
+      allSelected: false,
+      loadedPages: [1],
+      allLoadedRows: [],
+      params: "",
+      searchString: "",
     };
+  }
+
+  componentDidMount() {
+    let unselectedKeys = this.props.providedUnselectedRowKeys || this.state.unselectedRowKeys;
+    let selectedKeys = this.props.providedSelectedRowKeys || this.state.selectedRowKeys;
+    if (unselectedKeys.length > 0) {
+      selectedKeys = this.props.orderedTransferAccounts.filter(
+          (accountId: number) => (
+            this.props.transferAccounts.byId[accountId] != undefined && !unselectedKeys.includes(accountId)
+          )
+      );
+    }
+
+    this.setState({
+      selectedRowKeys:  selectedKeys,
+      unselectedRowKeys: unselectedKeys,
+      params: this.props.params,
+      searchString: this.props.searchString
+    })
+  }
+
+  componentDidUpdate(prevProps: Props) {
+    if (this.props.transferAccounts.IdList !== prevProps.transferAccounts.IdList) {
+      if (this.state.allSelected && !this.state.loadedPages.includes(this.props.paginationOptions?.currentPage)) {
+        this.setState({loadedPages: [...this.state.loadedPages, this.props.paginationOptions?.currentPage]})
+        this.setState({allLoadedRows: [...new Set([...this.state.allLoadedRows, ...this.props.orderedTransferAccounts])]})
+        this.setState({selectedRowKeys: [...new Set([...this.state.selectedRowKeys, ...this.props.transferAccounts.IdList])]})
+      }
+    }
+    if (this.props.params !== prevProps.params || this.props.searchString !== prevProps.searchString) {
+      this.setState({allSelected: false, selectedRowKeys: [], unselectedRowKeys: [], loadedPages: [1], allLoadedRows: []})
+    }
   }
 
   onChange = (
     selectedRowKeys: React.Key[],
     selectedRows: TransferAccount[]
   ) => {
+    if (this.props.disabled) {
+      return
+    }
+    const allLoadedRows = [...new Set([...this.state.allLoadedRows, ...this.props.orderedTransferAccounts])]
     let unselectedRowKeys: React.Key[] = [];
 
     if (this.state.allSelected) {
       // We only define the unselected rows when the "select all" box has been flagged as true (ie a "default selected" state),
       // because unselected rows isn't specific enough when you start from a "default unselected" state
       let selectedSet = new Set(selectedRowKeys);
-      unselectedRowKeys = this.props.orderedTransferAccounts.filter(
-        id => !selectedSet.has(id)
-      );
+      unselectedRowKeys = allLoadedRows.filter(row => !selectedSet.has(row));
     }
 
     this.setState(
@@ -185,9 +231,15 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
   };
 
   toggleSelectAll = (keys: React.Key[], data: TransferAccount[]) => {
+    if (this.props.disabled) {
+      return
+    }
+
     if (keys.length === data.length) {
       this.setState(
         {
+          loadedPages: [1],
+          allLoadedRows: [],
           selectedRowKeys: [],
           unselectedRowKeys: [],
           allSelected: false
@@ -197,6 +249,8 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
     } else {
       this.setState(
         {
+          loadedPages: [1],
+          allLoadedRows: [],
           selectedRowKeys: data.map(r => r.key),
           unselectedRowKeys: [],
           allSelected: true
@@ -205,6 +259,19 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
       );
     }
   };
+
+  toggleUnselect = () => {
+    this.setState(
+      {
+        loadedPages: [1],
+        allLoadedRows: [],
+        selectedRowKeys: [],
+        unselectedRowKeys: [],
+        allSelected: false
+      },
+      this.onSelectChangeCallback
+    );
+  }
 
   onSelectChangeCallback() {
     if (this.props.onSelectChange) {
@@ -222,7 +289,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
     const { selectedRowKeys, unselectedRowKeys, allSelected } = this.state;
     const {
       actionButtons,
-      noneSelectedbuttons,
+      dataButtons,
       orderedTransferAccounts,
       transferAccounts,
       users,
@@ -254,9 +321,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
     const headerCheckbox = (
       <Checkbox
         checked={selectedRowKeys.length > 0}
-        indeterminate={
-          selectedRowKeys.length > 0 && selectedRowKeys.length < data.length
-        }
+        indeterminate={allSelected ? unselectedRowKeys.length > 0 : selectedRowKeys.length > 0}
         onChange={e => this.toggleSelectAll(selectedRowKeys, data)}
       />
     );
@@ -264,7 +329,8 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
     const rowSelection = {
       onChange: this.onChange,
       selectedRowKeys: selectedRowKeys,
-      columnTitle: headerCheckbox
+      columnTitle: headerCheckbox,
+      preserveSelectedRowKeys: true,
     };
 
     let actionButtonElems = actionButtons.map((button: ActionButton) => (
@@ -282,8 +348,8 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
       </Button>
     ));
 
-    let noneSelectedButtonElems = noneSelectedbuttons.map(
-      (button: NoneSelectedButton) => (
+    let dataButtonsElems = dataButtons.map(
+      (button: DataButton) => (
         <Button
           key={button.label}
           onClick={() => button.onClick()}
@@ -297,8 +363,9 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
     );
 
     const hasSelected = selectedRowKeys.length > 0;
+    const numberSelected = this.props.paginationOptions?.items ? allSelected ? this.props.paginationOptions?.items - unselectedRowKeys.length : selectedRowKeys.length : selectedRowKeys.length
     return (
-      <div>
+      <div style={{opacity: this.props.disabled? 0.6 : 1}}>
         <div
           style={{
             display: "flex",
@@ -318,19 +385,13 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
               minHeight: "25px"
             }}
           >
-            {hasSelected ? (
-              <span style={{ marginRight: "10px", minHeight: "25px" }}>
-                {" "}
-                {`${
-                  allSelected ? "All" : selectedRowKeys.length
-                } Selected`}{" "}
-              </span>
-            ) : (
-              noneSelectedButtonElems
-            )}
+            {dataButtonsElems}
           </div>
         </div>
         <Space direction="vertical">
+          {hasSelected ? (
+            <Alert message={`${numberSelected} Selected`} style={{ marginLeft: "10px", marginRight: "10px" }} closeText="Clear" onClose={this.toggleUnselect}/>
+          ) : null}
           <Table
             loading={transferAccounts.loadStatus.isRequesting}
             columns={columns}
@@ -341,6 +402,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
           />
           { this.props.paginationOptions?
             <Pagination
+              style={{display: 'flex', justifyContent: 'flex-end'}}
               current={this.props.paginationOptions.currentPage}
               showSizeChanger
               defaultCurrent={1}
@@ -351,7 +413,6 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
             />
             : <></>
           }
-
         </Space>
       </div>
     );

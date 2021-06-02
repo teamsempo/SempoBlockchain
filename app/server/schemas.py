@@ -425,6 +425,8 @@ class OrganisationSchema(SchemaBase):
 
     valid_roles = fields.Raw()
 
+    master_wallet_balance = fields.Function(lambda obj: obj.queried_org_level_transfer_account.balance)
+
     require_transfer_card = fields.Boolean(default=False)
     default_disbursement = fields.Function(lambda obj: int(obj.default_disbursement))
     minimum_vendor_payout_withdrawal = fields.Function(lambda obj: int(obj.minimum_vendor_payout_withdrawal))
@@ -458,20 +460,21 @@ class AttributeMapSchema(Schema):
 
 
 class DisbursementSchema(SchemaBase):
-    recipient_count             = fields.Function(lambda obj: len(obj.transfer_accounts))
-    total_disbursement_amount   = fields.Method('_total_disbursement_amount')
+    search_string               = fields.Str()
+    search_filter_params        = fields.Str()
+    notes                       = fields.Str()
+    include_accounts            = fields.List(fields.Int())
+    exclude_accounts            = fields.List(fields.Int())
+
+    recipient_count             = fields.Int()
+    total_disbursement_amount   = fields.Int()
     label                       = fields.Str()
     state                       = fields.Str()
     transfer_type               = fields.Str()
     disbursement_amount         = fields.Int()
-    creator_email               = fields.Method('_creator_email')
-
-    def _total_disbursement_amount(self, obj):
-        return len(obj.transfer_accounts)*obj.disbursement_amount
-
-    def _creator_email(self, obj):
-        return obj.creator_user.email
-
+    creator_user = fields.Nested(UserSchema, attribute='creator_user', only=("id", "first_name", "last_name", "email"))
+    approvers = fields.Nested(UserSchema, attribute='approvers', many=True, only=("id", "first_name", "last_name", "email"))
+    approval_times              = fields.List(fields.DateTime(dump_only=True))
 
 pdf_users_schema = UserSchema(many=True, only=("id", "qr", "first_name", "last_name"))
 

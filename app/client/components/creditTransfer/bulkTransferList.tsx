@@ -62,7 +62,9 @@ const columns: ColumnsType<BulkTransfer> = [
   {
     title: "Created",
     key: "created",
-    render: (text: any, record: any) => <DateTime created={record.created} />
+    render: (text: any, record: any) => (
+      <DateTime created={record.created} useRelativeTime={false} />
+    )
   },
   {
     title: "Recipient Count",
@@ -94,6 +96,8 @@ const columns: ColumnsType<BulkTransfer> = [
         return <Tag color="#9bdf56">Approved</Tag>;
       } else if (record.state === "PENDING") {
         return <Tag color="#e2a963">Pending</Tag>;
+      } else if (record.state === "PARTIAL") {
+        return <Tag color="#d48806">Partial</Tag>;
       } else {
         return <Tag color="#f16853">Rejected</Tag>;
       }

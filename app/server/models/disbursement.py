@@ -1,12 +1,22 @@
 from server import db
+from flask import g, current_app
+from sqlalchemy import func
+import datetime
 from server.models.utils import ModelBase, OneOrgBase, disbursement_transfer_account_association_table,\
-    disbursement_credit_transfer_association_table
+    disbursement_credit_transfer_association_table, disbursement_approver_user_association_table
 from sqlalchemy.types import ARRAY
 from sqlalchemy.ext.hybrid import hybrid_property
+from server.utils.access_control import AccessControl
 
-ALLOWED_STATES = ['PENDING', 'APPROVED', 'REJECTED']
+PENDING = 'PENDING'
+APPROVED = 'APPROVED'
+PARTIAL = 'PARTIAL'
+REJECTED = 'REJECTED'
+
+ALLOWED_STATES = [PENDING, APPROVED, PARTIAL, REJECTED]
 ALLOWED_STATE_TRANSITIONS = {
-    'PENDING': ['APPROVED', 'REJECTED']
+    PENDING: [APPROVED, PARTIAL, REJECTED],
+    PARTIAL: [APPROVED, REJECTED, PARTIAL]
 }
 
 class Disbursement(ModelBase):
@@ -15,6 +25,7 @@ class Disbursement(ModelBase):
     creator_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
 
     label = db.Column(db.String)
+    notes = db.Column(db.String(), default='')
     search_string = db.Column(db.String)
     search_filter_params = db.Column(db.String)
     include_accounts = db.Column(db.ARRAY(db.Integer))
@@ -36,6 +47,21 @@ class Disbursement(ModelBase):
         secondary=disbursement_credit_transfer_association_table,
         back_populates="disbursement")
 
+    approvers = db.relationship(
+        "User",
+        secondary=disbursement_approver_user_association_table,
+    )
+    approval_times = db.Column(db.ARRAY(db.DateTime), default=[])
+    
+    @hybrid_property
+    def recipient_count(self):
+        return db.session.query(func.count(disbursement_transfer_account_association_table.c.disbursement_id))\
+            .filter(disbursement_transfer_account_association_table.c.disbursement_id==self.id).first()[0]
+
+    @hybrid_property
+    def total_disbursement_amount(self):
+        return self.recipient_count * self.disbursement_amount 
+
     @hybrid_property
     def disbursement_amount(self):
         return (self._disbursement_amount_wei or 0) / int(1e16)
@@ -55,14 +81,48 @@ class Disbursement(ModelBase):
 
         self.state = new_state
 
+    def add_approver(self):
+        if g.user not in self.approvers:
+            if not self.approval_times:
+                self.approval_times = []
+            if len(self.approvers) == len(self.approval_times):
+                self.approval_times = self.approval_times + [datetime.datetime.utcnow()] 
+            self.approvers.append(g.user)
+        
+    def check_if_approved(self):
+        if AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'sempoadmin'):
+            return True
+        if current_app.config['REQUIRE_MULTIPLE_APPROVALS']:
+            # It always has to be approved by at least two people
+            if len(self.approvers) <=1:
+                return False
+            # If there's an `ALLOWED_APPROVERS` list, one of the approvers has to be in it
+            if current_app.config['ALLOWED_APPROVERS']:
+                # approve if email in list
+                for user in self.approvers:
+                    if user.email in current_app.config['ALLOWED_APPROVERS']:
+                        return True
+            # If there's not an `ALLOWED_APPROVERS` list, it just has to be approved by more than one person
+            else:
+                return True
+        else:
+            # Multi-approval is off, so it's approved by default
+            return True
+
     def approve(self):
-        self._transition_state('APPROVED')
+        self.add_approver()
+        if self.check_if_approved():
+            self._transition_state(APPROVED)
+        else:
+            self._transition_state(PARTIAL)
+            return PARTIAL
 
     def reject(self):
-        self._transition_state('REJECTED')
+        self.add_approver()             
+        self._transition_state(REJECTED)
 
     def __init__(self, *args, **kwargs):
 
         super(Disbursement, self).__init__(*args, **kwargs)
 
-        self.state = 'PENDING'
+        self.state = PENDING

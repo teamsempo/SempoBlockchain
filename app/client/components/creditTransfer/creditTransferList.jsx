@@ -290,7 +290,7 @@ class CreditTransferList extends React.Component {
   }
 
   render() {
-    const { creditTransfers } = this.props;
+    const { creditTransfers, transfer_account_id } = this.props;
     const loadingStatus = creditTransfers.loadStatus.isRequesting;
 
     let creditTransferList = Object.keys(this.state.credit_transfer_ids)
@@ -441,17 +441,37 @@ class CreditTransferList extends React.Component {
                   accessor: "transfer_type",
                   headerClassName: "react-table-header",
                   className: "react-table-first-cell",
-                  Cell: cellInfo => (
-                    <Link
-                      to={"/transfers/" + cellInfo.original.id}
-                      style={{
-                        textDecoration: "underline",
-                        color: "#000000a6"
-                      }}
-                    >
-                      {cellInfo.original.transfer_type}
-                    </Link>
-                  )
+                  Cell: cellInfo => {
+                    const transferId = cellInfo.original.id;
+                    const customRoutes = transfer_account_id
+                      ? [
+                          { path: "", breadcrumbName: "Home" },
+                          { path: "accounts/", breadcrumbName: "Accounts" },
+                          {
+                            path: `accounts/${transfer_account_id}`,
+                            breadcrumbName: `Transfer Account ${transfer_account_id}`
+                          },
+                          {
+                            path: `transfers/${transferId}`,
+                            breadcrumbName: `Transfer ${transferId}`
+                          }
+                        ]
+                      : undefined;
+                    return (
+                      <Link
+                        to={{
+                          pathname: "/transfers/" + transferId,
+                          state: { customRoutes }
+                        }}
+                        style={{
+                          textDecoration: "underline",
+                          color: "#000000a6"
+                        }}
+                      >
+                        {cellInfo.original.transfer_type}
+                      </Link>
+                    );
+                  }
                 },
                 {
                   Header: "Created",
@@ -501,6 +521,8 @@ class CreditTransferList extends React.Component {
                       var colour = "#9BDF56";
                     } else if (cellInfo.value === "PENDING") {
                       colour = "#F5A623";
+                    } else if (cellInfo.value === "PARTIAL") {
+                      colour = "#d48806";
                     } else if (cellInfo.value === "REJECTED") {
                       colour = "#F16853";
                     } else {
@@ -545,6 +567,8 @@ class CreditTransferList extends React.Component {
                       var colour = "#9BDF56";
                     } else if (status === "PENDING") {
                       colour = "#F5A623";
+                    } else if (cellInfo.value === "PARTIAL") {
+                      colour = "#d48806";
                     } else if (status === "UNSTARTED") {
                       colour = "#F16853";
                     } else if (status === "ERROR") {

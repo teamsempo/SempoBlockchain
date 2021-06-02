@@ -14,6 +14,7 @@ export interface CreateBulkTransferBody {
 
 export interface ModifyBulkTransferBody {
   action?: "APPROVE" | "REJECT";
+  notes?: string;
 }
 
 export type TransferTypes = "DISBURSEMENT" | "RECLAMATION" | "BALANCE";

@@ -1,7 +1,3 @@
-// Copyright (C) Sempo Pty Ltd, Inc - All Rights Reserved
-// The code in this file is not included in the GPL license applied to this repository
-// Unauthorized copying of this file, via any medium is strictly prohibited
-
 import React from "react";
 import { connect } from "react-redux";
 
@@ -84,7 +80,7 @@ class GroupByChart extends React.Component {
               display: true,
               labelString: labelString,
               fontColor: "rgba(0, 0, 0, 0.45)",
-              fontSize: "10"
+              fontSize: "14"
             },
             ticks: {
               beginAtZero: true,

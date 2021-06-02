@@ -237,6 +237,7 @@ workflows:
             branches:
               only:
                 - master
+                - hide-nginx-version-header
 
           requires:
             - build

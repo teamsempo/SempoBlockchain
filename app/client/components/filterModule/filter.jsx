@@ -1,7 +1,3 @@
-// Copyright (C) Sempo Pty Ltd, Inc - All Rights Reserved
-// The code in this file is not included in the GPL license applied to this repository
-// Unauthorized copying of this file, via any medium is strictly prohibited
-
 import React from "react";
 import { Select, InputNumber, DatePicker, Button } from "antd";
 const { Option, OptGroup } = Select;
@@ -10,7 +6,7 @@ import { DefaultTheme } from "../theme";
 
 import styled from "styled-components";
 import PropTypes from "prop-types";
-import { replaceUnderscores } from "../../utils.js";
+import { replaceUnderscores, parseEncodedParams } from "../../utils";
 
 import moment from "moment";
 
@@ -24,7 +20,7 @@ const propTypes = {
 };
 
 const defaultProps = {
-  possibleFilters: [],
+  possibleFilters: {},
   onFiltersChanged: () => {
     console.log("Filters changed");
   },
@@ -41,6 +37,29 @@ class Filter extends React.Component {
       selectorKeyBase: "",
       ...this.baseRuleConstructionState
     };
+  }
+
+  componentDidMount() {
+    this.checkForProvidedParams();
+  }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.possibleFilters !== this.props.possibleFilters) {
+      this.checkForProvidedParams();
+    }
+  }
+
+  checkForProvidedParams() {
+    if (
+      this.props.providedParams &&
+      Object.keys(this.props.possibleFilters).length > 0
+    ) {
+      let parsed = parseEncodedParams(
+        this.props.possibleFilters,
+        this.props.providedParams
+      );
+      this.setState({ filters: parsed });
+    }
   }
 
   baseRuleConstructionState = {
@@ -187,6 +206,7 @@ class Filter extends React.Component {
 
     return (
       <Select
+        disabled={this.props.disabled}
         onChange={this.comparatorChange}
         defaultValue={"="}
         style={{ width: "150px" }}
@@ -258,6 +278,7 @@ class Filter extends React.Component {
 
     return (
       <Select
+        disabled={this.props.disabled}
         mode="multiple"
         style={{ minWidth: "238px" }}
         placeholder="Please select"
@@ -345,6 +366,10 @@ class Filter extends React.Component {
   };
 
   removeFilter = id => {
+    if (this.props.disabled) {
+      return;
+    }
+
     this.setState(
       prevstate => ({
         filters: prevstate.filters.filter(filter => filter.id !== parseInt(id))
@@ -415,6 +440,9 @@ class Filter extends React.Component {
                 </BubbleLeft>
                 {filterVals}
                 <SVG
+                  style={{
+                    cursor: this.props.disabled ? "not-allowed" : "pointer"
+                  }}
                   src={
                     attributeProperties.table === "credit_transfer"
                       ? "/static/media/closePrimary.svg"
@@ -436,7 +464,7 @@ class Filter extends React.Component {
       <div style={{ display: "flex", flexDirection: "column" }}>
         <div
           style={{
-            display: "flex",
+            display: this.props.disabled ? "none" : "flex",
             flexDirection: "row",
             alignItems: "center",
             flexFlow: "row wrap"
@@ -511,5 +539,4 @@ const BubbleText = styled.p`
 const SVG = styled.img`
   width: 12px;
   height: 12px;
-  cursor: pointer;
 `;

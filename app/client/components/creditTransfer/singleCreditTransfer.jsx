@@ -1,4 +1,5 @@
 import React from "react";
+import moment from "moment";
 import { connect } from "react-redux";
 import { Card, Empty, Statistic, Tag, Descriptions, Button, Space } from "antd";
 import { DollarOutlined } from "@ant-design/icons";
@@ -38,13 +39,48 @@ class SingleCreditTransfer extends React.Component {
       path: this.props.creditTransferId
     });
   }
+  navigateToUser = accountId => {
+    window.location.assign("/users/" + accountId);
+  };
+  navigateToTransferAccount = accountId => {
+    window.location.assign("/accounts/" + accountId);
+  };
 
   render() {
     const { creditTransfer, activeToken } = this.props;
     const symbol = activeToken && activeToken.symbol;
 
     if (creditTransfer) {
-      const actionsDisabled = creditTransfer.transfer_status !== "PENDING";
+      // Transfer Metadata
+      const blockchainId = creditTransfer.blockchain_task_uuid;
+      const blockchainStatus = creditTransfer.blockchain_status;
+
+      const transferStatus = creditTransfer.transfer_status;
+      const transferMode = creditTransfer.transfer_mode;
+
+      const createDate = moment
+        .utc(creditTransfer.created)
+        .local()
+        .format("YYYY-MM-DD HH:mm:ss");
+      const resolveDate = moment
+        .utc(creditTransfer.resolved)
+        .local()
+        .format("YYYY-MM-DD HH:mm:ss");
+
+      const lat = creditTransfer.lat;
+      const lng = creditTransfer.lng;
+      const coords = lat && lng ? lat + ", " + lng : "";
+      // Sender Info
+      const senderUserID = creditTransfer.sender_user;
+      const recipientUserID = creditTransfer.recipient_user;
+      // Recipient Info
+      const senderTransferAccountID = creditTransfer.sender_transfer_account;
+      const recipientTransferAccountID =
+        creditTransfer.recipient_transfer_account;
+
+      const actionsDisabled =
+        creditTransfer.transfer_status !== "PENDING" &&
+        creditTransfer.transfer_status !== "PARTIAL";
       const tagColor =
         creditTransfer.transfer_status === "COMPLETE"
           ? "green"
@@ -93,18 +129,73 @@ class SingleCreditTransfer extends React.Component {
             </Space>
           }
         >
-          <Descriptions title={"Credit Transfer Info"}>
-            {Object.keys(creditTransfer).map(key => {
-              if (typeof creditTransfer[key] !== "object") {
-                return (
-                  <Descriptions.Item
-                    label={toTitleCase(replaceUnderscores(key))}
-                  >
-                    {creditTransfer[key]}
-                  </Descriptions.Item>
-                );
-              }
-            })}
+          <Descriptions title={"Transfer Information"}>
+            <Descriptions.Item label={"Transfer Status"}>
+              {transferStatus}
+            </Descriptions.Item>
+            <Descriptions.Item label={"Transfer Mode"}>
+              {transferMode}
+            </Descriptions.Item>
+            <Descriptions.Item label={"Blockchain Status"}>
+              {blockchainStatus}
+            </Descriptions.Item>
+            <Descriptions.Item label={"Blockchain UUID"}>
+              {blockchainId}
+            </Descriptions.Item>
+          </Descriptions>
+
+          <Descriptions title={"Transfer Metadata"}>
+            <Descriptions.Item label={"Date Created"}>
+              {createDate}
+            </Descriptions.Item>
+            <Descriptions.Item label={"Date Resolved"}>
+              {resolveDate}
+            </Descriptions.Item>
+            <Descriptions.Item label={"Coordinates"}>
+              {coords}
+            </Descriptions.Item>
+          </Descriptions>
+
+          <Descriptions title={"Sender Information"}>
+            <Descriptions.Item label={"Sender Transfer Account"}>
+              <a
+                style={{ cursor: "pointer" }}
+                onClick={() =>
+                  this.navigateToTransferAccount(senderTransferAccountID)
+                }
+              >
+                {senderTransferAccountID}
+              </a>
+            </Descriptions.Item>
+            <Descriptions.Item label={"Sender User"}>
+              <a
+                style={{ cursor: "pointer" }}
+                onClick={() => this.navigateToUser(senderUserID)}
+              >
+                {senderUserID}
+              </a>
+            </Descriptions.Item>
+          </Descriptions>
+
+          <Descriptions title={"Recipient Information"}>
+            <Descriptions.Item label={"Recipient Transfer Account"}>
+              <a
+                style={{ cursor: "pointer" }}
+                onClick={() =>
+                  this.navigateToTransferAccount(recipientTransferAccountID)
+                }
+              >
+                {recipientTransferAccountID}
+              </a>
+            </Descriptions.Item>
+            <Descriptions.Item label={"Recipient User"}>
+              <a
+                style={{ cursor: "pointer" }}
+                onClick={() => this.navigateToUser(recipientUserID)}
+              >
+                {recipientUserID}
+              </a>
+            </Descriptions.Item>
           </Descriptions>
         </Card>
       );

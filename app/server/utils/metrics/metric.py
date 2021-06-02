@@ -1,7 +1,3 @@
-# Copyright (C) Sempo Pty Ltd, Inc - All Rights Reserved
-# The code in this file is not included in the GPL license applied to this repository
-# Unauthorized copying of this file, via any medium is strictly prohibited
-
 from server.utils.metrics import filters, metrics_cache, postprocessing_actions, group
 from server.utils.metrics.metrics_const import *
 import datetime
@@ -65,7 +61,8 @@ class Metric(object):
                         date_filters.append(date_filter_attribute >= start_date)
                     if end_date:
                         date_filters.append(date_filter_attribute <=  datetime.datetime.strptime(end_date, "%Y-%m-%d") + datetime.timedelta(days=1)  )
-                    filtered_query = filtered_query.filter(*date_filters)
+                    if not self.bypass_user_filters:
+                        filtered_query = filtered_query.filter(*date_filters)
 
             # Handle start_day and end_day queries so we can have a percentage change for the whole day range
             if query in ['start_day_query', 'end_day_query']:

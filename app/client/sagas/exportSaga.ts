@@ -1,4 +1,5 @@
 import { put, takeEvery, call, all } from "redux-saga/effects";
+import { message } from "antd";
 import { handleError } from "../utils";
 
 import { ExportAction } from "../reducers/export/actions";
@@ -14,9 +15,10 @@ function* newExport(
     const result = yield call(exportAPI, action.payload);
 
     yield put(ExportAction.exportSuccess(result.data));
+    message.success(result.data.message);
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
-
+    message.error(error);
     yield put(ExportAction.exportFailure(error.message));
   }
 }

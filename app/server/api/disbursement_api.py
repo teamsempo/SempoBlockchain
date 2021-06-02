@@ -2,12 +2,12 @@ from decimal import Decimal
 import math
 
 from sqlalchemy.orm import joinedload
-from flask import Blueprint, request, make_response, jsonify, g
+from flask import Blueprint, request, make_response, jsonify, g, current_app
 from flask.views import MethodView
 from sqlalchemy import desc, asc
 
 from server import db, red
-from server.schemas import credit_transfers_schema, disbursement_schema, disbursements_schema
+from server.schemas import transfer_accounts_schema, disbursement_schema, disbursements_schema, credit_transfers_schema
 from server.models.disbursement import Disbursement
 from server.models.transfer_account import TransferAccount
 from server.models.credit_transfer import CreditTransfer
@@ -62,10 +62,9 @@ def make_transfers(disbursement_id, auto_resolve=False):
                 )
 
         disbursement.credit_transfers.append(transfer)
-
-        if auto_resolve:
-            # See below comment on batching issues
-            transfer.resolve_as_complete_and_trigger_blockchain(batch_uuid=None)
+        if auto_resolve and disbursement.state == 'APPROVED':
+            transfer.approvers = disbursement.approvers
+            transfer.add_approver_and_resolve_as_completed()
 
         db.session.commit()
         percent_complete = ((idx + 1) / len(disbursement.transfer_accounts)) * 100
@@ -96,7 +95,7 @@ class MakeDisbursementAPI(MethodView):
         # --- Handle Parameters ---
         # HANDLE PARAM : label - Name for the disbursement
         label = post_data.get('label') or ''
-        # HANDLE PARAM : search_stirng - Any search string. An empty string (or None) will just return everything!
+        # HANDLE PARAM : search_string - Any search string. An empty string (or None) will just return everything!
         search_string = post_data.get('search_string') or ''
         # HANDLE PARAM : params - Standard filter object. Exact same as the ones Metrics uses!
         encoded_filters = post_data.get('params')
@@ -156,33 +155,26 @@ class MakeDisbursementAPI(MethodView):
 class DisbursementAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def get(self, disbursement_id):
-        transfers = db.session.query(CreditTransfer)\
-            .filter(CreditTransfer.disbursement.has(id=disbursement_id))\
-            .options(joinedload(CreditTransfer.disbursement))
-
-        transfers, total_items, total_pages, new_last_fetched = paginate_query(transfers)
-
-        if transfers is None:
+        accounts = db.session.query(TransferAccount)\
+            .filter(TransferAccount.disbursements.any(id=disbursement_id))\
+            .options(joinedload(TransferAccount.disbursements))
+        accounts, total_items, total_pages, new_last_fetched = paginate_query(accounts)
+        if accounts is None:
             response_object = {
-                'message': 'No credit transfers',
+                'message': 'No transfer accounts',
             }
 
             return make_response(jsonify(response_object)), 400
 
-        transfer_list = credit_transfers_schema.dump(transfers).data
-
+        transfer_accounts = transfer_accounts_schema.dump(accounts).data
         d = db.session.query(Disbursement).filter_by(id=disbursement_id).first()
-
         disbursement = disbursement_schema.dump(d).data
 
         response_object = {
             'status': 'success',
             'message': 'Successfully Loaded.',
-            'items': total_items,
-            'pages': total_pages,
-            'last_fetched': new_last_fetched,
             'data': {
-                'credit_transfers': transfer_list,
+                'transfer_accounts': transfer_accounts,
                 'disbursement': disbursement
             }
         }
@@ -192,6 +184,7 @@ class DisbursementAPI(MethodView):
     def put(self, disbursement_id):
         put_data = request.get_json()
         action = put_data.get('action', '').upper()
+        notes = put_data.get('notes') or ''
 
         if not disbursement_id:
             return { 'message': 'Please provide a disbursement_id'}, 400
@@ -206,7 +199,7 @@ class DisbursementAPI(MethodView):
             disbursement = Disbursement.query.filter(Disbursement.id == disbursement_id)\
                 .options(joinedload(Disbursement.credit_transfers))\
                 .first()
-
+            disbursement.notes = notes
             if not disbursement:
                 return { 'message': f'Disbursement with ID \'{disbursement_id}\' not found' }, 400
 
@@ -216,10 +209,15 @@ class DisbursementAPI(MethodView):
             if action == 'APPROVE':
                 disbursement.approve()
                 db.session.commit()
-                auto_resolve = AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'superadmin')
-                task_uuid = add_after_request_checkable_executor_job(
-                    make_transfers, kwargs={'disbursement_id': disbursement.id, 'auto_resolve': auto_resolve}
-                )
+                auto_resolve = False
+                if current_app.config['REQUIRE_MULTIPLE_APPROVALS'] or AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'superadmin'):
+                    auto_resolve = True
+                # A disbursement isn't necessarily approved after approve() is called, since we can require multiple approvers
+                task_uuid = None
+                if disbursement.state == 'APPROVED':
+                    task_uuid = add_after_request_checkable_executor_job(
+                        make_transfers, kwargs={'disbursement_id': disbursement.id, 'auto_resolve': auto_resolve}
+                    )
 
                 data = disbursement_schema.dump(disbursement).data
                 return {

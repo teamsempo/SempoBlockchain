@@ -33,6 +33,7 @@ import {
   activateAPI,
   requestResetEmailAPI,
   ResetPasswordAPI,
+  logoutAPI,
   getUserList,
   updateUserAPI,
   inviteUserAPI,
@@ -148,6 +149,7 @@ function* saveOrgId(
   >
 ) {
   try {
+    const isManageWallet = action.payload.isManageWallet;
     yield call(storeOrgIds, action.payload.organisationIds);
 
     // window.location.search = "?org=2" or "?query_organisations=1,2"
@@ -165,9 +167,13 @@ function* saveOrgId(
       action.payload.organisationIds.toString() ===
         query_params["query_organisations"]
     ) {
-      window.location.reload();
+      isManageWallet
+        ? window.location.assign("/manage")
+        : window.location.reload();
     } else {
-      window.location.assign("/");
+      isManageWallet
+        ? window.location.assign("/manage")
+        : window.location.assign("/");
     }
   } catch (e) {
     removeOrgIds();
@@ -177,6 +183,13 @@ function* saveOrgId(
 function* watchSaveOrgId() {
   yield takeEvery(LoginActionTypes.UPDATE_ACTIVE_ORG, saveOrgId);
 }
+
+export function* apiLogout() {
+  yield call(logoutAPI);
+  yield call(removeSessionToken);
+  yield call(removeOrgIds);
+}
+
 export function* logout() {
   yield call(removeSessionToken);
   yield call(removeOrgIds);
@@ -282,6 +295,10 @@ function* refreshToken() {
       // ... put special cancellation handling code here
     }
   }
+}
+
+function* watchAPILogoutRequest() {
+  yield takeEvery([LoginActionTypes.API_LOGOUT], apiLogout);
 }
 
 function* watchLogoutRequest() {
@@ -523,6 +540,7 @@ function* deleteInvite(
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
     yield put(DeleteInviteAction.deleteInviteFailure(error.message));
+    message.error(error.message);
   }
 }
 
@@ -543,6 +561,7 @@ function* inviteUserRequest(
     browserHistory.push("/settings");
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
+    message.error(error.message);
     yield put(InviteUserAction.inviteUserFailure(error.message));
   }
 }
@@ -585,6 +604,7 @@ export default function* authSagas() {
     watchSaveOrgId(),
     watchRegisterRequest(),
     watchLoginRequest(),
+    watchAPILogoutRequest(),
     watchLogoutRequest(),
     watchActivateRequest(),
     watchResetEmailRequest(),

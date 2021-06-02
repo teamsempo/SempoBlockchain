@@ -13,7 +13,7 @@ from uuid import uuid4
 
 from server import db, bt
 from server.models.utils import BlockchainTaskableBase, ManyOrgBase, credit_transfer_transfer_usage_association_table,\
-    disbursement_credit_transfer_association_table
+    disbursement_credit_transfer_association_table, credit_transfer_approver_user_association_table
 from server.models.token import Token
 from server.models.transfer_account import TransferAccount
 from server.utils.access_control import AccessControl
@@ -108,6 +108,12 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         secondary=disbursement_credit_transfer_association_table,
         back_populates="credit_transfers",
         uselist=False
+    )
+
+    approvers = db.relationship(
+        "User",
+        secondary=credit_transfer_approver_user_association_table,
+        lazy=True
     )
 
     def add_message(self, message):
@@ -241,6 +247,36 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         # Remove any possible duplicates
         return set(required_priors)
 
+    def add_approver_and_resolve_as_completed(self, user=None):
+        # Adds approver to transfer, resolves as complete if it can!
+        if not user:
+            user = g.user
+        if user not in self.approvers:
+            self.approvers.append(user)
+        if len(self.approvers) == 1:
+            if current_app.config['REQUIRE_MULTIPLE_APPROVALS']:
+                self.transfer_status = TransferStatusEnum.PARTIAL
+        if self.check_if_fully_approved():
+            self.resolve_as_complete_and_trigger_blockchain()
+
+    def check_if_fully_approved(self):
+        # Checks if the credit transfer is approved and ready to be resolved as complete
+        if current_app.config['REQUIRE_MULTIPLE_APPROVALS'] and not AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'sempoadmin'):
+            if len(self.approvers) <=1:
+                return False
+            else:
+                # If there's an `ALLOWED_APPROVERS` list, one of the approvers has to be in it
+                if current_app.config['ALLOWED_APPROVERS']:
+                    # approve if email in list
+                    for user in self.approvers:
+                        if user.email in current_app.config['ALLOWED_APPROVERS']:
+                            return True
+                # If there's not an `ALLOWED_APPROVERS` list, it just has to be approved by more than one person
+                else:
+                    return True
+        else:
+            return True
+
     def resolve_as_complete_with_existing_blockchain_transaction(self, transaction_hash):
 
         self.resolve_as_complete()
@@ -262,7 +298,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
             g.pending_transactions.append((self, queue))
 
     def resolve_as_complete(self, batch_uuid=None):
-        if self.transfer_status not in [None, TransferStatusEnum.PENDING]:
+        if self.transfer_status not in [None, TransferStatusEnum.PENDING, TransferStatusEnum.PARTIAL]:
             raise Exception(f'Resolve called multiple times for transfer {self.id}')
         try:
             self.check_sender_transfer_limits()
@@ -275,6 +311,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
         self.resolved_date = datetime.datetime.utcnow()
         self.transfer_status = TransferStatusEnum.COMPLETE
+        self.blockchain_status = BlockchainStatus.PENDING
         self.update_balances()
 
         if (datetime.datetime.utcnow() - self.created).seconds > 5:
@@ -291,7 +328,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
             self.fiat_ramp.resolve_as_complete()
 
     def resolve_as_rejected(self, message=None):
-        if self.transfer_status not in [None, TransferStatusEnum.PENDING]:
+        if self.transfer_status not in [None, TransferStatusEnum.PENDING, TransferStatusEnum.PARTIAL]:
             raise Exception(f'Resolve called multiple times for transfer {self.id}')
 
         if self.fiat_ramp and self.transfer_type in [TransferTypeEnum.DEPOSIT, TransferTypeEnum.WITHDRAWAL]:
