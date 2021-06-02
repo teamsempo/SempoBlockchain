@@ -12,6 +12,7 @@ from server.models.blacklist_token import BlacklistToken
 from server.utils.auth import requires_auth, tfa_logic, show_all, create_user_response_object
 from server.utils.access_control import AccessControl
 from server.utils import user as UserUtils
+from server.utils.rate_limit import rate_limit
 from server.utils.phone import proccess_phone_number
 from server.utils.amazon_ses import send_reset_email, send_activation_email, send_invite_email, \
     send_invite_email_to_existing_user
@@ -329,6 +330,15 @@ class LoginAPI(MethodView):
         password_empty = password == '' or password is None
         pin_empty = pin == '' or pin is None
 
+        ratelimit_key = email or post_data.get('phone')
+        limit = rate_limit("login_"+ratelimit_key, 25)
+        if limit:
+            response_object = {
+                'status': 'fail',
+                'message': f'Please try again in {limit} minutes'
+            }
+            return make_response(jsonify(response_object)), 403
+
         # First try to match email
         if email:
             user = User.query.filter(func.lower(User.email)==email).execution_options(show_all=True).first()
@@ -534,6 +544,15 @@ class RequestPasswordResetEmailAPI(MethodView):
             }
 
             return make_response(jsonify(response_object)), 401
+
+        limit = rate_limit("password_reset_"+email, 25)
+        if limit:
+            response_object = {
+                'status': 'fail',
+                'message': f'Please try again in {limit} minutes'
+            }
+            return make_response(jsonify(response_object)), 403
+
         user = User.query.filter(func.lower(User.email)==email).execution_options(show_all=True).first()
 
         if user:
