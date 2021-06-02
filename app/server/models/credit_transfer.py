@@ -307,8 +307,6 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
     @standard_executor_job
     def async_update_balances(self):
-        # Sleep for 1s to make sure simultaneous transactions can resolve
-        time.sleep(1)
         from server.models.transfer_account import TransferAccount
         sender = db.session.query(TransferAccount).filter(TransferAccount.id == self.sender_transfer_account_id).first()
         recipient = db.session.query(TransferAccount).filter(TransferAccount.id == self.recipient_transfer_account_id).first()
