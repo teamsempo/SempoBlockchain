@@ -331,13 +331,14 @@ class LoginAPI(MethodView):
         pin_empty = pin == '' or pin is None
 
         ratelimit_key = email or post_data.get('phone')
-        limit = rate_limit("login_"+ratelimit_key, 25)
-        if limit:
-            response_object = {
-                'status': 'fail',
-                'message': f'Please try again in {limit} minutes'
-            }
-            return make_response(jsonify(response_object)), 403
+        if ratelimit_key:
+            limit = rate_limit("login_"+ratelimit_key, 25)
+            if limit:
+                response_object = {
+                    'status': 'fail',
+                    'message': f'Please try again in {limit} minutes'
+                }
+                return make_response(jsonify(response_object)), 403
 
         # First try to match email
         if email:
