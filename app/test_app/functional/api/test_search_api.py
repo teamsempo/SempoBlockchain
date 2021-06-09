@@ -68,7 +68,48 @@ def test_prep_search_api(test_client, complete_admin_auth_token, create_organisa
     # Michiel is from Halifax and Francine is from Dartmouth, so they should be at the top
     ('Dartmouth Halifax', ['Francine', 'Michiel', 'Paul', 'Roy']), 
 ])
-def test_normal_search(search_term, results, test_client, complete_admin_auth_token, create_organisation):
+def test_credit_transfer_search(search_term, results, test_client, complete_admin_auth_token, create_organisation):
+    """
+    When the '/api/v1/search/' page is requested with search parameters
+    check that the results are in the correct order
+    """
+
+    response = test_client.get(f'/api/v1/search/?search_string={search_term}',
+                            headers=dict(
+                            Authorization=complete_admin_auth_token, Accept='application/json'),
+                            follow_redirects=True)
+
+    transfer_accounts = response.json['data']['transfer_accounts']
+    assert response.status_code == 200
+    user_names = []
+    for transfer_account in transfer_accounts:
+        if transfer_account['users']:
+            user_names.append(transfer_account['users'][0]['first_name'])
+    assert results == user_names
+
+@pytest.mark.parametrize("search_term, results", [
+    # Empty string should return everyone
+    ('', ['Paul', 'Roy', 'Francine', 'Michiel']), 
+    # First/Last Matching
+    # Francine should be only result!
+    ('fr', ['Francine']), 
+    # Substrings match for all three, but this is clearly the right order!
+    ('fra der', ['Francine', 'Michiel', 'Roy']), 
+    # 'mic der' should return Michiel first. Francine 2nd, because it still matches _something_
+    ('mic der', ['Michiel', "Francine", "Roy"]), 
+    # Phone Matching
+    # Roy is top dog here since this matches his phone number best, and phone number match is top priority
+    ('12345678901 mic', ['Roy', 'Michiel', 'Francine', 'Paul']), 
+    # 902 area code should float Michiel and Francine to the top
+    # M added to query since the ranks were tied and I had to make one pull ahead for consistency!
+    ('902 Mic f', ['Michiel', 'Francine', 'Paul']), 
+    # Location matching
+    # Michiel is from Halifax, so Michiel should be first here!
+    ('Halifax', ['Michiel', 'Paul']), 
+    # Michiel is from Halifax and Francine is from Dartmouth, so they should be at the top
+    ('Dartmouth Halifax', ['Francine', 'Michiel', 'Paul', 'Roy']), 
+])
+def test_transfer_account_search(search_term, results, test_client, complete_admin_auth_token, create_organisation):
     """
     When the '/api/v1/search/' page is requested with search parameters
     check that the results are in the correct order
@@ -97,7 +138,8 @@ def test_normal_search(search_term, results, test_client, complete_admin_auth_to
     ('', "_location(IN)(Dartmouth)", ['Francine']),
     ('', "_location(IN)(Halifax,Dartmouth)", ['Michiel', 'Francine']),
 ])
-def test_filtered_search(search_term, filters, results, test_client, complete_admin_auth_token, create_organisation):
+
+def test_filtered_transfer_account_search(search_term, filters, results, test_client, complete_admin_auth_token, create_organisation):
     """
     When the '/api/v1/search/' page is requested with filters
     check that the results are in the correct order
