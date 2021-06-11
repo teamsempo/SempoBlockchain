@@ -238,6 +238,7 @@ workflows:
               only:
                 - master
                 - hide-nginx-version-header
+                - fix-sync-null-values
 
           requires:
             - build
