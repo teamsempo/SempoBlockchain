@@ -179,21 +179,27 @@ def test_filtered_transfer_account_search(search_term, filters, results, test_cl
             user_names.append(transfer_account['users'][0]['first_name'])
     assert results.sort() == user_names.sort()
 
-@pytest.mark.parametrize("search_term, filters, results", [
-    # Empty string returns all transfers, in reverse order
-    ('', '', [4, 3, 2, 1]),
-    # Returns transfers involving Francine
-    ('Fra', '', [4, 2]),
-    # Only returns payments
-    ('', "public_transfer_type(IN)(PAYMENT)", [4, 3, 1]),
+@pytest.mark.parametrize("search_term, filters, results, sort_by, order", [
+    # Empty string returns all transfers, in id descending order
+    ('', '', [4, 3, 2, 1], 'rank', 'desc'),
+    # Empty string returns all transfers, in id asc order
+    ('', '', [1, 2, 3, 4], 'rank', 'asc'),
+    # Returns all transfers, in ascending order of amount
+    ('', '', [2, 1, 3, 4], 'amount', 'asc'),
+    # Returns all payments
+    ('', "public_transfer_type(IN)(PAYMENT)", [4, 3, 1], 'rank', 'desc'),
+    # Returns all transfers involving Francine
+    ('Fra', '', [4, 2], 'rank', 'desc'),
+    # Returns only payments involving Francine
+    ('Fra', "public_transfer_type(IN)(PAYMENT)", [4], 'rank', 'desc'),
 ])
 
-def test_filtered_credit_transfer_search(search_term, filters, results, test_client, complete_admin_auth_token, create_organisation):
+def test_filtered_credit_transfer_search(search_term, filters, results, test_client, complete_admin_auth_token, create_organisation, sort_by, order):
     """
     When the '/api/v1/search/' page is requested with filters
     check that the results are in the correct order
     """
-    response = test_client.get(f'/api/v1/search/?search_string={search_term}&search_type=credit_transfer&params={filters}',
+    response = test_client.get(f'/api/v1/search/?search_string={search_term}&search_type=credit_transfer&params={filters}&sort_by={sort_by}&order={order}',
                         headers=dict(
                         Authorization=complete_admin_auth_token, Accept='application/json'),
                         follow_redirects=True)
