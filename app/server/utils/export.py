@@ -6,7 +6,7 @@ from weasyprint import HTML
 from server.schemas import pdf_users_schema
 from server.utils.amazon_s3 import upload_local_file_to_s3, get_local_save_path
 from server.utils.amazon_ses import send_export_email
-
+from pdfrw import PdfReader, PdfWriter
 
 def generate_pdf_export(users, pdf_filename):
 
@@ -27,7 +27,10 @@ def export_pdf_via_s3(html, filename, email=None):
 
     def pdf_save_meth(path):
         HTML(string=html).write_pdf(path)
-
+        # Strip producer PDF metadata
+        pdf = PdfReader(path)
+        pdf.Info.Producer = ''
+        PdfWriter(path, trailer=pdf).write()
     return _export_via_s3(pdf_save_meth, filename, email)
 
 
