@@ -2,9 +2,7 @@
 This file tests search_api.py.
 """
 import json, pytest
-from time import sleep
-from server.utils.auth import get_complete_auth_token
-from server.utils.user import create_transfer_account_user, set_custom_attributes
+from server.utils.user import create_transfer_account_user
 from server import db
 
 def test_prep_search_api(test_client, complete_admin_auth_token, create_organisation):
@@ -20,30 +18,55 @@ def test_prep_search_api(test_client, complete_admin_auth_token, create_organisa
     ''')
 
     # Adds users we're searching for
-    create_transfer_account_user(first_name='Michiel',
+    michiel = create_transfer_account_user(first_name='Michiel',
                                     last_name='deRoos',
                                     phone='+19025551234',
                                     organisation=create_organisation,
-                                    initial_disbursement = 100).location = 'Halifax'
+                                    initial_disbursement = 100)
+    michiel.location = 'Halifax'
 
-    create_transfer_account_user(first_name='Francine',
+    francine = create_transfer_account_user(first_name='Francine',
                                     last_name='deRoos',
                                     phone='+19025552345',
                                     organisation=create_organisation,
-                                    initial_disbursement = 200).location = 'Dartmouth'
+                                    initial_disbursement = 200)
+    francine.location = 'Dartmouth'
 
-    create_transfer_account_user(first_name='Roy',
+    roy = create_transfer_account_user(first_name='Roy',
                                     last_name='Donk',
                                     phone='+12345678901',
                                     organisation=create_organisation,
-                                    initial_disbursement = 200).location = 'Burbank'
+                                    initial_disbursement = 200)
+    roy.location = 'Burbank'
 
-    create_transfer_account_user(first_name='Paul',
+    paul = create_transfer_account_user(first_name='Paul',
                                     last_name='Bufano',
                                     phone='+98765432123',
                                     organisation=create_organisation,
-                                    initial_disbursement = 200).location = 'California'
+                                    initial_disbursement = 200)
+    paul.location = 'California'
 
+    db.session.commit()
+
+    def make_transfer(amount, recipient_user_id, sender_user_id, transfer_type):
+        test_client.post(
+        '/api/v1/credit_transfer/',
+        headers=dict(
+            Authorization=complete_admin_auth_token,
+            Accept='application/json'
+        ),
+        data=json.dumps(dict(
+            transfer_amount=amount,
+            sender_user_id=sender_user_id,
+            recipient_user_id=recipient_user_id,
+            transfer_type=transfer_type,
+        )),
+        content_type='application/json', follow_redirects=True)
+
+    make_transfer(5, paul.id, michiel.id, 'PAYMENT')
+    make_transfer(2, francine.id, roy.id, 'DISBURSEMENT')
+    make_transfer(6, roy.id, paul.id, 'PAYMENT')
+    make_transfer(23, michiel.id, francine.id, 'PAYMENT')
     db.session.commit()
 
 @pytest.mark.parametrize("search_term, results", [
@@ -144,7 +167,7 @@ def test_filtered_transfer_account_search(search_term, filters, results, test_cl
     When the '/api/v1/search/' page is requested with filters
     check that the results are in the correct order
     """
-    response = test_client.get(f'/api/v1/search/?search_string={search_term}&search_type=transfer_accounts&params={filters}',
+    response = test_client.get(f'/api/v1/search/?search_string={search_term}&search_type=transfer_account&params={filters}',
                         headers=dict(
                         Authorization=complete_admin_auth_token, Accept='application/json'),
                         follow_redirects=True)
@@ -155,4 +178,30 @@ def test_filtered_transfer_account_search(search_term, filters, results, test_cl
         if transfer_account['users']:
             user_names.append(transfer_account['users'][0]['first_name'])
     assert results.sort() == user_names.sort()
+
+@pytest.mark.parametrize("search_term, filters, results", [
+    # Empty string returns all transfers, in reverse order
+    ('', '', [4, 3, 2, 1]),
+    # Returns transfers involving Francine
+    ('Fra', '', [4, 2]),
+    # Only returns payments
+    ('', "public_transfer_type(IN)(PAYMENT)", [4, 3, 1]),
+])
+
+def test_filtered_credit_transfer_search(search_term, filters, results, test_client, complete_admin_auth_token, create_organisation):
+    """
+    When the '/api/v1/search/' page is requested with filters
+    check that the results are in the correct order
+    """
+    response = test_client.get(f'/api/v1/search/?search_string={search_term}&search_type=credit_transfer&params={filters}',
+                        headers=dict(
+                        Authorization=complete_admin_auth_token, Accept='application/json'),
+                        follow_redirects=True)
+    credit_transfers = response.json['data']['credit_transfers']
+    assert response.status_code == 200
+    ids = []
+    for credit_transfer in credit_transfers:
+        if credit_transfer['id']:
+            ids.append(credit_transfer['id'])
+    assert results == ids
 

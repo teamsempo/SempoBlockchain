@@ -7,6 +7,7 @@ from server.models.credit_transfer import CreditTransfer
 from server.models.user import User
 from functools import reduce
 from sqlalchemy.orm import lazyload, aliased
+from sqlalchemy import or_
 
 class SearchableColumn:
     def __init__(self, name, column, rank=1):
@@ -42,9 +43,9 @@ def generate_search_query(search_string, filters, order, sort_by_arg, include_us
             'status': TransferAccount.is_approved,
         },
         CREDIT_TRANSFER: {
-            'sender_first_name': sender.last_name,
+            'sender_first_name': sender.first_name,
             'sender_last_name': sender.last_name,
-            'recipient_first_name': recipient.last_name,
+            'recipient_first_name': recipient.first_name,
             'recipient_last_name': recipient.last_name,
             'amount': CreditTransfer._transfer_amount_wei,
             'created': CreditTransfer.created,
@@ -68,10 +69,11 @@ def generate_search_query(search_string, filters, order, sort_by_arg, include_us
         SearchableColumn('primary_blockchain_address', User.primary_blockchain_address, rank=2),
     ]
     sum_search = reduce(lambda x,y: x+y, [sc.get_similarity_query(search_string) for sc in user_search_columns])
-    sort_by = sum_search if sort_by_arg == 'rank' else sort_types_to_database_types[sort_types_to_database_types][sort_by_arg]
+    sort_by = sum_search if sort_by_arg == 'rank' else sort_types_to_database_types[search_type][sort_by_arg]
     # If there's no search string, the process is the same, just sort by account creation date
     if search_type == TRANSFER_ACCOUNT:
-        sort_by = sort_types_to_database_types[sort_types_to_database_types]['date_account_created'] if sort_by == 'rank' and not search_string else sort_by
+        # If the sort by argument is rank, but there are no ranks because there is no search string, sort by date account created
+        sort_by = sort_types_to_database_types[search_type]['date_account_created'] if sort_by_arg == 'rank' and not search_string else sum_search
         entities = [TransferAccount, sum_search, User] if include_user else [TransferAccount]
         final_query = db.session.query(TransferAccount, User, sum_search)\
             .outerjoin(TransferAccount, User.default_transfer_account_id == TransferAccount.id)\
@@ -83,15 +85,14 @@ def generate_search_query(search_string, filters, order, sort_by_arg, include_us
             final_query = final_query.options(lazyload(User.custom_attributes))
 
     else:
-        sort_by = sort_types_to_database_types[sort_types_to_database_types]['created'] if sort_by == 'rank' and not search_string else sort_by
-
+        # If the sort by argument is rank, but there are no ranks because there is no search string, sort by date transfer created
+        sort_by = sort_types_to_database_types[search_type]['id'] if sort_by_arg == 'rank' and not search_string else sort_by
         final_query = db.session.query(CreditTransfer, sum_search)\
-            .join(CreditTransfer, User.id == CreditTransfer.recipient_user_id or User.id == CreditTransfer.sender_user_id)\
-            .join(sender, sender.id == CreditTransfer.sender_user_id)\
-            .join(recipient, recipient.id == CreditTransfer.recipient_user_id)\
-            .with_entities(CreditTransfer, User, sum_search)\
-            .order_by(order(sort_by))\
-            .limit(10)
+            .join(sender, sender.id == User.id)\
+            .join(recipient, recipient.id == User.id)\
+            .join(CreditTransfer, or_((recipient.id == CreditTransfer.recipient_user_id), (sender.id == CreditTransfer.sender_user_id)))\
+            .with_entities(CreditTransfer)\
+            .order_by(order(sort_by))
     
     # If there is a search string, we only want to return ranked results!
     final_query = final_query.filter(sum_search!=0) if search_string else final_query
