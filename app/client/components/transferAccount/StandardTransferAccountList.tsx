@@ -276,6 +276,7 @@ class StandardTransferAccountList extends React.Component<
     }
     const hasSelected =
       allSelected || (include_accounts && include_accounts.length > 0);
+    console.log("hasSelected", hasSelected);
 
     let numberSet = typeof amount === "number" && amount !== 0;
 
