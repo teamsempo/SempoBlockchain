@@ -107,7 +107,7 @@ class ResetPasswordFormContainer extends React.Component {
     if (this.props.resetPasswordState.success) {
       return (
         <div style={{ textAlign: "center" }}>
-          <h3> Password Successfuly Changed </h3>
+          <h3> Password Successfully Changed </h3>
           <Text>
             You can now{" "}
             <StyledLink to="/" exact>
