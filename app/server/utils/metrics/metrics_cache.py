@@ -13,6 +13,11 @@ valid_strategies = [SUM, COUNT, SUM_OBJECTS, FIRST_COUNT, QUERY_ALL]
 # Combinatory stategies which aren't cachable
 dumb_strategies = [FIRST_COUNT, QUERY_ALL]
 
+# Workaround for an incongruity between flask-sqlalchemy and sqlalchemy
+def dummy_function():
+    return True
+db.session._autoflush = dummy_function
+
 def _store_cache(key, value):
     pickled_object = pickle.dumps(value)
     red.set(key, pickled_object, config.METRICS_CACHE_TIMEOUT)
@@ -95,10 +100,10 @@ def _handle_combinatory_strategy(query, cache_result, strategy):
     return strategy_functions[strategy](query, cache_result)
 
 def _sum_strategy(query, cache_result):
-    return float(query.first().total or 0) + (cache_result or 0)
+    return float(query.with_session(db.session).first().total or 0) + (cache_result or 0)
 
 def _count_strategy(query, cache_result):
-    return query.count() + (cache_result or 0)
+    return query.with_session(db.session).count() + (cache_result or 0)
 
 def _sum_list_of_objects(query, cache_result):
     combined_results = {}
@@ -109,7 +114,7 @@ def _sum_list_of_objects(query, cache_result):
             else:
                 combined_results[(r[1])] = r[0]
 
-    query_result = query.all()
+    query_result = query.with_session(db.session).all()
     for r in query_result:
         if len(r) == 3:
             if (r[1], r[2]) not in combined_results:
@@ -134,9 +139,9 @@ def _sum_list_of_objects(query, cache_result):
 
 # "Dumb" combinatory strategies which are uncachable
 def _first_count(query, cache_result):
-    return query.first().count
+    return query.with_session(db.session).first().count
 
 def _return_all(query, cache_result):
-    return query.all()
+    return query.with_session(db.session).all()
 
 strategy_functions = { SUM: _sum_strategy, COUNT: _count_strategy, SUM_OBJECTS: _sum_list_of_objects, FIRST_COUNT: _first_count, QUERY_ALL: _return_all }
