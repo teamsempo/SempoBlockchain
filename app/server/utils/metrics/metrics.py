@@ -1,3 +1,4 @@
+from logging import error
 from server import db, red, bt
 
 from flask import g
@@ -116,29 +117,41 @@ def calculate_transfer_stats(
     def calculate_metric(metric):
         import threading
         with threading.Lock():
-            db.session.flush()
+            try:
+                db.session.remove()
+                db.engine.dispose()
 
-            session = db.session
-            print(session)
-            print(f'Starting {threading.current_thread()}')
+                session = db.session
+                print(session)
+                print(f'Starting {threading.current_thread()}')
+                dont_include_timeseries = True
+                if requested_metric in [metric.metric_name, metrics_const.ALL]:
+                    dont_include_timeseries = False
+                result = metric.execute_query(user_filters=user_filter, 
+                                                            date_filter_attributes=date_filter_attributes, 
+                                                            enable_caching=enable_cache, 
+                                                            population_query_result=total_users, 
+                                                            dont_include_timeseries=dont_include_timeseries, 
+                                                            start_date=start_date, 
+                                                            end_date=end_date,
+                                                            group_by=group_by)        
+                print(f'Ending {threading.current_thread()}')
+                db.session.remove()
+                db.engine.dispose()
 
-            dont_include_timeseries = True
-            if requested_metric in [metric.metric_name, metrics_const.ALL]:
-                dont_include_timeseries = False
-            result = metric.execute_query(user_filters=user_filter, 
-                                                        date_filter_attributes=date_filter_attributes, 
-                                                        enable_caching=enable_cache, 
-                                                        population_query_result=total_users, 
-                                                        dont_include_timeseries=dont_include_timeseries, 
-                                                        start_date=start_date, 
-                                                        end_date=end_date,
-                                                        group_by=group_by)
-            print(type(result))
-            db.session.flush()
-        
-            print(f'Ending {threading.current_thread()}')
 
-            return metric.metric_name, result
+                return metric.metric_name, result
+            except Exception as inst:
+                print(inst)
+                print('ERROR')
+                print('ERROR')
+                print('ERROR')
+                print('ERROR')
+                print('ERROR')
+                print('ERROR')
+                print('ERROR')
+                print(f'ERR {threading.current_thread()}')
+
 
     futures = []
     for metric in metrics_list:
