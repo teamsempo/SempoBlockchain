@@ -2,8 +2,9 @@ from server import db, red, bt
 
 from flask import g
 
+from server import executor
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferStatusEnum
-from server.utils.metrics import filters, metrics_cache, metric, metrics_const, group
+from server.utils.metrics import metrics_const
 from server.utils.metrics.transfer_stats import TransferStats
 from server.utils.metrics.participant_stats import ParticipantStats
 from server.utils.metrics.total_users import TotalUsers
@@ -16,12 +17,9 @@ from server.models.custom_attribute_user_storage import CustomAttributeUserStora
 from server.models.organisation import Organisation
 from server.models.token import Token
 
-from sqlalchemy.orm import aliased
-from sqlalchemy.sql import func, text
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.sql import text
 from sqlalchemy import text
 
-import sqlalchemy
 import datetime, json
 import pendulum
 
@@ -115,12 +113,19 @@ def calculate_transfer_stats(
     if requested_metric not in availible_metrics:
         raise Exception(f'{requested_metric} is not an availible metric of type {metric_type}. Please choose one of the following: {", ".join(availible_metrics)}')
 
-    data = {}
-    for metric in metrics_list:
-        dont_include_timeseries = True
-        if requested_metric in [metric.metric_name, metrics_const.ALL]:
-            dont_include_timeseries = False
-        data[metric.metric_name] = metric.execute_query(user_filters=user_filter, 
+    def calculate_metric(metric):
+        import threading
+        with threading.Lock():
+            db.session.flush()
+
+            session = db.session
+            print(session)
+            print(f'Starting {threading.current_thread()}')
+
+            dont_include_timeseries = True
+            if requested_metric in [metric.metric_name, metrics_const.ALL]:
+                dont_include_timeseries = False
+            result = metric.execute_query(user_filters=user_filter, 
                                                         date_filter_attributes=date_filter_attributes, 
                                                         enable_caching=enable_cache, 
                                                         population_query_result=total_users, 
@@ -128,6 +133,20 @@ def calculate_transfer_stats(
                                                         start_date=start_date, 
                                                         end_date=end_date,
                                                         group_by=group_by)
+            print(type(result))
+            db.session.flush()
+        
+            print(f'Ending {threading.current_thread()}')
+
+            return metric.metric_name, result
+
+    futures = []
+    for metric in metrics_list:
+        futures.append(executor.submit(calculate_metric, metric))
+    data = {}
+    for future in futures:
+        metric_name, result = future.result()
+        data[metric_name] = result
 
     data['mandatory_filter'] = mandatory_filter
 

@@ -237,6 +237,7 @@ workflows:
             branches:
               only:
                 - master
+                - thread-metrics-calculation
 
           requires:
             - build

@@ -1,9 +1,5 @@
-from datetime import datetime, timedelta
-
 from server import red, db
 from flask import g
-from decimal import Decimal
-import json
 import pickle
 import config
 
@@ -37,7 +33,6 @@ def get_metrics_org_string(org_id):
 
 
 def execute_with_partial_history_cache(metric_name, query, object_model, strategy, enable_cache = True, group_by=None):
-    clear_metrics_cache()
     # enable_cache pass-thru. This is so we don't cache data when filters are active.
     if strategy in dumb_strategies or not enable_cache:
         return _handle_combinatory_strategy(query, None, strategy)
@@ -50,7 +45,6 @@ def execute_with_partial_history_cache(metric_name, query, object_model, strateg
     CURRENT_MAX_ID = f'{ORG_STRING}_{object_model.__table__.name}_max_id'
     HIGHEST_ID_CACHED = f'{ORG_STRING}_{metric_name}_{group_by}_max_cached_id'
     CACHE_RESULT = f'{ORG_STRING}_{metric_name}_{group_by}'
-
     # Checks if provided combinatry strategy is valid
     if strategy not in valid_strategies:
         raise Exception(f'Invalid combinatory strategy {strategy} requested.')
@@ -79,7 +73,6 @@ def execute_with_partial_history_cache(metric_name, query, object_model, strateg
 
     #Combines results
     result = _handle_combinatory_strategy(filtered_query, cache_result, strategy)
-
     # Updates the cache with new data
     _store_cache(CACHE_RESULT, result)
     red.set(HIGHEST_ID_CACHED, current_max_id, config.METRICS_CACHE_TIMEOUT)
