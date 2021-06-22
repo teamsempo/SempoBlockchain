@@ -100,7 +100,7 @@ def _handle_combinatory_strategy(query, cache_result, strategy):
     return strategy_functions[strategy](query, cache_result)
 
 def _sum_strategy(query, cache_result):
-    return float(query.first().total or 0) + (cache_result or 0)
+    return float(query.with_session(db.session).first().total or 0) + (cache_result or 0)
 
 def _count_strategy(query, cache_result):
     return query.with_session(db.session).count() + (cache_result or 0)
