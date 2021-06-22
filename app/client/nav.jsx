@@ -328,6 +328,7 @@ class Nav extends React.Component {
               path="/not-found"
               component={notFoundPage}
               title={`Not Found`}
+              isAntDesign={true}
             />
             <PublicRoute component={NotFoundRedirect} />
           </Switch>

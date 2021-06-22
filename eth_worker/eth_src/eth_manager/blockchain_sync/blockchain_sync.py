@@ -22,7 +22,7 @@ class BlockchainSyncer(object):
             'sender_blockchain_address': transaction.sender_address,
             'recipient_blockchain_address': transaction.recipient_address,
             'blockchain_transaction_hash': transaction.hash,
-            'transfer_amount': int(transaction.amount),
+            'transfer_amount': int(transaction.amount or 0),
             'contract_address': transaction.contract_address
         }
         r = requests.post(config.APP_HOST + '/api/v1/credit_transfer/internal/',
