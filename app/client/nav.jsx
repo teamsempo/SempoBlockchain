@@ -25,14 +25,25 @@ const creditTransferListPage = lazy(() =>
 const singleCreditTransferPage = lazy(() =>
   import("./components/pages/singleCreditTransferPage.jsx")
 );
-const settingsPage = lazy(() =>
-  import("./components/pages/settings/settingsPage.jsx")
-);
 const internalChangePasswordPage = lazy(() =>
   import("./components/pages/settings/internalChangePasswordPage.jsx")
 );
 const tfaPage = lazy(() => import("./components/pages/settings/tfaPage.jsx"));
-const InvitePage = lazy(() => import("./components/pages/InvitePage.jsx"));
+const InvitePage = lazy(() =>
+  import("./components/pages/settings/InvitePage.jsx")
+);
+const AdminUserListPage = lazy(() =>
+  import("./components/adminUser/adminUserList.jsx")
+);
+const IntegrationsPage = lazy(() =>
+  import("./components/pages/settings/IntegrationsPage.jsx")
+);
+const LogoutPage = lazy(() =>
+  import("./components/pages/settings/LogoutPage.jsx")
+);
+const VerificationPage = lazy(() =>
+  import("./components/pages/settings/VerificationPage.jsx")
+);
 const BusinessVerificationPage = lazy(() =>
   import("./components/pages/businessVerificationPage.jsx")
 );
@@ -75,6 +86,8 @@ class Nav extends React.Component {
   render() {
     const isLoggedIn = this.props.loggedIn;
     const isReAuthing = this.props.login.isLoggingIn;
+
+    const NotFoundRedirect = () => <Redirect to="/not-found" />;
 
     return (
       <Router history={browserHistory}>
@@ -165,20 +178,36 @@ class Nav extends React.Component {
             />
             <PrivateRoute
               exact
-              path="/settings"
-              component={settingsPage}
+              path="/settings/admins"
+              component={AdminUserListPage}
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
-              title={`Settings`}
+              title={`Invite Admins`}
+              isAntDesign={true}
             />
             <PrivateRoute
               exact
-              path="/settings/invite"
+              path="/settings/integrations"
+              component={IntegrationsPage}
+              isLoggedIn={isLoggedIn}
+              isReAuthing={isReAuthing}
+              title={`Integrations`}
+              isAntDesign={true}
+            />
+            <PrivateRoute
+              exact
+              path="/settings/admins/invite"
               component={InvitePage}
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
               title={`Invite Admins`}
               isAntDesign={true}
+              customRoutes={[
+                { path: "", breadcrumbName: "Home" },
+                { path: "settings", breadcrumbName: "Settings" },
+                { path: "settings/admins", breadcrumbName: "Admins" },
+                { path: "settings/admins/invite", breadcrumbName: "Invite" }
+              ]}
             />
             <PrivateRoute
               exact
@@ -191,11 +220,20 @@ class Nav extends React.Component {
             />
             <PrivateRoute
               exact
+              path="/settings/status"
+              component={VerificationPage}
+              isLoggedIn={isLoggedIn}
+              isReAuthing={isReAuthing}
+              title={`Project Status`}
+              isAntDesign={true}
+            />
+            <PrivateRoute
+              exact
               path="/settings/verification"
               component={BusinessVerificationPage}
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
-              title={`Organisation Verification`}
+              title={`Project Verification`}
             />
             <PrivateRoute
               exact
@@ -216,7 +254,16 @@ class Nav extends React.Component {
             />
             <PrivateRoute
               exact
-              path="/settings/project"
+              path="/settings/logout"
+              component={LogoutPage}
+              isLoggedIn={isLoggedIn}
+              isReAuthing={isReAuthing}
+              title={`Log out`}
+              isAntDesign={true}
+            />
+            <PrivateRoute
+              exact
+              path="/settings"
               component={OrganisationPage}
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
@@ -235,7 +282,6 @@ class Nav extends React.Component {
               customRoutes={[
                 { path: "", breadcrumbName: "Home" },
                 { path: "settings", breadcrumbName: "Settings" },
-                { path: "settings/project", breadcrumbName: "Project" },
                 { path: "settings/project/new", breadcrumbName: "New" }
               ]}
             />
@@ -278,7 +324,12 @@ class Nav extends React.Component {
               title={`Reset Password`}
             />
             <PublicRoute path="/login" component={authPage} title={`Login`} />
-            <PublicRoute component={notFoundPage} title={`Not Found`} />
+            <PublicRoute
+              path="/not-found"
+              component={notFoundPage}
+              title={`Not Found`}
+            />
+            <PublicRoute component={NotFoundRedirect} />
           </Switch>
         </ThemeProvider>
       </Router>

@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, Space } from "antd";
+import { Card } from "antd";
 
 import { GetTFAAPI } from "../../../api/authAPI";
 
@@ -25,18 +25,17 @@ export default class tfaPage extends React.Component {
 
   render() {
     return (
-      <Space direction="vertical" style={{ width: "100%" }} size="middle">
-        <Card
-          title={"Two Step Authentication"}
-          bodyStyle={{ maxWidth: "500px" }}
-        >
-          {this.state.tfaURL === null ? (
-            <LoadingSpinner />
-          ) : (
-            <TFAForm tfaURL={this.state.tfaURL} />
-          )}
-        </Card>
-      </Space>
+      <Card
+        title={"Two Step Authentication"}
+        bodyStyle={{ maxWidth: "500px" }}
+        bordered={false}
+      >
+        {this.state.tfaURL === null ? (
+          <LoadingSpinner />
+        ) : (
+          <TFAForm tfaURL={this.state.tfaURL} />
+        )}
+      </Card>
     );
   }
 }
