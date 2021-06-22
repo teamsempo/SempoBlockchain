@@ -1,4 +1,4 @@
-from server import red, bt
+from server import red, bt, db
 
 from flask import g
 
@@ -124,7 +124,8 @@ def calculate_transfer_stats(
                                                     dont_include_timeseries=dont_include_timeseries, 
                                                     start_date=start_date, 
                                                     end_date=end_date,
-                                                    group_by=group_by)        
+                                                    group_by=group_by)
+        db.session.close()
         return metric.metric_name, result
 
 
