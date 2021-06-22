@@ -276,7 +276,11 @@ class Nav extends React.Component {
               title={`Reset Password`}
             />
             <PublicRoute path="/login" component={authPage} title={`Login`} />
-            <PublicRoute component={notFoundPage} title={`Not Found`} />
+            <PublicRoute
+              component={notFoundPage}
+              title={`Not Found`}
+              isAntDesign={true}
+            />
           </Switch>
         </ThemeProvider>
       </Router>
