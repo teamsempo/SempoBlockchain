@@ -58,7 +58,7 @@ def execute_with_partial_history_cache(metric_name, query, object_model, strateg
     # get it from the DB many times in the same request
     current_max_id = red.get(CURRENT_MAX_ID)
     if not current_max_id:
-        query_max = db.session.query(db.func.max(object_model.id)).first()
+        query_max = db.session.query(db.func.max(object_model.id)).with_session(db.session).first()
         try:
             current_max_id = query_max[0]
         except IndexError:
@@ -100,7 +100,7 @@ def _handle_combinatory_strategy(query, cache_result, strategy):
     return strategy_functions[strategy](query, cache_result)
 
 def _sum_strategy(query, cache_result):
-    return float(query.with_session(db.session).first().total or 0) + (cache_result or 0)
+    return float(query.first().total or 0) + (cache_result or 0)
 
 def _count_strategy(query, cache_result):
     return query.with_session(db.session).count() + (cache_result or 0)

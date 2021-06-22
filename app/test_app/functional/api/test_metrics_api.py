@@ -398,7 +398,7 @@ def test_get_metric_filters(test_client, complete_admin_auth_token, external_res
         db.session.query(CustomAttribute).first().group_visibility = MetricsVisibility.RECIPIENT
 
     db.session.commit()
-    # Tests getting list of availible metrics filters from the /api/v1/metrics/filters endpoint
+    # Tests getting list of available metrics filters from the /api/v1/metrics/filters endpoint
     response = test_client.get(
         f'/api/v1/metrics/filters/?metric_type={metric_type}',
         headers=dict(

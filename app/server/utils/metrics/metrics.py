@@ -1,5 +1,4 @@
-from logging import error
-from server import db, red, bt
+from server import red, bt
 
 from flask import g
 
@@ -109,29 +108,24 @@ def calculate_transfer_stats(
         metrics_list = TransferStats(group_strategy, timeseries_unit, token, date_filter_attributes=date_filter_attributes).metrics + ParticipantStats(group_strategy, timeseries_unit, date_filter_attributes=date_filter_attributes).metrics
     
     # Ensure that the metric requested by the user is available
-    availible_metrics = [m.metric_name for m in metrics_list]
-    availible_metrics.append(metrics_const.ALL)
-    if requested_metric not in availible_metrics:
-        raise Exception(f'{requested_metric} is not an availible metric of type {metric_type}. Please choose one of the following: {", ".join(availible_metrics)}')
+    available_metrics = [m.metric_name for m in metrics_list]
+    available_metrics.append(metrics_const.ALL)
+    if requested_metric not in available_metrics:
+        raise Exception(f'{requested_metric} is not an available metric of type {metric_type}. Please choose one of the following: {", ".join(available_metrics)}')
 
     def calculate_metric(metric):
-        import threading
-        with threading.Lock():
-            print(f'Starting {threading.current_thread()}')
-            dont_include_timeseries = True
-            if requested_metric in [metric.metric_name, metrics_const.ALL]:
-                dont_include_timeseries = False
-            result = metric.execute_query(user_filters=user_filter, 
-                                                        date_filter_attributes=date_filter_attributes, 
-                                                        enable_caching=enable_cache, 
-                                                        population_query_result=total_users, 
-                                                        dont_include_timeseries=dont_include_timeseries, 
-                                                        start_date=start_date, 
-                                                        end_date=end_date,
-                                                        group_by=group_by)        
-            print(f'Ending {threading.current_thread()}')
-
-            return metric.metric_name, result
+        dont_include_timeseries = True
+        if requested_metric in [metric.metric_name, metrics_const.ALL]:
+            dont_include_timeseries = False
+        result = metric.execute_query(user_filters=user_filter, 
+                                                    date_filter_attributes=date_filter_attributes, 
+                                                    enable_caching=enable_cache, 
+                                                    population_query_result=total_users, 
+                                                    dont_include_timeseries=dont_include_timeseries, 
+                                                    start_date=start_date, 
+                                                    end_date=end_date,
+                                                    group_by=group_by)        
+        return metric.metric_name, result
 
 
     futures = []
