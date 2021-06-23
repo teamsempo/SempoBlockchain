@@ -159,8 +159,7 @@ class OrganisationPage extends React.Component<IProps, IState> {
     return (
       <div
         style={{
-          opacity: disabled ? 0.6 : 1,
-          pointerEvents: disabled ? "none" : "auto"
+          opacity: disabled ? 0.6 : 1
         }}
       >
         {isNewOrg ? (
