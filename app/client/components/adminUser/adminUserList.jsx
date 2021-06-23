@@ -259,7 +259,7 @@ class AdminUserList extends React.Component {
             <div>
               <UploadButtonWrapper style={{ marginRight: 0, marginLeft: 0 }}>
                 <StyledButton
-                  onClick={() => browserHistory.push("/settings/invite")}
+                  onClick={() => browserHistory.push("/settings/admins/invite")}
                   style={{
                     fontWeight: "400",
                     margin: "0em 1em",
