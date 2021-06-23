@@ -22,6 +22,7 @@ interface DispatchProps {
 }
 
 interface StateProps {
+  login: ReduxState["login"];
   tokens: ReduxState["tokens"];
   organisations: ReduxState["organisations"];
   activeOrganisation: Organisation;
@@ -126,7 +127,8 @@ class OrganisationPage extends React.Component<IProps, IState> {
   }
 
   render() {
-    const { isNewOrg } = this.props;
+    const { isNewOrg, login } = this.props;
+    const disabled = login.adminTier !== "superadmin";
 
     const orgCard = (
       <Card
@@ -155,7 +157,12 @@ class OrganisationPage extends React.Component<IProps, IState> {
     );
 
     return (
-      <div>
+      <div
+        style={{
+          opacity: disabled ? 0.6 : 1,
+          pointerEvents: disabled ? "none" : "auto"
+        }}
+      >
         {isNewOrg ? (
           <Space direction="vertical" style={{ width: "100%" }} size="middle">
             {orgCard}
@@ -170,6 +177,7 @@ class OrganisationPage extends React.Component<IProps, IState> {
 
 const mapStateToProps = (state: any): StateProps => {
   return {
+    login: state.login,
     tokens: state.tokens,
     organisations: state.organisations,
     activeOrganisation: state.organisations.byId[state.login.organisationId]
