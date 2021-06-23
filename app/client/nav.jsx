@@ -36,7 +36,7 @@ const AdminUserListPage = lazy(() =>
   import("./components/adminUser/adminUserList.jsx")
 );
 const IntegrationsPage = lazy(() =>
-  import("./components/pages/settings/IntegrationsPage.jsx")
+  import("./components/pages/settings/integrationsPage.jsx")
 );
 const LogoutPage = lazy(() =>
   import("./components/pages/settings/LogoutPage.jsx")
