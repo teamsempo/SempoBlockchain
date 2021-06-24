@@ -151,6 +151,13 @@ class NavBar extends React.Component<Props, State> {
                 icon={<UnorderedListOutlined translate={""} />}
                 disabled={isMultiOrg || false}
               >
+                <NavLink to="/new_transfers">New Transfers List</NavLink>
+              </Menu.Item>
+              <Menu.Item
+                key="/new_transfers"
+                icon={<UnorderedListOutlined translate={""} />}
+                disabled={isMultiOrg || false}
+              >
                 <NavLink to="/transfers">Transfers List</NavLink>
               </Menu.Item>
               <Menu.Item

@@ -102,7 +102,6 @@ interface CreditTransferListAPIResult {
 function* loadCreditTransferList({ payload }: CreditTransferListAPIResult) {
   try {
     const credit_load_result = yield call(loadCreditTransferListAPI, payload);
-
     yield call(updateStateFromCreditTransfer, credit_load_result);
 
     yield put(LoadCreditTransferAction.loadCreditTransferListSuccess());

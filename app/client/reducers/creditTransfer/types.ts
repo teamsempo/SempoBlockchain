@@ -15,6 +15,12 @@ export enum LoadCreditTransferActionTypes {
   LOAD_CREDIT_TRANSFER_LIST_FAILURE = "LOAD_CREDIT_TRANSFER_LIST_FAILURE"
 }
 
+export enum NewLoadCreditTransferActionTypes {
+  NEW_LOAD_CREDIT_TRANSFER_LIST_REQUEST = "NEW_LOAD_CREDIT_TRANSFER_LIST_REQUEST",
+  NEW_LOAD_CREDIT_TRANSFER_LIST_SUCCESS = "NEW_LOAD_CREDIT_TRANSFER_LIST_SUCCESS",
+  NEW_LOAD_CREDIT_TRANSFER_LIST_FAILURE = "NEW_LOAD_CREDIT_TRANSFER_LIST_FAILURE"
+}
+
 export enum ModifyCreditTransferActionTypes {
   MODIFY_TRANSFER_REQUEST = "MODIFY_TRANSFER_REQUEST",
   MODIFY_TRANSFER_SUCCESS = "MODIFY_TRANSFER_SUCCESS",
@@ -62,13 +68,21 @@ export type CreditTransfer =
   | DisbursementCreditTransfer
   | ReclamationCreditTransfer;
 
+  export interface NewCreditTransferLoadApiResult {
+    type: typeof NewLoadCreditTransferActionTypes.NEW_LOAD_CREDIT_TRANSFER_LIST_REQUEST;
+    payload: any;
+  }
+
 // TODO we should only need one of these keys
 export interface CreditTransfers {
   [key: number]: CreditTransfer;
 
   [key: string]: CreditTransfer;
 }
-
+export interface NewLoadTransferAccountListPayload {
+  query?: {};
+  path?: number;
+}
 export interface LoadCreditTransferPayload {
   query?: {
     transfer_type: string;
