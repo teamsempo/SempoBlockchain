@@ -51,7 +51,7 @@ export default function GetVerified(props: Props) {
     !(Object.values(businessProfile).length > 0)
   ) {
     if (adminTier === "superadmin") {
-      text = <Link to="settings/verification">Get Verified</Link>;
+      text = <Link to="/settings/verification">Get Verified</Link>;
     }
 
     if (userId) {

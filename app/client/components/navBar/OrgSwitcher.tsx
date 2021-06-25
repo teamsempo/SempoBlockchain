@@ -168,7 +168,7 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
         </NavLink>
       </Menu.Item>
       <Menu.Item key="invite" disabled={isMultiOrg || false}>
-        <NavLink to="/settings/invite">
+        <NavLink to="/settings/admins/invite">
           <UserAddOutlined translate={""} /> Invite User
         </NavLink>
       </Menu.Item>

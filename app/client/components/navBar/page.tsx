@@ -14,6 +14,7 @@ import LoadingSpinner from "../loadingSpinner";
 import { LoginState } from "../../reducers/auth/loginReducer";
 import { ReduxState } from "../../reducers/rootReducer";
 import { browserHistory } from "../../createStore";
+import { SettingsSubMenu } from "../pages/settings/SettingsSubMenu";
 
 const { Content, Header, Footer } = Layout;
 
@@ -64,6 +65,11 @@ const Page: React.FunctionComponent<OuterProps> = props => {
   const [collapsed, setCollapsed] = React.useState(false);
   const [routes, setRoutes] = React.useState<Route[] | undefined>();
   const [prevPath, setPrevPath] = React.useState("");
+
+  const isSettings =
+    location.pathname.includes("/settings") &&
+    title !== "Not Found" &&
+    title !== "New Project";
 
   const login: LoginState = useSelector((state: ReduxState) => state.login);
   const { organisationIds } = login;
@@ -197,7 +203,13 @@ const Page: React.FunctionComponent<OuterProps> = props => {
                 </CenterLoadingSideBarActive>
               }
             >
-              <Component {...props} />
+              {isSettings ? (
+                <SettingsSubMenu activeMenu={location.pathname}>
+                  <Component {...props} />
+                </SettingsSubMenu>
+              ) : (
+                <Component {...props} />
+              )}
             </React.Suspense>
           </Content>
           {footer ? (
