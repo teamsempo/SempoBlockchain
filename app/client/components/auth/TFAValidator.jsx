@@ -1,11 +1,10 @@
 import React from "react";
 import { connect } from "react-redux";
-
-import AsyncButton from "./../AsyncButton.jsx";
+import { Button, Checkbox, Input, Space } from "antd";
 
 import { ValidateTfaAction } from "../../reducers/auth/actions";
 
-import { Input, ErrorMessage } from "./../styledElements";
+import { ErrorMessage } from "../styledElements";
 
 const mapStateToProps = state => {
   return {
@@ -83,7 +82,7 @@ export class TFAValidator extends React.Component {
     }
 
     return (
-      <div style={{ display: "block" }}>
+      <Space direction="vertical">
         <Input
           type="text"
           value={this.state.otp}
@@ -94,31 +93,32 @@ export class TFAValidator extends React.Component {
           aria-label="Your TFA Code"
         />
 
-        <label style={{ marginLeft: "0.5em" }}>
-          <input
-            name="remember"
-            type="checkbox"
-            checked={this.state.rememberComputer}
-            onChange={() => this.onCheck()}
-            aria-label="Remember my computer"
-          />
+        <Checkbox
+          name="remember"
+          type="checkbox"
+          checked={this.state.rememberComputer}
+          onChange={() => this.onCheck()}
+          aria-label="Remember my computer"
+        >
           Remember computer
-        </label>
+        </Checkbox>
 
-        <AsyncButton
+        <Button
           onClick={() => this.onClick()}
-          isLoading={this.props.validateState.isRequesting}
-          buttonStyle={{ width: "calc(100% - 1em)", display: "flex" }}
-          buttonText={<span>Verify</span>}
+          loading={this.props.validateState.isRequesting}
           label={"Verify my application"}
-        />
+          type={"primary"}
+          block
+        >
+          Verify
+        </Button>
 
         <div style={{ textAlign: "center" }}>
           Enter the 6-digit code you see in the app.
         </div>
 
         <ErrorMessage>{this.state.errorMessage}</ErrorMessage>
-      </div>
+      </Space>
     );
   }
 }
