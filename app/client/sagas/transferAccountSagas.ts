@@ -18,7 +18,8 @@ import {
   LoadTransferAccountActionTypes,
   EditTransferAccountActionTypes,
   TransferAccountEditApiResult,
-  TransferAccountLoadApiResult
+  TransferAccountLoadApiResult,
+  LoadTransferAccountListPayload
 } from "../reducers/transferAccount/types";
 
 import {

@@ -3,8 +3,20 @@ import { apiClient } from "./client/apiClient";
 import {
   CreateCreditTransferPayload,
   LoadCreditTransferPayload,
-  ModifyCreditTransferRequestPayload
+  ModifyCreditTransferRequestPayload,
+  NewLoadTransferAccountListPayload
 } from "../reducers/creditTransfer/types";
+
+export const newLoadTransferAccountListAPI = ({
+  query,
+  path
+}: NewLoadTransferAccountListPayload) =>
+  apiClient({
+    url: "/search/",
+    method: "GET",
+    query: query,
+    path: path
+  });
 
 export const loadCreditTransferListAPI = ({
   query,

@@ -2,8 +2,6 @@ import * as React from "react";
 import { connect } from "react-redux";
 
 import { ReduxState } from "../../reducers/rootReducer";
-import { LoadTransferAccountListPayload } from "../../reducers/transferAccount/types";
-import { LoadTransferAccountAction } from "../../reducers/transferAccount/actions";
 
 import QueryConstructor, { Query } from "../filterModule/queryConstructor";
 import TransferAccountList from "./TransferAccountList";
@@ -13,15 +11,11 @@ import { getActiveToken } from "../../utils";
 interface StateProps {
   activeToken: any;
   transferAccounts: any;
+  creditTransfers: any;
+  users: any;
   login: any;
 }
 
-interface DispatchProps {
-  loadTransferAccountList: ({
-    query,
-    path
-  }: LoadTransferAccountListPayload) => LoadTransferAccountAction;
-}
 
 interface OuterProps {}
 
@@ -33,25 +27,15 @@ interface ComponentState {
   per_page: number;
 }
 
-type Props = StateProps & DispatchProps & OuterProps;
+type Props = StateProps & OuterProps;
 
 const mapStateToProps = (state: ReduxState): StateProps => {
   return {
     activeToken: getActiveToken(state),
     transferAccounts: state.transferAccounts,
+    creditTransfers: state.creditTransfers,
+    users: state.users,
     login: state.login
-  };
-};
-
-const mapDispatchToProps = (dispatch: any): DispatchProps => {
-  return {
-    loadTransferAccountList: ({
-      query,
-      path
-    }: LoadTransferAccountListPayload) =>
-      dispatch(
-        LoadTransferAccountAction.loadTransferAccountsRequest({ query, path })
-      )
   };
 };
 
@@ -87,13 +71,17 @@ class StandardTransferAccountList extends React.Component<
   }
 
   render() {
-    const { transferAccounts } = this.props;
-
+    const { transferAccounts, creditTransfers, users} = this.props;
+    console.log("this.props.transferAccounts")
+    console.log(this.props.transferAccounts)
+    console.log("this.props.creditTransfers")
+    console.log(this.props.creditTransfers)
     return (
       <>
         <QueryConstructor
           onQueryChange={(query: Query) => this.updateQueryData(query)}
-          filterObject="user"
+          filterObject="credit_transfer"
+          queryType="credit_transfer"
           pagination={{
             page: this.state.page,
             per_page: this.state.per_page
@@ -103,6 +91,8 @@ class StandardTransferAccountList extends React.Component<
           params={this.state.params}
           searchString={this.state.searchString}
           orderedTransferAccounts={transferAccounts.IdList}
+          creditTransfers={creditTransfers}
+          users={users}
           paginationOptions={{
             currentPage: this.state.page,
             items: this.props.transferAccounts.pagination.items,
@@ -117,5 +107,4 @@ class StandardTransferAccountList extends React.Component<
 
 export default connect(
   mapStateToProps,
-  mapDispatchToProps
 )(StandardTransferAccountList);

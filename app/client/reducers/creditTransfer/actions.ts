@@ -7,7 +7,9 @@ import {
   LoadCreditTransferPayload,
   ModifyCreditTransferRequestPayload,
   CreateCreditTransferPayload,
-  ModifyCreditTransferPayload
+  ModifyCreditTransferPayload,
+  NewLoadTransferAccountListPayload,
+  NewLoadCreditTransferActionTypes
 } from "./types";
 
 export const LoadCreditTransferAction = {
@@ -65,3 +67,34 @@ export const CreditTransferAction = {
 };
 
 export type CreditTransferAction = ActionsUnion<typeof CreditTransferAction>;
+
+
+export const newLoadCreditTransferRequest = (
+  payload: NewLoadTransferAccountListPayload
+) =>
+  createAction(
+    NewLoadCreditTransferActionTypes.NEW_LOAD_CREDIT_TRANSFER_LIST_REQUEST,
+    payload
+  );
+
+export const newLoadCreditTransferSuccess = (lastQueried: Date) =>
+  createAction(
+    NewLoadCreditTransferActionTypes.NEW_LOAD_CREDIT_TRANSFER_LIST_SUCCESS,
+    lastQueried
+  );
+
+export const newLoadCreditTransferFailure = (error: string) =>
+  createAction(
+    NewLoadCreditTransferActionTypes.NEW_LOAD_CREDIT_TRANSFER_LIST_FAILURE,
+    error
+  );
+
+export const NewLoadCreditTransferAction = {
+  newLoadCreditTransferRequest,
+  newLoadCreditTransferSuccess,
+  newLoadCreditTransferFailure
+};
+
+export type NewLoadCreditTransferAction = ActionsUnion<
+  typeof NewLoadCreditTransferAction
+>;

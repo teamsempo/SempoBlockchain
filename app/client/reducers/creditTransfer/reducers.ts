@@ -3,13 +3,15 @@ import { DEEEEEEP } from "../../utils";
 import {
   CreditTransferActionTypes,
   LoadCreditTransferActionTypes,
-  ModifyCreditTransferActionTypes
+  ModifyCreditTransferActionTypes,
+  NewLoadCreditTransferActionTypes
 } from "./types";
 
 import {
   CreditTransferAction,
   LoadCreditTransferAction,
-  ModifyCreditTransferAction
+  ModifyCreditTransferAction,
+  NewLoadCreditTransferAction
 } from "./actions";
 
 export const byId = (state = {}, action: CreditTransferAction) => {
@@ -56,6 +58,22 @@ const loadStatus = (state = initialState, action: LoadCreditTransferAction) => {
 
     case LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_FAILURE:
       return { ...state, isRequesting: false, error: action.error };
+
+    default:
+      return state;
+  }
+};
+
+const newLoadStatus = (state = initialState, action: NewLoadCreditTransferAction) => {
+  switch (action.type) {
+    case NewLoadCreditTransferActionTypes.NEW_LOAD_CREDIT_TRANSFER_LIST_REQUEST:
+      return { ...state, isRequesting: true };
+
+    case NewLoadCreditTransferActionTypes.NEW_LOAD_CREDIT_TRANSFER_LIST_SUCCESS:
+      return { ...state, isRequesting: false, success: true };
+
+    case NewLoadCreditTransferActionTypes.NEW_LOAD_CREDIT_TRANSFER_LIST_FAILURE:
+        return { ...state, isRequesting: false, error: action.error };
 
     default:
       return state;
@@ -116,5 +134,6 @@ export const creditTransfers = combineReducers({
   byId,
   loadStatus,
   createStatus,
-  modifyStatus
+  modifyStatus,
+  newLoadStatus
 });

@@ -87,13 +87,17 @@ def generate_search_query(search_string, filters, order, sort_by_arg, include_us
     else:
         # If the sort by argument is rank, but there are no ranks because there is no search string, sort by date transfer created
         sort_by = sort_types_to_database_types[search_type]['id'] if sort_by_arg == 'rank' and not search_string else sort_by
-        final_query = db.session.query(CreditTransfer, sum_search)\
-            .join(sender, sender.id == User.id)\
-            .join(recipient, recipient.id == User.id)\
-            .join(CreditTransfer, or_((recipient.id == CreditTransfer.recipient_user_id), (sender.id == CreditTransfer.sender_user_id)))\
-            .with_entities(CreditTransfer)\
-            .order_by(order(sort_by))
-    
+        if search_string:
+            final_query = db.session.query(CreditTransfer, sum_search)\
+                .join(sender, sender.id == User.id)\
+                .join(recipient, recipient.id == User.id)\
+                .join(CreditTransfer, or_((recipient.id == CreditTransfer.recipient_user_id), (sender.id == CreditTransfer.sender_user_id)))\
+                .with_entities(CreditTransfer)\
+                .order_by(order(sort_by))
+        else:
+            final_query = db.session.query(CreditTransfer)\
+                .order_by(order(sort_by))
+
     # If there is a search string, we only want to return ranked results!
     final_query = final_query.filter(sum_search!=0) if search_string else final_query
     if search_type == CREDIT_TRANSFER:

@@ -8,10 +8,7 @@ import { LightTheme } from "../theme.js";
 
 import StandardTransferAccountList from "../newCreditTransfer/StandardTransferAccountList";
 
-import { LoadTransferAccountAction } from "../../reducers/transferAccount/actions";
 import organizationWrapper from "../organizationWrapper.jsx";
-import NoDataMessage from "../NoDataMessage";
-import QueryConstructor from "../filterModule/queryConstructor";
 
 const mapStateToProps = state => {
   return {
@@ -32,14 +29,7 @@ const mapStateToProps = state => {
   };
 };
 
-const mapDispatchToProps = dispatch => {
-  return {
-    loadTransferAccountList: (query, path) =>
-      dispatch(
-        LoadTransferAccountAction.loadTransferAccountsRequest({ query, path })
-      )
-  };
-};
+
 
 class TransferAccountListPage extends React.Component {
   componentDidMount() {
@@ -92,7 +82,7 @@ class TransferAccountListPage extends React.Component {
       <WrapperDiv>
         <PageWrapper>
           <ThemeProvider theme={LightTheme}>
-            <Card title="All Accounts" style={{ margin: "10px" }}>
+            <Card title="All Transfers" style={{ margin: "10px" }}>
               <StandardTransferAccountList />
             </Card>
           </ThemeProvider>
@@ -103,6 +93,5 @@ class TransferAccountListPage extends React.Component {
 }
 
 export default connect(
-  mapStateToProps,
-  mapDispatchToProps
+  mapStateToProps
 )(organizationWrapper(TransferAccountListPage));

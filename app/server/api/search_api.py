@@ -41,7 +41,7 @@ class SearchAPI(MethodView):
         order_arg = request.args.get('order') or 'DESC'
         if order_arg.upper() not in ['ASC', 'DESC']:
             return { 'message': 'Invalid order value \'{}\'. Please use \'ASC\' or \'DESC\''.format(order_arg)}
-        search_type = request.args.get('search_type') or TRANSFER_ACCOUNT
+        search_type = request.args.get('search_type') or CREDIT_TRANSFER
         search_type = search_type.upper()
         if search_type.upper() not in [TRANSFER_ACCOUNT, CREDIT_TRANSFER]:
             return { 'message': f'Invalid search_type value \'{search_type}\'. Please use \'{TRANSFER_ACCOUNT}\' or \'{CREDIT_TRANSFER}\''}

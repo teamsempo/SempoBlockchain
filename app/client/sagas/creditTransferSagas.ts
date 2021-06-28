@@ -5,17 +5,19 @@ import { message } from "antd";
 import {
   LoadCreditTransferActionTypes,
   ModifyCreditTransferActionTypes,
-  CreditTransferActionTypes
+  CreditTransferActionTypes,
+  NewLoadCreditTransferActionTypes
 } from "../reducers/creditTransfer/types";
 
 import {
   CreditTransferAction,
   LoadCreditTransferAction,
-  ModifyCreditTransferAction
+  ModifyCreditTransferAction,
 } from "../reducers/creditTransfer/actions";
 
 import {
   loadCreditTransferListAPI,
+  newLoadTransferAccountListAPI,
   modifyTransferAPI,
   newTransferAPI
 } from "../api/creditTransferAPI";
@@ -202,11 +204,34 @@ function* watchCreateTransfer() {
   );
 }
 
+function* loadCreditTransfers({ payload }: CreditTransferListAPIResult) {
+  try {
+    const credit_load_result = yield call(newLoadTransferAccountListAPI, payload);
+    yield call(updateStateFromCreditTransfer, credit_load_result);
+
+    yield put(LoadCreditTransferAction.loadCreditTransferListSuccess());
+  } catch (fetch_error) {
+    const error = yield call(handleError, fetch_error);
+
+    yield put(LoadCreditTransferAction.loadCreditTransferListFailure(error));
+
+    message.error(error.message);
+  }
+}
+
+function* newWatchLoadCreditTransferList() {
+  yield takeEvery(
+    NewLoadCreditTransferActionTypes.NEW_LOAD_CREDIT_TRANSFER_LIST_REQUEST,
+    loadCreditTransfers
+  );
+}
+
 export default function* credit_transferSagas() {
   yield all([
     watchLoadCreditTransferList(),
     watchModifyTransfer(),
     watchCreateTransfer(),
-    watchPusherCreditTransfer()
+    watchPusherCreditTransfer(),
+    newWatchLoadCreditTransferList()
   ]);
 }
