@@ -1,13 +1,10 @@
 from sqlalchemy.sql import func
 
 from server.models.credit_transfer import CreditTransfer
-from server.models.transfer_account import TransferAccount
-from server.models.user import User
 from server.utils.metrics import filters, metrics_cache, metric, metric_group, group
 from server.utils.metrics.metrics_const import *
 
-from server import db, red, bt
-from sqlalchemy.dialects.postgresql import JSONB
+from server import db
 
 class TransferStats(metric_group.MetricGroup):
     def __init__(self, group_strategy, timeseries_unit = 'day', token=None, date_filter_attributes=None):
