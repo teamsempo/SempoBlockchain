@@ -105,9 +105,17 @@ class CreditTransferAPI(MethodView):
                     query = query.filter(
                         or_(CreditTransfer.recipient_transfer_account_id.in_(parsed_transfer_account_ids),
                             CreditTransfer.sender_transfer_account_id.in_(parsed_transfer_account_ids)))
-                transfers, total_items, total_pages, new_last_fetched = paginate_query(query)
-            # Search Logic
-            final_query = generate_search_query(search_string, filters, order, sort_by_arg, search_type=CREDIT_TRANSFER)
+                credit_transfers, total_items, total_pages, new_last_fetched = paginate_query(query)
+            else:
+                try:
+                    final_query = generate_search_query(search_string, filters, order, sort_by_arg, search_type=CREDIT_TRANSFER)
+                except Exception as e:
+                    response_object = {
+                        'status': 'fail',
+                        'message': str(e)
+                    }
+                    return make_response(jsonify(response_object)), 200
+
             credit_transfers, total_items, total_pages, new_last_fetched = paginate_query(final_query, ignore_last_fetched=True)
             if AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'admin'):
                 result = credit_transfers_schema.dump(credit_transfers)

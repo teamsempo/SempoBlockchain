@@ -55,9 +55,8 @@ def generate_search_query(search_string, filters, order, sort_by_arg, include_us
     }
 
     if sort_by_arg not in sort_types_to_database_types[search_type]:
-        return {
-            'message': f'Invalid sort_by value {sort_by_arg}. Please use one of the following: {sort_types_to_database_types[search_type].keys()}'\
-        }
+        raise Exception(f'Invalid sort_by value {sort_by_arg}. Please use one of the following: {sort_types_to_database_types[search_type].keys()}')
+
     # To add new searchable column, simply add a new SearchableColumn object!
     # And don't forget to add a trigram index on that column too-- see migration 33df5e72fca4 for reference
     user_search_columns = [
