@@ -4,13 +4,13 @@ import {
   CreateCreditTransferPayload,
   LoadCreditTransferPayload,
   ModifyCreditTransferRequestPayload,
-  NewLoadTransferAccountListPayload
+  LoadTransferAccountListPayload
 } from "../reducers/creditTransfer/types";
 
 export const newLoadTransferAccountListAPI = ({
   query,
   path
-}: NewLoadTransferAccountListPayload) =>
+}: LoadTransferAccountListPayload) =>
   apiClient({
     url: "/credit_transfer/",
     method: "GET",

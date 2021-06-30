@@ -64,17 +64,12 @@ export type CreditTransfer =
   | DisbursementCreditTransfer
   | ReclamationCreditTransfer;
 
-export interface NewCreditTransferLoadApiResult {
-  type: typeof LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_REQUEST;
-  payload: any;
-}
-
 // TODO we should only need one of these keys
 export interface CreditTransfers {
   [key: number]: CreditTransfer;
   [key: string]: CreditTransfer;
 }
-export interface NewLoadTransferAccountListPayload {
+export interface LoadTransferAccountListPayload {
   query?: {};
   path?: number;
 }
