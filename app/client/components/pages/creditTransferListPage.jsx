@@ -1,46 +1,74 @@
 import React from "react";
 import { connect } from "react-redux";
 import { ThemeProvider } from "styled-components";
+import { Card } from "antd";
 
 import { PageWrapper, WrapperDiv } from "../styledElements.js";
 import { LightTheme } from "../theme.js";
 
-import CreditTransferListWithFilterWrapper from "../creditTransfer/creditTransferListWithFilterWrapper.jsx";
+// HERE
+import StandardTransferAccountList from "../creditTransfer/StandardCreditTransferList";
 
-import { LoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
 import organizationWrapper from "../organizationWrapper.jsx";
-import NoDataMessage from "../NoDataMessage";
 
 const mapStateToProps = state => {
   return {
-    creditTransfers: state.creditTransfers,
-    creditTransferList: Object.keys(state.creditTransfers.byId)
-      .filter(id => typeof state.creditTransfers.byId[id] !== "undefined")
-      .map(id => state.creditTransfers.byId[id])
+    login: state.login,
+    transferAccounts: state.transferAccounts,
+    mergedTransferAccountUserList: Object.keys(state.transferAccounts.byId)
+      .map(id => {
+        return {
+          ...{
+            id,
+            ...state.users.byId[state.transferAccounts.byId[id].primary_user_id]
+          },
+          ...state.transferAccounts.byId[id]
+        };
+      })
+      .filter(mergedObj => mergedObj.users && mergedObj.users.length >= 1), // only show mergedObjects with users
+    users: state.users
   };
 };
 
-const mapDispatchToProps = dispatch => {
-  return {
-    loadCreditTransferList: query =>
-      dispatch(
-        LoadCreditTransferAction.loadCreditTransferListRequest({ query })
-      )
-  };
-};
-
-class CreditTransferListPage extends React.Component {
+class TransferAccountListPage extends React.Component {
   componentDidMount() {
-    this.props.loadCreditTransferList({ per_page: 200, page: 1 });
+    this.buildFilterForAPI();
+  }
+
+  componentDidUpdate(newProps) {
+    if (newProps.location.pathname !== location.pathname) {
+      this.buildFilterForAPI();
+    }
+  }
+
+  buildFilterForAPI() {
+    let query = {};
+
+    if (this.props.transferAccounts.loadStatus.lastQueried) {
+      query.updated_after = this.props.transferAccounts.loadStatus.lastQueried;
+    }
   }
 
   render() {
-    const { creditTransferList } = this.props;
-    let isNoData = Object.keys(creditTransferList).length === 0;
+    let transferAccountList = this.props.mergedTransferAccountUserList;
+
+    if (this.props.login.adminTier === "view") {
+      transferAccountList = Object.keys(this.props.transferAccounts.byId).map(
+        id => this.props.transferAccounts.byId[id]
+      );
+    }
+
+    const isNoData = Object.keys(transferAccountList).length === 0;
+    const isNotRequesting = !this.props.transferAccounts.loadStatus
+      .isRequesting;
+    const isNotRequestSuccess = !this.props.transferAccounts.loadStatus.success;
+    const isNotNullError =
+      this.props.transferAccounts.loadStatus.error !== null;
 
     if (
       isNoData &&
-      this.props.creditTransfers.loadStatus.isRequesting !== true
+      isNotRequesting &&
+      (isNotRequestSuccess && isNotNullError)
     ) {
       return (
         <PageWrapper>
@@ -53,9 +81,9 @@ class CreditTransferListPage extends React.Component {
       <WrapperDiv>
         <PageWrapper>
           <ThemeProvider theme={LightTheme}>
-            <CreditTransferListWithFilterWrapper
-              creditTransferList={this.props.creditTransferList}
-            />
+            <Card title="All Transfers" style={{ margin: "10px" }}>
+              <StandardTransferAccountList />
+            </Card>
           </ThemeProvider>
         </PageWrapper>
       </WrapperDiv>
@@ -63,7 +91,6 @@ class CreditTransferListPage extends React.Component {
   }
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(organizationWrapper(CreditTransferListPage));
+export default connect(mapStateToProps)(
+  organizationWrapper(TransferAccountListPage)
+);

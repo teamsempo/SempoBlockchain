@@ -4,7 +4,7 @@ import { connect } from "react-redux";
 import { ReduxState } from "../../reducers/rootReducer";
 
 import QueryConstructor, { Query } from "../filterModule/queryConstructor";
-import TransferAccountList from "./TransferAccountList";
+import TransferAccountList from "./CreditTransferList";
 
 import { getActiveToken } from "../../utils";
 
@@ -16,7 +16,7 @@ interface StateProps {
   login: any;
 }
 
-interface OuterProps { }
+interface OuterProps {}
 
 interface ComponentState {
   label: string;
@@ -38,7 +38,7 @@ const mapStateToProps = (state: ReduxState): StateProps => {
   };
 };
 
-class StandardTransferAccountList extends React.Component<
+class StandardCreditTransferList extends React.Component<
   Props,
   ComponentState
 > {
@@ -100,4 +100,4 @@ class StandardTransferAccountList extends React.Component<
   }
 }
 
-export default connect(mapStateToProps)(StandardTransferAccountList);
+export default connect(mapStateToProps)(StandardCreditTransferList);
