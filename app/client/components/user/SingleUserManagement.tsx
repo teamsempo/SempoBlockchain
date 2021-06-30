@@ -2,10 +2,7 @@ import * as React from "react";
 import { connect } from "react-redux";
 import { message } from "antd";
 
-import {
-  LoadTransferUsagePayload,
-  TransferUsage
-} from "../../reducers/transferUsage/types";
+import { TransferUsage } from "../../reducers/transferUsage/types";
 import { ReduxState } from "../../reducers/rootReducer";
 import EditUserForm, { IEditUser } from "./EditUserForm";
 import {
@@ -20,10 +17,8 @@ import {
 } from "../../reducers/user/types";
 
 import { EditTransferCardAction } from "../../reducers/transferCard/actions";
-import { LoadTransferUsagesAction } from "../../reducers/transferUsage/actions";
 
 interface DispatchProps {
-  loadUsages: (payload: LoadTransferUsagePayload) => LoadTransferUsagesAction;
   editUser: (body: User, path: number) => EditUserAction;
   resetPin: (payload: ResetPinPayload) => ResetPinAction;
   deleteUser: (payload: DeleteUserPayload) => DeleteUserAction;
@@ -81,17 +76,6 @@ class SingleUserManagement extends React.Component<Props> {
       },
       this.props.userId
     );
-  }
-
-  componentDidUpdate(prevProps: any) {
-    if (
-      prevProps.users.editStatus.isRequesting !==
-      this.props.users.editStatus.isRequesting
-    ) {
-      if (prevProps.users.editStatus.isRequesting) {
-        this.props.loadUsages({ query: { show_all: true } });
-      }
-    }
   }
 
   onResetPin() {
@@ -164,8 +148,6 @@ const mapStateToProps = (state: ReduxState, ownProps: any): StateProps => {
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => {
   return {
-    loadUsages: payload =>
-      dispatch(LoadTransferUsagesAction.loadTransferUsagesRequest(payload)),
     editUser: (body: User, path: number) =>
       dispatch(EditUserAction.editUserRequest({ body, path })),
     resetPin: payload => dispatch(ResetPinAction.resetPinRequest(payload)),
