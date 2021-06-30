@@ -42,17 +42,6 @@ class SingleUserPage extends React.Component {
     }
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    if (
-      prevProps.users.editStatus.isRequesting !==
-      this.props.users.editStatus.isRequesting
-    ) {
-      if (prevProps.users.editStatus.isRequesting) {
-        this.props.loadTransferUsages({ show_all: true });
-      }
-    }
-  }
-
   render() {
     let pathname_array = location.pathname.split("/").slice(1);
     let url_provided = pathname_array[1];
