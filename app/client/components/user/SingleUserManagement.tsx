@@ -2,7 +2,10 @@ import * as React from "react";
 import { connect } from "react-redux";
 import { message } from "antd";
 
-import { TransferUsage } from "../../reducers/transferUsage/types";
+import {
+  LoadTransferUsagePayload,
+  TransferUsage
+} from "../../reducers/transferUsage/types";
 import { ReduxState } from "../../reducers/rootReducer";
 import EditUserForm, { IEditUser } from "./EditUserForm";
 import {
@@ -13,13 +16,14 @@ import {
 import {
   User,
   ResetPinPayload,
-  DeleteUserPayload,
-  LoadUserRequestPayload
+  DeleteUserPayload
 } from "../../reducers/user/types";
 
 import { EditTransferCardAction } from "../../reducers/transferCard/actions";
+import { LoadTransferUsagesAction } from "../../reducers/transferUsage/actions";
 
 interface DispatchProps {
+  loadUsages: (payload: LoadTransferUsagePayload) => LoadTransferUsagesAction;
   editUser: (body: User, path: number) => EditUserAction;
   resetPin: (payload: ResetPinPayload) => ResetPinAction;
   deleteUser: (payload: DeleteUserPayload) => DeleteUserAction;
@@ -31,7 +35,8 @@ interface DispatchProps {
 }
 
 interface StateProps {
-  users: any;
+  transferCard: ReduxState["transferCard"];
+  users: ReduxState["users"];
   selectedUser: any;
   transferUsages: TransferUsage[];
 }
@@ -76,6 +81,17 @@ class SingleUserManagement extends React.Component<Props> {
       },
       this.props.userId
     );
+  }
+
+  componentDidUpdate(prevProps: any) {
+    if (
+      prevProps.users.editStatus.isRequesting !==
+      this.props.users.editStatus.isRequesting
+    ) {
+      if (prevProps.users.editStatus.isRequesting) {
+        this.props.loadUsages({ query: { show_all: true } });
+      }
+    }
   }
 
   onResetPin() {
@@ -124,6 +140,7 @@ class SingleUserManagement extends React.Component<Props> {
   render() {
     return (
       <EditUserForm
+        transferCard={this.props.transferCard}
         users={this.props.users}
         selectedUser={this.props.selectedUser}
         transferUsages={this.props.transferUsages}
@@ -138,6 +155,7 @@ class SingleUserManagement extends React.Component<Props> {
 
 const mapStateToProps = (state: ReduxState, ownProps: any): StateProps => {
   return {
+    transferCard: state.transferCard,
     users: state.users,
     selectedUser: state.users.byId[parseInt(ownProps.userId)],
     transferUsages: state.transferUsages.transferUsages
@@ -146,6 +164,8 @@ const mapStateToProps = (state: ReduxState, ownProps: any): StateProps => {
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => {
   return {
+    loadUsages: payload =>
+      dispatch(LoadTransferUsagesAction.loadTransferUsagesRequest(payload)),
     editUser: (body: User, path: number) =>
       dispatch(EditUserAction.editUserRequest({ body, path })),
     resetPin: payload => dispatch(ResetPinAction.resetPinRequest(payload)),
