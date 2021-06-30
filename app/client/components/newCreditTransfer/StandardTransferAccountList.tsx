@@ -16,7 +16,7 @@ interface StateProps {
   login: any;
 }
 
-interface OuterProps {}
+interface OuterProps { }
 
 interface ComponentState {
   label: string;

@@ -152,18 +152,10 @@ class Nav extends React.Component {
             <PrivateRoute
               exact
               path="/transfers"
-              component={creditTransferListPage}
-              isLoggedIn={isLoggedIn}
-              isReAuthing={isReAuthing}
-              title={`Transfers`}
-            />
-            <PrivateRoute
-              exact
-              path="/new_transfers"
               component={newCreditTransferListPage}
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
-              title={`New Transfers`}
+              title={`Transfers`}
             />
             <PrivateRoute
               exact

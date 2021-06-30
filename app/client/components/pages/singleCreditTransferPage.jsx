@@ -36,16 +36,6 @@ class SingleCreditTransferPage extends React.Component {
     let pathname_array = location.pathname.split("/").slice(1);
     let url_provided = pathname_array[1];
     let creditTransferId = parseInt(url_provided);
-
-    console.log("creditTransferId");
-    console.log("creditTransferId");
-    console.log("creditTransferId");
-    console.log("creditTransferId");
-    console.log("creditTransferId");
-    console.log(creditTransferId);
-    console.log(creditTransferId);
-    console.log(creditTransferId);
-    console.log(this.props.creditTransfers);
     let creditTransferComponent;
     if (this.props.creditTransfers.byId[creditTransferId]) {
       creditTransferComponent = (

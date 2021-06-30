@@ -77,7 +77,6 @@ export interface NewCreditTransferLoadApiResult {
 // TODO we should only need one of these keys
 export interface CreditTransfers {
   [key: number]: CreditTransfer;
-
   [key: string]: CreditTransfer;
 }
 export interface NewLoadTransferAccountListPayload {

@@ -97,7 +97,7 @@ function* updateStateFromCreditTransfer(result: CreditLoadApiResult) {
 }
 
 interface CreditTransferListAPIResult {
-  type: typeof LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_REQUEST;
+  type: typeof NewLoadCreditTransferActionTypes.NEW_LOAD_CREDIT_TRANSFER_LIST_REQUEST;
   payload: any;
 }
 
@@ -107,12 +107,6 @@ function* loadCreditTransferList({ payload }: CreditTransferListAPIResult) {
     yield call(updateStateFromCreditTransfer, credit_load_result);
 
     yield put(LoadCreditTransferAction.loadCreditTransferListSuccess());
-    console.log("A");
-    console.log("A");
-    console.log("A");
-    console.log("A");
-    console.log("A");
-    console.log("A");
     if (credit_load_result.items) {
       yield put(
         NewLoadCreditTransferAction.updateCreditTransferPagination(
@@ -131,7 +125,7 @@ function* loadCreditTransferList({ payload }: CreditTransferListAPIResult) {
 
 function* watchLoadCreditTransferList() {
   yield takeEvery(
-    LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_REQUEST,
+    NewLoadCreditTransferActionTypes.NEW_LOAD_CREDIT_TRANSFER_LIST_REQUEST,
     loadCreditTransferList
   );
 }
@@ -219,13 +213,10 @@ function* watchCreateTransfer() {
 
 function* loadCreditTransfers({ payload }: CreditTransferListAPIResult) {
   try {
-    console.log("BcdDef");
     const credit_load_result = yield call(
       newLoadTransferAccountListAPI,
       payload
     );
-    console.log("AbCdEf");
-    console.log(credit_load_result);
     yield call(updateStateFromCreditTransfer, credit_load_result);
 
     yield put(LoadCreditTransferAction.loadCreditTransferListSuccess());

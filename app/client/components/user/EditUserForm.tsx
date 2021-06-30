@@ -224,16 +224,7 @@ class EditUserForm extends React.Component<
         );
       }
     }
-    console.log("customAttributes");
-    console.log("customAttributes");
-    console.log("customAttributes");
-    console.log("customAttributes");
-    console.log(customAttributes);
-    console.log("businessUsageName");
-    console.log("businessUsageName");
-    console.log("businessUsageName");
-    console.log("businessUsageName");
-    console.log(businessUsageName);
+
     return (
       <div style={{ display: "flex", flexDirection: "column" }}>
         <form onSubmit={this.props.handleSubmit}>

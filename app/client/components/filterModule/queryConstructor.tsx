@@ -180,7 +180,7 @@ class QueryConstructor extends React.Component<Props, ComponentState> {
 
   loadData = () => {
     let pagination = this.props.pagination || {};
-    if(this.props.queryType && this.props.queryType == 'credit_transfer'){
+    if (this.props.queryType && this.props.queryType == 'credit_transfer') {
       this.props.loadCreditTransferList({
         query: {
           params: this.state.encodedFilters,
@@ -189,7 +189,7 @@ class QueryConstructor extends React.Component<Props, ComponentState> {
         }
       });
     }
-    else { 
+    else {
       this.props.loadTransferAccountList({
         query: {
           params: this.state.encodedFilters,

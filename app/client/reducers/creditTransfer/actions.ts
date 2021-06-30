@@ -2,7 +2,6 @@ import { createAction, ActionsUnion } from "../../reduxUtils";
 import {
   CreditTransfers,
   CreditTransferActionTypes,
-  LoadCreditTransferActionTypes,
   ModifyCreditTransferActionTypes,
   LoadCreditTransferPayload,
   ModifyCreditTransferRequestPayload,

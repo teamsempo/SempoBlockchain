@@ -2,14 +2,12 @@ import { combineReducers } from "redux";
 import { DEEEEEEP } from "../../utils";
 import {
   CreditTransferActionTypes,
-  LoadCreditTransferActionTypes,
   ModifyCreditTransferActionTypes,
   NewLoadCreditTransferActionTypes
 } from "./types";
 
 import {
   CreditTransferAction,
-  LoadCreditTransferAction,
   ModifyCreditTransferAction,
   NewLoadCreditTransferAction
 } from "./actions";
@@ -17,17 +15,8 @@ import {
 export const byId = (state = {}, action: CreditTransferAction) => {
   switch (action.type) {
     case CreditTransferActionTypes.UPDATE_CREDIT_TRANSFER_LIST:
-      console.log("action.payload");
-      console.log("action.payload");
-      console.log("action.payload");
-      console.log("action.payload");
       console.log(action.payload);
       if (!action.payload) {
-        console.log("NONE");
-        console.log("NONE");
-        console.log("NONE");
-        console.log("NONE");
-        console.log("NONE");
         return {};
       }
       Object.keys(action.payload).map(id => {
@@ -67,31 +56,14 @@ const newLoadStatus = (
 ) => {
   switch (action.type) {
     case NewLoadCreditTransferActionTypes.NEW_LOAD_CREDIT_TRANSFER_LIST_REQUEST:
-      console.log(1);
-      console.log(1);
-      console.log(1);
-      console.log(1);
-      console.log(1);
-      console.log(1);
-      console.log(1);
-      console.log(1);
-      console.log(1);
-      console.log(1);
-      console.log(1);
-      console.log(1);
-      console.log(1);
+
       return { ...state, isRequesting: true };
 
     case NewLoadCreditTransferActionTypes.NEW_LOAD_CREDIT_TRANSFER_LIST_SUCCESS:
-      console.log(3);
-      console.log(5555);
-      console.log(3);
 
       return { ...state, isRequesting: false, success: true };
 
     case NewLoadCreditTransferActionTypes.NEW_LOAD_CREDIT_TRANSFER_LIST_FAILURE:
-      console.log(35234235);
-
       return { ...state, isRequesting: false, error: action.error };
 
     default:
@@ -163,8 +135,6 @@ const pagination = (
 ) => {
   switch (action.type) {
     case NewLoadCreditTransferActionTypes.NEW_UPDATE_CREDIT_TRANSFER_LIST_PAGINATION:
-      console.log("DOIT");
-      console.log(action.payload);
       return { items: action.payload };
     default:
       return state;

@@ -179,7 +179,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
   }
 
   render() {
-    const {} = this.state;
+    const { } = this.state;
     const { creditTransfers, users } = this.props;
 
     let data: any[] = Object.values(creditTransfers.byId)
@@ -192,16 +192,16 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
 
         const sender_name = sender_user
           ? (sender_user.first_name === null ? "" : sender_user.first_name) +
-            " " +
-            (sender_user.last_name === null ? "" : sender_user.last_name)
+          " " +
+          (sender_user.last_name === null ? "" : sender_user.last_name)
           : "";
 
         const recipient_name = recipient_user
           ? (recipient_user.first_name === null
-              ? ""
-              : recipient_user.first_name) +
-            " " +
-            (recipient_user.last_name === null ? "" : recipient_user.last_name)
+            ? ""
+            : recipient_user.first_name) +
+          " " +
+          (recipient_user.last_name === null ? "" : recipient_user.last_name)
           : "";
 
         if (transfer.transfer_status === "COMPLETE") {
@@ -246,20 +246,6 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
         };
       })
       .reverse();
-    console.log("creditTransfers.loadStatus");
-    console.log("creditTransfers.loadStatus");
-    console.log("creditTransfers.loadStatus");
-    console.log("creditTransfers.loadStatus");
-    console.log("creditTransfers.loadStatus");
-    console.log("creditTransfers.loadStatus");
-    console.log("creditTransfers.loadStatus");
-    console.log(creditTransfers.loadStatus);
-    console.log(creditTransfers.loadStatus);
-    console.log(creditTransfers.loadStatus);
-    console.log(creditTransfers.loadStatus);
-    console.log(creditTransfers.loadStatus);
-    console.log(creditTransfers.newLoadStatus);
-    console.log(creditTransfers.newLoadStatus);
     return (
       <div style={{ opacity: this.props.disabled ? 0.6 : 1 }}>
         <div
