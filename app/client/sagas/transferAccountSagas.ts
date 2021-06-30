@@ -10,7 +10,7 @@ import {
   TransferAccountAction,
   EditTransferAccountAction
 } from "../reducers/transferAccount/actions";
-import { NewLoadCreditTransferAction } from "../reducers/creditTransfer/actions";
+import { LoadCreditTransferAction } from "../reducers/creditTransfer/actions";
 import { UserListAction } from "../reducers/user/actions";
 import { TokenListAction } from "../reducers/token/actions";
 
@@ -61,7 +61,7 @@ function* updateStateFromTransferAccount(data: TransferAccountData) {
   const credit_sends = normalizedData.entities.credit_sends;
   if (credit_sends) {
     yield put(
-      NewLoadCreditTransferAction.newUpdateCreditTransferListRequest(
+      LoadCreditTransferAction.updateCreditTransferListRequest(
         credit_receives
       )
     );
@@ -70,7 +70,7 @@ function* updateStateFromTransferAccount(data: TransferAccountData) {
   const credit_receives = normalizedData.entities.credit_receives;
   if (credit_receives) {
     yield put(
-      NewLoadCreditTransferAction.newUpdateCreditTransferListRequest(
+      LoadCreditTransferAction.updateCreditTransferListRequest(
         credit_receives
       )
     );

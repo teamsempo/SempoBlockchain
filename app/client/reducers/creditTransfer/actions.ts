@@ -3,7 +3,6 @@ import {
   CreditTransfers,
   CreditTransferActionTypes,
   ModifyCreditTransferActionTypes,
-  LoadCreditTransferPayload,
   ModifyCreditTransferRequestPayload,
   CreateCreditTransferPayload,
   ModifyCreditTransferPayload,
@@ -46,7 +45,7 @@ export const CreditTransferAction = {
 
 export type CreditTransferAction = ActionsUnion<typeof CreditTransferAction>;
 
-export const newLoadCreditTransferRequest = (
+export const loadCreditTransferRequest = (
   payload: NewLoadTransferAccountListPayload
 ) =>
   createAction(
@@ -54,7 +53,7 @@ export const newLoadCreditTransferRequest = (
     payload
   );
 
-export const newUpdateCreditTransferListRequest = (
+export const updateCreditTransferListRequest = (
   credit_transfers: CreditTransfers
 ) =>
   createAction(
@@ -62,10 +61,10 @@ export const newUpdateCreditTransferListRequest = (
     credit_transfers
   );
 
-export const newLoadCreditTransferSuccess = () =>
+export const loadCreditTransferSuccess = () =>
   createAction(LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_SUCCESS);
 
-export const newLoadCreditTransferFailure = (error: string) =>
+export const loadCreditTransferFailure = (error: string) =>
   createAction(
     LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_FAILURE,
     error
@@ -77,14 +76,14 @@ export const updateCreditTransferPagination = (items: number) =>
     items
   );
 
-export const NewLoadCreditTransferAction = {
-  newLoadCreditTransferRequest,
-  newLoadCreditTransferSuccess,
-  newLoadCreditTransferFailure,
+export const LoadCreditTransferAction = {
+  loadCreditTransferRequest,
+  loadCreditTransferSuccess,
+  loadCreditTransferFailure,
   updateCreditTransferPagination,
-  newUpdateCreditTransferListRequest
+  updateCreditTransferListRequest
 };
 
-export type NewLoadCreditTransferAction = ActionsUnion<
-  typeof NewLoadCreditTransferAction
+export type LoadCreditTransferAction = ActionsUnion<
+  typeof LoadCreditTransferAction
 >;

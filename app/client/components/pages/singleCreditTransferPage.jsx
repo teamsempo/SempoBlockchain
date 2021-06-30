@@ -7,7 +7,7 @@ import { CenterLoadingSideBarActive, WrapperDiv } from "../styledElements.js";
 import organizationWrapper from "../organizationWrapper.jsx";
 import LoadingSpinner from "../loadingSpinner";
 import SingleCreditTransfer from "../creditTransfer/singleCreditTransfer";
-import { NewLoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
+import { LoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
 
 const mapStateToProps = state => {
   return {
@@ -19,7 +19,7 @@ const mapDispatchToProps = dispatch => {
   return {
     loadCreditTransferList: path =>
       dispatch(
-        NewLoadCreditTransferAction.newLoadCreditTransferRequest({ path })
+        LoadCreditTransferAction.loadCreditTransferRequest({ path })
       )
   };
 };

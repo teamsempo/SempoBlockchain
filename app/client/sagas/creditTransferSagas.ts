@@ -12,7 +12,7 @@ import {
   CreditTransferAction,
   LoadCreditTransferAction,
   ModifyCreditTransferAction,
-  NewLoadCreditTransferAction
+  LoadCreditTransferAction
 } from "../reducers/creditTransfer/actions";
 
 import {
@@ -91,7 +91,7 @@ function* updateStateFromCreditTransfer(result: CreditLoadApiResult) {
   }
   const credit_transfers = normalizedData.entities.credit_transfers;
   yield put(
-    NewLoadCreditTransferAction.newUpdateCreditTransferListRequest(
+    LoadCreditTransferAction.updateCreditTransferListRequest(
       credit_transfers
     )
   );
@@ -106,17 +106,17 @@ function* loadCreditTransferList({ payload }: CreditTransferListAPIResult) {
   try {
     const credit_load_result = yield call(loadCreditTransferListAPI, payload);
     yield call(updateStateFromCreditTransfer, credit_load_result);
-    yield put(NewLoadCreditTransferAction.newLoadCreditTransferSuccess());
+    yield put(LoadCreditTransferAction.loadCreditTransferSuccess());
     if (credit_load_result.items) {
       yield put(
-        NewLoadCreditTransferAction.updateCreditTransferPagination(
+        LoadCreditTransferAction.updateCreditTransferPagination(
           credit_load_result.items
         )
       );
     }
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
-    yield put(NewLoadCreditTransferAction.newLoadCreditTransferFailure(error));
+    yield put(LoadCreditTransferAction.loadCreditTransferFailure(error));
 
     message.error(error.message);
   }
@@ -132,10 +132,10 @@ function* watchLoadCreditTransferList() {
 function* loadPusherCreditTransfer(pusher_data: any) {
   try {
     yield call(updateStateFromCreditTransfer, pusher_data);
-    yield put(NewLoadCreditTransferAction.newLoadCreditTransferSuccess());
+    yield put(LoadCreditTransferAction.loadCreditTransferSuccess());
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
-    yield put(NewLoadCreditTransferAction.newLoadCreditTransferFailure(error));
+    yield put(LoadCreditTransferAction.loadCreditTransferFailure(error));
   }
 }
 
@@ -216,16 +216,16 @@ function* loadCreditTransfers({ payload }: CreditTransferListAPIResult) {
     );
     yield call(updateStateFromCreditTransfer, credit_load_result);
 
-    yield put(NewLoadCreditTransferAction.newLoadCreditTransferSuccess());
+    yield put(LoadCreditTransferAction.loadCreditTransferSuccess());
     yield put(
-      NewLoadCreditTransferAction.updateCreditTransferPagination(
+      LoadCreditTransferAction.updateCreditTransferPagination(
         credit_load_result.items || 0
       )
     );
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
-    yield put(NewLoadCreditTransferAction.newLoadCreditTransferFailure(error));
+    yield put(LoadCreditTransferAction.loadCreditTransferFailure(error));
 
     message.error(error.message);
   }

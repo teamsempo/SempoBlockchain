@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import { subscribe, unsubscribe } from "pusher-redux";
 
 import { CreditTransferActionTypes } from "../../reducers/creditTransfer/types";
-import { NewLoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
+import { LoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
 
 import { BeneficiaryLiveFeed } from "../dashboard";
 import LoadingSpinner from "../loadingSpinner.jsx";
@@ -29,7 +29,7 @@ const mapDispatchToProps = dispatch => {
   return {
     loadCreditTransferList: query =>
       dispatch(
-        NewLoadCreditTransferAction.newLoadCreditTransferRequest({ query })
+        LoadCreditTransferAction.loadCreditTransferRequest({ query })
       ),
     activateAccount: payload =>
       dispatch(ActivateAccountAction.activateAccountRequest(payload))

@@ -10,7 +10,7 @@ import { AllowedMetricsObjects } from "../../reducers/metric/types";
 import { processFiltersForQuery } from "../../utils";
 import Filter from "./filter";
 import { LoadTransferAccountAction } from "../../reducers/transferAccount/actions";
-import { NewLoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
+import { LoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
 import { LoadTransferAccountListPayload } from "../../reducers/transferAccount/types";
 import { NewLoadTransferAccountListPayload } from "../../reducers/creditTransfer/types";
 
@@ -31,7 +31,7 @@ interface DispatchProps {
   loadCreditTransferList: ({
     query,
     path
-  }: NewLoadTransferAccountListPayload) => NewLoadCreditTransferAction;
+  }: NewLoadTransferAccountListPayload) => LoadCreditTransferAction;
 }
 
 export interface Query {
@@ -90,7 +90,7 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => {
       path
     }: NewLoadTransferAccountListPayload) =>
       dispatch(
-        NewLoadCreditTransferAction.newLoadCreditTransferRequest({ query, path })
+        LoadCreditTransferAction.loadCreditTransferRequest({ query, path })
       )
   };
 };

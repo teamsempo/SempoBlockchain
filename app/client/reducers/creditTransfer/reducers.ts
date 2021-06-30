@@ -9,7 +9,7 @@ import {
 import {
   CreditTransferAction,
   ModifyCreditTransferAction,
-  NewLoadCreditTransferAction
+  LoadCreditTransferAction
 } from "./actions";
 
 export const byId = (state = {}, action: CreditTransferAction) => {
@@ -51,7 +51,7 @@ const initialState: RequestingState = {
 
 const loadStatus = (
   state = initialState,
-  action: NewLoadCreditTransferAction
+  action: LoadCreditTransferAction
 ) => {
   switch (action.type) {
     case LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_REQUEST:
@@ -128,7 +128,7 @@ const initialPaginationState: Pagination = {
 
 const pagination = (
   state = initialPaginationState,
-  action: NewLoadCreditTransferAction
+  action: LoadCreditTransferAction
 ) => {
   switch (action.type) {
     case LoadCreditTransferActionTypes.UPDATE_CREDIT_TRANSFER_LIST_PAGINATION:

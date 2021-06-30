@@ -5,7 +5,7 @@ import { Card, Empty, Statistic, Tag, Descriptions, Button, Space } from "antd";
 import { DollarOutlined } from "@ant-design/icons";
 
 import {
-  NewLoadCreditTransferAction,
+  LoadCreditTransferAction,
   ModifyCreditTransferAction
 } from "../../reducers/creditTransfer/actions";
 import organizationWrapper from "../organizationWrapper.jsx";
@@ -26,7 +26,7 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = dispatch => {
   return {
     loadCreditTransferList: path =>
-      dispatch(NewLoadCreditTransferAction.loadCreditTransferListRequest(path)),
+      dispatch(LoadCreditTransferAction.loadCreditTransferListRequest(path)),
     modifyTransferRequest: payload =>
       dispatch(ModifyCreditTransferAction.modifyTransferRequest(payload))
   };
