@@ -5,7 +5,7 @@ import { connect } from "react-redux";
 import { StyledButton, StyledSelect, ModuleBox } from "../styledElements";
 import AsyncButton from "./../AsyncButton.jsx";
 
-import { CreditTransferAction } from "../../reducers/creditTransfer/actions";
+import { NewLoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
 import { getActiveToken } from "../../utils";
 
 const mapStateToProps = state => {
@@ -20,7 +20,9 @@ const mapStateToProps = state => {
 const mapDispatchToProps = dispatch => {
   return {
     createTransferRequest: body =>
-      dispatch(CreditTransferAction.createTransferRequest({ body }))
+      dispatch(
+        NewLoadCreditTransferAction.NewLoadCreditTransferAction({ body })
+      )
   };
 };
 

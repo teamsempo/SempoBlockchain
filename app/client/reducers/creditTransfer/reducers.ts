@@ -3,7 +3,7 @@ import { DEEEEEEP } from "../../utils";
 import {
   CreditTransferActionTypes,
   ModifyCreditTransferActionTypes,
-  NewLoadCreditTransferActionTypes
+  LoadCreditTransferActionTypes
 } from "./types";
 
 import {
@@ -54,13 +54,13 @@ const newLoadStatus = (
   action: NewLoadCreditTransferAction
 ) => {
   switch (action.type) {
-    case NewLoadCreditTransferActionTypes.NEW_LOAD_CREDIT_TRANSFER_LIST_REQUEST:
+    case LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_REQUEST:
       return { ...state, isRequesting: true };
 
-    case NewLoadCreditTransferActionTypes.NEW_LOAD_CREDIT_TRANSFER_LIST_SUCCESS:
+    case LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_SUCCESS:
       return { ...state, isRequesting: false, success: true };
 
-    case NewLoadCreditTransferActionTypes.NEW_LOAD_CREDIT_TRANSFER_LIST_FAILURE:
+    case LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_FAILURE:
       return { ...state, isRequesting: false, error: action.error };
 
     default:
@@ -131,7 +131,7 @@ const pagination = (
   action: NewLoadCreditTransferAction
 ) => {
   switch (action.type) {
-    case NewLoadCreditTransferActionTypes.NEW_UPDATE_CREDIT_TRANSFER_LIST_PAGINATION:
+    case LoadCreditTransferActionTypes.UPDATE_CREDIT_TRANSFER_LIST_PAGINATION:
       return { items: action.payload };
     default:
       return state;

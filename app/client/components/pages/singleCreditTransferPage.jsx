@@ -4,7 +4,6 @@ import { Card } from "antd";
 
 import { CenterLoadingSideBarActive, WrapperDiv } from "../styledElements.js";
 
-import { LoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
 import organizationWrapper from "../organizationWrapper.jsx";
 import LoadingSpinner from "../loadingSpinner";
 import SingleCreditTransfer from "../creditTransfer/singleCreditTransfer";
