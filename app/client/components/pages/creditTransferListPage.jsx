@@ -6,7 +6,6 @@ import { Card } from "antd";
 import { PageWrapper, WrapperDiv } from "../styledElements.js";
 import { LightTheme } from "../theme.js";
 
-// HERE
 import StandardTransferAccountList from "../creditTransfer/StandardCreditTransferList";
 
 import organizationWrapper from "../organizationWrapper.jsx";
