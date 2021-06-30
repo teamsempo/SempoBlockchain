@@ -8,6 +8,7 @@ import { LoadCreditTransferAction } from "../../reducers/creditTransfer/actions"
 import organizationWrapper from "../organizationWrapper.jsx";
 import LoadingSpinner from "../loadingSpinner";
 import SingleCreditTransfer from "../creditTransfer/singleCreditTransfer";
+import { NewLoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
 
 const mapStateToProps = state => {
   return {
@@ -18,7 +19,9 @@ const mapStateToProps = state => {
 const mapDispatchToProps = dispatch => {
   return {
     loadCreditTransferList: path =>
-      dispatch(LoadCreditTransferAction.loadCreditTransferListRequest(path))
+      dispatch(
+        NewLoadCreditTransferAction.newLoadCreditTransferRequest({ path })
+      )
   };
 };
 
@@ -26,7 +29,7 @@ class SingleCreditTransferPage extends React.Component {
   componentDidMount() {
     let pathname_array = location.pathname.split("/").slice(1);
     let creditTransferId = parseInt(pathname_array[1]);
-    this.props.loadCreditTransferList({ path: creditTransferId });
+    this.props.loadCreditTransferList(creditTransferId);
   }
 
   render() {

@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import { subscribe, unsubscribe } from "pusher-redux";
 
 import { CreditTransferActionTypes } from "../../reducers/creditTransfer/types";
-import { LoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
+import { NewLoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
 
 import { BeneficiaryLiveFeed } from "../dashboard";
 import LoadingSpinner from "../loadingSpinner.jsx";
@@ -29,7 +29,7 @@ const mapDispatchToProps = dispatch => {
   return {
     loadCreditTransferList: query =>
       dispatch(
-        LoadCreditTransferAction.loadCreditTransferListRequest({ query })
+        NewLoadCreditTransferAction.newLoadCreditTransferRequest({ query })
       ),
     activateAccount: payload =>
       dispatch(ActivateAccountAction.activateAccountRequest(payload))
@@ -48,13 +48,9 @@ class DashboardPage extends React.Component {
 
   componentDidMount() {
     this.subscribe();
-
-    let transfer_type = "ALL";
-    let per_page = 50;
+    let per_page = 10;
     let page = 1;
     this.props.loadCreditTransferList({
-      get_stats: true,
-      transfer_type: transfer_type,
       per_page: per_page,
       page: page
     });

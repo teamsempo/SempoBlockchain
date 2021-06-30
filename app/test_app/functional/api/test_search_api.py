@@ -91,17 +91,16 @@ def test_prep_search_api(test_client, complete_admin_auth_token, create_organisa
     # Michiel is from Halifax and Francine is from Dartmouth, so they should be at the top
     ('Dartmouth Halifax', ['Francine', 'Michiel', 'Paul', 'Roy']), 
 ])
-def test_credit_transfer_search(search_term, results, test_client, complete_admin_auth_token, create_organisation):
+def test_transfer_accounts_search(search_term, results, test_client, complete_admin_auth_token, create_organisation):
     """
-    When the '/api/v1/search/' page is requested with search parameters
+    When the '/api/v1/transfer_account/' page is requested with search parameters
     check that the results are in the correct order
     """
 
-    response = test_client.get(f'/api/v1/search/?search_string={search_term}',
+    response = test_client.get(f'/api/v1/transfer_account/?search_string={search_term}',
                             headers=dict(
                             Authorization=complete_admin_auth_token, Accept='application/json'),
                             follow_redirects=True)
-
     transfer_accounts = response.json['data']['transfer_accounts']
     assert response.status_code == 200
     user_names = []
@@ -134,11 +133,11 @@ def test_credit_transfer_search(search_term, results, test_client, complete_admi
 ])
 def test_transfer_account_search(search_term, results, test_client, complete_admin_auth_token, create_organisation):
     """
-    When the '/api/v1/search/' page is requested with search parameters
+    When the '/api/v1/transfer_account/' page is requested with search parameters
     check that the results are in the correct order
     """
 
-    response = test_client.get(f'/api/v1/search/?search_string={search_term}',
+    response = test_client.get(f'/api/v1/transfer_account/?search_string={search_term}',
                             headers=dict(
                             Authorization=complete_admin_auth_token, Accept='application/json'),
                             follow_redirects=True)
@@ -164,10 +163,10 @@ def test_transfer_account_search(search_term, results, test_client, complete_adm
 
 def test_filtered_transfer_account_search(search_term, filters, results, test_client, complete_admin_auth_token, create_organisation):
     """
-    When the '/api/v1/search/' page is requested with filters
+    When the '/api/v1/transfer_account/' page is requested with filters
     check that the results are in the correct order
     """
-    response = test_client.get(f'/api/v1/search/?search_string={search_term}&search_type=transfer_account&params={filters}',
+    response = test_client.get(f'/api/v1/transfer_account/?search_string={search_term}&search_type=transfer_account&params={filters}',
                         headers=dict(
                         Authorization=complete_admin_auth_token, Accept='application/json'),
                         follow_redirects=True)
@@ -196,10 +195,10 @@ def test_filtered_transfer_account_search(search_term, filters, results, test_cl
 
 def test_filtered_credit_transfer_search(search_term, filters, results, test_client, complete_admin_auth_token, create_organisation, sort_by, order):
     """
-    When the '/api/v1/search/' page is requested with filters
+    When the '/api/v1/credit_transfer/' page is requested with filters
     check that the results are in the correct order
     """
-    response = test_client.get(f'/api/v1/search/?search_string={search_term}&search_type=credit_transfer&params={filters}&sort_by={sort_by}&order={order}',
+    response = test_client.get(f'/api/v1/credit_transfer/?search_string={search_term}&search_type=credit_transfer&params={filters}&sort_by={sort_by}&order={order}',
                         headers=dict(
                         Authorization=complete_admin_auth_token, Accept='application/json'),
                         follow_redirects=True)
