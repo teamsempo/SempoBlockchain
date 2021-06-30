@@ -15,7 +15,6 @@ import {
 export const byId = (state = {}, action: CreditTransferAction) => {
   switch (action.type) {
     case CreditTransferActionTypes.UPDATE_CREDIT_TRANSFER_LIST:
-      console.log(action.payload);
       if (!action.payload) {
         return {};
       }
@@ -56,11 +55,9 @@ const newLoadStatus = (
 ) => {
   switch (action.type) {
     case NewLoadCreditTransferActionTypes.NEW_LOAD_CREDIT_TRANSFER_LIST_REQUEST:
-
       return { ...state, isRequesting: true };
 
     case NewLoadCreditTransferActionTypes.NEW_LOAD_CREDIT_TRANSFER_LIST_SUCCESS:
-
       return { ...state, isRequesting: false, success: true };
 
     case NewLoadCreditTransferActionTypes.NEW_LOAD_CREDIT_TRANSFER_LIST_FAILURE:

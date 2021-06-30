@@ -53,8 +53,6 @@ const overwriteMerge = (destinationArray, sourceArray) => sourceArray;
 
 export function DEEEEEEP(parent_object, child_object_to_add) {
   // update object state data with new data, while keeping untouched old data, overwrite array
-  console.log(parent_object);
-  console.log(child_object_to_add);
   return merge(parent_object, child_object_to_add, {
     arrayMerge: overwriteMerge
   });
