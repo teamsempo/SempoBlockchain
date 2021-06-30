@@ -49,7 +49,7 @@ const initialState: RequestingState = {
   error: null
 };
 
-const newLoadStatus = (
+const loadStatus = (
   state = initialState,
   action: NewLoadCreditTransferAction
 ) => {
@@ -142,6 +142,6 @@ export const creditTransfers = combineReducers({
   byId,
   createStatus,
   modifyStatus,
-  newLoadStatus,
+  loadStatus,
   pagination
 });

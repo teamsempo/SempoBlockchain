@@ -268,7 +268,7 @@ class CreditTransferList extends React.Component<Props, ComponentState> {
         </div>
         <Space direction="vertical">
           <Table
-            loading={creditTransfers.newLoadStatus.isRequesting}
+            loading={creditTransfers.loadStatus.isRequesting}
             columns={columns}
             dataSource={data}
             style={{ marginLeft: "10px", marginRight: "10px" }}

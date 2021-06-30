@@ -408,7 +408,7 @@ class CreditTransferList extends React.Component {
     }
 
     if (
-      this.props.creditTransfers.newLoadStatus.isRequesting ||
+      this.props.creditTransfers.loadStatus.isRequesting ||
       this.props.transferAccounts.loadStatus.isRequesting
     ) {
       return (

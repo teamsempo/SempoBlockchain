@@ -48,7 +48,7 @@ class SingleCreditTransferPage extends React.Component {
       );
     }
 
-    if (this.props.creditTransfers.newLoadStatus.isRequesting === true) {
+    if (this.props.creditTransfers.loadStatus.isRequesting === true) {
       return (
         <WrapperDiv>
           <CenterLoadingSideBarActive>

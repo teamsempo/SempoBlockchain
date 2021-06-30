@@ -167,7 +167,7 @@ class DashboardPage extends React.Component {
       </React.Fragment>
     );
 
-    if (this.props.creditTransfers.newLoadStatus.isRequesting === true) {
+    if (this.props.creditTransfers.loadStatus.isRequesting === true) {
       return (
         <WrapperDiv>
           <CenterLoadingSideBarActive>
@@ -177,7 +177,7 @@ class DashboardPage extends React.Component {
       );
     } else if (Object.values(this.props.creditTransfers.byId).length === 0) {
       return <NoDataMessage />;
-    } else if (this.props.creditTransfers.newLoadStatus.success === true) {
+    } else if (this.props.creditTransfers.loadStatus.success === true) {
       if (this.state.liveFeedExpanded) {
         return (
           <div>
