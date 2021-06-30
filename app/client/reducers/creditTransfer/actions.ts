@@ -15,16 +15,16 @@ import {
 export const LoadCreditTransferAction = {
   loadCreditTransferListRequest: (payload: LoadCreditTransferPayload) =>
     createAction(
-      LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_REQUEST,
+      NewLoadCreditTransferActionTypes.NEW_LOAD_CREDIT_TRANSFER_LIST_SUCCESS,
       payload
     ),
   loadCreditTransferListSuccess: () =>
     createAction(
-      LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_SUCCESS
+      NewLoadCreditTransferActionTypes.NEW_LOAD_CREDIT_TRANSFER_LIST_SUCCESS
     ),
   loadCreditTransferListFailure: (err: string) =>
     createAction(
-      LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_FAILURE,
+      NewLoadCreditTransferActionTypes.NEW_LOAD_CREDIT_TRANSFER_LIST_FAILURE,
       err
     )
 };
@@ -68,7 +68,6 @@ export const CreditTransferAction = {
 
 export type CreditTransferAction = ActionsUnion<typeof CreditTransferAction>;
 
-
 export const newLoadCreditTransferRequest = (
   payload: NewLoadTransferAccountListPayload
 ) =>
@@ -89,10 +88,17 @@ export const newLoadCreditTransferFailure = (error: string) =>
     error
   );
 
+export const updateCreditTransferPagination = (items: number) =>
+  createAction(
+    NewLoadCreditTransferActionTypes.NEW_UPDATE_CREDIT_TRANSFER_LIST_PAGINATION,
+    items
+  );
+
 export const NewLoadCreditTransferAction = {
   newLoadCreditTransferRequest,
   newLoadCreditTransferSuccess,
-  newLoadCreditTransferFailure
+  newLoadCreditTransferFailure,
+  updateCreditTransferPagination
 };
 
 export type NewLoadCreditTransferAction = ActionsUnion<

@@ -16,7 +16,6 @@ interface StateProps {
   login: any;
 }
 
-
 interface OuterProps {}
 
 interface ComponentState {
@@ -71,11 +70,7 @@ class StandardTransferAccountList extends React.Component<
   }
 
   render() {
-    const { transferAccounts, creditTransfers, users} = this.props;
-    console.log("this.props.transferAccounts")
-    console.log(this.props.transferAccounts)
-    console.log("this.props.creditTransfers")
-    console.log(this.props.creditTransfers)
+    const { transferAccounts, creditTransfers, users } = this.props;
     return (
       <>
         <QueryConstructor
@@ -95,7 +90,7 @@ class StandardTransferAccountList extends React.Component<
           users={users}
           paginationOptions={{
             currentPage: this.state.page,
-            items: this.props.transferAccounts.pagination.items,
+            items: this.props.creditTransfers.pagination.items,
             onChange: (page: number, perPage: number | undefined) =>
               this.onPaginateChange(page, perPage)
           }}
@@ -105,6 +100,4 @@ class StandardTransferAccountList extends React.Component<
   }
 }
 
-export default connect(
-  mapStateToProps,
-)(StandardTransferAccountList);
+export default connect(mapStateToProps)(StandardTransferAccountList);

@@ -13,6 +13,7 @@ import {
   CreditTransferAction,
   LoadCreditTransferAction,
   ModifyCreditTransferAction,
+  NewLoadCreditTransferAction
 } from "../reducers/creditTransfer/actions";
 
 import {
@@ -43,8 +44,10 @@ function* updateStateFromCreditTransfer(result: CreditLoadApiResult) {
   } else {
     credit_transfer_list.push(result.data.credit_transfer);
   }
-
-  const normalizedData = normalize(credit_transfer_list, creditTransferSchema);
+  const normalizedData = normalize(
+    credit_transfer_list.reverse(),
+    creditTransferSchema
+  );
 
   const transfer_accounts = normalizedData.entities.transfer_accounts;
   if (transfer_accounts) {
@@ -88,12 +91,9 @@ function* updateStateFromCreditTransfer(result: CreditLoadApiResult) {
     yield put(MetricAction.updateMetrics(metrics));
   }
   const credit_transfers = normalizedData.entities.credit_transfers;
-
-  if (credit_transfers) {
-    yield put(
-      CreditTransferAction.updateCreditTransferListRequest(credit_transfers)
-    );
-  }
+  yield put(
+    CreditTransferAction.updateCreditTransferListRequest(credit_transfers)
+  );
 }
 
 interface CreditTransferListAPIResult {
@@ -107,6 +107,19 @@ function* loadCreditTransferList({ payload }: CreditTransferListAPIResult) {
     yield call(updateStateFromCreditTransfer, credit_load_result);
 
     yield put(LoadCreditTransferAction.loadCreditTransferListSuccess());
+    console.log("A");
+    console.log("A");
+    console.log("A");
+    console.log("A");
+    console.log("A");
+    console.log("A");
+    if (credit_load_result.items) {
+      yield put(
+        NewLoadCreditTransferAction.updateCreditTransferPagination(
+          credit_load_result.items
+        )
+      );
+    }
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 
@@ -206,10 +219,21 @@ function* watchCreateTransfer() {
 
 function* loadCreditTransfers({ payload }: CreditTransferListAPIResult) {
   try {
-    const credit_load_result = yield call(newLoadTransferAccountListAPI, payload);
+    console.log("BcdDef");
+    const credit_load_result = yield call(
+      newLoadTransferAccountListAPI,
+      payload
+    );
+    console.log("AbCdEf");
+    console.log(credit_load_result);
     yield call(updateStateFromCreditTransfer, credit_load_result);
 
     yield put(LoadCreditTransferAction.loadCreditTransferListSuccess());
+    yield put(
+      NewLoadCreditTransferAction.updateCreditTransferPagination(
+        credit_load_result.items || 0
+      )
+    );
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
 

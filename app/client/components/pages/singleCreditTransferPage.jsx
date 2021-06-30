@@ -34,6 +34,15 @@ class SingleCreditTransferPage extends React.Component {
     let url_provided = pathname_array[1];
     let creditTransferId = parseInt(url_provided);
 
+    console.log("creditTransferId");
+    console.log("creditTransferId");
+    console.log("creditTransferId");
+    console.log("creditTransferId");
+    console.log("creditTransferId");
+    console.log(creditTransferId);
+    console.log(creditTransferId);
+    console.log(creditTransferId);
+    console.log(this.props.creditTransfers);
     let creditTransferComponent;
     if (this.props.creditTransfers.byId[creditTransferId]) {
       creditTransferComponent = (
@@ -47,7 +56,7 @@ class SingleCreditTransferPage extends React.Component {
       );
     }
 
-    if (this.props.creditTransfers.loadStatus.isRequesting === true) {
+    if (this.props.creditTransfers.newLoadStatus.isRequesting === true) {
       return (
         <WrapperDiv>
           <CenterLoadingSideBarActive>

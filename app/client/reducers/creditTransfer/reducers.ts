@@ -17,6 +17,19 @@ import {
 export const byId = (state = {}, action: CreditTransferAction) => {
   switch (action.type) {
     case CreditTransferActionTypes.UPDATE_CREDIT_TRANSFER_LIST:
+      console.log("action.payload");
+      console.log("action.payload");
+      console.log("action.payload");
+      console.log("action.payload");
+      console.log(action.payload);
+      if (!action.payload) {
+        console.log("NONE");
+        console.log("NONE");
+        console.log("NONE");
+        console.log("NONE");
+        console.log("NONE");
+        return {};
+      }
       Object.keys(action.payload).map(id => {
         let transfer = action.payload[id];
         if (
@@ -30,7 +43,7 @@ export const byId = (state = {}, action: CreditTransferAction) => {
           }
         }
       });
-      return DEEEEEEP(state, action.payload);
+      return DEEEEEEP({}, action.payload);
     default:
       return state;
   }
@@ -48,32 +61,38 @@ const initialState: RequestingState = {
   error: null
 };
 
-const loadStatus = (state = initialState, action: LoadCreditTransferAction) => {
-  switch (action.type) {
-    case LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_REQUEST:
-      return { ...state, isRequesting: true };
-
-    case LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_SUCCESS:
-      return { ...state, isRequesting: false, success: true };
-
-    case LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_FAILURE:
-      return { ...state, isRequesting: false, error: action.error };
-
-    default:
-      return state;
-  }
-};
-
-const newLoadStatus = (state = initialState, action: NewLoadCreditTransferAction) => {
+const newLoadStatus = (
+  state = initialState,
+  action: NewLoadCreditTransferAction
+) => {
   switch (action.type) {
     case NewLoadCreditTransferActionTypes.NEW_LOAD_CREDIT_TRANSFER_LIST_REQUEST:
+      console.log(1);
+      console.log(1);
+      console.log(1);
+      console.log(1);
+      console.log(1);
+      console.log(1);
+      console.log(1);
+      console.log(1);
+      console.log(1);
+      console.log(1);
+      console.log(1);
+      console.log(1);
+      console.log(1);
       return { ...state, isRequesting: true };
 
     case NewLoadCreditTransferActionTypes.NEW_LOAD_CREDIT_TRANSFER_LIST_SUCCESS:
+      console.log(3);
+      console.log(5555);
+      console.log(3);
+
       return { ...state, isRequesting: false, success: true };
 
     case NewLoadCreditTransferActionTypes.NEW_LOAD_CREDIT_TRANSFER_LIST_FAILURE:
-        return { ...state, isRequesting: false, error: action.error };
+      console.log(35234235);
+
+      return { ...state, isRequesting: false, error: action.error };
 
     default:
       return state;
@@ -130,10 +149,32 @@ export const createStatus = (
   }
 };
 
+export interface Pagination {
+  items: number;
+}
+
+const initialPaginationState: Pagination = {
+  items: 0
+};
+
+const pagination = (
+  state = initialPaginationState,
+  action: NewLoadCreditTransferAction
+) => {
+  switch (action.type) {
+    case NewLoadCreditTransferActionTypes.NEW_UPDATE_CREDIT_TRANSFER_LIST_PAGINATION:
+      console.log("DOIT");
+      console.log(action.payload);
+      return { items: action.payload };
+    default:
+      return state;
+  }
+};
+
 export const creditTransfers = combineReducers({
   byId,
-  loadStatus,
   createStatus,
   modifyStatus,
-  newLoadStatus
+  newLoadStatus,
+  pagination
 });

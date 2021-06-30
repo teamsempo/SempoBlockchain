@@ -37,7 +37,6 @@ class SingleTransferAccountWrapper extends React.Component {
         typeof transferAccount.users !== "undefined" ? (
           <UserList user_ids={transferAccount.users} />
         ) : null}
-
         <CreditTransferList
           credit_transfer_ids={creditTransferIds}
           transfer_account_id={transferAccountId}
