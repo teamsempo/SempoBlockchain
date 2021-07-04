@@ -5,43 +5,43 @@
     "aggregate": {
       "ORGANISATION": 1,
       "USER": 5,
-      "percent_change": 100,
+      "percent_change": -100,
       "total": 6
     },
     "timeseries": {
       "ORGANISATION": [
         {
-          "date": "2021-01-22T00:00:00",
+          "date": "2018-12-26T00:00:00",
           "value": 1
         },
         {
-          "date": "2021-02-04T00:00:00",
+          "date": "2019-01-08T00:00:00",
           "value": 1
         },
         {
-          "date": "2021-02-09T00:00:00",
+          "date": "2019-01-13T00:00:00",
           "value": 1
         },
         {
-          "date": "2021-02-11T00:00:00",
+          "date": "2021-06-28T00:00:00",
           "value": 1
         }
       ],
       "USER": [
         {
-          "date": "2021-02-05T00:00:00",
+          "date": "2019-01-09T00:00:00",
           "value": 1
         },
         {
-          "date": "2021-02-07T00:00:00",
+          "date": "2019-01-11T00:00:00",
           "value": 1
         },
         {
-          "date": "2021-02-10T00:00:00",
+          "date": "2019-01-14T00:00:00",
           "value": 2
         },
         {
-          "date": "2021-02-11T00:00:00",
+          "date": "2019-01-15T00:00:00",
           "value": 1
         }
       ]
@@ -55,7 +55,7 @@
     "aggregate": {
       "ORGANISATION": 1517,
       "USER": 170,
-      "percent_change": 397.029702970297,
+      "percent_change": -100,
       "total": 1687
     },
     "type": {
@@ -79,13 +79,25 @@
   "mandatory_filter": {},
   "master_wallet_balance": -1517,
   "total_distributed": 1517,
+  "total_population_cumulative": {
+    "aggregate": {
+      "ORGANISATION": 1,
+      "USER": 5,
+      "percent_change": -100,
+      "total": 7
+    },
+    "type": {
+      "display_decimals": 0,
+      "value_type": "count"
+    }
+  },
   "total_reclaimed": 0,
   "total_withdrawn": 0,
   "trades_per_user": {
     "aggregate": {
       "USER": 0.8333333333333334,
       "percent_change": null,
-      "total": 0.7142857142857143
+      "total": 0.8333333333333334
     },
     "type": {
       "display_decimals": 2,
@@ -96,7 +108,7 @@
     "aggregate": {
       "USER": 28.333333333333332,
       "percent_change": null,
-      "total": 24.285714285714285
+      "total": 28.333333333333332
     },
     "type": {
       "currency_name": "AUD Reserve Token",
@@ -108,7 +120,7 @@
   "users_created": {
     "aggregate": {
       "USER": 6,
-      "percent_change": 300,
+      "percent_change": -100,
       "total": 7
     },
     "type": {
@@ -120,7 +132,7 @@
     "aggregate": {
       "ORGANISATION": 1,
       "USER": 5,
-      "percent_change": 100,
+      "percent_change": -100,
       "total": 6
     },
     "type": {
