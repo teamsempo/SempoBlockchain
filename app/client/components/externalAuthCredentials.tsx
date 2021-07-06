@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Checkbox, Input } from "antd";
+import { Checkbox, Input, Card } from "antd";
 
-import styled from "styled-components";
 import { generateQueryString, getToken, handleResponse } from "../utils";
 import QRShowingModal from "./QRShowingModal";
 
@@ -81,84 +80,56 @@ export default function KoboCredentials() {
     });
     return (
       <div>
-        <div style={{ margin: "1em" }}>
-          <StyledAccountWrapper>
-            <StyledHeader>Plugin/Integration Credentials</StyledHeader>
-            <StyledContent>
-              <b>Username: </b>
-              {username}
-            </StyledContent>
-            <StyledContent>
-              <b>Password: </b>
-              {password}
-            </StyledContent>
-            <StyledContent>
-              <QRShowingModal data={`auth:${qrData}`} />
-            </StyledContent>
-          </StyledAccountWrapper>
-        </div>
-        <div style={{ margin: "1em" }}>
-          <StyledAccountWrapper>
-            <StyledHeader>Integration URL</StyledHeader>
-            <StyledContent>
-              <Input type="text" size="small" value={url || ""} />
-            </StyledContent>
-            <StyledContent>
-              <Checkbox
-                id="preprocess"
-                name="preprocess"
-                checked={preprocess}
-                onClick={setCheckbox}
-                aria-label="Preprocess Inputs"
-              >
-                Preprocess Inputs
-              </Checkbox>
-              <br />
+        <Card title={"Integration Credentials"} type="inner">
+          <b>Username: </b>
+          {username}
+          <br />
+          <b>Password: </b>
+          {password}
+          <QRShowingModal data={`auth:${qrData}`} />
+        </Card>
 
-              <Checkbox
-                id="allow_as_update"
-                name="allow_as_update"
-                checked={allow_as_update}
-                onClick={setCheckbox}
-                aria-label="Allow User Updates"
-              >
-                Allow User Updates
-              </Checkbox>
-              <br />
+        <br />
 
-              <Checkbox
-                id="return_raw_on_error"
-                name="return_raw_on_error"
-                checked={return_raw_on_error}
-                onClick={setCheckbox}
-                aria-label="Send Error Data"
-              >
-                Send Error Data
-              </Checkbox>
-              <br />
-            </StyledContent>
-          </StyledAccountWrapper>
-        </div>
+        <Card title={"Integration URL"} type="inner">
+          <Input type="text" size="small" value={url || ""} />
+
+          <Checkbox
+            id="preprocess"
+            name="preprocess"
+            checked={preprocess}
+            onClick={setCheckbox}
+            aria-label="Preprocess Inputs"
+          >
+            Preprocess Inputs
+          </Checkbox>
+          <br />
+
+          <Checkbox
+            id="allow_as_update"
+            name="allow_as_update"
+            checked={allow_as_update}
+            onClick={setCheckbox}
+            aria-label="Allow User Updates"
+          >
+            Allow User Updates
+          </Checkbox>
+          <br />
+
+          <Checkbox
+            id="return_raw_on_error"
+            name="return_raw_on_error"
+            checked={return_raw_on_error}
+            onClick={setCheckbox}
+            aria-label="Send Error Data"
+          >
+            Send Error Data
+          </Checkbox>
+          <br />
+        </Card>
       </div>
     );
   } else {
     return <div></div>;
   }
 }
-
-const StyledHeader = styled.p`
-  font-weight: 600;
-  margin: 0 0 0.6em;
-`;
-
-const StyledContent = styled.p`
-  font-weight: 400;
-  margin: 0;
-`;
-
-const StyledAccountWrapper = styled.div`
-  background-color: #f7fafc;
-  padding: 1em;
-  font-size: 14px;
-  border: 1px solid #dbe4e8;
-`;

@@ -1,9 +1,5 @@
-from datetime import datetime, timedelta
-
 from server import red, db
 from flask import g
-from decimal import Decimal
-import json
 import pickle
 import config
 
@@ -16,6 +12,11 @@ QUERY_ALL = 'QUERY_ALL'
 valid_strategies = [SUM, COUNT, SUM_OBJECTS, FIRST_COUNT, QUERY_ALL]
 # Combinatory stategies which aren't cachable
 dumb_strategies = [FIRST_COUNT, QUERY_ALL]
+
+# Workaround for an incongruity between flask-sqlalchemy and sqlalchemy
+def dummy_function():
+    return True
+db.session._autoflush = dummy_function
 
 def _store_cache(key, value):
     pickled_object = pickle.dumps(value)
@@ -37,7 +38,6 @@ def get_metrics_org_string(org_id):
 
 
 def execute_with_partial_history_cache(metric_name, query, object_model, strategy, enable_cache = True, group_by=None):
-    clear_metrics_cache()
     # enable_cache pass-thru. This is so we don't cache data when filters are active.
     if strategy in dumb_strategies or not enable_cache:
         return _handle_combinatory_strategy(query, None, strategy)
@@ -50,7 +50,6 @@ def execute_with_partial_history_cache(metric_name, query, object_model, strateg
     CURRENT_MAX_ID = f'{ORG_STRING}_{object_model.__table__.name}_max_id'
     HIGHEST_ID_CACHED = f'{ORG_STRING}_{metric_name}_{group_by}_max_cached_id'
     CACHE_RESULT = f'{ORG_STRING}_{metric_name}_{group_by}'
-
     # Checks if provided combinatry strategy is valid
     if strategy not in valid_strategies:
         raise Exception(f'Invalid combinatory strategy {strategy} requested.')
@@ -59,7 +58,7 @@ def execute_with_partial_history_cache(metric_name, query, object_model, strateg
     # get it from the DB many times in the same request
     current_max_id = red.get(CURRENT_MAX_ID)
     if not current_max_id:
-        query_max = db.session.query(db.func.max(object_model.id)).first()
+        query_max = db.session.query(db.func.max(object_model.id)).with_session(db.session).first()
         try:
             current_max_id = query_max[0]
         except IndexError:
@@ -79,7 +78,6 @@ def execute_with_partial_history_cache(metric_name, query, object_model, strateg
 
     #Combines results
     result = _handle_combinatory_strategy(filtered_query, cache_result, strategy)
-
     # Updates the cache with new data
     _store_cache(CACHE_RESULT, result)
     red.set(HIGHEST_ID_CACHED, current_max_id, config.METRICS_CACHE_TIMEOUT)
@@ -102,10 +100,10 @@ def _handle_combinatory_strategy(query, cache_result, strategy):
     return strategy_functions[strategy](query, cache_result)
 
 def _sum_strategy(query, cache_result):
-    return float(query.first().total or 0) + (cache_result or 0)
+    return float(query.with_session(db.session).first().total or 0) + (cache_result or 0)
 
 def _count_strategy(query, cache_result):
-    return query.count() + (cache_result or 0)
+    return query.with_session(db.session).count() + (cache_result or 0)
 
 def _sum_list_of_objects(query, cache_result):
     combined_results = {}
@@ -116,7 +114,7 @@ def _sum_list_of_objects(query, cache_result):
             else:
                 combined_results[(r[1])] = r[0]
 
-    query_result = query.all()
+    query_result = query.with_session(db.session).all()
     for r in query_result:
         if len(r) == 3:
             if (r[1], r[2]) not in combined_results:
@@ -141,9 +139,9 @@ def _sum_list_of_objects(query, cache_result):
 
 # "Dumb" combinatory strategies which are uncachable
 def _first_count(query, cache_result):
-    return query.first().count
+    return query.with_session(db.session).first().count
 
 def _return_all(query, cache_result):
-    return query.all()
+    return query.with_session(db.session).all()
 
 strategy_functions = { SUM: _sum_strategy, COUNT: _count_strategy, SUM_OBJECTS: _sum_list_of_objects, FIRST_COUNT: _first_count, QUERY_ALL: _return_all }

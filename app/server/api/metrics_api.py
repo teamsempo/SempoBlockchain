@@ -1,5 +1,4 @@
-from flask import Blueprint, request, make_response, jsonify, g
-import json
+from flask import Blueprint, request, make_response, jsonify
 
 from server.utils.metrics.metrics import calculate_transfer_stats
 from server.utils.metrics import metrics_const, metrics_cache

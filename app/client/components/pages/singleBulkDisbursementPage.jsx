@@ -258,6 +258,7 @@ class SingleBulkDisbursementPage extends React.Component {
               orderedTransferAccounts={this.props.transferAccounts.IdList}
               disabled={true}
               actionButtons={[]}
+              dataButtons={[]}
               noneSelectedbuttons={[]}
               onSelectChange={(s, u, a) => {}}
               providedSelectedRowKeys={bulkItem && bulkItem.include_accounts}

@@ -348,7 +348,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
       </Button>
     ));
 
-    let dataButtonsElems = dataButtons || [].map(
+    let dataButtonsElems = dataButtons.map(
       (button: DataButton) => (
         <Button
           key={button.label}

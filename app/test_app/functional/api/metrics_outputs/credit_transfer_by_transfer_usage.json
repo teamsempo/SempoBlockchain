@@ -6,33 +6,33 @@
       "Jalepeno Chips": 25,
       "Pepperoni": 125,
       "Shopping Carts": 20,
-      "percent_change": 397.029702970297,
+      "percent_change": -100,
       "total": 1687
     },
     "timeseries": {
       "Jalepeno Chips": [
         {
-          "date": "2021-02-05T00:00:00",
+          "date": "2019-01-09T00:00:00",
           "value": 20
         },
         {
-          "date": "2021-02-10T00:00:00",
+          "date": "2019-01-14T00:00:00",
           "value": 5
         }
       ],
       "Pepperoni": [
         {
-          "date": "2021-02-10T00:00:00",
+          "date": "2019-01-14T00:00:00",
           "value": 25
         },
         {
-          "date": "2021-02-11T00:00:00",
+          "date": "2019-01-15T00:00:00",
           "value": 100
         }
       ],
       "Shopping Carts": [
         {
-          "date": "2021-02-07T00:00:00",
+          "date": "2019-01-11T00:00:00",
           "value": 20
         }
       ]
@@ -55,27 +55,27 @@
     "timeseries": {
       "Jalepeno Chips": [
         {
-          "date": "2021-02-05T00:00:00",
+          "date": "2019-01-09T00:00:00",
           "value": 1
         },
         {
-          "date": "2021-02-10T00:00:00",
+          "date": "2019-01-14T00:00:00",
           "value": 1
         }
       ],
       "Pepperoni": [
         {
-          "date": "2021-02-10T00:00:00",
+          "date": "2019-01-14T00:00:00",
           "value": 1
         },
         {
-          "date": "2021-02-11T00:00:00",
+          "date": "2019-01-15T00:00:00",
           "value": 1
         }
       ],
       "Shopping Carts": [
         {
-          "date": "2021-02-07T00:00:00",
+          "date": "2019-01-11T00:00:00",
           "value": 1
         }
       ]
@@ -92,36 +92,36 @@
   "total_withdrawn": 0,
   "trades_per_user": {
     "aggregate": {
-      "Jalepeno Chips": 0.2857142857142857,
-      "Pepperoni": 0.2857142857142857,
-      "Shopping Carts": 0.14285714285714285,
+      "Jalepeno Chips": 0.3333333333333333,
+      "Pepperoni": 0.3333333333333333,
+      "Shopping Carts": 0.16666666666666666,
       "percent_change": null,
-      "total": 0.7142857142857143
+      "total": 0.8333333333333334
     },
     "timeseries": {
       "Jalepeno Chips": [
         {
-          "date": "2021-02-05T00:00:00",
+          "date": "2019-01-09T00:00:00",
           "value": 1
         },
         {
-          "date": "2021-02-10T00:00:00",
+          "date": "2019-01-14T00:00:00",
           "value": 0.3333333333333333
         }
       ],
       "Pepperoni": [
         {
-          "date": "2021-02-10T00:00:00",
+          "date": "2019-01-14T00:00:00",
           "value": 0.3333333333333333
         },
         {
-          "date": "2021-02-11T00:00:00",
-          "value": 0.14285714285714285
+          "date": "2019-01-15T00:00:00",
+          "value": 0.16666666666666666
         }
       ],
       "Shopping Carts": [
         {
-          "date": "2021-02-07T00:00:00",
+          "date": "2019-01-11T00:00:00",
           "value": 0.5
         }
       ]
@@ -133,36 +133,36 @@
   },
   "transfer_amount_per_user": {
     "aggregate": {
-      "Jalepeno Chips": 3.5714285714285716,
-      "Pepperoni": 17.857142857142858,
-      "Shopping Carts": 2.857142857142857,
+      "Jalepeno Chips": 4.166666666666667,
+      "Pepperoni": 20.833333333333332,
+      "Shopping Carts": 3.3333333333333335,
       "percent_change": null,
-      "total": 24.285714285714285
+      "total": 28.333333333333332
     },
     "timeseries": {
       "Jalepeno Chips": [
         {
-          "date": "2021-02-05T00:00:00",
+          "date": "2019-01-09T00:00:00",
           "value": 20
         },
         {
-          "date": "2021-02-10T00:00:00",
+          "date": "2019-01-14T00:00:00",
           "value": 1.6666666666666667
         }
       ],
       "Pepperoni": [
         {
-          "date": "2021-02-10T00:00:00",
+          "date": "2019-01-14T00:00:00",
           "value": 8.333333333333334
         },
         {
-          "date": "2021-02-11T00:00:00",
-          "value": 14.285714285714286
+          "date": "2019-01-15T00:00:00",
+          "value": 16.666666666666668
         }
       ],
       "Shopping Carts": [
         {
-          "date": "2021-02-07T00:00:00",
+          "date": "2019-01-11T00:00:00",
           "value": 10
         }
       ]
@@ -179,33 +179,33 @@
       "Jalepeno Chips": 2,
       "Pepperoni": 2,
       "Shopping Carts": 1,
-      "percent_change": 100,
+      "percent_change": -100,
       "total": 6
     },
     "timeseries": {
       "Jalepeno Chips": [
         {
-          "date": "2021-02-05T00:00:00",
+          "date": "2019-01-09T00:00:00",
           "value": 1
         },
         {
-          "date": "2021-02-10T00:00:00",
+          "date": "2019-01-14T00:00:00",
           "value": 1
         }
       ],
       "Pepperoni": [
         {
-          "date": "2021-02-10T00:00:00",
+          "date": "2019-01-14T00:00:00",
           "value": 1
         },
         {
-          "date": "2021-02-11T00:00:00",
+          "date": "2019-01-15T00:00:00",
           "value": 1
         }
       ],
       "Shopping Carts": [
         {
-          "date": "2021-02-07T00:00:00",
+          "date": "2019-01-11T00:00:00",
           "value": 1
         }
       ]
