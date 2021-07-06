@@ -12,7 +12,7 @@ import Filter from "./filter";
 import { LoadTransferAccountAction } from "../../reducers/transferAccount/actions";
 import { LoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
 import { LoadTransferAccountListPayload } from "../../reducers/transferAccount/types";
-import { LoadTransferAccountListPayload } from "../../reducers/creditTransfer/types";
+import { LoadCreditTransferPayload } from "../../reducers/creditTransfer/types";
 
 import { TooltipWrapper } from "../dashboard/TooltipWrapper";
 
@@ -31,7 +31,7 @@ interface DispatchProps {
   loadCreditTransferList: ({
     query,
     path
-  }: LoadTransferAccountListPayload) => LoadCreditTransferAction;
+  }: LoadCreditTransferPayload) => LoadCreditTransferAction;
 }
 
 export interface Query {

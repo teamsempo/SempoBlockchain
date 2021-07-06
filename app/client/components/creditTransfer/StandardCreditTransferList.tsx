@@ -4,7 +4,7 @@ import { connect } from "react-redux";
 import { ReduxState } from "../../reducers/rootReducer";
 
 import QueryConstructor, { Query } from "../filterModule/queryConstructor";
-import TransferAccountList from "./CreditTransferList";
+import CreditTransferList from "./CreditTransferList";
 
 import { getActiveToken } from "../../utils";
 
@@ -82,7 +82,7 @@ class StandardCreditTransferList extends React.Component<
             per_page: this.state.per_page
           }}
         />
-        <TransferAccountList
+        <CreditTransferList
           params={this.state.params}
           searchString={this.state.searchString}
           orderedTransferAccounts={transferAccounts.IdList}

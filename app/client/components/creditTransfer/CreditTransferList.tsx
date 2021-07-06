@@ -12,7 +12,6 @@ import { formatMoney } from "../../utils";
 import DateTime from "../dateTime";
 
 interface StateProps {
-  transferAccounts: any;
   users: any;
   tokens: any;
 }
@@ -34,8 +33,8 @@ interface stringIndexable {
 interface OuterProps extends stringIndexable {
   params: string;
   searchString: string;
-  creditTransfers: [];
-  users: any;
+  creditTransfers: ReduxState["creditTransfers"];
+  users: ReduxState["users"];
 }
 
 export interface TransferAccount {
@@ -155,12 +154,11 @@ const columns: ColumnsType<TransferAccount> = [
 const mapStateToProps = (state: ReduxState): StateProps => {
   return {
     tokens: state.tokens,
-    transferAccounts: state.transferAccounts,
     users: state.users
   };
 };
 
-class CreditTransferList extends React.Component<Props, ComponentState> {
+class CreditTransferList extends React.Component<Props> {
   constructor(props: Props) {
     super(props);
 

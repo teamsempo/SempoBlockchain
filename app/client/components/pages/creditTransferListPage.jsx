@@ -9,6 +9,7 @@ import { LightTheme } from "../theme.js";
 import StandardTransferAccountList from "../creditTransfer/StandardCreditTransferList";
 
 import organizationWrapper from "../organizationWrapper.jsx";
+import NoDataMessage from "../NoDataMessage";
 
 const mapStateToProps = state => {
   return {

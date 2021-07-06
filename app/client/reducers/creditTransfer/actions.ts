@@ -6,7 +6,7 @@ import {
   ModifyCreditTransferRequestPayload,
   CreateCreditTransferPayload,
   ModifyCreditTransferPayload,
-  LoadTransferAccountListPayload,
+  LoadCreditTransferPayload,
   LoadCreditTransferActionTypes
 } from "./types";
 
@@ -46,7 +46,7 @@ export const CreditTransferAction = {
 export type CreditTransferAction = ActionsUnion<typeof CreditTransferAction>;
 
 export const loadCreditTransferRequest = (
-  payload: LoadTransferAccountListPayload
+  payload: LoadCreditTransferPayload
 ) =>
   createAction(
     LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_REQUEST,

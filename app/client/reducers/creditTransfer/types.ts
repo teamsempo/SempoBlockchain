@@ -69,16 +69,8 @@ export interface CreditTransfers {
   [key: number]: CreditTransfer;
   [key: string]: CreditTransfer;
 }
-export interface LoadTransferAccountListPayload {
-  query?: {};
-  path?: number;
-}
 export interface LoadCreditTransferPayload {
-  query?: {
-    transfer_type: string;
-    per_page: number;
-    page: number;
-  };
+  query?: {};
   path?: number;
 }
 

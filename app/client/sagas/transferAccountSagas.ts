@@ -62,7 +62,7 @@ function* updateStateFromTransferAccount(data: TransferAccountData) {
   if (credit_sends) {
     yield put(
       LoadCreditTransferAction.updateCreditTransferListRequest(
-        credit_receives
+        credit_sends
       )
     );
   }
