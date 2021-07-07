@@ -1,12 +1,9 @@
 from sqlalchemy.sql import func
-from sqlalchemy.dialects.postgresql import JSONB
 
-from server import db, red, bt
+from server import db
 
-from server.models.credit_transfer import CreditTransfer
-from server.models.transfer_account import TransferAccount
 from server.models.user import User
-from server.utils.metrics import filters, metrics_cache, metric, metric_group
+from server.utils.metrics import metrics_cache, metric, metric_group
 from server.utils.metrics.metrics_const import *
 
 
