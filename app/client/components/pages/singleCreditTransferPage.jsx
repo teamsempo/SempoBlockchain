@@ -4,10 +4,10 @@ import { Card } from "antd";
 
 import { CenterLoadingSideBarActive, WrapperDiv } from "../styledElements.js";
 
-import { LoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
 import organizationWrapper from "../organizationWrapper.jsx";
 import LoadingSpinner from "../loadingSpinner";
 import SingleCreditTransfer from "../creditTransfer/singleCreditTransfer";
+import { LoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
 
 const mapStateToProps = state => {
   return {
@@ -18,7 +18,9 @@ const mapStateToProps = state => {
 const mapDispatchToProps = dispatch => {
   return {
     loadCreditTransferList: path =>
-      dispatch(LoadCreditTransferAction.loadCreditTransferListRequest(path))
+      dispatch(
+        LoadCreditTransferAction.loadCreditTransferRequest({ path })
+      )
   };
 };
 
@@ -26,14 +28,13 @@ class SingleCreditTransferPage extends React.Component {
   componentDidMount() {
     let pathname_array = location.pathname.split("/").slice(1);
     let creditTransferId = parseInt(pathname_array[1]);
-    this.props.loadCreditTransferList({ path: creditTransferId });
+    this.props.loadCreditTransferList(creditTransferId);
   }
 
   render() {
     let pathname_array = location.pathname.split("/").slice(1);
     let url_provided = pathname_array[1];
     let creditTransferId = parseInt(url_provided);
-
     let creditTransferComponent;
     if (this.props.creditTransfers.byId[creditTransferId]) {
       creditTransferComponent = (

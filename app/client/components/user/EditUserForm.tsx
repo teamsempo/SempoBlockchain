@@ -156,7 +156,7 @@ class EditUserForm extends React.Component<
 
     let validRoles = this.props.activeOrganisation.valid_roles;
     let customAttributes = selectedUser && selectedUser.custom_attributes;
-    let businessUsageName = transferUsage && transferUsage.name;
+    let businessUsageName = (transferUsage && transferUsage.name) || "";
 
     let profilePicture = null;
     let custom_attribute_list = null;
@@ -386,7 +386,9 @@ class EditUserForm extends React.Component<
             </Wrapper>
           </ModuleBox>
 
-          {Object.keys(customAttributes).length >= 1 || businessUsageName ? (
+          {Object.keys(customAttributes || {}).length >= 1 ||
+          businessUsageName ||
+          "" ? (
             <ModuleBox>
               <Wrapper>
                 <TopRow>

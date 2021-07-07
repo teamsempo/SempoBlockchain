@@ -291,7 +291,7 @@ class CreditTransferList extends React.Component {
 
   render() {
     const { creditTransfers, transfer_account_id } = this.props;
-    const loadingStatus = creditTransfers.loadStatus.isRequesting;
+    // const loadingStatus = creditTransfers.loadStatus.isRequesting;
 
     let creditTransferList = Object.keys(this.state.credit_transfer_ids)
       .filter(id => typeof this.props.creditTransfers.byId[id] !== "undefined")
@@ -420,238 +420,221 @@ class CreditTransferList extends React.Component {
       );
     }
 
-    if (
-      this.props.creditTransfers.loadStatus.success ||
-      (this.props.transferAccounts.loadStatus.success && !this.state.isLoading)
-    ) {
-      return (
-        <Wrapper>
-          <ModuleBox style={{ width: "calc(100% - 2em)" }}>
-            <TopRow>{topBarContent}</TopRow>
-            <ReactTable
-              columns={[
-                {
-                  Header: "Id",
-                  accessor: "id",
-                  headerClassName: "react-table-header",
-                  width: 60
-                },
-                {
-                  Header: "Type",
-                  accessor: "transfer_type",
-                  headerClassName: "react-table-header",
-                  className: "react-table-first-cell",
-                  Cell: cellInfo => {
-                    const transferId = cellInfo.original.id;
-                    const customRoutes = transfer_account_id
-                      ? [
-                          { path: "", breadcrumbName: "Home" },
-                          { path: "accounts/", breadcrumbName: "Accounts" },
-                          {
-                            path: `accounts/${transfer_account_id}`,
-                            breadcrumbName: `Transfer Account ${transfer_account_id}`
-                          },
-                          {
-                            path: `transfers/${transferId}`,
-                            breadcrumbName: `Transfer ${transferId}`
-                          }
-                        ]
-                      : undefined;
-                    return (
-                      <Link
-                        to={{
-                          pathname: "/transfers/" + transferId,
-                          state: { customRoutes }
-                        }}
-                        style={{
-                          textDecoration: "underline",
-                          color: "#000000a6"
-                        }}
-                      >
-                        {cellInfo.original.transfer_type}
-                      </Link>
-                    );
-                  }
-                },
-                {
-                  Header: "Created",
-                  accessor: "created",
-                  headerClassName: "react-table-header",
-                  Cell: cellInfo => <DateTime created={cellInfo.value} />
-                },
-                {
-                  Header: "Amount",
-                  accessor: "transfer_amount",
-                  headerClassName: "react-table-header",
-                  Cell: cellInfo => {
-                    let currency =
-                      cellInfo.original.token &&
-                      this.props.tokens.byId[cellInfo.original.token] &&
-                      this.props.tokens.byId[cellInfo.original.token].symbol;
-                    const money = formatMoney(
-                      cellInfo.value / 100,
-                      undefined,
-                      undefined,
-                      undefined,
-                      currency
-                    );
-                    return <p style={{ margin: 0 }}>{money}</p>;
-                  }
-                },
-                {
-                  Header: "Sender",
-                  id: "senderUser",
-                  accessor: creditTransfer =>
-                    this._customSender(creditTransfer),
-                  headerClassName: "react-table-header"
-                },
-                {
-                  Header: "Recipient",
-                  id: "recipientUser",
-                  accessor: creditTransfer =>
-                    this._customRecipient(creditTransfer),
-                  headerClassName: "react-table-header"
-                },
-                {
-                  Header: "Approval",
-                  accessor: "transfer_status",
-                  headerClassName: "react-table-header",
-                  Cell: cellInfo => {
-                    if (cellInfo.value === "COMPLETE") {
-                      var colour = "#9BDF56";
-                    } else if (cellInfo.value === "PENDING") {
-                      colour = "#F5A623";
-                    } else if (cellInfo.value === "PARTIAL") {
-                      colour = "#d48806";
-                    } else if (cellInfo.value === "REJECTED") {
-                      colour = "#F16853";
-                    } else {
-                      colour = "#c6c6c6";
-                    }
-                    return (
-                      <div
-                        style={{
-                          height: "100%",
-                          display: "flex",
-                          alignItems: "center"
-                        }}
-                      >
-                        <Status style={{ backgroundColor: colour }}>
-                          {cellInfo.value}
-                        </Status>
-                      </div>
-                    );
-                  }
-                },
-                {
-                  Header: "Blockchain",
-                  id: "blockchain_status",
-                  accessor: creditTransfer => {
-                    try {
-                      var task =
-                        creditTransfer.blockchain_status_breakdown.transfer ||
-                        creditTransfer.blockchain_status_breakdown.disbursement;
-                    } catch (e) {
-                      task = {};
-                    }
-                    return {
-                      status: creditTransfer.blockchain_status,
-                      hash: task.hash
-                    };
-                  },
-                  headerClassName: "react-table-header",
-                  Cell: cellInfo => {
-                    let { status, hash } = cellInfo.value;
-
-                    if (status === "COMPLETE") {
-                      var colour = "#9BDF56";
-                    } else if (status === "PENDING") {
-                      colour = "#F5A623";
-                    } else if (cellInfo.value === "PARTIAL") {
-                      colour = "#d48806";
-                    } else if (status === "UNSTARTED") {
-                      colour = "#F16853";
-                    } else if (status === "ERROR") {
-                      colour = "#F16853";
-                    } else {
-                      colour = "#c6c6c6";
-                    }
-
-                    if (hash) {
-                      var tracker_link =
-                        window.ETH_EXPLORER_URL + "/tx/" + hash;
-                    } else {
-                      tracker_link = null;
-                    }
-                    return (
-                      <div
-                        style={{
-                          height: "100%",
-                          display: "flex",
-                          alignItems: "center"
-                        }}
-                      >
-                        <Status
-                          style={{ backgroundColor: colour }}
-                          href={tracker_link}
-                          target="_blank"
-                        >
-                          {status}
-                        </Status>
-                      </div>
-                    );
-                  }
-                },
-                {
-                  Header: () => (
-                    <input
-                      type="checkbox"
-                      checked={this.state.allCheckedCreditTransfers}
-                      onChange={() =>
-                        this.checkAllCreditTransfers(filteredData)
-                      }
-                    />
-                  ),
-                  accessor: "id",
-                  headerClassName: "react-table-header",
-                  width: 60,
-                  sortable: false,
-                  Cell: cellInfo => this.displaySelect(cellInfo.value)
+    return (
+      <Wrapper>
+        <ModuleBox style={{ width: "calc(100% - 2em)" }}>
+          <TopRow>{topBarContent}</TopRow>
+          <ReactTable
+            columns={[
+              {
+                Header: "Id",
+                accessor: "id",
+                headerClassName: "react-table-header",
+                width: 60
+              },
+              {
+                Header: "Type",
+                accessor: "transfer_type",
+                headerClassName: "react-table-header",
+                className: "react-table-first-cell",
+                Cell: cellInfo => {
+                  const transferId = cellInfo.original.id;
+                  const customRoutes = transfer_account_id
+                    ? [
+                        { path: "", breadcrumbName: "Home" },
+                        { path: "accounts/", breadcrumbName: "Accounts" },
+                        {
+                          path: `accounts/${transfer_account_id}`,
+                          breadcrumbName: `Transfer Account ${transfer_account_id}`
+                        },
+                        {
+                          path: `transfers/${transferId}`,
+                          breadcrumbName: `Transfer ${transferId}`
+                        }
+                      ]
+                    : undefined;
+                  return (
+                    <Link
+                      to={{
+                        pathname: "/transfers/" + transferId,
+                        state: { customRoutes }
+                      }}
+                      style={{
+                        textDecoration: "underline",
+                        color: "#000000a6"
+                      }}
+                    >
+                      {cellInfo.original.transfer_type}
+                    </Link>
+                  );
                 }
-              ]}
-              data={filteredData}
-              loading={loadingStatus} // Display the loading overlay when we need it
-              pageSize={20}
-              sortable={true}
-              showPagination={true}
-              showPageSizeOptions={false}
-              className="react-table"
-              resizable={false}
-              getTdProps={(state, rowInfo) => {
-                return {
-                  onClick: (e, handleOriginal) => {
-                    if (rowInfo) {
-                      this.toggleSelectedCreditTransfer(rowInfo.row.id);
-                    }
-                    if (handleOriginal) {
-                      handleOriginal();
-                    }
+              },
+              {
+                Header: "Created",
+                accessor: "created",
+                headerClassName: "react-table-header",
+                Cell: cellInfo => <DateTime created={cellInfo.value} />
+              },
+              {
+                Header: "Amount",
+                accessor: "transfer_amount",
+                headerClassName: "react-table-header",
+                Cell: cellInfo => {
+                  let currency =
+                    cellInfo.original.token &&
+                    this.props.tokens.byId[cellInfo.original.token] &&
+                    this.props.tokens.byId[cellInfo.original.token].symbol;
+                  const money = formatMoney(
+                    cellInfo.value / 100,
+                    undefined,
+                    undefined,
+                    undefined,
+                    currency
+                  );
+                  return <p style={{ margin: 0 }}>{money}</p>;
+                }
+              },
+              {
+                Header: "Sender",
+                id: "senderUser",
+                accessor: creditTransfer => this._customSender(creditTransfer),
+                headerClassName: "react-table-header"
+              },
+              {
+                Header: "Recipient",
+                id: "recipientUser",
+                accessor: creditTransfer =>
+                  this._customRecipient(creditTransfer),
+                headerClassName: "react-table-header"
+              },
+              {
+                Header: "Approval",
+                accessor: "transfer_status",
+                headerClassName: "react-table-header",
+                Cell: cellInfo => {
+                  if (cellInfo.value === "COMPLETE") {
+                    var colour = "#9BDF56";
+                  } else if (cellInfo.value === "PENDING") {
+                    colour = "#F5A623";
+                  } else if (cellInfo.value === "PARTIAL") {
+                    colour = "#d48806";
+                  } else if (cellInfo.value === "REJECTED") {
+                    colour = "#F16853";
+                  } else {
+                    colour = "#c6c6c6";
                   }
-                };
-              }}
-            />
-          </ModuleBox>
-        </Wrapper>
-      );
-    } else if (this.props.transferAccounts.loadStatus.error !== null) {
-      return <p>{this.props.transferAccounts.loadStatus.error.message}</p>;
-    } else {
-      return (
-        <p style={{ padding: "1em", textAlign: "center" }}>
-          No credit transfers found
-        </p>
-      );
-    }
+                  return (
+                    <div
+                      style={{
+                        height: "100%",
+                        display: "flex",
+                        alignItems: "center"
+                      }}
+                    >
+                      <Status style={{ backgroundColor: colour }}>
+                        {cellInfo.value}
+                      </Status>
+                    </div>
+                  );
+                }
+              },
+              {
+                Header: "Blockchain",
+                id: "blockchain_status",
+                accessor: creditTransfer => {
+                  try {
+                    var task =
+                      creditTransfer.blockchain_status_breakdown.transfer ||
+                      creditTransfer.blockchain_status_breakdown.disbursement;
+                  } catch (e) {
+                    task = {};
+                  }
+                  return {
+                    status: creditTransfer.blockchain_status,
+                    hash: task.hash
+                  };
+                },
+                headerClassName: "react-table-header",
+                Cell: cellInfo => {
+                  let { status, hash } = cellInfo.value;
+
+                  if (status === "COMPLETE") {
+                    var colour = "#9BDF56";
+                  } else if (status === "PENDING") {
+                    colour = "#F5A623";
+                  } else if (cellInfo.value === "PARTIAL") {
+                    colour = "#d48806";
+                  } else if (status === "UNSTARTED") {
+                    colour = "#F16853";
+                  } else if (status === "ERROR") {
+                    colour = "#F16853";
+                  } else {
+                    colour = "#c6c6c6";
+                  }
+
+                  if (hash) {
+                    var tracker_link = window.ETH_EXPLORER_URL + "/tx/" + hash;
+                  } else {
+                    tracker_link = null;
+                  }
+                  return (
+                    <div
+                      style={{
+                        height: "100%",
+                        display: "flex",
+                        alignItems: "center"
+                      }}
+                    >
+                      <Status
+                        style={{ backgroundColor: colour }}
+                        href={tracker_link}
+                        target="_blank"
+                      >
+                        {status}
+                      </Status>
+                    </div>
+                  );
+                }
+              },
+              {
+                Header: () => (
+                  <input
+                    type="checkbox"
+                    checked={this.state.allCheckedCreditTransfers}
+                    onChange={() => this.checkAllCreditTransfers(filteredData)}
+                  />
+                ),
+                accessor: "id",
+                headerClassName: "react-table-header",
+                width: 60,
+                sortable: false,
+                Cell: cellInfo => this.displaySelect(cellInfo.value)
+              }
+            ]}
+            data={filteredData}
+            //loading={loadingStatus} // Display the loading overlay when we need it
+            pageSize={20}
+            sortable={true}
+            showPagination={true}
+            showPageSizeOptions={false}
+            className="react-table"
+            resizable={false}
+            getTdProps={(state, rowInfo) => {
+              return {
+                onClick: (e, handleOriginal) => {
+                  if (rowInfo) {
+                    this.toggleSelectedCreditTransfer(rowInfo.row.id);
+                  }
+                  if (handleOriginal) {
+                    handleOriginal();
+                  }
+                }
+              };
+            }}
+          />
+        </ModuleBox>
+      </Wrapper>
+    );
   }
 }
 

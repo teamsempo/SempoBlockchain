@@ -1,16 +1,12 @@
 from server.models.credit_transfer import CreditTransfer
 from server.models.transfer_account import TransferAccount
-from server.utils.metrics import metrics_cache
 from server.models.custom_attribute_user_storage import CustomAttributeUserStorage
 from server.models.custom_attribute import CustomAttribute
 
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferStatusEnum
-from flask import g
 from server.models.user import User
-from sqlalchemy.sql import func, text
 from sqlalchemy.orm import aliased
-from sqlalchemy import case, or_
-from server import db, red, bt
+from sqlalchemy import or_
 
 def apply_filters(query, filters, query_table):
     """

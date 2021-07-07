@@ -1,9 +1,13 @@
 from flask import Blueprint, request, make_response, jsonify, g
 from flask.views import MethodView
 from sqlalchemy import or_, not_
+from sqlalchemy import desc, asc
+
 import json
 from decimal import Decimal
 from uuid import uuid4
+import datetime
+
 from server import db
 from server.models.token import Token
 from server.models.utils import paginate_query
@@ -12,10 +16,12 @@ from server.models.blockchain_address import BlockchainAddress
 from server.models.transfer_account import TransferAccount, TransferAccountType
 
 from server.schemas import credit_transfers_schema, credit_transfer_schema, view_credit_transfers_schema, view_credit_transfer_schema
+from server.utils.transfer_filter import process_transfer_filters
 from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl
 from server.utils.credit_transfer import find_user_with_transfer_account_from_identifiers
-from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferModeEnum, TransferStatusEnum
+from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferModeEnum
+from server.utils.search import generate_search_query, CREDIT_TRANSFER
 from server.utils.credit_transfer import (
     make_payment_transfer,
     make_target_balance_transfer,
@@ -35,13 +41,25 @@ class CreditTransferAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'any'})
     def get(self, credit_transfer_id):
         transfer_account_ids = request.args.get('transfer_account_ids')
-        transfer_type = request.args.get('transfer_type', 'ALL')
-        result = None
-        if transfer_type:
-            transfer_type = transfer_type.upper()
+        # Handle search parameters
+        # HANDLE PARAM : search_string - Any search string. An empty string (or None) will just return everything!
+        search_string = request.args.get('search_string') or ''
+        # HANDLE PARAM : params - Standard filter object. Exact same as the ones Metrics uses!
+        encoded_filters = request.args.get('params')
+        filters = process_transfer_filters(encoded_filters)
+        # HANDLE PARAM : order
+        # Valid orders types are: `ASC` and `DESC`
+        # Default: DESC
+        order_arg = request.args.get('order') or 'DESC'
+        if order_arg.upper() not in ['ASC', 'DESC']:
+            return { 'message': 'Invalid order value \'{}\'. Please use \'ASC\' or \'DESC\''.format(order_arg)}
+        order = asc if order_arg.upper()=='ASC' else desc
+        # HANDLE PARAM: sort_by
+        # Valid orders types are: first_name, last_name, email, date_account_created, rank, balance, status
+        # Default: rank
+        sort_by_arg = request.args.get('sort_by') or 'rank'
 
         if credit_transfer_id:
-
             credit_transfer = CreditTransfer.query.get(credit_transfer_id)
 
             if credit_transfer is None:
@@ -66,21 +84,11 @@ class CreditTransferAPI(MethodView):
             return make_response(jsonify(response_object)), 200
 
         else:
-
-            query = CreditTransfer.query
-            transfer_list = None
-
-            if transfer_type != 'ALL':
-                try:
-                    transfer_type_enum = TransferTypeEnum[transfer_type]
-                    query = query.filter(CreditTransfer.transfer_type == transfer_type_enum)
-                except KeyError:
-                    response_object = {
-                        'message': 'Invalid Filter: Transfer Type ',
-                    }
-                    return make_response(jsonify(response_object)), 400
-
+            # Legacy support of transfer_account_ids
             if transfer_account_ids:
+                query = CreditTransfer.query
+                transfer_list = None
+
                 # We're getting a list of transfer accounts - parse
                 try:
                     parsed_transfer_account_ids = list(
@@ -97,25 +105,32 @@ class CreditTransferAPI(MethodView):
                     query = query.filter(
                         or_(CreditTransfer.recipient_transfer_account_id.in_(parsed_transfer_account_ids),
                             CreditTransfer.sender_transfer_account_id.in_(parsed_transfer_account_ids)))
-            transfers, total_items, total_pages, new_last_fetched = paginate_query(query)
+                credit_transfers, total_items, total_pages, new_last_fetched = paginate_query(query)
+            else:
+                try:
+                    final_query = generate_search_query(search_string, filters, order, sort_by_arg, search_type=CREDIT_TRANSFER)
+                except Exception as e:
+                    response_object = {
+                        'status': 'fail',
+                        'message': str(e)
+                    }
+                    return make_response(jsonify(response_object)), 200
 
+            credit_transfers, total_items, total_pages, new_last_fetched = paginate_query(final_query, ignore_last_fetched=True)
             if AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'admin'):
-                transfer_list = credit_transfers_schema.dump(transfers).data
-            elif AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'view'):
-                transfer_list = view_credit_transfers_schema.dump(transfers).data
+                result = credit_transfers_schema.dump(credit_transfers)
+            elif AccessControl.has_any_tier(g.user.roles, 'ADMIN'):
+                result = view_credit_transfers_schema.dump(credit_transfers)
 
-            response_object = {
+            return {
                 'status': 'success',
                 'message': 'Successfully Loaded.',
                 'items': total_items,
                 'pages': total_pages,
                 'last_fetched': new_last_fetched,
-                'data': {
-                    'credit_transfers': transfer_list,
-                }
+                'query_time': datetime.datetime.utcnow(),
+                'data': { 'credit_transfers': result.data }
             }
-
-            return make_response(jsonify(response_object)), 200
 
     @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def put(self, credit_transfer_id):

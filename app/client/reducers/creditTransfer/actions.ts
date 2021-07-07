@@ -2,34 +2,13 @@ import { createAction, ActionsUnion } from "../../reduxUtils";
 import {
   CreditTransfers,
   CreditTransferActionTypes,
-  LoadCreditTransferActionTypes,
   ModifyCreditTransferActionTypes,
-  LoadCreditTransferPayload,
   ModifyCreditTransferRequestPayload,
   CreateCreditTransferPayload,
-  ModifyCreditTransferPayload
+  ModifyCreditTransferPayload,
+  LoadCreditTransferPayload,
+  LoadCreditTransferActionTypes
 } from "./types";
-
-export const LoadCreditTransferAction = {
-  loadCreditTransferListRequest: (payload: LoadCreditTransferPayload) =>
-    createAction(
-      LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_REQUEST,
-      payload
-    ),
-  loadCreditTransferListSuccess: () =>
-    createAction(
-      LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_SUCCESS
-    ),
-  loadCreditTransferListFailure: (err: string) =>
-    createAction(
-      LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_FAILURE,
-      err
-    )
-};
-
-export type LoadCreditTransferAction = ActionsUnion<
-  typeof LoadCreditTransferAction
->;
 
 export const ModifyCreditTransferAction = {
   modifyTransferRequest: (payload: ModifyCreditTransferRequestPayload) =>
@@ -65,3 +44,46 @@ export const CreditTransferAction = {
 };
 
 export type CreditTransferAction = ActionsUnion<typeof CreditTransferAction>;
+
+export const loadCreditTransferRequest = (
+  payload: LoadCreditTransferPayload
+) =>
+  createAction(
+    LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_REQUEST,
+    payload
+  );
+
+export const updateCreditTransferListRequest = (
+  credit_transfers: CreditTransfers
+) =>
+  createAction(
+    CreditTransferActionTypes.UPDATE_CREDIT_TRANSFER_LIST,
+    credit_transfers
+  );
+
+export const loadCreditTransferSuccess = () =>
+  createAction(LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_SUCCESS);
+
+export const loadCreditTransferFailure = (error: string) =>
+  createAction(
+    LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_FAILURE,
+    error
+  );
+
+export const updateCreditTransferPagination = (items: number) =>
+  createAction(
+    LoadCreditTransferActionTypes.UPDATE_CREDIT_TRANSFER_LIST_PAGINATION,
+    items
+  );
+
+export const LoadCreditTransferAction = {
+  loadCreditTransferRequest,
+  loadCreditTransferSuccess,
+  loadCreditTransferFailure,
+  updateCreditTransferPagination,
+  updateCreditTransferListRequest
+};
+
+export type LoadCreditTransferAction = ActionsUnion<
+  typeof LoadCreditTransferAction
+>;

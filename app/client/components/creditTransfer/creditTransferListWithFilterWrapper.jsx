@@ -1,7 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 
-import CreditTransferList from "./creditTransferList.jsx";
+import CreditTransferList from "./LegacyCreditTransferList.jsx";
 import SearchBoxWithFilter from "../filterModule/SearchBoxWithFilter.jsx";
 
 export default class CreditTransferListWithFilterWrapper extends React.Component {
