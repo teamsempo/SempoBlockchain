@@ -1,8 +1,8 @@
 import React from "react";
 import styled from "styled-components";
 import QRCode from "qrcode.react";
+import { Button } from "antd";
 
-import AsyncButton from "./../AsyncButton.jsx";
 import TFAValidator from "./TFAValidator.jsx";
 
 import { FooterLink } from "../pages/authPage.jsx";
@@ -26,14 +26,16 @@ export default class TFAForm extends React.Component {
       return (
         <div>
           <TFAQr data={this.props.tfaURL} />
-          <AsyncButton
+          <Button
             onClick={() => this.handleNextBack()}
-            buttonStyle={{ width: "calc(100% - 1em)", display: "flex" }}
-            buttonText={<span>Next</span>}
+            type={"primary"}
             label={
               "Go to the next page once two factor authentication QR code is scanned"
             }
-          />
+            block
+          >
+            Next
+          </Button>
         </div>
       );
     } else {
