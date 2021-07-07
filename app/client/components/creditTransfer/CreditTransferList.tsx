@@ -97,7 +97,7 @@ const columns: ColumnsType<TransferAccount> = [
     ellipsis: true,
     render: (text: any, record: any) => (
       <Link
-        to={"/users/" + record.sender_user_id}
+        to={"/accounts/" + record.sender_transfer_account_id}
         style={{
           textDecoration: "underline",
           color: "#000000a6",
@@ -114,7 +114,7 @@ const columns: ColumnsType<TransferAccount> = [
     ellipsis: true,
     render: (text: any, record: any) => (
       <Link
-        to={"/users/" + record.recipient_user_id}
+        to={"/accounts/" + record.recipient_transfer_account_id}
         style={{
           textDecoration: "underline",
           color: "#000000a6",
@@ -227,7 +227,6 @@ class CreditTransferList extends React.Component<Props> {
         } else {
           blockchain_status_colour = "#c6c6c6";
         }
-
         return {
           id: transfer.id,
           created: transfer.created,
@@ -238,9 +237,9 @@ class CreditTransferList extends React.Component<Props> {
           blockchain_status: transfer.blockchain_status,
           blockchain_status_colour: blockchain_status_colour,
           recipient_name: recipient_name,
-          recipient_user_id: recipient_user && recipient_user.id,
           sender_name: sender_name,
-          sender_user_id: sender_user && sender_user.id
+          sender_transfer_account_id: transfer.sender_transfer_account_id,
+          recipient_transfer_account_id: transfer.recipient_transfer_account_id
         };
       })
       .reverse();
