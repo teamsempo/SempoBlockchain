@@ -237,10 +237,10 @@ workflows:
             branches:
               only:
                 - master
+                - always-get-new-nonce
 
           requires:
             - build
-            - always-get-new-nonce
 #            - test:backend
 #            - test:worker
 #            - test:frontend
