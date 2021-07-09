@@ -640,7 +640,7 @@ class ResetPasswordAPI(MethodView):
 
                 return make_response(jsonify(response_object)), 401
 
-            user = User.query.filter_by(id=resp.get('user_id')).execution_options(show_all=True).first()
+            user = User.query.filter_by(id=resp.get('id')).execution_options(show_all=True).first()
 
             if not user:
                 response_object = {

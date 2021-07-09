@@ -12,7 +12,9 @@ export enum CreditTransferActionTypes {
 export enum LoadCreditTransferActionTypes {
   LOAD_CREDIT_TRANSFER_LIST_REQUEST = "LOAD_CREDIT_TRANSFER_LIST_REQUEST",
   LOAD_CREDIT_TRANSFER_LIST_SUCCESS = "LOAD_CREDIT_TRANSFER_LIST_SUCCESS",
-  LOAD_CREDIT_TRANSFER_LIST_FAILURE = "LOAD_CREDIT_TRANSFER_LIST_FAILURE"
+  LOAD_CREDIT_TRANSFER_LIST_FAILURE = "LOAD_CREDIT_TRANSFER_LIST_FAILURE",
+  UPDATE_CREDIT_TRANSFER_LIST = "UPDATE_CREDIT_TRANSFER_LIST",
+  UPDATE_CREDIT_TRANSFER_LIST_PAGINATION = "UPDATE_CREDIT_TRANSFER_LIST_PAGINATION"
 }
 
 export enum ModifyCreditTransferActionTypes {
@@ -65,16 +67,10 @@ export type CreditTransfer =
 // TODO we should only need one of these keys
 export interface CreditTransfers {
   [key: number]: CreditTransfer;
-
   [key: string]: CreditTransfer;
 }
-
 export interface LoadCreditTransferPayload {
-  query?: {
-    transfer_type: string;
-    per_page: number;
-    page: number;
-  };
+  query?: {};
   path?: number;
 }
 

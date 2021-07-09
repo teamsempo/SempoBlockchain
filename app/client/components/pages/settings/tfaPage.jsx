@@ -1,18 +1,10 @@
 import React from "react";
-import styled from "styled-components";
-import { connect } from "react-redux";
+import { Card } from "antd";
 
 import { GetTFAAPI } from "../../../api/authAPI";
 
 import TFAForm from "../../auth/TFAForm.jsx";
 import LoadingSpinner from "../../loadingSpinner.jsx";
-
-import {
-  PageWrapper,
-  ModuleHeader,
-  WrapperDiv,
-  RestrictedModuleBox
-} from "../../styledElements";
 
 export default class tfaPage extends React.Component {
   constructor(props) {
@@ -33,17 +25,17 @@ export default class tfaPage extends React.Component {
 
   render() {
     return (
-      <WrapperDiv>
-        <PageWrapper style={{ display: "flex", flexDirection: "column" }}>
-          {this.state.tfaURL === null ? (
-            <LoadingSpinner />
-          ) : (
-            <RestrictedModuleBox>
-              <TFAForm tfaURL={this.state.tfaURL} />
-            </RestrictedModuleBox>
-          )}
-        </PageWrapper>
-      </WrapperDiv>
+      <Card
+        title={"Two Step Authentication"}
+        bodyStyle={{ maxWidth: "500px" }}
+        bordered={false}
+      >
+        {this.state.tfaURL === null ? (
+          <LoadingSpinner />
+        ) : (
+          <TFAForm tfaURL={this.state.tfaURL} />
+        )}
+      </Card>
     );
   }
 }

@@ -558,7 +558,7 @@ function* inviteUserRequest(
     const result = yield call(inviteUserAPI, action.payload);
     yield put(InviteUserAction.inviteUserSuccess());
     message.success(result.message);
-    browserHistory.push("/settings");
+    browserHistory.push("/settings/admins");
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
     message.error(error.message);
@@ -590,7 +590,7 @@ function* validateTFA(
     return validateTFAresponse;
   } catch (error) {
     const response = yield call(handleError, error);
-
+    message.error(response.message);
     yield put(ValidateTfaAction.validateTFAFailure(response.message));
   }
 }
