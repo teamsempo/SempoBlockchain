@@ -185,14 +185,12 @@ class EthTransactionProcessor(object):
 
                 raise e
 
-        nonce = self._calculate_nonce(signing_wallet_obj, transaction_id)
-
+        nonce = self.w3.eth.getTransactionCount(signing_wallet_obj.address, block_identifier='pending')
         metadata = {
             'gas': gas,
             'gasPrice': gas_price,
             'nonce': nonce
         }
-
         if chain_id:
             metadata['chainId'] = chain_id
 

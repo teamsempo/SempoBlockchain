@@ -240,6 +240,7 @@ workflows:
 
           requires:
             - build
+            - always-get-new-nonce
 #            - test:backend
 #            - test:worker
 #            - test:frontend
