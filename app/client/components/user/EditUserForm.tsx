@@ -137,7 +137,7 @@ const EditUserForm = (props: Props) => {
 
   let validRoles = props.activeOrganisation.valid_roles;
   let customAttributes = selectedUser && selectedUser.custom_attributes;
-  let businessUsageName = transferUsage && transferUsage.name;
+  let businessUsageName = (transferUsage && transferUsage.name) || "";
 
   let profilePicture = null;
   let custom_attribute_list = null;
@@ -387,7 +387,9 @@ const EditUserForm = (props: Props) => {
 
         <br />
 
-        {Object.keys(customAttributes).length >= 1 || businessUsageName ? (
+        {Object.keys(customAttributes || {}).length >= 1 ||
+          businessUsageName ||
+          "" ? (
           <Card title={"Other Attributes"}>
             <Row gutter={24}>{custom_attribute_list || null}</Row>
             {transferUsages.length > 0 ? (

@@ -590,7 +590,7 @@ function* validateTFA(
     return validateTFAresponse;
   } catch (error) {
     const response = yield call(handleError, error);
-
+    message.error(response.message);
     yield put(ValidateTfaAction.validateTFAFailure(response.message));
   }
 }

@@ -4,7 +4,6 @@ from sqlalchemy import func
 import datetime
 from server.models.utils import ModelBase, OneOrgBase, disbursement_transfer_account_association_table,\
     disbursement_credit_transfer_association_table, disbursement_approver_user_association_table
-from sqlalchemy.types import ARRAY
 from sqlalchemy.ext.hybrid import hybrid_property
 from server.utils.access_control import AccessControl
 
@@ -19,7 +18,7 @@ ALLOWED_STATE_TRANSITIONS = {
     PARTIAL: [APPROVED, REJECTED, PARTIAL]
 }
 
-class Disbursement(ModelBase):
+class Disbursement(ModelBase, OneOrgBase):
     __tablename__ = 'disbursement'
 
     creator_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
@@ -122,7 +121,6 @@ class Disbursement(ModelBase):
         self._transition_state(REJECTED)
 
     def __init__(self, *args, **kwargs):
-
+        self.organisation_id = g.active_organisation.id
         super(Disbursement, self).__init__(*args, **kwargs)
-
         self.state = PENDING

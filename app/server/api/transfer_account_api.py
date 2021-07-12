@@ -98,7 +98,7 @@ class TransferAccountAPI(MethodView):
                 'query_time': datetime.datetime.utcnow().strftime("%m/%d/%Y, %H:%M:%S"),
                 'data': {'transfer_accounts': result.data}
             }
-            return make_response(json.dumps(response_object), 200)
+            return make_response(jsonify(response_object), 200)
 
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def put(self, transfer_account_id):

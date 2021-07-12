@@ -6,7 +6,7 @@ import {
   ModifyCreditTransferRequestPayload
 } from "../reducers/creditTransfer/types";
 
-export const loadCreditTransferListAPI = ({
+export const LoadCreditTransferListAPI = ({
   query,
   path
 }: LoadCreditTransferPayload) =>

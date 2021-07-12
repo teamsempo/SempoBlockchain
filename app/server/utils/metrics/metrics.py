@@ -17,7 +17,8 @@ from server.models.custom_attribute_user_storage import CustomAttributeUserStora
 from server.models.organisation import Organisation
 from server.models.token import Token
 
-from sqlalchemy.sql import text
+from sqlalchemy.sql import func, text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy import text
 
 import datetime, json

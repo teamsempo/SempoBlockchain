@@ -318,9 +318,9 @@ export const processFiltersForQuery = filters => {
 
 export const parseEncodedParams = (allowedFilters, params) => {
   let inequalityMapper = {
-    'EQ': '=',
-    'LT': '<',
-    'GT': '>',
+    EQ: "=",
+    LT: "<",
+    GT: ">"
   };
 
   return params
@@ -332,25 +332,25 @@ export const parseEncodedParams = (allowedFilters, params) => {
 
       let matchedFilter = allowedFilters[attribute];
       if (!matchedFilter) {
-        throw `Allowed Filter not found for attribute ${attribute}. Allowed filters are: ${allowedFilters}`
+        throw `Allowed Filter not found for attribute ${attribute}. Allowed filters are: ${allowedFilters}`;
       }
 
-      if (comparator === 'IN') {
+      if (comparator === "IN") {
         return {
           type: matchedFilter.type,
           attribute: decodeURIComponent(attribute),
-          allowedValues: value.split(',').map(decodeURIComponent),
-          id: i+1
-        }
+          allowedValues: value.split(",").map(decodeURIComponent),
+          id: i + 1
+        };
       }
 
       return {
-        type: inequalityMapper[comparator] || inequalityMapper['EQ'],
+        type: inequalityMapper[comparator] || inequalityMapper["EQ"],
         attribute: decodeURIComponent(attribute),
         threshold: value,
-        id: i+1
-      }
-  })
+        id: i + 1
+      };
+    });
 };
 
 export function hexToRgb(hex) {

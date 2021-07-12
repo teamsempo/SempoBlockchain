@@ -1,7 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 
-import CreditTransferList from "../creditTransfer/creditTransferList.jsx";
+import CreditTransferList from "../creditTransfer/LegacyCreditTransferList";
 import TransferAccountManager from "./transferAccountManager.jsx";
 import UserList from "../user/userList.jsx";
 import connect from "react-redux/es/connect/connect";
@@ -37,7 +37,6 @@ class SingleTransferAccountWrapper extends React.Component {
         typeof transferAccount.users !== "undefined" ? (
           <UserList user_ids={transferAccount.users} />
         ) : null}
-
         <CreditTransferList
           credit_transfer_ids={creditTransferIds}
           transfer_account_id={transferAccountId}
