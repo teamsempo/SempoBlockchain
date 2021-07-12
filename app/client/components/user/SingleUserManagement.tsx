@@ -72,7 +72,7 @@ class SingleUserManagement extends React.Component<Props> {
         first_name: form.firstName,
         last_name: form.lastName,
         public_serial_number: form.publicSerialNumber,
-        phone: form.phone,
+        phone: "+" + form.phone,
         location: form.location,
         account_types: form.accountTypes,
         referred_by: form.referredBy,
