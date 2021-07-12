@@ -59,20 +59,13 @@ function* updateStateFromTransferAccount(data: TransferAccountData) {
   }
 
   const credit_sends = normalizedData.entities.credit_sends;
-  if (credit_sends) {
-    yield put(
-      LoadCreditTransferAction.updateCreditTransferListRequest(
-        credit_sends
-      )
-    );
-  }
-
   const credit_receives = normalizedData.entities.credit_receives;
-  if (credit_receives) {
+  if (credit_sends || credit_receives) {
     yield put(
-      LoadCreditTransferAction.updateCreditTransferListRequest(
-        credit_receives
-      )
+      LoadCreditTransferAction.updateCreditTransferListRequest({
+        ...credit_sends,
+        ...credit_receives
+      })
     );
   }
 
