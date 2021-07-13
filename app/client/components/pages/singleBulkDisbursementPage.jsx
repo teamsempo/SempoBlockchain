@@ -205,6 +205,16 @@ class SingleBulkDisbursementPage extends React.Component {
             </p>
             <p>
               {" "}
+              <b>Errors:</b>{" "}
+              {bulkItem &&
+                bulkItem.errors &&
+                bulkItem.errors.length > 0 &&
+                bulkItem.errors.map(error => {
+                  return <Tag color="#f16853">{error}</Tag>;
+                })}
+            </p>
+            <p>
+              {" "}
               <b>Notes: </b>
               {status == "APPROVED" || status == "REJECTED" ? (
                 this.state.notes || notes
