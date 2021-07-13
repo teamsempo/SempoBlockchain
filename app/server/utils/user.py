@@ -592,7 +592,7 @@ def proccess_create_or_modify_user_request(
             response_object = {'message': 'User already exists for Identifier'}
             return response_object, 400
 
-        if (existing_user.id != user_id) and existing_user.phone == phone:
+        if user_id is not None and (existing_user.id != user_id) and existing_user.phone == phone:
             response_object = {'message': f'User already exists for phone {existing_user}'}
             return response_object, 400
 
