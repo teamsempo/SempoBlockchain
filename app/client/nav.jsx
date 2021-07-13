@@ -150,6 +150,7 @@ class Nav extends React.Component {
               isLoggedIn={isLoggedIn}
               isReAuthing={isReAuthing}
               title={`User`}
+              isAntDesign={true}
             />
             <PrivateRoute
               exact
