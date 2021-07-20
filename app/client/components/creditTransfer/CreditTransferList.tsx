@@ -95,35 +95,49 @@ const columns: ColumnsType<TransferAccount> = [
     title: "Sender",
     key: "sender_name",
     ellipsis: true,
-    render: (text: any, record: any) => (
-      <Link
-        to={"/accounts/" + record.sender_transfer_account_id}
-        style={{
-          textDecoration: "underline",
-          color: "#000000a6",
-          fontWeight: 400
-        }}
-      >
-        {record.sender_name}
-      </Link>
-    )
+    render: (text: any, record: any) => {
+      const isDisbursement = record.transfer_type === "DISBURSEMENT";
+      return (
+        <Link
+          to={
+            isDisbursement
+              ? "#"
+              : "/accounts/" + record.sender_transfer_account_id
+          }
+          style={{
+            textDecoration: isDisbursement ? "" : "underline",
+            color: "#000000a6",
+            fontWeight: 400
+          }}
+        >
+          {record.sender_name}
+        </Link>
+      );
+    }
   },
   {
     title: "Recipient",
     key: "recipient_name",
     ellipsis: true,
-    render: (text: any, record: any) => (
-      <Link
-        to={"/accounts/" + record.recipient_transfer_account_id}
-        style={{
-          textDecoration: "underline",
-          color: "#000000a6",
-          fontWeight: 400
-        }}
-      >
-        {record.recipient_name}
-      </Link>
-    )
+    render: (text: any, record: any) => {
+      const isReclamation = record.transfer_type === "RECLAMATION";
+      return (
+        <Link
+          to={
+            isReclamation
+              ? "#"
+              : "/accounts/" + record.recipient_transfer_account_id
+          }
+          style={{
+            textDecoration: isReclamation ? "" : "underline",
+            color: "#000000a6",
+            fontWeight: 400
+          }}
+        >
+          {record.recipient_name}
+        </Link>
+      );
+    }
   },
   {
     title: "Type",
@@ -182,25 +196,35 @@ class CreditTransferList extends React.Component<Props> {
 
     let data: any[] = Object.values(creditTransfers.byId)
       .map((transfer: any) => {
+        let sender_name;
+        let recipient_name;
         const recipient_user =
           transfer.recipient_user && users.byId[transfer.recipient_user];
 
         const sender_user =
           transfer.sender_user && users.byId[transfer.sender_user];
 
-        const sender_name = sender_user
+        let email = transfer.authorising_user_email;
+
+        sender_name = sender_user
           ? (sender_user.first_name === null ? "" : sender_user.first_name) +
             " " +
             (sender_user.last_name === null ? "" : sender_user.last_name)
           : "";
 
-        const recipient_name = recipient_user
+        recipient_name = recipient_user
           ? (recipient_user.first_name === null
               ? ""
               : recipient_user.first_name) +
             " " +
             (recipient_user.last_name === null ? "" : recipient_user.last_name)
           : "";
+
+        if (transfer.transfer_type === "DISBURSEMENT") {
+          sender_name = email;
+        } else if (transfer.transfer_type === "RECLAMATION") {
+          recipient_name = email;
+        }
 
         if (transfer.transfer_status === "COMPLETE") {
           var transfer_status_colour = "#9BDF56";
