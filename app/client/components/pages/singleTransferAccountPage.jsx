@@ -1,12 +1,9 @@
 import React from "react";
 import { connect } from "react-redux";
 import styled, { ThemeProvider } from "styled-components";
+import { Card } from "antd";
 
-import {
-  PageWrapper,
-  ModuleBox,
-  CenterLoadingSideBarActive
-} from "../styledElements.js";
+import { PageWrapper, CenterLoadingSideBarActive } from "../styledElements.js";
 import LoadingSpinner from "../loadingSpinner.jsx";
 import { LightTheme } from "../theme.js";
 import SingleTransferAccountManagement from "../transferAccount/singleTransferAccountWrapper.jsx";
@@ -57,11 +54,14 @@ class SingleTransferAccountPage extends React.Component {
       );
     } else {
       componentFallback = (
-        <ModuleBox>
+        <Card
+          style={{ marginTop: "1em" }}
+          title={`No Such Account: ${url_provided}`}
+        >
           <p style={{ padding: "1em", textAlign: "center" }}>
             No Such Account: {url_provided}
           </p>
-        </ModuleBox>
+        </Card>
       );
     }
 
