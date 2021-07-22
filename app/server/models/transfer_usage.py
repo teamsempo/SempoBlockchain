@@ -63,6 +63,7 @@ class TransferUsage(ModelBase):
         if usage is None:
             usage = cls(name=name, default=default, **kwargs)
             db.session.add(usage)
+            db.session.flush()
         return usage
 
     def __repr__(self):

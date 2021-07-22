@@ -463,6 +463,7 @@ class DisbursementSchema(SchemaBase):
     search_string               = fields.Str()
     search_filter_params        = fields.Str()
     notes                       = fields.Str()
+    errors                      = fields.List(fields.Str())
     include_accounts            = fields.List(fields.Int())
     exclude_accounts            = fields.List(fields.Int())
 
