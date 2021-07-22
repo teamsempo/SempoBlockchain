@@ -32,11 +32,21 @@ class SingleTransferAccountPage extends React.Component {
     this.state = {};
   }
 
-  componentDidMount() {
+  loadTransferAccount() {
     let pathname_array = location.pathname.split("/").slice(1);
     let transferAccountID = parseInt(pathname_array[1]);
     if (transferAccountID) {
       this.props.loadTransferAccountList(transferAccountID); //  load single account
+    }
+  }
+
+  componentDidMount() {
+    this.loadTransferAccount();
+  }
+
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    if (prevProps.location.pathname !== location.pathname) {
+      this.loadTransferAccount();
     }
   }
 

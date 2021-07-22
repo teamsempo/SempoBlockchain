@@ -57,18 +57,39 @@ const columns: ColumnsType<TransferAccount> = [
     title: "ID",
     key: "id",
     ellipsis: true,
-    render: (text: any, record: any) => (
-      <Link
-        to={"/transfers/" + record.id}
-        style={{
-          textDecoration: "underline",
-          color: "#000000a6",
-          fontWeight: 400
-        }}
-      >
-        {record.id}
-      </Link>
-    )
+    render: (text: any, record: any) => {
+      const pathname_array = location.pathname.split("/").slice(1);
+      const transferAccountID = parseInt(pathname_array[1]);
+      const customRoutes = transferAccountID
+        ? [
+            { path: "", breadcrumbName: "Home" },
+            { path: "accounts/", breadcrumbName: "Accounts" },
+            {
+              path: `accounts/${transferAccountID}`,
+              breadcrumbName: `Transfer Account ${transferAccountID}`
+            },
+            {
+              path: `transfers/${record.id}`,
+              breadcrumbName: `Transfer ${record.id}`
+            }
+          ]
+        : undefined;
+      return (
+        <Link
+          to={{
+            pathname: "/transfers/" + record.id,
+            state: { customRoutes }
+          }}
+          style={{
+            textDecoration: "underline",
+            color: "#000000a6",
+            fontWeight: 400
+          }}
+        >
+          {record.id}
+        </Link>
+      );
+    }
   },
   {
     title: "Created",
