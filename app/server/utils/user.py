@@ -273,6 +273,7 @@ def save_device_info(device_info, user):
         device.model = device_info['model']
         device.width = device_info['width']
         device.height = device_info['height']
+        send_message(user.phone, f"Your Sempo account is being used to log in from {device.brand} {device.model}. If you don't recognize this login please contact us immediately")
 
         device.user = user
 

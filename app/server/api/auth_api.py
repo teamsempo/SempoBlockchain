@@ -319,7 +319,6 @@ class LoginAPI(MethodView):
         post_data = request.get_json()
         user = None
         phone = None
-
         email = post_data.get('username', '') or post_data.get('email', '')
         email = email.lower() if email else ''
         password = post_data.get('password')
@@ -440,9 +439,9 @@ class LoginAPI(MethodView):
                     'message': 'Account has not been activated. Please check your emails.'
                 }
                 return make_response(jsonify(response_object)), 401
-
             if post_data.get('deviceInfo'):
-                UserUtils.save_device_info(post_data.get('deviceInfo'), user)
+                deviceInfo = post_data.get('deviceInfo')
+                UserUtils.save_device_info(deviceInfo, user)
 
             auth_token = user.encode_auth_token()
 
