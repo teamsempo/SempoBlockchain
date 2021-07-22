@@ -10,7 +10,6 @@ const mapStateToProps = (state, props) => {
   };
 };
 
-
 class UserList extends React.Component {
   constructor() {
     super();
@@ -65,31 +64,45 @@ class UserList extends React.Component {
                 breadcrumbName: `User ${record.id}`
               }
             ];
-            return <Link style={{textDecoration: 'underline', color: 'rgba(0, 0, 0, 0.65)', fontWeight: 400}} to={{
-              pathname: "/users/" + record.id,
-              state: {customRoutes}
-            }}>{(record.first_name === null ? "" : record.first_name) + " " + (record.last_name === null ? "" :
-              record.last_name)}</Link>
+            return (
+              <Link
+                style={{
+                  textDecoration: "underline",
+                  color: "rgba(0, 0, 0, 0.65)",
+                  fontWeight: 400
+                }}
+                to={{
+                  pathname: "/users/" + record.id,
+                  state: { customRoutes }
+                }}
+              >
+                {(record.first_name === null ? "" : record.first_name) +
+                  " " +
+                  (record.last_name === null ? "" : record.last_name)}
+              </Link>
+            );
           }
         },
         {
           title: "Created",
           dataIndex: "created",
           key: "created"
-        },
+        }
       ];
 
-      table = <Table
-        columns={columns}
-        dataSource={this.props.userList}
-        loading={loadingStatus} // Display the loading overlay when we need it
-        pagination={false}
-      />
+      table = (
+        <Table
+          columns={columns}
+          dataSource={this.props.userList}
+          loading={loadingStatus} // Display the loading overlay when we need it
+          pagination={false}
+        />
+      );
     }
 
     return (
-      <Card title={'Participants'} style={{marginTop: '1em'}}>
-        {table || <p>No participants</p>}
+      <Card title={"Users"} style={{ marginTop: "1em" }}>
+        {table || <p>No users</p>}
       </Card>
     );
   }
