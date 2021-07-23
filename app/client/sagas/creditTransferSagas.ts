@@ -1,4 +1,4 @@
-import { put, takeEvery, call, all } from "redux-saga/effects";
+import { put, takeEvery, call, all, select } from "redux-saga/effects";
 import { normalize } from "normalizr";
 import { message } from "antd";
 
@@ -11,7 +11,7 @@ import {
 import {
   CreditTransferAction,
   LoadCreditTransferAction,
-  ModifyCreditTransferAction,
+  ModifyCreditTransferAction
 } from "../reducers/creditTransfer/actions";
 
 import {
@@ -25,6 +25,7 @@ import { UserListAction } from "../reducers/user/actions";
 import { MetricAction } from "../reducers/metric/actions";
 import { TransferAccountAction } from "../reducers/transferAccount/actions";
 import { TokenListAction } from "../reducers/token/actions";
+import { ReduxState } from "../reducers/rootReducer";
 
 interface CreditLoadApiResult {
   is_create: boolean;
@@ -63,7 +64,7 @@ function* updateStateFromCreditTransfer(result: CreditLoadApiResult) {
     yield put(UserListAction.deepUpdateUserList(users));
   }
 
-  if (result.is_create === true) {
+  if (result.is_create) {
     // a single transfer was just created!
     // we need to add the newly created credit_transfer id
     // to the associated transfer_account object credit_transfer array
@@ -72,7 +73,18 @@ function* updateStateFromCreditTransfer(result: CreditLoadApiResult) {
         credit_transfer_list
       )
     );
+    const getCreditTransfers = (state: ReduxState) =>
+      state.creditTransfers.byId;
+    const creditTransfers = yield select(getCreditTransfers);
+    const credit_transfers = normalizedData.entities.credit_transfers;
+    yield put(
+      LoadCreditTransferAction.updateCreditTransferListRequest({
+        ...creditTransfers,
+        ...credit_transfers
+      })
+    );
     message.success(result.message);
+    return;
   }
 
   if (result.bulk_responses) {
@@ -89,9 +101,7 @@ function* updateStateFromCreditTransfer(result: CreditLoadApiResult) {
   }
   const credit_transfers = normalizedData.entities.credit_transfers;
   yield put(
-    LoadCreditTransferAction.updateCreditTransferListRequest(
-      credit_transfers
-    )
+    LoadCreditTransferAction.updateCreditTransferListRequest(credit_transfers)
   );
 }
 
@@ -179,7 +189,6 @@ function* watchCreateTransfer() {
   );
 }
 
-
 function* loadCreditTransferList({ payload }: CreditTransferListAPIResult) {
   try {
     const credit_load_result = yield call(LoadCreditTransferListAPI, payload);
@@ -207,12 +216,11 @@ function* watchLoadCreditTransferList() {
   );
 }
 
-
 export default function* credit_transferSagas() {
   yield all([
     watchLoadCreditTransferList(),
     watchModifyTransfer(),
     watchCreateTransfer(),
-    watchPusherCreditTransfer(),
+    watchPusherCreditTransfer()
   ]);
 }

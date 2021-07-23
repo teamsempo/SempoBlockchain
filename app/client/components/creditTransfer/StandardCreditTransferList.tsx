@@ -16,7 +16,9 @@ interface StateProps {
   login: any;
 }
 
-interface OuterProps {}
+interface OuterProps {
+  transferAccountId?: string;
+}
 
 interface ComponentState {
   label: string;
@@ -81,6 +83,7 @@ class StandardCreditTransferList extends React.Component<
             page: this.state.page,
             per_page: this.state.per_page
           }}
+          transferAccountId={this.props.transferAccountId}
         />
         <CreditTransferList
           params={this.state.params}
