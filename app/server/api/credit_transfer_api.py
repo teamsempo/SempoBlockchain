@@ -84,28 +84,49 @@ class CreditTransferAPI(MethodView):
             return make_response(jsonify(response_object)), 200
 
         else:
-            # Legacy support of transfer_account_ids
             if transfer_account_ids:
-                query = CreditTransfer.query
-                transfer_list = None
-
                 # We're getting a list of transfer accounts - parse
                 try:
                     parsed_transfer_account_ids = list(
                         map(lambda x: int(x), filter(None, transfer_account_ids.split(','))))
-
-                except ValueError:
+                except Exception as e:
                     response_object = {
-                        'message': 'Invalid Filter: Transfer Account IDs ',
+                        'status': 'fail',
+                        'message': str(e)
                     }
                     return make_response(jsonify(response_object)), 400
 
                 if parsed_transfer_account_ids:
+                    try:
+                        query = generate_search_query(search_string, filters, order, sort_by_arg,
+                                                            search_type=CREDIT_TRANSFER)
+                    except Exception as e:
+                        response_object = {
+                            'status': 'fail',
+                            'message': str(e)
+                        }
+                        return make_response(jsonify(response_object)), 200
 
-                    query = query.filter(
+                    final_query = query.filter(
                         or_(CreditTransfer.recipient_transfer_account_id.in_(parsed_transfer_account_ids),
                             CreditTransfer.sender_transfer_account_id.in_(parsed_transfer_account_ids)))
-                credit_transfers, total_items, total_pages, new_last_fetched = paginate_query(query)
+
+                    credit_transfers, total_items, total_pages, new_last_fetched = paginate_query(final_query, ignore_last_fetched=True)
+                    if AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'admin'):
+                        result = credit_transfers_schema.dump(credit_transfers)
+                    elif AccessControl.has_any_tier(g.user.roles, 'ADMIN'):
+                        result = view_credit_transfers_schema.dump(credit_transfers)
+
+                    return {
+                        'status': 'success',
+                        'message': 'Successfully Loaded.',
+                        'items': total_items,
+                        'pages': total_pages,
+                        'last_fetched': new_last_fetched,
+                        'query_time': datetime.datetime.utcnow(),
+                        'data': {'credit_transfers': result.data}
+                    }
+
             else:
                 try:
                     final_query = generate_search_query(search_string, filters, order, sort_by_arg, search_type=CREDIT_TRANSFER)

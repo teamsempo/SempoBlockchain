@@ -25,6 +25,7 @@ class Disbursement(ModelBase, OneOrgBase):
 
     label = db.Column(db.String)
     notes = db.Column(db.String(), default='')
+    errors = db.Column(db.ARRAY(db.String), default=[])
     search_string = db.Column(db.String)
     search_filter_params = db.Column(db.String)
     include_accounts = db.Column(db.ARRAY(db.Integer))
