@@ -143,6 +143,50 @@ class TestModels:
         blockchain_sync.synchronize_third_party_transactions()
         assert ranges == [(1, 2, 5001), (1, 5002, 10001), (1, 10002, 12000), (2, 2, 5001), (2, 5002, 10001), (2, 10002, 12000)]
 
+    def test_skip(self, mocker, blockchain_sync, processor, persistence_module: SQLPersistenceInterface):
+        # Create filters for this function to consume
+        tf = blockchain_sync.add_transaction_filter(
+            '0x000090c5a236130E5D51260A2A5Bfde834C694b6',
+            self.contract_type,
+            self.filter_parameters,
+            self.filter_type,
+            self.decimals,
+            self.block_epoch
+        )
+        tf.status = 'SKIP'
+
+        mocker.patch.object(blockchain_sync, 'get_latest_block_number', lambda: 5000)
+        ranges = []
+        mocker.patch.object(blockchain_sync, 'process_chunk', lambda filter, floor, ceiling: ranges.append((filter.id, floor, ceiling)))
+        blockchain_sync_constants.BLOCKS_PER_REQUEST=5000
+        blockchain_sync.synchronize_third_party_transactions()
+        assert ranges == []
+        assert tf.max_block == 5000
+
+    def test_disabled(self, mocker, blockchain_sync, processor, persistence_module: SQLPersistenceInterface):
+        # Create filters for this function to consume
+        tf = blockchain_sync.add_transaction_filter(
+            '0x000090c5a236130E5D51260A2A5Bfde834C694b6',
+            self.contract_type,
+            self.filter_parameters,
+            self.filter_type,
+            self.decimals,
+            self.block_epoch
+        )
+        tf.status = 'DISABLED'
+        # We want to make sure that latest block number is being NOT being fetched!
+        # Disabled filters should make zero calls
+        def this_shouldnt_be_called():
+            assert 1==2
+        mocker.patch.object(blockchain_sync, 'get_latest_block_number', this_shouldnt_be_called)
+
+        ranges = []
+        mocker.patch.object(blockchain_sync, 'process_chunk', lambda filter, floor, ceiling: ranges.append((filter.id, floor, ceiling)))
+        blockchain_sync_constants.BLOCKS_PER_REQUEST=5000
+        blockchain_sync.synchronize_third_party_transactions()
+        assert ranges == []
+        assert tf.max_block == 1
+
     def test_handle_event(self, mocker, blockchain_sync, processor, persistence_module: SQLPersistenceInterface):
         # Create dummy objects for this functions to consume (handle_event only uses decimals)
         class DummyFilter():
