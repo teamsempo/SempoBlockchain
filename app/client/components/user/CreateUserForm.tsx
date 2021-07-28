@@ -87,7 +87,6 @@ const CreateUserForm = (props: Props) => {
       });
   };
   const onFinish = (values: ICreateUserUpdate) => {
-    console.log("values", values);
     props.onSubmit(values);
   };
 
@@ -102,12 +101,13 @@ const CreateUserForm = (props: Props) => {
   if (defaultDisbursement > 0) {
     initialDisbursementAmount = (
       <Form.Item label="Initial Disbursement Amount" name="initialDisbursement">
-        <div>
-          <Input />
-          {activeToken !== null && typeof activeToken !== "undefined"
-            ? activeToken.symbol
-            : null}
-        </div>
+        <Input
+          addonAfter={
+            activeToken !== null && typeof activeToken !== "undefined"
+              ? activeToken.symbol
+              : null
+          }
+        />
       </Form.Item>
     );
   }
