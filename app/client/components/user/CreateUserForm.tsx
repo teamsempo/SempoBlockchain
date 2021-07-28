@@ -1,16 +1,18 @@
-import * as React from "react";
+import React, { useEffect } from "react";
 import { connect } from "react-redux";
+import { Form, Input, Button, Select } from "antd";
 
-import { reduxForm, InjectedFormProps, formValueSelector } from "redux-form";
 import QrReadingModal from "../qrReadingModal";
-import { ErrorMessage, ModuleHeader } from "../styledElements";
-import AsyncButton from "../AsyncButton";
-import InputField from "../form/InputField";
-import SelectField from "../form/SelectField";
 import { TransferUsage } from "../../reducers/transferUsage/types";
 import { TransferAccountTypes } from "../transferAccount/types";
 import { Token } from "../../reducers/token/types";
 import { getActiveToken } from "../../utils";
+import { ReduxState } from "../../reducers/rootReducer";
+import FormValidation from "../form/FormValidation";
+import { AdaptedPhoneInput } from "../form/PhoneAntDesign";
+import { GenderTypes } from "./types";
+
+const { Option } = Select;
 
 export interface ICreateUser {
   firstName?: string;
@@ -42,13 +44,12 @@ export interface ICreateVendor {
 export type ICreateUserUpdate = ICreateUser & ICreateVendor;
 
 interface OuterProps {
+  onSubmit: (values: ICreateUserUpdate) => void;
   users: any;
   transferUsages: TransferUsage[];
 }
 
 interface StateProps {
-  accountTypes: string[];
-  businessUsageValue?: string;
   activeToken: Token;
   defaultDisbursement: any;
   validRoles: TransferAccountTypes[];
@@ -56,35 +57,24 @@ interface StateProps {
 
 type Props = OuterProps & StateProps;
 
-const validate = (values: ICreateUser) => {
-  const errors: any = {};
-
-  if (!values.phone && !values.publicSerialNumber) {
-    errors.phone = "Must provide either phone number or ID number";
-  }
-
-  return errors;
-};
-
-class CreateUserForm extends React.Component<
-  InjectedFormProps<ICreateUser, Props> & Props
-> {
-  componentDidMount() {
-    const { defaultDisbursement, validRoles } = this.props;
-    this.props.initialize({
+const CreateUserForm = (props: Props) => {
+  const [form] = Form.useForm();
+  useEffect(() => {
+    const { defaultDisbursement, validRoles } = props;
+    form.setFieldsValue({
       accountTypes: [validRoles[0]],
       gender: "female",
       initialDisbursement: defaultDisbursement
     });
-  }
+  }, []);
 
-  setSerialNumber(data: string) {
+  const setSerialNumber = (data: string) => {
     const cleanedData = data.replace(/^\s+|\s+$/g, "");
-    this.props.change("publicSerialNumber", cleanedData);
-  }
+    form.setFieldsValue({ publicSerialNumber: cleanedData });
+  };
 
-  optionizeUsages() {
-    return this.props.transferUsages
+  const optionizeUsages = () => {
+    return props.transferUsages
       .map(transferUsage => {
         return {
           name: transferUsage.name,
@@ -95,171 +85,247 @@ class CreateUserForm extends React.Component<
         name: "Other",
         value: "other"
       });
-  }
+  };
+  const onFinish = (values: ICreateUserUpdate) => {
+    console.log("values", values);
+    props.onSubmit(values);
+  };
 
-  render() {
-    const {
-      activeToken,
-      businessUsageValue,
-      transferUsages,
-      accountTypes,
-      defaultDisbursement,
-      validRoles
-    } = this.props;
-    let initialDisbursementAmount;
-    let businessUsage;
+  const {
+    activeToken,
+    transferUsages,
+    defaultDisbursement,
+    validRoles
+  } = props;
+  let initialDisbursementAmount: JSX.Element;
 
-    if (defaultDisbursement > 0) {
-      initialDisbursementAmount = (
-        <InputField
-          name="initialDisbursement"
-          label={"Initial Disbursement Amount"}
-        >
+  if (defaultDisbursement > 0) {
+    initialDisbursementAmount = (
+      <Form.Item label="Initial Disbursement Amount" name="initialDisbursement">
+        <div>
+          <Input />
           {activeToken !== null && typeof activeToken !== "undefined"
             ? activeToken.symbol
             : null}
-        </InputField>
-      );
-    }
-    if (transferUsages.length > 0) {
-      if (businessUsageValue && businessUsageValue.toLowerCase() === "other") {
-        businessUsage = (
-          <>
-            <SelectField
-              name="businessUsage"
-              label="Business Category"
-              options={this.optionizeUsages()}
-            />
-            <InputField
-              name="usageOtherSpecific"
-              label="Please specify the category"
-              isRequired
-              isNotOther
-            />
-          </>
-        );
-      } else {
-        businessUsage = (
-          <SelectField
-            name="businessUsage"
-            label="Business Category"
-            options={this.optionizeUsages()}
-          />
-        );
-      }
-    }
-
-    let selectedUserForm = <></>;
-    let selectedCashierForm = <></>;
-    let selectedVendorForm = <></>;
-    let selectedTokenAgentForm = <></>;
-    const accountTypesList = accountTypes || [];
-    if (accountTypesList.includes("beneficiary")) {
-      selectedUserForm = <>{initialDisbursementAmount}</>;
-    }
-    if (accountTypesList.includes("cashier")) {
-      selectedCashierForm = (
-        <div>
-          <div>
-            To create a cashier account, enter the <strong>vendor's</strong>{" "}
-            phone and pin.
-          </div>
-          <InputField
-            name="existingVendorPhone"
-            label={"Vendor Phone Number"}
-          />
-          <InputField
-            name="existingVendorPin"
-            type="password"
-            label={"Vendor PIN"}
-          />
         </div>
-      );
-    }
-    if (
-      accountTypesList.includes("vendor") ||
-      accountTypesList.includes("cashier") ||
-      accountTypesList.includes("supervendor")
-    ) {
-      selectedVendorForm = (
-        <div>
-          {businessUsage}
-          <InputField name="transferAccountName" label={"Store Name"} />
-        </div>
-      );
-    }
-    if (accountTypesList.includes("token_agent")) {
-      selectedTokenAgentForm = <></>;
-    }
-
-    return (
-      <div>
-        <ModuleHeader>Create an account</ModuleHeader>
-
-        <div style={{ padding: "1em" }}>
-          <form onSubmit={this.props.handleSubmit}>
-            <InputField
-              {...accountTypes}
-              name="accountTypes"
-              label={"Account Types"}
-              isMultipleChoice={true}
-              options={validRoles}
-              style={{ minWidth: "200px" }}
-            />
-            <InputField name="publicSerialNumber" label={"ID Number"}>
-              {/*
-                // @ts-ignore */}
-              <QrReadingModal
-                updateData={(data: string) => this.setSerialNumber(data)}
-              />
-            </InputField>{" "}
-            <span>or</span>
-            <InputField name="phone" label={"Phone Number"} isPhoneNumber />
-            <InputField name="firstName" label="Given Name(s)" isRequired />
-            <InputField name="lastName" label="Family/Surname" />
-            {/*<InputField name="bio" label="Directory Entry" />*/}
-            <InputField name="location" label="Location" />
-            <SelectField
-              name="gender"
-              label="Gender"
-              options={["Female", "Male", "Other"]}
-              hideNoneOption={true}
-            />
-            {selectedUserForm}
-            {selectedCashierForm}
-            {selectedVendorForm}
-            {selectedTokenAgentForm}
-            <ErrorMessage>{this.props.users.createStatus.error}</ErrorMessage>
-            <AsyncButton
-              type="submit"
-              isLoading={this.props.users.createStatus.isRequesting}
-              buttonStyle={{ display: "flex" }}
-              buttonText={<span>Submit</span>}
-            />
-          </form>
-        </div>
-      </div>
+      </Form.Item>
     );
   }
-}
 
-const CreateUserFormReduxForm = reduxForm<ICreateUser, Props>({
-  form: "createUser",
-  validate
-})(CreateUserForm);
+  return (
+    <div>
+      <Form onFinish={onFinish} layout="vertical" form={form}>
+        <Form.Item label="Account Types" name="accountTypes">
+          <Select mode="multiple">
+            {Object.values(validRoles).map((value, index) => {
+              return (
+                <Option value={value} key={index}>
+                  {value}
+                </Option>
+              );
+            })}
+          </Select>
+        </Form.Item>
+        <Form.Item
+          label="ID Number"
+          name="publicSerialNumber"
+          dependencies={["phone"]}
+          rules={[
+            ({ getFieldValue }) => ({
+              validator(_, value) {
+                if (!value && !getFieldValue("phone")) {
+                  return Promise.reject(
+                    "Must provide either phone number or ID number"
+                  );
+                }
+                return Promise.resolve();
+              }
+            })
+          ]}
+        >
+          <Input
+            addonAfter={
+              <QrReadingModal
+                updateData={(data: string) => setSerialNumber(data)}
+              />
+            }
+          />
+        </Form.Item>
+        <span>or</span>
+        <Form.Item
+          label="Phone Number"
+          name="phone"
+          valuePropName="value"
+          hasFeedback
+          dependencies={["publicSerialNumber"]}
+          rules={[
+            ({ getFieldValue }) => ({
+              validator(_, value) {
+                if (!value && !getFieldValue("publicSerialNumber")) {
+                  return Promise.reject(
+                    "Must provide either phone number or ID number"
+                  );
+                }
+                return FormValidation.antPhone(value);
+              }
+            })
+          ]}
+        >
+          <AdaptedPhoneInput isPhoneNumber />
+        </Form.Item>
+        <Form.Item
+          label="Given Name(s)"
+          name="firstName"
+          rules={[{ required: true, message: "Please input first name" }]}
+        >
+          <Input />
+        </Form.Item>
+        <Form.Item label="Family/Surname" name="lastName">
+          <Input />
+        </Form.Item>
+        <Form.Item label="Location" name="location">
+          <Input />
+        </Form.Item>
+        <Form.Item label={"Gender"} name={"gender"}>
+          <Select>
+            {Object.keys(GenderTypes).map((type, index) => {
+              return (
+                <Option value={type} key={index}>
+                  {type}
+                </Option>
+              );
+            })}
+          </Select>
+        </Form.Item>
+        <Form.Item
+          noStyle
+          shouldUpdate={(prevValues, currentValues) =>
+            prevValues.accountTypes !== currentValues.accountTypes
+          }
+        >
+          {({ getFieldValue }) =>
+            getFieldValue("accountTypes") &&
+            getFieldValue("accountTypes").includes("beneficiary") ? (
+              <>{initialDisbursementAmount}</>
+            ) : null
+          }
+        </Form.Item>
+        <Form.Item
+          noStyle
+          shouldUpdate={(prevValues, currentValues) =>
+            prevValues.accountTypes !== currentValues.accountTypes
+          }
+        >
+          {({ getFieldValue }) =>
+            getFieldValue("accountTypes") &&
+            getFieldValue("accountTypes").includes("cashier") ? (
+              <div>
+                <div>
+                  To create a cashier account, enter the{" "}
+                  <strong>vendor's</strong> phone and pin.
+                </div>
+                <Form.Item
+                  label="Vendor Phone Number"
+                  name="existingVendorPhone"
+                >
+                  <Input />
+                </Form.Item>
+                <Form.Item label="Vendor PIN" name="existingVendorPin">
+                  <Input type="password" />
+                </Form.Item>
+              </div>
+            ) : null
+          }
+        </Form.Item>
+        <Form.Item
+          noStyle
+          shouldUpdate={(prevValues, currentValues) =>
+            prevValues.accountTypes !== currentValues.accountTypes
+          }
+        >
+          {({ getFieldValue }) =>
+            getFieldValue("accountTypes") &&
+            (getFieldValue("accountTypes").includes("vendor") ||
+              getFieldValue("accountTypes").includes("cashier") ||
+              getFieldValue("accountTypes").includes("supervendor")) ? (
+              <div>
+                {transferUsages.length > 0 ? (
+                  <div>
+                    <Form.Item name="businessUsage" label="Business Category">
+                      <Select>
+                        {optionizeUsages().map(
+                          (
+                            usage: { value: string; name: React.ReactNode },
+                            index: string | number | undefined
+                          ) => {
+                            return (
+                              <Option value={usage.value} key={index}>
+                                {usage.name}
+                              </Option>
+                            );
+                          }
+                        )}
+                      </Select>
+                    </Form.Item>
+                    <Form.Item
+                      noStyle
+                      shouldUpdate={(prevValues, currentValues) =>
+                        prevValues.businessUsage !== currentValues.businessUsage
+                      }
+                    >
+                      {({ getFieldValue }) =>
+                        getFieldValue("businessUsage") &&
+                        getFieldValue("businessUsage").toLowerCase() ===
+                          "other" ? (
+                          <Form.Item
+                            name="usageOtherSpecific"
+                            label="Please specify the category"
+                            rules={[
+                              {
+                                required: true,
+                                message: "Please specify the category!"
+                              }
+                            ]}
+                          >
+                            <Input />
+                          </Form.Item>
+                        ) : null
+                      }
+                    </Form.Item>
+                  </div>
+                ) : null}
+                <Form.Item label="Store Name" name="transferAccountName">
+                  <Input />
+                </Form.Item>
+              </div>
+            ) : null
+          }
+        </Form.Item>
+        <Form.Item>
+          <Button
+            htmlType="submit"
+            type="primary"
+            loading={props.users.createStatus.isRequesting}
+          >
+            Submit
+          </Button>
+        </Form.Item>
+      </Form>
+    </div>
+  );
+};
 
-export default connect(
-  (state: any): StateProps => {
-    const selector = formValueSelector("createUser");
-    return {
-      accountTypes: selector(state, "accountTypes"),
-      businessUsageValue: selector(state, "businessUsage"),
-      activeToken: getActiveToken(state),
-      defaultDisbursement:
-        state.organisations.byId[state.login.organisationId]
-          .default_disbursement / 100,
-      validRoles:
-        state.organisations.byId[state.login.organisationId].valid_roles || []
-    };
-  }
-)(CreateUserFormReduxForm);
+const mapStateToProps = (state: ReduxState): StateProps => {
+  return {
+    activeToken: getActiveToken(state),
+    defaultDisbursement:
+      // @ts-ignore
+      state.organisations.byId[state.login.organisationId]
+        .default_disbursement / 100,
+    validRoles:
+      // @ts-ignore
+      state.organisations.byId[state.login.organisationId].valid_roles || []
+  };
+};
+
+export default connect(mapStateToProps)(CreateUserForm);
