@@ -3,3 +3,7 @@ BLOCKS_PER_REQUEST = 1000
 # The lock gets renewed with every synchronized chunk, so the lock will continue to 
 # function in long-running jobs
 LOCK_TIMEOUT = 600
+
+ENABLED = 'ENABLED'
+DISABLED = 'DISABLED'
+SKIP = 'SKIP'

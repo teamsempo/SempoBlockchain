@@ -326,6 +326,7 @@ class SynchronizationFilter(ModelBase):
     contract_type = Column(String)
     filter_parameters = Column(String)
     filter_type = Column(String) # TRANSFER, EXCHANGE
+    status = Column(String) # ENABLED, DISABLED, SKIP
     max_block = Column(Integer)
     decimals = Column(Integer)
     blocks = relationship("SynchronizedBlock", back_populates="synchronization_filter", lazy=True)
