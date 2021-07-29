@@ -41,6 +41,15 @@ class BlockchainSyncer(object):
         # then trigger process_all_chunks, which will consume those jobs from redis
         total_blocks_retrieved = 0
         for f in filters:
+            # Skip getting data for filters whose status is DISABLED
+            if f.status == sync_const.DISABLED:
+                continue
+            # Skip over blocks when status is SKIP. This is so work can be done on the blockchain
+            # and not be tracked in the app (for balance reconciliations)
+            if f.status == sync_const.SKIP:
+                latest_block = self.get_latest_block_number()
+                self.persistence.set_filter_max_block(f.id, latest_block)
+                continue
             # Make sure a filter is only being executed once at a time
             have_lock = False
             lock = self.red.lock(f'third-party-sync-lock-{f.id}', timeout=sync_const.LOCK_TIMEOUT)
