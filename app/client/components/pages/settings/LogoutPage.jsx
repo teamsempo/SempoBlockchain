@@ -1,6 +1,6 @@
 import React from "react";
 import { Card } from "antd";
-import AuthModule from "../../auth/authModule.jsx";
+import { LogoutButton } from "../../auth/LogoutButton";
 
 export default class LogoutPage extends React.Component {
   render() {
@@ -10,7 +10,7 @@ export default class LogoutPage extends React.Component {
         bodyStyle={{ maxWidth: "400px" }}
         bordered={false}
       >
-        <AuthModule />
+        <LogoutButton />
       </Card>
     );
   }
