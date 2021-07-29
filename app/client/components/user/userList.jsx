@@ -1,24 +1,12 @@
 import React from "react";
 import { connect } from "react-redux";
-import styled from "styled-components";
-import ReactTable from "react-table";
-
-import { TopRow, ModuleBox, ModuleHeader } from "../styledElements.js";
-
-import { LoadAdminUserListAction } from "../../reducers/auth/actions";
-import { browserHistory } from "../../createStore.js";
+import { Card, Table, Tag } from "antd";
+import { Link } from "react-router-dom";
 
 const mapStateToProps = (state, props) => {
   return {
     userList: props.user_ids.map(userId => state.users.byId[userId]),
     transferAccounts: state.transferAccounts
-  };
-};
-
-const mapDispatchToProps = dispatch => {
-  return {
-    loadUserList: () =>
-      dispatch(LoadAdminUserListAction.loadAdminUserListRequest())
   };
 };
 
@@ -34,154 +22,93 @@ class UserList extends React.Component {
     };
   }
 
-  displayCorrectStatus(id) {
-    if (this.props.userList.find(x => x.id === id).is_disabled) {
-      var StatusComponent = (
-        <StatusWrapper>
-          <DisabledIcon style={{ backgroundColor: "rgba(255, 0, 0, 0.8)" }}>
-            Disabled
-          </DisabledIcon>
-        </StatusWrapper>
+  displayCorrectStatus(item) {
+    let statusComponent;
+    if (item.is_disabled) {
+      statusComponent = (
+        <Tag color={"rgba(255, 0, 0, 0.8)"} key={"Disabled"}>
+          Disabled
+        </Tag>
       );
-    } else if (!this.props.userList.find(x => x.id === id).is_activated) {
-      StatusComponent = (
-        <StatusWrapper>
-          <DisabledIcon style={{ backgroundColor: "rgba(39, 164, 167, 0.8)" }}>
-            Unactivated
-          </DisabledIcon>
-        </StatusWrapper>
+    } else if (!item.is_activated) {
+      statusComponent = (
+        <Tag color={"rgba(39, 164, 167, 0.8)"} key={"Unactivated"}>
+          Unactivated
+        </Tag>
       );
-    } else {
-      StatusComponent = null;
     }
-    return StatusComponent;
+    return statusComponent;
   }
 
   render() {
     const loadingStatus = this.props.transferAccounts.isRequesting;
+    let table;
 
     if (this.props.transferAccounts.loadStatus.success) {
-      const tableLength = this.props.userList.length;
+      const columns = [
+        {
+          title: "Name",
+          dataIndex: "userName",
+          key: "userName",
+          render: (id, record) => {
+            const primaryTransferAccount = record.default_transfer_account_id;
+            const customRoutes = [
+              { path: "", breadcrumbName: "Home" },
+              { path: "accounts/", breadcrumbName: "Accounts" },
+              {
+                path: `accounts/${primaryTransferAccount}`,
+                breadcrumbName: `Transfer Account ${primaryTransferAccount}`
+              },
+              {
+                path: `users/${record.id}`,
+                breadcrumbName: `User ${record.id}`
+              }
+            ];
+            return (
+              <Link
+                style={{
+                  textDecoration: "underline",
+                  color: "rgba(0, 0, 0, 0.65)",
+                  fontWeight: 400
+                }}
+                to={{
+                  pathname: "/users/" + record.id,
+                  state: { customRoutes }
+                }}
+              >
+                {(record.first_name === null ? "" : record.first_name) +
+                  " " +
+                  (record.last_name === null ? "" : record.last_name)}
+              </Link>
+            );
+          }
+        },
+        {
+          title: "Created",
+          dataIndex: "created",
+          key: "created"
+        }
+      ];
 
-      return (
-        <Wrapper>
-          <ModuleBox>
-            <TopRow>
-              <ModuleHeader>Participants</ModuleHeader>
-            </TopRow>
-            <ReactTable
-              columns={[
-                {
-                  Header: "Name",
-                  id: "userName",
-                  accessor: user =>
-                    (user.first_name === null ? "" : user.first_name) +
-                    " " +
-                    (user.last_name === null ? "" : user.last_name),
-                  headerClassName: "react-table-header",
-                  className: "react-table-first-cell"
-                },
-                {
-                  Header: "Account Type",
-                  accessor: "admin_tier",
-                  headerClassName: "react-table-header"
-                },
-                {
-                  Header: "Created",
-                  accessor: "created",
-                  headerClassName: "react-table-header"
-                },
-                {
-                  Header: "Status",
-                  accessor: "id",
-                  headerClassName: "react-table-header",
-                  Cell: cellInfo => this.displayCorrectStatus(cellInfo.value)
-                }
-              ]}
-              data={this.props.userList}
-              loading={loadingStatus} // Display the loading overlay when we need it
-              defaultPageSize={tableLength}
-              sortable={false}
-              showPagination={false}
-              showPageSizeOptions={false}
-              className="react-table"
-              resizable={false}
-              getTrProps={(state, rowInfo, instance) => {
-                if (rowInfo) {
-                  return {
-                    style: {
-                      cursor: rowInfo.row ? "pointer" : null
-                    }
-                  };
-                }
-                return {};
-              }}
-              getTdProps={(state, rowInfo) => {
-                return {
-                  onClick: (e, handleOriginal) => {
-                    if (rowInfo && rowInfo.row) {
-                      const primaryTransferAccount =
-                        rowInfo.original.default_transfer_account_id;
-                      const customRoutes = [
-                        { path: "", breadcrumbName: "Home" },
-                        { path: "accounts/", breadcrumbName: "Accounts" },
-                        {
-                          path: `accounts/${primaryTransferAccount}`,
-                          breadcrumbName: `Transfer Account ${primaryTransferAccount}`
-                        },
-                        {
-                          path: `users/${rowInfo.row.id}`,
-                          breadcrumbName: `User ${rowInfo.row.id}`
-                        }
-                      ];
-                      browserHistory.push("/users/" + rowInfo.row.id, {
-                        customRoutes
-                      });
-                    }
-                    if (handleOriginal) {
-                      handleOriginal();
-                    }
-                  }
-                };
-              }}
-            />
-            <FooterBar>
-              <p style={{ margin: 0 }}>{tableLength} users</p>
-            </FooterBar>
-          </ModuleBox>
-        </Wrapper>
+      table = (
+        <Table
+          columns={columns}
+          dataSource={this.props.userList}
+          loading={loadingStatus} // Display the loading overlay when we need it
+          pagination={false}
+        />
       );
     }
 
-    return <p>No users.</p>;
+    return (
+      <Card title={"Users"} style={{ marginTop: "1em" }}>
+        {table || <p>No users</p>}
+      </Card>
+    );
   }
 }
 
 export default connect(
   mapStateToProps,
-  mapDispatchToProps
+  null
 )(UserList);
-
-const StatusWrapper = styled.div`
-  display: flex;
-`;
-
-const Wrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-
-const DisabledIcon = styled.p`
-  color: #fff;
-  padding: 0.2em 1em;
-  margin: 0;
-  font-weight: 500;
-  border-radius: 20px;
-  text-transform: uppercase;
-  font-size: 12px;
-`;
-
-const FooterBar = styled.div`
-  border-top: solid 1px rgba(0, 0, 0, 0.05);
-  padding: 1em;
-`;

@@ -91,6 +91,35 @@ body {
 }
 
 /* Override default phone number input */
+input.ant-input.form-control:hover {
+  border-color: #50b3b1 !important;
+}
+input.ant-input.form-control:focus {
+  border-color: #50b3b1 !important;
+}
+input.ant-input.form-control {
+  border: 1px solid #d9d9d9 !important;
+  height: 33px;
+  width: 100% !important;
+}
+.ant-form-item-has-error .ant-input.form-control,
+.ant-form-item-has-error .ant-input-affix-wrapper,
+.ant-form-item-has-error .ant-input:hover,
+.ant-form-item-has-error input.ant-input.form-control:focus {
+  border-color: #ff4d4f !important;
+}
+.ant-form-item-has-error .ant-input.form-control,
+.ant-form-item-has-error .ant-input-affix-wrapper,
+.ant-form-item-has-error .ant-input:hover,
+.ant-form-item-has-error input.ant-input.form-control:hover {
+  border-color: #ff4d4f !important;
+}
+.ant-form-item-has-error .ant-input.form-control,
+.ant-form-item-has-error .ant-input-affix-wrapper,
+.ant-form-item-has-error .ant-input:hover,
+.ant-form-item-has-error .form-control {
+  border-color: #ff4d4f !important;
+}
 .react-tel-input .form-control {
   border-width: 0 0 1px 0 !important;
   width: unset !important;

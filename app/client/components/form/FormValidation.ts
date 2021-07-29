@@ -17,6 +17,20 @@ const FormValidation = {
       }
     }
   },
+  antPhone: async (value: string) => {
+    if (value) {
+      if (value.length === 1) {
+        return Promise.reject(new Error("Please enter a proper phone number"));
+      }
+      const formattedNumber = value.includes("+") ? value : "+" + value;
+      const number = parsePhoneNumberFromString(formattedNumber);
+      if (number && number.isValid()) {
+        return Promise.resolve();
+      } else {
+        return Promise.reject(new Error("Please enter a proper phone number"));
+      }
+    }
+  },
   notOther: (value: string) =>
     value.toLowerCase() === "other"
       ? "'Other' is not a valid input"

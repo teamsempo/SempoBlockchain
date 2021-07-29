@@ -1,12 +1,9 @@
 import React from "react";
 import { connect } from "react-redux";
+import { Card } from "antd";
 import styled, { ThemeProvider } from "styled-components";
 
-import {
-  PageWrapper,
-  ModuleBox,
-  CenterLoadingSideBarActive
-} from "../styledElements.js";
+import { PageWrapper, CenterLoadingSideBarActive } from "../styledElements.js";
 import LoadingSpinner from "../loadingSpinner.jsx";
 import { LightTheme } from "../theme.js";
 import SingleUserManagement from "../user/SingleUserManagement.tsx";
@@ -55,11 +52,14 @@ class SingleUserPage extends React.Component {
       var userComponent = <SingleUserManagement userId={userId} />;
     } else {
       userComponent = (
-        <ModuleBox>
+        <Card
+          style={{ marginTop: "1em" }}
+          title={`No Such User: ${url_provided}`}
+        >
           <p style={{ padding: "1em", textAlign: "center" }}>
             No Such User: {url_provided}
           </p>
-        </ModuleBox>
+        </Card>
       );
     }
 
