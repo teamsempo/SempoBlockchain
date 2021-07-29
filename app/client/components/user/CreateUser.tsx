@@ -68,7 +68,11 @@ class CreateUserUpdated extends React.Component<Props, ComponentState> {
         bio: form.bio,
         gender: form.gender,
         public_serial_number: form.publicSerialNumber,
-        phone: form.publicSerialNumber ? undefined : form.phone,
+        phone: form.publicSerialNumber
+          ? undefined
+          : form.phone
+          ? "+" + form.phone
+          : undefined,
         initial_disbursement: (form.initialDisbursement || 0) * 100,
         require_transfer_card_exists:
           activeOrganisation && activeOrganisation.require_transfer_card,
