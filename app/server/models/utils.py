@@ -53,7 +53,7 @@ def no_expire():
 def filter_by_org(query):
     """A query compilation rule that will add limiting criteria for every
     subclass of OrgBase"""
-    show_deleted = query._execution_options.get("show_deleted", False)
+    show_deleted = getattr(g, "show_deleted", False) or query._execution_options.get("show_deleted", False)
     show_all = getattr(g, "show_all", False) or query._execution_options.get("show_all", False)
     # We want to support multiple active organizations, but only for select GET requets.
     # This is done through a multi_org flag, very similar to the show_all flag
