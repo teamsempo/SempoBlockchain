@@ -12,7 +12,6 @@ from sql_persistence.models import (
     BlockchainTransaction,
     BlockchainTask,
     BlockchainWallet,
-    SynchronizedBlock,
     SynchronizationFilter
 )
 
@@ -570,14 +569,6 @@ class SQLPersistenceInterface(object):
                 else:
                     result[address] = [hash]
         return result
-
-    def get_failed_block_fetches(self):
-        failed_block_fetches = self.session.query(
-            SynchronizationFilter.contract_address, SynchronizedBlock.block_number)\
-            .filter(SynchronizedBlock.status != 'SUCCESS')\
-            .join(SynchronizationFilter)\
-            .all()
-        return self.__aggregate_tuple_list__(failed_block_fetches)
 
     def get_failed_callbacks(self):
         failed_callbacks = self.session.query(
