@@ -131,7 +131,6 @@ class BlockchainSyncer(object):
         # Creates DB objects for every block to monitor status
         config.logg.info(f'Fetching block range {start_block} to {end_block} for contract {contract_address}')
 
-        self.persistence.add_block_range(start_block, end_block, filter_id)
         erc20_contract = self.w3.eth.contract(
             address = Web3.toChecksumAddress(contract_address),
             abi = erc20_abi.abi
@@ -144,12 +143,8 @@ class BlockchainSyncer(object):
             )
             for event in events:
                 yield event
-            # Once a batch of chunks is completed, we can mark them completed
-            self.persistence.set_block_range_status(start_block, end_block, 'SUCCESS', filter_id)
-
         except:
             # Setting block status as a range since individual blocks can't fail at this stage (as we are getting a range of blocks)
-            self.persistence.set_block_range_status(start_block, end_block, 'FAILED', filter_id)
             raise Exception(f'Failed fetching block range {start_block} to {end_block} for contract {contract_address}')
 
     # Adds transaction filter to database if it doesn't already exist
