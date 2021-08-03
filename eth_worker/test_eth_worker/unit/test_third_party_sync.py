@@ -313,11 +313,6 @@ class TestModels:
         resp['last_time_synchronized'] = None
         assert resp == expected_resp
 
-        # Check failed blocks
-        failed_blocks = blockchain_sync.get_failed_block_fetches()
-        expected_resp = {'0x000090c5a236130E5D51260A2A5Bfde834C694b6': [2, 3], '0x000090c5a236130E5D51260A2A5Bfde844C694b6': [1]}
-        assert failed_blocks == expected_resp
-
         # Check failed callbacks
         failed_callbacks = blockchain_sync.get_failed_callbacks()
         expected_resp = {'0x468F90c5a236130E5D51260A2A5Bfde834C694b6': ['0x4444444444444444444444444']}

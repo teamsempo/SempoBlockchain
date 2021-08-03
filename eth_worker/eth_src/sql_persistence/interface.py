@@ -559,7 +559,7 @@ class SQLPersistenceInterface(object):
             'last_time_synchronized': __query_tuple_list_to_dict__(last_time_synchronized)
         }
         
-    # Utility function for get_failed_block_fetches and get_failed_callbacks
+    # Utility function for get_failed_callbacks
     def __aggregate_tuple_list__(self, response):
         result = {}
         for address, hash in response:
