@@ -198,6 +198,7 @@ function* createUser(
     const error = yield call(handleError, fetch_error);
 
     yield put(CreateUserAction.createUserFailure(error.message));
+    message.error(error.message);
   }
 }
 
