@@ -3,6 +3,7 @@ from sqlalchemy import or_
 from sqlalchemy.ext.hybrid import hybrid_property
 import config
 from server import db, bt
+import decimal
 
 from flask import current_app
 from server.models.transfer_account import TransferAccount, TransferAccountType
@@ -85,7 +86,7 @@ class Token(ModelBase):
         return int(token_amount) / 10**self.get_decimals(queue) * 100
 
     def system_amount_to_token(self, system_amount, queue='high-priority'):
-        return int(system_amount/100 * 10**self.get_decimals(queue))
+        return int(decimal.Decimal(system_amount/100) * 10**self.get_decimals(queue))
 
     def __init__(self, chain='ETHEREUM', **kwargs):
         self.chain = chain
