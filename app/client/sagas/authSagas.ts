@@ -360,9 +360,11 @@ function* register(
     } else {
       yield put(RegisterAction.registerFailure(registered_account.message));
       yield put(LoginAction.loginFailure(registered_account.message));
+      message.error(registered_account.message);
     }
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
+    message.error(error.message);
 
     yield put(RegisterAction.registerFailure(error.message));
   }

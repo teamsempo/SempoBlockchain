@@ -88,7 +88,7 @@ export class authPage extends React.Component {
                 />
               )}
             />
-            <Route component={LoginForm} />
+            <Route component={Login} />
           </Switch>
         </LoginModuleBox>
         <TermsText
@@ -117,6 +117,18 @@ export default connect(
   mapStateToProps,
   mapDispatchToProps
 )(authPage);
+
+const Login = () => (
+  <div>
+    <LoginForm />
+    <Footer>
+      <FooterText>
+        Don’t have a Sempo account?
+        <FooterLink to="/login/sign-up">Signup</FooterLink>
+      </FooterText>
+    </Footer>
+  </div>
+);
 
 const forgotPassword = () => (
   <div>

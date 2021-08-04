@@ -58,7 +58,6 @@ const RequestResetEmailForm = function(props) {
       <Form
         name="basic"
         style={{ maxWidth: "300px" }}
-        initialValues={{ remember: false }}
         onFinish={props.onFinish}
         onFinishFailed={props.onFinishFailed}
       >

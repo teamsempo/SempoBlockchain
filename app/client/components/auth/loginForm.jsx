@@ -1,13 +1,11 @@
 import React from "react";
 import { connect } from "react-redux";
 import { Link } from "react-router-dom";
-import { Button, Input, Form, Typography } from "antd";
+import { Button, Input, Form } from "antd";
 
 import { LoginAction } from "../../reducers/auth/actions";
 
 import TFAForm from "./TFAForm.jsx";
-
-const { Text } = Typography;
 
 const mapStateToProps = state => {
   return {
@@ -68,7 +66,6 @@ const LoginForm = function(props) {
       <Form
         name="basic"
         style={{ maxWidth: "300px" }}
-        initialValues={{ remember: false }}
         onFinish={props.onFinish}
         onFinishFailed={props.onFinishFailed}
       >
@@ -91,20 +88,18 @@ const LoginForm = function(props) {
           />
         </Form.Item>
 
-        <Button
-          htmlType="submit"
-          loading={props.isLoading}
-          label={"Login"}
-          type={"primary"}
-          block
-        >
-          Login
-        </Button>
+        <Form.Item>
+          <Button
+            htmlType="submit"
+            loading={props.isLoading}
+            label={"Login"}
+            type={"primary"}
+            block
+          >
+            Login
+          </Button>
+        </Form.Item>
       </Form>
-      <div style={{ textAlign: "center", marginTop: "24px" }}>
-        <Text>Don’t have a Sempo account?</Text>{" "}
-        <Link to={"/login/sign-up"}>Sign Up</Link>
-      </div>
     </div>
   );
 };

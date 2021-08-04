@@ -90,6 +90,7 @@
     "@sentry/browser": "^4.2.3",
     "@types/qrcode.react": "^1.0.1",
     "antd": "^4.11.0",
+    "antd-password-input-strength": "^1.1.1",
     "chart.js": "^2.7.2",
     "deck.gl": "5.1.4",
     "deepmerge": "^2.2.1",
