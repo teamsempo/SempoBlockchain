@@ -441,6 +441,7 @@ function* resetEmailRequest(
     yield put(
       ResetPasswordEmailAction.passwordResetEmailFailure(error.statusText)
     );
+    message.error(error.statusText);
   }
 }
 
@@ -458,11 +459,13 @@ function* resetPassword(
   >
 ) {
   try {
-    yield call(ResetPasswordAPI, action.payload);
+    const result = yield call(ResetPasswordAPI, action.payload);
     yield put(ResetPasswordAction.resetPasswordSuccess());
     yield put(LoginAction.logout());
+    message.success(result.message);
   } catch (error) {
     yield put(ResetPasswordAction.resetPasswordFailure(error.statusText));
+    message.error(error.statusText);
   }
 }
 

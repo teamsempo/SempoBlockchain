@@ -117,7 +117,7 @@ const RegisterFormContainer = props => {
         <PasswordInput
           inputProps={{
             placeholder: "Password",
-            minlength: "8",
+            minLength: "8",
             type: "password"
           }}
         />
