@@ -68,7 +68,7 @@ export class authPage extends React.Component {
     return (
       <WrapperDiv>
         <LoginModuleBox>
-          <div>
+          <div style={{ paddingBottom: "24px" }}>
             <SempoLogoSVG
               src="/static/media/sempo_logo_teal.png"
               alt={"Sempo Logo"}
@@ -195,12 +195,6 @@ export const FooterLink = styled(Link)`
   &:hover {
     text-decoration: underline;
   }
-`;
-
-const DeploymentNameText = styled.p`
-  font-weight: 400;
-  color: #9e9e9e;
-  margin: 0;
 `;
 
 const LoginModuleBox = styled.div`

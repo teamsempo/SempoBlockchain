@@ -250,9 +250,11 @@ function* requestToken(
       return token_response;
     } else {
       yield put(LoginAction.loginFailure(token_response.message));
+      message.error(token_response.message);
     }
   } catch (error) {
     yield put(LoginAction.loginFailure(error.statusText));
+    message.error(error.statusText);
   } finally {
     if (yield cancelled()) {
       // ... put special cancellation handling code here

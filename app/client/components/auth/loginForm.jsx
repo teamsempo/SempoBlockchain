@@ -1,14 +1,13 @@
 import React from "react";
 import { connect } from "react-redux";
-import styled from "styled-components";
 import { Link } from "react-router-dom";
+import { Button, Input, Form, Typography } from "antd";
 
-import AsyncButton from "./../AsyncButton.jsx";
 import { LoginAction } from "../../reducers/auth/actions";
 
-import { Input, ErrorMessage } from "./../styledElements";
-import { Footer, FooterLink, FooterText } from "../pages/authPage.jsx";
 import TFAForm from "./TFAForm.jsx";
+
+const { Text } = Typography;
 
 const mapStateToProps = state => {
   return {
@@ -25,58 +24,22 @@ const mapDispatchToProps = dispatch => {
 export class LoginFormContainer extends React.Component {
   constructor() {
     super();
-    this.state = {
-      username: "",
-      password: "",
-      user_missing: false,
-      password_missing: false,
-      invalid_login: false
-    };
+    this.state = {};
+    this.onFinish = this.onFinish.bind(this);
   }
 
-  componentWillReceiveProps(nextProps) {
-    this.setState({ invalid_login: nextProps.login_status.error });
-  }
-
-  attemptlogin() {
-    if (this.state.username == "") {
-      this.setState({ user_missing: true });
-      return;
-    }
-    if (this.state.password == "") {
-      this.setState({ password_missing: true });
-      return;
-    }
+  onFinish(values) {
     this.props.loginRequest({
-      body: { username: this.state.username, password: this.state.password }
+      body: {
+        username: values.email,
+        password: values.password
+      }
     });
   }
 
-  onUserFieldKeyPress(e) {
-    var username = e.target.value;
-    this.setState({
-      username: username,
-      user_missing: false,
-      invalid_login: false
-    });
-    if (e.nativeEvent.keyCode != 13) return;
-    this.attemptlogin();
-  }
-
-  onPasswordFieldKeyPress(e) {
-    var password = e.target.value;
-    this.setState({
-      password: password,
-      password_missing: false,
-      invalid_login: false
-    });
-    if (e.nativeEvent.keyCode != 13) return;
-    this.attemptlogin();
-  }
-
-  onClick() {
-    this.attemptlogin();
-  }
+  onFinishFailed = errorInfo => {
+    console.log("Failed:", errorInfo);
+  };
 
   render() {
     if (this.props.login_status.tfaURL || this.props.login_status.tfaFailure) {
@@ -91,69 +54,57 @@ export class LoginFormContainer extends React.Component {
     }
     return (
       <LoginForm
-        onUserFieldKeyPress={e => this.onUserFieldKeyPress(e)}
-        onPasswordFieldKeyPress={e => this.onPasswordFieldKeyPress(e)}
-        onClick={() => this.onClick()}
-        user_missing={this.state.user_missing}
-        password_missing={this.state.password_missing}
-        invalid_login={this.state.invalid_login}
-        isLoggingIn={this.props.login_status.isLoggingIn}
+        isLoading={this.props.login_status.isLoggingIn}
+        onFinish={this.onFinish}
+        onFinishFailed={this.onFinishFailed}
       />
     );
   }
 }
 
 const LoginForm = function(props) {
-  if (props.user_missing) {
-    var error_message = "Email Missing";
-  } else if (props.password_missing) {
-    error_message = "Password Missing";
-  } else if (props.invalid_login) {
-    error_message = props.invalid_login;
-  } else {
-    error_message = "";
-  }
-
   return (
     <div>
-      <div style={{ display: "block", position: "relative" }}>
-        <ErrorMessage>{error_message}</ErrorMessage>
-
-        <Input
-          type="email"
-          id="UserField"
-          onKeyUp={props.onUserFieldKeyPress}
-          placeholder="Email"
+      <Form
+        name="basic"
+        style={{ maxWidth: "300px" }}
+        initialValues={{ remember: false }}
+        onFinish={props.onFinish}
+        onFinishFailed={props.onFinishFailed}
+      >
+        <Form.Item
           aria-label="Email"
-        />
-
-        <Input
-          type="password"
-          id="PasswordField"
-          onKeyUp={props.onPasswordFieldKeyPress}
-          placeholder="Password"
+          name="email"
+          rules={[{ required: true, message: "Please enter your email!" }]}
+        >
+          <Input placeholder="Email" type={"email"} />
+        </Form.Item>
+        <Form.Item
           aria-label="Password"
-        />
+          name="password"
+          rules={[{ required: true, message: "Please enter your password!" }]}
+        >
+          <Input
+            placeholder="Password"
+            type={"password"}
+            suffix={<Link to={"/login/forgot"}>Forgot Password</Link>}
+          />
+        </Form.Item>
 
-        <ResetPasswordLink to="/login/forgot">
-          Forgot Password
-        </ResetPasswordLink>
+        <Button
+          htmlType="submit"
+          loading={props.isLoading}
+          label={"Login"}
+          type={"primary"}
+          block
+        >
+          Login
+        </Button>
+      </Form>
+      <div style={{ textAlign: "center", marginTop: "24px" }}>
+        <Text>Don’t have a Sempo account?</Text>{" "}
+        <Link to={"/login/sign-up"}>Sign Up</Link>
       </div>
-
-      <AsyncButton
-        onClick={props.onClick}
-        isLoading={props.isLoggingIn}
-        buttonStyle={{ width: "calc(100% - 1em)", display: "flex" }}
-        buttonText={<span>LOGIN</span>}
-        label={"Login"}
-      />
-
-      <Footer>
-        <FooterText>
-          Don’t have a Sempo account?
-          <FooterLink to="/login/sign-up">Sign Up</FooterLink>
-        </FooterText>
-      </Footer>
     </div>
   );
 };
@@ -161,17 +112,3 @@ export default connect(
   mapStateToProps,
   mapDispatchToProps
 )(LoginFormContainer);
-
-const ResetPasswordLink = styled(Link)`
-  cursor: pointer;
-  font-size: 14px;
-  color: #30a4a6;
-  font-weight: bolder;
-  text-decoration: none;
-  position: absolute;
-  top: 5.7em;
-  right: 1em;
-  &:hover {
-    text-decoration: underline;
-  }
-`;
