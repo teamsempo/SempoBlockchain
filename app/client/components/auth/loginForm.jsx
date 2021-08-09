@@ -36,7 +36,7 @@ export class LoginFormContainer extends React.Component {
   }
 
   onFinishFailed = errorInfo => {
-    console.log("Failed:", errorInfo);
+    // console.log("Failed:", errorInfo);
   };
 
   render() {

@@ -99,7 +99,7 @@ const RegisterFormContainer = props => {
               if (!value) {
                 return Promise.reject("Please enter your password!");
               }
-              if (value && value.length <= 8) {
+              if (value && value.length < 8) {
                 return Promise.reject(
                   "Password must be at least 8 characters long"
                 );
@@ -117,7 +117,6 @@ const RegisterFormContainer = props => {
         <PasswordInput
           inputProps={{
             placeholder: "Password",
-            minLength: "8",
             type: "password"
           }}
         />
