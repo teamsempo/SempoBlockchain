@@ -86,9 +86,6 @@ class BlockchainTasker(object):
     def get_third_party_sync_metrics(self):
         return self._execute_synchronous_celery(self._eth_endpoint('get_third_party_sync_metrics'), {})
 
-    def get_failed_block_fetches(self):
-        return self._execute_synchronous_celery(self._eth_endpoint('get_failed_block_fetches'), {})
-
     def get_failed_callbacks(self):
         return self._execute_synchronous_celery(self._eth_endpoint('get_failed_callbacks'), {})
 

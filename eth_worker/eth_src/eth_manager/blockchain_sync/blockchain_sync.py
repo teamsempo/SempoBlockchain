@@ -172,9 +172,6 @@ class BlockchainSyncer(object):
     def get_metrics(self):
         return self.persistence.get_transaction_sync_metrics()
 
-    def get_failed_block_fetches(self):
-        return self.persistence.get_failed_block_fetches()
-
     def get_failed_callbacks(self):
         return self.persistence.get_failed_callbacks()
 

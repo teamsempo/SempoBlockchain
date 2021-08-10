@@ -77,10 +77,6 @@ processor_task_config = {
 def get_third_party_sync_metrics(self):
     return blockchain_sync.get_metrics()
 
-@app.task(name=eth_endpoint('get_failed_block_fetches'), **base_task_config)
-def get_failed_block_fetches(self):
-    return blockchain_sync.get_failed_block_fetches()
-
 @app.task(name=eth_endpoint('get_failed_callbacks'), **base_task_config)
 def get_failed_callbacks(self):
     return blockchain_sync.get_failed_callbacks()

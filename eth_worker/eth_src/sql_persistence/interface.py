@@ -12,7 +12,6 @@ from sql_persistence.models import (
     BlockchainTransaction,
     BlockchainTask,
     BlockchainWallet,
-    SynchronizedBlock,
     SynchronizationFilter
 )
 
@@ -560,7 +559,7 @@ class SQLPersistenceInterface(object):
             'last_time_synchronized': __query_tuple_list_to_dict__(last_time_synchronized)
         }
         
-    # Utility function for get_failed_block_fetches and get_failed_callbacks
+    # Utility function for get_failed_callbacks
     def __aggregate_tuple_list__(self, response):
         result = {}
         for address, hash in response:
@@ -570,14 +569,6 @@ class SQLPersistenceInterface(object):
                 else:
                     result[address] = [hash]
         return result
-
-    def get_failed_block_fetches(self):
-        failed_block_fetches = self.session.query(
-            SynchronizationFilter.contract_address, SynchronizedBlock.block_number)\
-            .filter(SynchronizedBlock.status != 'SUCCESS')\
-            .join(SynchronizationFilter)\
-            .all()
-        return self.__aggregate_tuple_list__(failed_block_fetches)
 
     def get_failed_callbacks(self):
         failed_callbacks = self.session.query(
