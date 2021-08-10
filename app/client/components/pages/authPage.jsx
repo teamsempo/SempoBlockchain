@@ -68,7 +68,7 @@ export class authPage extends React.Component {
     return (
       <WrapperDiv>
         <LoginModuleBox>
-          <div>
+          <div style={{ paddingBottom: "24px" }}>
             <SempoLogoSVG
               src="/static/media/sempo_logo_teal.png"
               alt={"Sempo Logo"}
@@ -88,7 +88,7 @@ export class authPage extends React.Component {
                 />
               )}
             />
-            <Route component={LoginForm} />
+            <Route component={Login} />
           </Switch>
         </LoginModuleBox>
         <TermsText
@@ -117,6 +117,18 @@ export default connect(
   mapStateToProps,
   mapDispatchToProps
 )(authPage);
+
+const Login = () => (
+  <div>
+    <LoginForm />
+    <Footer>
+      <FooterText>
+        Don’t have a Sempo account?
+        <FooterLink to="/login/sign-up">Signup</FooterLink>
+      </FooterText>
+    </Footer>
+  </div>
+);
 
 const forgotPassword = () => (
   <div>
@@ -195,12 +207,6 @@ export const FooterLink = styled(Link)`
   &:hover {
     text-decoration: underline;
   }
-`;
-
-const DeploymentNameText = styled.p`
-  font-weight: 400;
-  color: #9e9e9e;
-  margin: 0;
 `;
 
 const LoginModuleBox = styled.div`
