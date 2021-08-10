@@ -393,7 +393,7 @@ def make_target_balance_transfer(target_balance,
     if target_user.transfer_account is None:
         raise TransferAccountNotFoundError('Transfer account not found')
 
-    transfer_amount = target_balance - target_user.transfer_account.balance
+    transfer_amount = Decimal(target_balance) - target_user.transfer_account.balance
 
     if transfer_amount == 0:
         raise InvalidTargetBalanceError("Transfer Amount can't be zero")

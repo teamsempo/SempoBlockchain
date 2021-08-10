@@ -46,7 +46,8 @@ interface Pagination {
 
 interface OuterProps {
   filterObject: AllowedMetricsObjects;
-  pagination?: Pagination
+  pagination?: Pagination;
+  transferAccountId?: string;
   onQueryChange?: (query: Query) => void;
   providedParams?: string;
   queryType?: string;
@@ -180,12 +181,14 @@ class QueryConstructor extends React.Component<Props, ComponentState> {
 
   loadData = () => {
     let pagination = this.props.pagination || {};
+    let transferAccountId = this.props.transferAccountId ? {transfer_account_ids: this.props.transferAccountId} : {}
     if (this.props.queryType && this.props.queryType == 'credit_transfer') {
       this.props.loadCreditTransferList({
         query: {
           params: this.state.encodedFilters,
           search_string: this.state.searchString,
-          ...pagination
+          ...pagination,
+          ...transferAccountId
         }
       });
     }

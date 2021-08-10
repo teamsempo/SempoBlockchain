@@ -250,9 +250,11 @@ function* requestToken(
       return token_response;
     } else {
       yield put(LoginAction.loginFailure(token_response.message));
+      message.error(token_response.message);
     }
   } catch (error) {
     yield put(LoginAction.loginFailure(error.statusText));
+    message.error(error.statusText);
   } finally {
     if (yield cancelled()) {
       // ... put special cancellation handling code here
@@ -358,9 +360,11 @@ function* register(
     } else {
       yield put(RegisterAction.registerFailure(registered_account.message));
       yield put(LoginAction.loginFailure(registered_account.message));
+      message.error(registered_account.message);
     }
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
+    message.error(error.message);
 
     yield put(RegisterAction.registerFailure(error.message));
   }
@@ -437,6 +441,7 @@ function* resetEmailRequest(
     yield put(
       ResetPasswordEmailAction.passwordResetEmailFailure(error.statusText)
     );
+    message.error(error.statusText);
   }
 }
 
@@ -454,11 +459,13 @@ function* resetPassword(
   >
 ) {
   try {
-    yield call(ResetPasswordAPI, action.payload);
+    const result = yield call(ResetPasswordAPI, action.payload);
     yield put(ResetPasswordAction.resetPasswordSuccess());
     yield put(LoginAction.logout());
+    message.success(result.message);
   } catch (error) {
     yield put(ResetPasswordAction.resetPasswordFailure(error.statusText));
+    message.error(error.statusText);
   }
 }
 

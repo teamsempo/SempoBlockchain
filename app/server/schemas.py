@@ -300,6 +300,7 @@ class TransferAccountSchema(SchemaBase):
         many=True,
         only=(
             "first_name",
+            "created",
             "id",
             "is_beneficiary",
             "is_disabled",
@@ -463,6 +464,7 @@ class DisbursementSchema(SchemaBase):
     search_string               = fields.Str()
     search_filter_params        = fields.Str()
     notes                       = fields.Str()
+    errors                      = fields.List(fields.Str())
     include_accounts            = fields.List(fields.Int())
     exclude_accounts            = fields.List(fields.Int())
 
@@ -492,10 +494,8 @@ transfer_account_schema = TransferAccountSchema(
         "credit_sends.recipient_transfer_account",
         "credit_receives.sender_transfer_account",
         "credit_receives.recipient_transfer_account",
-        # "credit_sends.sender_user",
-        # "credit_sends.recipient_user",
-        #  "credit_receives.sender_user",
-        #  "credit_receives.recipient_user"
+        "credit_sends",
+        "credit_receives",
     ))
 
 transfer_accounts_schema = TransferAccountSchema(

@@ -1,11 +1,8 @@
 import React from "react";
 import { connect } from "react-redux";
-
-import AsyncButton from "./../AsyncButton.jsx";
+import { Button, Input, Form } from "antd";
 
 import { ResetPasswordEmailAction } from "../../reducers/auth/actions";
-
-import { Input, ErrorMessage } from "./../styledElements";
 
 const mapStateToProps = state => {
   return {
@@ -23,88 +20,69 @@ const mapDispatchToProps = dispatch => {
 class RequestResetEmailFormContainer extends React.Component {
   constructor() {
     super();
-    this.state = {
-      email: "",
-      email_missing: false
-    };
+    this.state = {};
+    this.onFinish = this.onFinish.bind(this);
   }
 
-  attemptRequestPasswordResetEmail() {
-    if (this.state.email === "") {
-      this.setState({ email_missing: false });
-      return;
-    }
-    this.props.requestPasswordResetEmail({ body: { email: this.state.email } });
+  onFinish(values) {
+    this.props.requestPasswordResetEmail({
+      body: {
+        email: values.email
+      }
+    });
   }
 
-  onEmailFieldKeyPress(e) {
-    let email = e.target.value;
-    this.setState({ error: false, email: email });
-    if (e.nativeEvent.keyCode !== 13) return;
-    this.attemptRequestPasswordResetEmail(email);
-  }
-
-  onClick() {
-    this.attemptRequestPasswordResetEmail(this.state.email);
-  }
+  onFinishFailed = errorInfo => {
+    console.log("Failed:", errorInfo);
+  };
 
   render() {
     return (
       <RequestResetEmailForm
-        onEmailFieldKeyPress={e => this.onEmailFieldKeyPress(e)}
-        onClick={() => this.onClick()}
-        email_missing={this.state.email_missing}
-        requestError={this.props.email_state.error}
         requestSuccess={this.props.email_state.success}
         isLoading={this.props.email_state.isRequesting}
+        onFinish={this.onFinish}
+        onFinishFailed={this.onFinishFailed}
       />
     );
   }
 }
 
 const RequestResetEmailForm = function(props) {
-  if (props.email_missing) {
-    var error_message = "Email Missing";
-  } else if (props.requestError) {
-    error_message = props.requestError;
-  } else {
-    error_message = "";
-  }
-
   if (props.requestSuccess) {
     var innercontent = (
       <div>We've sent you an email to reset your password.</div>
     );
   } else {
     innercontent = (
-      <div>
-        <Input
-          type="email"
-          id="UserField"
-          onKeyUp={props.onEmailFieldKeyPress}
-          placeholder="Email"
+      <Form
+        name="basic"
+        style={{ maxWidth: "300px" }}
+        onFinish={props.onFinish}
+        onFinishFailed={props.onFinishFailed}
+      >
+        <Form.Item
           aria-label="Email"
-        />
+          name="email"
+          rules={[{ required: true, message: "Please enter your email!" }]}
+        >
+          <Input placeholder="Email" type={"email"} />
+        </Form.Item>
 
-        <AsyncButton
-          onClick={props.onClick}
-          isLoading={props.isLoading}
-          buttonStyle={{ width: "calc(100% - 1em)", display: "flex" }}
-          buttonText={<span>Reset Password</span>}
+        <Button
+          htmlType="submit"
+          loading={props.isLoading}
           label={"Reset Password on Sempo Dashboard"}
-        />
-        <ErrorMessage>{error_message}</ErrorMessage>
-      </div>
+          type={"primary"}
+          block
+        >
+          Reset Password
+        </Button>
+      </Form>
     );
   }
 
-  return (
-    <div style={{ textAlign: "center" }}>
-      <h3> Reset Password </h3>
-
-      {innercontent}
-    </div>
-  );
+  return <div style={{ textAlign: "center" }}>{innercontent}</div>;
 };
 export default connect(
   mapStateToProps,
