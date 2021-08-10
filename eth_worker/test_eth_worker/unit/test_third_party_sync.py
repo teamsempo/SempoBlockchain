@@ -1,7 +1,7 @@
 import pytest
 
 from sql_persistence.interface import SQLPersistenceInterface
-from sql_persistence.models import BlockchainTransaction, SynchronizedBlock
+from sql_persistence.models import BlockchainTransaction
 from eth_manager.blockchain_sync import blockchain_sync_constants
 import datetime
 
@@ -73,8 +73,6 @@ class TestModels:
 
     # Tests get_blockchain_history
     def test_get_blockchain_transaction_history(self, mocker, blockchain_sync, processor, db_session):
-        # Need a valid filter object since get_blockchain_transaction_history creates and modifies 
-        # the SynchronizedBlock table, which has needs to be linked to a tx filter foreign key
         filter = blockchain_sync.add_transaction_filter(
             self.contract_address,
             self.contract_type,
@@ -106,11 +104,6 @@ class TestModels:
         for event in events:
             # Have to consume generator for test to halt
             assert event == None
-
-        blocks = db_session.query(SynchronizedBlock).all()
-        for b in blocks:
-            assert b.status == 'SUCCESS'
-        assert len(blocks) == 500
         
     def test_synchronize_third_party_transactions(
             self, mocker, blockchain_sync, processor, persistence_module: SQLPersistenceInterface
@@ -310,59 +303,15 @@ class TestModels:
         )
         db_session.add(fail_tx)
 
-        success_synchronized_block = SynchronizedBlock(
-            block_number = 1,
-            status = 'SUCCESS',
-            is_synchronized = False,
-            synchronization_filter_id = tf1,
-            decimals = 18
-        )
-        db_session.add(success_synchronized_block)
-
-        fail_synchronized_block = SynchronizedBlock(
-            block_number = 2,
-            status = 'FAILED',
-            is_synchronized = False,
-            synchronization_filter_id = tf1,
-            decimals = 18
-        )
-        db_session.add(fail_synchronized_block)
-
-        fail_synchronized_block2 = SynchronizedBlock(
-            block_number = 3,
-            status = 'FAILED',
-            is_synchronized = False,
-            synchronization_filter_id = tf1,
-            decimals = 18
-        )
-        db_session.add(fail_synchronized_block2)
-        
-        fail_synchronized_block3 = SynchronizedBlock(
-            block_number = 1,
-            status = 'FAILED',
-            is_synchronized = False,
-            synchronization_filter_id = tf2,
-            decimals = 18
-        )
-        db_session.add(fail_synchronized_block3)
-
         expected_resp = {
             'unsynchronized_transaction_count': {'0x468F90c5a236130E5D51260A2A5Bfde834C694b6': 1}, 
             'synchronized_transaction_count': {'0x468F90c5a236130E5D51260A2A5Bfde834C694b6': 1}, 
-            'unsynchronized_block_count': {'0x000090c5a236130E5D51260A2A5Bfde834C694b6': 2, '0x000090c5a236130E5D51260A2A5Bfde844C694b6': 1}, 
-            'synchronized_block_count': {'0x000090c5a236130E5D51260A2A5Bfde834C694b6': 1}, 
-            'max_synchronized_blocks': {'0x000090c5a236130E5D51260A2A5Bfde834C694b6': 1, '0x000090c5a236130E5D51260A2A5Bfde844C694b6': 1}, 
             'last_time_synchronized': None
         }
         # Check base metrics
         resp = blockchain_sync.get_metrics()
         resp['last_time_synchronized'] = None
         assert resp == expected_resp
-
-        # Check failed blocks
-        failed_blocks = blockchain_sync.get_failed_block_fetches()
-        expected_resp = {'0x000090c5a236130E5D51260A2A5Bfde834C694b6': [2, 3], '0x000090c5a236130E5D51260A2A5Bfde844C694b6': [1]}
-        assert failed_blocks == expected_resp
 
         # Check failed callbacks
         failed_callbacks = blockchain_sync.get_failed_callbacks()
