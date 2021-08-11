@@ -1,6 +1,6 @@
 from flask import Blueprint, request, make_response, jsonify, g, current_app
 from flask.views import MethodView
-from openpyxl import Workbook
+from pyexcelerate import Workbook
 from datetime import datetime, timedelta
 import random, string, os
 from sqlalchemy import and_, or_, desc
@@ -19,7 +19,7 @@ from server.utils.auth import requires_auth
 from server.utils.amazon_s3 import upload_local_file_to_s3
 from server.utils.date_magic import find_last_period_dates
 from server.utils.amazon_ses import send_export_email
-from server.utils.export import generate_pdf_export, export_workbook_via_s3
+from server.utils.export import generate_pdf_export, export_workbook_via_s3, partition_query
 from server.utils.executor import standard_executor_job, add_after_request_executor_job
 from server.utils.transfer_filter import process_transfer_filters
 from server.utils.search import generate_search_query
@@ -90,17 +90,21 @@ def generate_export(post_data):
     pdf_filename = base_filename + '.pdf'
 
     wb = Workbook()
-    ws = wb.active
-    ws.title = "transfer_accounts"
+    ws = wb.new_sheet("transfer_accounts")
+
     # ws1 = wb.create_sheet(title='transfer_accounts')
 
     start_date = None
     end_date = None
     user_filter = None
 
+    for index, column in enumerate(transfer_account_columns):
+        ws[1][index+1] = column['header']
+
+
     # Create transfer_accounts workbook headers
     for index, column in enumerate(transfer_account_columns):
-        _ = ws.cell(column=index + 1, row=1, value="{0}".format(column['header']))
+        ws[1][index+1] = column['header']
 
     user_accounts = []
     credit_transfer_list = []
@@ -131,8 +135,8 @@ def generate_export(post_data):
             user_filter==True
         ).options(
             joinedload(User.transfer_accounts)
-        ).all()
-
+        )
+        user_accounts = partition_query(user_accounts)
     elif user_type == 'selected':
         # HANDLE PARAM : search_string - Any search string. An empty string (or None) will just return everything!
         search_string = post_data.get('search_string') or ''
@@ -145,11 +149,12 @@ def generate_export(post_data):
         exclude_accounts = post_data.get('exclude_accounts', [])
 
         if include_accounts:
-            transfer_accounts = db.session.query(TransferAccount).filter(TransferAccount.id.in_(include_accounts)).all()
+            transfer_accounts = db.session.query(TransferAccount).options().filter(TransferAccount.id.in_(include_accounts))
+            transfer_accounts = partition_query(transfer_accounts)
         else:
             search_query = generate_search_query(search_string, filters, order=desc, sort_by_arg='rank', include_user=True)
             search_query = search_query.filter(TransferAccount.id.notin_(exclude_accounts))
-            results = search_query.all()
+            results = partition_query(search_query)
             transfer_accounts = [r[0] for r in results] # Get TransferAccount (TransferAccount, searchRank, User)
         user_accounts = [ta.primary_user for ta in transfer_accounts]
     else:
@@ -157,7 +162,8 @@ def generate_export(post_data):
             or_(User.has_beneficiary_role == True, User.has_vendor_role == True)
         ).options(
             joinedload(User.transfer_accounts)
-        ).all()
+        )
+        user_accounts = partition_query(user_accounts)
 
     if export_type == 'pdf':
         file_url = generate_pdf_export(user_accounts, pdf_filename)
@@ -223,8 +229,8 @@ def generate_export(post_data):
                             CreditTransfer.recipient_transfer_account_id == transfer_account.id,
                             CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
                             CreditTransfer.resolved_date.between(prior_period_start,prior_period_end)
-                        )).all()
-
+                        ))
+                        in_transactions = partition_query(in_transactions)
                         for transaction in in_transactions:
                             in_for_period += transaction.transfer_amount
 
@@ -236,7 +242,8 @@ def generate_export(post_data):
                             CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
                             CreditTransfer.resolved_date.between(prior_period_start, prior_period_end),
                             CreditTransfer.transfer_type != TransferTypeEnum.WITHDRAWAL
-                        )).all()
+                        ))
+                        out_transactions = partition_query(out_transactions)
 
                         for transaction in out_transactions:
                             out_for_period += transaction.transfer_amount
@@ -265,7 +272,8 @@ def generate_export(post_data):
                             CreditTransfer.recipient_transfer_account_id == transfer_account.id,
                             CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
                             CreditTransfer.resolved_date.between(payable_epoch,prior_period_end)
-                        )).all()
+                        ))
+                        in_transactions = partition_query(in_transactions)
 
                         for transaction in in_transactions:
                             in_for_period += transaction.transfer_amount
@@ -277,7 +285,8 @@ def generate_export(post_data):
                             CreditTransfer.sender_transfer_account_id == transfer_account.id,
                             CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
                             CreditTransfer.resolved_date.between(payable_epoch, datetime.utcnow())
-                        )).all()
+                        ))
+                        out_transactions = partition_query(out_transactions)
 
                         for transaction in out_transactions:
                             out_for_period += transaction.transfer_amount
@@ -289,8 +298,7 @@ def generate_export(post_data):
                     else:
                         cell_contents = ""
 
-                    _ = ws.cell(column=jindix + 1, row=index + 2, value=cell_contents)
-
+                    ws[index+2][jindix+1] = cell_contents
                 if include_custom_attributes:
                     # Add custom attributes as columns at the end
                     for attribute in transfer_account.primary_user.custom_attributes:
@@ -301,36 +309,31 @@ def generate_export(post_data):
                         except ValueError:
                             custom_attribute_columns.append(name)
                             col_num = len(custom_attribute_columns) + len(transfer_account_columns)
-
-                        _ = ws.cell(column=col_num, row=index + 2, value=attribute.value)
+                        ws[index + 2][col_num] = attribute.value
             else:
                 print('No Transfer Account for user account id: ', user_account.id)
 
         # Add custom attribute headers:
         if include_custom_attributes:
             for index, column_name in enumerate(custom_attribute_columns):
-                _ = ws.cell(
-                    column=index + 1 + len(transfer_account_columns),
-                    row=1,
-                    value="{0}".format(column_name)
-                )
+                ws[1][index + 1 + len(transfer_account_columns)] = column_name
 
     if include_transfers and user_accounts is not None:
         base_credit_transfer_query= CreditTransfer.query.enable_eagerloads(False)
         if start_date and end_date is not None:
             credit_transfer_list = base_credit_transfer_query.filter(
                 CreditTransfer.created.between(start_date, end_date)
-            ).all()
+            )
 
         if date_range == 'all':
-            credit_transfer_list = base_credit_transfer_query.all()
+            credit_transfer_list = base_credit_transfer_query
 
-        transfer_sheet = wb.create_sheet(title='credit_transfers')
+        credit_transfer_list = partition_query(credit_transfer_list)
+        transfer_sheet = wb.new_sheet("credit_transfers")
 
         # Create credit_transfers workbook headers
         for index, column in enumerate(credit_transfer_columns):
-            _ = transfer_sheet.cell(column=index + 1, row=1, value="{0}".format(column['header']))
-
+            transfer_sheet[1][index+1] = column['header']
         if credit_transfer_list is not None:
             for index, credit_transfer in enumerate(credit_transfer_list):
                 for jindix, column in enumerate(credit_transfer_columns):
@@ -345,27 +348,18 @@ def generate_export(post_data):
                         cell_contents = ', '.join([usage.name for usage in credit_transfer.transfer_usages])
                     else:
                         cell_contents = ""
-
-                    _ = transfer_sheet.cell(column=jindix + 1, row=index + 2, value=cell_contents)
-
+                    transfer_sheet[index + 2][jindix + 1] = cell_contents
         else:
             print('No Credit Transfers')
    
-    if len(user_accounts) is not 0:
-        file_url = export_workbook_via_s3(wb, workbook_filename)
-        response_object = {
-            'message': 'Export file created.',
-            'data': {
-                'file_url': file_url,
-            }
+    file_url = export_workbook_via_s3(wb, workbook_filename)
+    response_object = {
+        'message': 'Export file created.',
+        'data': {
+            'file_url': file_url,
         }
-        return make_response(jsonify(response_object)), 201
-    else:
-        # return no data
-        response_object = {
-            'message': 'No data available for export',
-        }
-        return make_response(jsonify(response_object)), 404
+    }
+    return make_response(jsonify(response_object)), 201
 
 
 class ExportAPI(MethodView):
@@ -407,8 +401,7 @@ class MeExportAPI(MethodView):
 
         # Vendor Export
         wb = Workbook()
-        ws = wb.active
-        ws.title = "credit_transfers"
+        ws = wb.new_sheet("transfer_accounts")
 
         start_date = None
         end_date = None
@@ -416,7 +409,7 @@ class MeExportAPI(MethodView):
 
         # Create credit_transfers workbook headers
         for index, column in enumerate(credit_transfer_columns):
-            _ = ws.cell(column=index + 1, row=1, value="{0}".format(column['header']))
+            _ = ws[index + 1][1] = column['header']
 
         if date_range == 'day':
             # return previous day of transactions
@@ -435,13 +428,13 @@ class MeExportAPI(MethodView):
                 or_(CreditTransfer.recipient_transfer_account_id == transfer_account.id,
                     CreditTransfer.sender_transfer_account_id == transfer_account.id))))\
                     .enable_eagerloads(False)
-
         else:
             # default to all credit transfers of transfer_account.id
             credit_transfer_list = CreditTransfer.query.filter(
                 or_(CreditTransfer.recipient_transfer_account_id == transfer_account.id,
                     CreditTransfer.sender_transfer_account_id == transfer_account.id))\
                     .enable_eagerloads(False)
+        credit_transfer_list = partition_query(credit_transfer_list)
 
         # loop over all credit transfers, create cells
         if credit_transfer_list is not None:
@@ -458,8 +451,7 @@ class MeExportAPI(MethodView):
                         cell_contents = ', '.join([usage.name for usage in credit_transfer.transfer_usages])
                     else:
                         cell_contents = ""
-
-                    _ = ws.cell(column=jindix + 1, row=index + 2, value=cell_contents)
+                    ws[jindix + 1][index + 2] = cell_contents
 
         if credit_transfer_list is not None:
             file_url = export_workbook_via_s3(wb, workbook_filename, email)
