@@ -154,7 +154,7 @@ def generate_export(post_data):
         else:
             search_query = generate_search_query(search_string, filters, order=desc, sort_by_arg='rank', include_user=True)
             search_query = search_query.filter(TransferAccount.id.notin_(exclude_accounts))
-            results = search_query.all()
+            results = partition_query(search_query)
             transfer_accounts = [r[0] for r in results] # Get TransferAccount (TransferAccount, searchRank, User)
         user_accounts = [ta.primary_user for ta in transfer_accounts]
     else:
