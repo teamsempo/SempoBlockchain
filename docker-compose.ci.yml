@@ -47,9 +47,5 @@ services:
       CONTAINER_TYPE: "PROCESSOR"
       PYTHONUNBUFFERED: 0
     image: "eth_worker_process:${IMAGE_TAG:-latest}"
-  pgbouncer:
-    environment:
-      <<: *CI_ENV
-    image: "pgbouncer:${IMAGE_TAG:-latest}"
   ganache:
     command: "-l 80000000 -i 42 -s GANACHE_SEED_DETERMINISTIC -e 10000"
