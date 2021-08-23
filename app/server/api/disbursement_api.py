@@ -19,6 +19,7 @@ from server.utils.transfer_enums import TransferSubTypeEnum, TransferModeEnum
 from server.models.utils import paginate_query
 from server.utils.executor import status_checkable_executor_job, add_after_request_checkable_executor_job
 from server.utils.access_control import AccessControl
+from server.utils.metrics.metrics_cache import clear_metrics_cache
 
 disbursement_blueprint = Blueprint('disbursement', __name__)
 
@@ -71,11 +72,13 @@ def make_transfers(disbursement_id, auto_resolve=False):
 
         db.session.commit()
         percent_complete = ((idx + 1) / len(disbursement.transfer_accounts)) * 100
+
         yield {
             'message': 'success' if percent_complete == 100 else 'pending',
             'percent_complete': math.floor(percent_complete),
             'data': {'credit_transfers': credit_transfers_schema.dump(disbursement.credit_transfers).data}
         }
+    clear_metrics_cache()
 
 class MakeDisbursementAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
