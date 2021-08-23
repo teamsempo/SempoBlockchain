@@ -11,8 +11,7 @@ services:
       - postgres
       - eth_worker
     ports:
-      - "3031:3031"
-      - "9000:9000"
+      - "80:80"
 
   eth_worker:
     build:
@@ -41,20 +40,6 @@ services:
       - ganache
       - eth_postgres
 
-  pgbouncer:
-    build:
-      context: .
-      dockerfile: pgbouncer/Dockerfile
-    image: "pgbouncer:${IMAGE_TAG:-latest}"
-
-  proxy:
-    build: proxy
-    image: "proxy:${IMAGE_TAG:-latest}"
-    ports:
-      - "80:80"
-    depends_on:
-      - app
-
   postgres:
     image: "postgres"
     restart: always
@@ -77,56 +62,3 @@ services:
   ganache:
     image: "trufflesuite/ganache-cli:v6.7.0"
     command: "-l 80000000 -i 42"
-#  beat:
-#    build:
-#      context: app/server
-#      dockerfile: worker/Dockerfile
-#    image: worker
-#    environment:
-#      LOCATION: "LOCAL_DOCKER"
-#      CONTAINER_TYPE: "BEAT"
-#      PYTHONUNBUFFERED: 0
-#    env_file:
-#      - ~/ebkeys.env
-#    depends_on:
-#      - redis
-#  filter:
-#    build:
-#      context: app/server
-#      dockerfile: worker/Dockerfile
-#    image: worker
-#    environment:
-#      LOCATION: "LOCAL_DOCKER"
-#      CONTAINER_TYPE: "FILTER"
-#      PYTHONUNBUFFERED: 0
-#    env_file:
-#      - ~/ebkeys.env
-#    depends_on:
-#      - redis
-#  flower:
-#    build: flower
-#    environment:
-#      LOCATION: "LOCAL_DOCKER"
-#    env_file:
-#      - ~/ebkeys.env
-#    depends_on:
-#      - app
-#    volumes:
-#      - db-data:/var/lib/postgresql/data
-#    ports:
-#      - 5431:5432
-#    ports:
-#    - "6379:6379"
-#  whatsapp:
-#    build: ./whatsApp
-#    environment:
-#      LOCATION: "LOCAL_DOCKER"
-#      PYTHONUNBUFFERED: 0
-#    shm_size: 1g
-#    env_file:
-#     - ~/ebkeys.env
-#    volumes:
-#     - /tmp:/tmp
-#    depends_on:
-#    - redis
-

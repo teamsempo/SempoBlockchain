@@ -198,16 +198,11 @@ jobs:
       - run:
           name: Push Docker Image
           command: |
-
             eval $(aws ecr get-login --no-include-email --region ${REPOSITORY_REGION});
-            docker tag server:${CIRCLE_SHA1} ${REPOSITORY_URI}:server_${CIRCLE_SHA1}
-            docker push ${REPOSITORY_URI}:server_${CIRCLE_SHA1}
-            docker tag proxy:${CIRCLE_SHA1} ${REPOSITORY_URI}:proxy_${CIRCLE_SHA1}
-            docker push ${REPOSITORY_URI}:proxy_${CIRCLE_SHA1}
-            docker tag eth_worker:${CIRCLE_SHA1} ${REPOSITORY_URI}:eth_worker_${CIRCLE_SHA1}
-            docker push ${REPOSITORY_URI}:eth_worker_${CIRCLE_SHA1}
-            docker tag pgbouncer:${CIRCLE_SHA1} ${REPOSITORY_URI}:pgbouncer_${CIRCLE_SHA1}
-            docker push ${REPOSITORY_URI}:pgbouncer_${CIRCLE_SHA1}
+            docker tag server:${CIRCLE_SHA1} ${APP_REPOSITORY_URI}:server_${CIRCLE_SHA1}
+            docker push ${APP_REPOSITORY_URI}:server_${CIRCLE_SHA1}
+            docker tag eth_worker:${CIRCLE_SHA1} ${WORKER_REPOSITORY_URI}:eth_worker_${CIRCLE_SHA1}
+            docker push ${WORKER_REPOSITORY_URI}:eth_worker_${CIRCLE_SHA1}
       - run:
           name: Create Dockerrun config file
           command: |
@@ -237,6 +232,7 @@ workflows:
             branches:
               only:
                 - master
+                - deploy-to-ecs
 
           requires:
             - build

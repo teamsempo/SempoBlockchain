@@ -1,0 +1,24 @@
+version: "3"
+services:
+  app:
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    image: "server:${IMAGE_TAG:-latest}"
+    environment:
+      CONTAINER_TYPE: "APP"
+    depends_on:
+      - eth_worker
+    ports:
+      - "80:80"
+      - "9000:9000"
+
+  eth_worker:
+    build:
+      context: .
+      dockerfile: eth_worker/Dockerfile
+    image: "eth_worker:${IMAGE_TAG:-latest}"
+    environment:
+      CONTAINER_TYPE: "PRIMARY"
+      PYTHONUNBUFFERED: 0
+      CI: "false"
