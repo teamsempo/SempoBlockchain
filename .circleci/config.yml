@@ -141,7 +141,7 @@ jobs:
       - run:
           name: Upload coverage report to Codecov
           command: bash <(curl -s https://codecov.io/bash) -cF javascript
-  deploy:
+  push:
     working_directory: ~/project
     docker:
       - image: circleci/python:3.6-node
@@ -205,12 +205,6 @@ jobs:
             docker push ${APP_REPOSITORY_URI}:server_${CIRCLE_SHA1}
             docker tag eth_worker:${CIRCLE_SHA1} ${WORKER_REPOSITORY_URI}:eth_worker_${CIRCLE_SHA1}
             docker push ${WORKER_REPOSITORY_URI}:eth_worker_${CIRCLE_SHA1}
-
-      - aws-ecs/deploy-service-update:
-          family: "${AWS_RESOURCE_NAME_PREFIX}-service"
-          cluster-name: "${AWS_RESOURCE_NAME_PREFIX}-cluster"
-          container-image-name-updates: "container=${AWS_RESOURCE_NAME_PREFIX}-service,tag=${CIRCLE_SHA1}"
-
       - run:
           name: Create Dockerrun config file
           command: |
@@ -235,7 +229,7 @@ workflows:
       - test:frontend:
           requires:
             - build
-      - deploy:
+      - push:
           filters:
             branches:
               only:
@@ -244,6 +238,12 @@ workflows:
 
           requires:
             - build
+      - aws-ecs/deploy-service-update:
+          family: "app"
+          cluster-name: "devecs"
+          container-image-name-updates: "container=${APP_REPOSITORY_URI},tag=server_${CIRCLE_SHA1}"
+          requires:
+            - push
 #            - test:backend
 #            - test:worker
 #            - test:frontend
