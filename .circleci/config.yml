@@ -139,7 +139,7 @@ jobs:
       - run:
           name: Upload coverage report to Codecov
           command: bash <(curl -s https://codecov.io/bash) -cF javascript
-  push:
+  deploy:
     working_directory: ~/project
     docker:
       - image: circleci/python:3.6-node
@@ -181,21 +181,6 @@ jobs:
             - "/usr/local/bin"
             - "/usr/local/lib/python3.6/site-packages"
       - run:
-          name: Setup AWS EB Config
-          command: |
-            mkdir ./.elasticbeanstalk
-
-            printf "branch-defaults:
-              default:
-               environment: sempo-dev
-            global:
-             application_name: ${DEPLOY_APPLICATION_NAME}
-             default_ec2_keyname: aws-eb
-             default_platform: Multi-container Docker 18.09.9-ce (Generic)
-             default_region: ${DEPLOY_REGION}
-             include_git_submodules: true
-             workspace_type: Application" > ./.elasticbeanstalk/config.yml
-      - run:
           name: Push Docker Image
           command: |
             eval $(aws ecr get-login --no-include-email --region ${REPOSITORY_REGION});
@@ -210,14 +195,8 @@ jobs:
           name: Update ECS Task
           command: aws ecs register-task-definition --cli-input-json file://ecs_task_config.json
       - run:
-          name: Create Dockerrun config file
-          command: |
-            sed "s|REPOSITORY_URI|${REPOSITORY_URI}|g; s|TAG_SUFFIX|${CIRCLE_SHA1}|g" awsDockerrunTemplate.json > Dockerrun.aws.json
-
-      - run:
-          name: Deploy app to AWS Server via Docker
-          command: |
-            eb deploy ${DEPLOY_ENV}
+          name: Deploy
+          command: aws ecs update-service --cluster devecs --service app --task-definition app --force-new-deployment
 
 workflows:
   version: 2
@@ -233,7 +212,7 @@ workflows:
       - test:frontend:
           requires:
             - build
-      - push:
+      - deploy:
           filters:
             branches:
               only:
