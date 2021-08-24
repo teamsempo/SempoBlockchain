@@ -119,7 +119,7 @@ class NavBar extends React.Component<Props, State> {
             <SubMenu
               key="sub1"
               icon={<DesktopOutlined translate={""} />}
-              title="DASHBOARD!"
+              title="Dashboard"
             >
               <Menu.Item key="/">
                 <NavLink to="/">
@@ -158,7 +158,7 @@ class NavBar extends React.Component<Props, State> {
                 icon={<SendOutlined translate={""} />}
                 disabled={isMultiOrg || false}
               >
-                <NavLink to="/bulk/">BulkBulkBulk Transfers</NavLink>
+                <NavLink to="/bulk/">Bulk Transfers</NavLink>
               </Menu.Item>
             </SubMenu>
 
