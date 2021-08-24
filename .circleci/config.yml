@@ -1,4 +1,6 @@
 version: 2.0
+orbs:
+  aws-ecs: circleci/aws-ecs@2.2.1
 jobs:
   build:
     working_directory: ~/project
@@ -203,6 +205,12 @@ jobs:
             docker push ${APP_REPOSITORY_URI}:server_${CIRCLE_SHA1}
             docker tag eth_worker:${CIRCLE_SHA1} ${WORKER_REPOSITORY_URI}:eth_worker_${CIRCLE_SHA1}
             docker push ${WORKER_REPOSITORY_URI}:eth_worker_${CIRCLE_SHA1}
+
+      - aws-ecs/deploy-service-update:
+          family: "${AWS_RESOURCE_NAME_PREFIX}-service"
+          cluster-name: "${AWS_RESOURCE_NAME_PREFIX}-cluster"
+          container-image-name-updates: "container=${AWS_RESOURCE_NAME_PREFIX}-service,tag=${CIRCLE_SHA1}"
+
       - run:
           name: Create Dockerrun config file
           command: |
