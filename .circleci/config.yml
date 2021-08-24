@@ -204,6 +204,9 @@ jobs:
             docker tag eth_worker:${CIRCLE_SHA1} ${WORKER_REPOSITORY_URI}:eth_worker_${CIRCLE_SHA1}
             docker push ${WORKER_REPOSITORY_URI}:eth_worker_${CIRCLE_SHA1}
       - run:
+          name: Add updated image to task definition
+          command: sed "s|CIRCLE_SHA1|${CIRCLE_SHA1}|g;" ecs_task_config_template.json > ecs_task_config.json
+      - run:
           name: Update ECS Task
           command: aws ecs register-task-definition --cli-input-json file://ecs_task_config.json
       - run:
