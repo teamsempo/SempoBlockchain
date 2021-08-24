@@ -81,7 +81,7 @@ jobs:
             - app/server/static/javascript/dist
             - docker-cache
 
-  test:backend:
+  testbackend:
     working_directory: ~/project
     docker:
       - image: circleci/python:3.6-node
@@ -102,7 +102,7 @@ jobs:
             export GIT_HASH=$CIRCLE_SHA1
             export IMAGE_TAG=$CIRCLE_SHA1
             docker-compose -f docker-compose.yml -f docker-compose.ci.yml up --exit-code-from app
-  test:worker:
+  testworker:
     working_directory: ~/project
     docker:
       - image: circleci/python:3.6-node
@@ -123,7 +123,7 @@ jobs:
             export GIT_HASH=$CIRCLE_SHA1
             export IMAGE_TAG=$CIRCLE_SHA1
             docker-compose -f docker-compose.yml -f docker-compose.ci.yml up --exit-code-from eth_worker
-  test:frontend:
+  testfrontend:
     working_directory: ~/project
     docker:
       - image: circleci/python:3.6-node
@@ -220,13 +220,13 @@ workflows:
   main_workflow:
     jobs:
       - build
-      - test:backend:
+      - testbackend:
           requires:
             - build
-      - test:worker:
+      - testworker:
           requires:
             - build
-      - test:frontend:
+      - testfrontend:
           requires:
             - build
       - push:
