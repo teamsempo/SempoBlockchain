@@ -31,4 +31,6 @@ ARG GIT_HASH
 ENV GIT_HASH=$GIT_HASH
 ENV STATIC_URL="content"
 
+CMD ["/_docker_app_script.sh"]
+
 EXPOSE 80
