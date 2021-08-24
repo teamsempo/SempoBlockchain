@@ -1,4 +1,4 @@
-version: 2.0
+version: 2.1
 orbs:
   aws-ecs: circleci/aws-ecs@2.2.1
 jobs:
