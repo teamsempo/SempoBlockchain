@@ -158,7 +158,7 @@ class NavBar extends React.Component<Props, State> {
                 icon={<SendOutlined translate={""} />}
                 disabled={isMultiOrg || false}
               >
-                <NavLink to="/bulk/">Bulk Transfers</NavLink>
+                <NavLink to="/bulk/">BulkBulkBulk Transfers</NavLink>
               </Menu.Item>
             </SubMenu>
 
