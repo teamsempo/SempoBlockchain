@@ -25,8 +25,6 @@ COPY ./app/uwsgi.ini /app
 
 WORKDIR /
 
-RUN chmod +x /_docker_app_script.sh
-
 ARG GIT_HASH
 ENV GIT_HASH=$GIT_HASH
 ENV STATIC_URL="content"
