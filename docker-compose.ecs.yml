@@ -11,7 +11,6 @@ services:
       - eth_worker
     ports:
       - "80:80"
-      - "9000:9000"
 
   eth_worker:
     build:

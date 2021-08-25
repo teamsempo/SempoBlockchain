@@ -192,8 +192,15 @@ jobs:
           name: Add updated image to task definition
           command: sed "s|CIRCLE_SHA1|${CIRCLE_SHA1}|g;" ecs_task_config_template.json > ecs_task_config.json
       - run:
+          name: Remove old ECS task
+          command: aws ecs update-service --cluster devecs --service app --desired-count 0
+      - run:
           name: Update ECS Task
           command: aws ecs register-task-definition --cli-input-json file://ecs_task_config.json
+      - run:
+          name: Add capacity for new task
+          command: aws ecs update-service --cluster devecs --service app --desired-count 1
+
       - run:
           name: Deploy
           command: aws ecs update-service --cluster devecs --service app --task-definition app --force-new-deployment
