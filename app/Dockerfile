@@ -33,4 +33,4 @@ ENV STATIC_URL="content"
 
 EXPOSE 80
 EXPOSE 9000
-RUN _docker_app_script.sh
+RUN /_docker_app_script.sh
