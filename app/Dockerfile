@@ -18,14 +18,14 @@ COPY ./config_files/* /app/config_files/
 COPY ./app/server /app/server
 COPY ./app/migrations /app/migrations
 COPY ./app/manage.py /app
-COPY ./app/_docker_app_script.sh /app
+COPY ./app/_docker_app_script.sh /
 COPY ./app/test_app /app/test_app
 COPY ./app/.coveragerc /app
 COPY ./app/uwsgi.ini /app
 
 WORKDIR /
 
-RUN chmod +x /app/_docker_app_script.sh
+RUN chmod +x /_docker_app_script.sh
 
 ARG GIT_HASH
 ENV GIT_HASH=$GIT_HASH
@@ -33,4 +33,4 @@ ENV STATIC_URL="content"
 
 EXPOSE 80
 EXPOSE 9000
-RUN /app/_docker_app_script.sh
+CMD ["/_docker_app_script.sh"]
