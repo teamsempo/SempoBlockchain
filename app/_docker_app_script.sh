@@ -35,4 +35,3 @@ else
 
 fi
 
-sleep infinity
