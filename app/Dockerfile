@@ -18,7 +18,7 @@ COPY ./config_files/* /app/config_files/
 COPY ./app/server /app/server
 COPY ./app/migrations /app/migrations
 COPY ./app/manage.py /app
-COPY ./app/_docker_app_script.sh /
+COPY ./app/_docker_app_script.sh /app/prestart.sh
 COPY ./app/test_app /app/test_app
 COPY ./app/.coveragerc /app
 COPY ./app/uwsgi.ini /app
@@ -33,4 +33,3 @@ ENV STATIC_URL="content"
 
 EXPOSE 80
 EXPOSE 9000
-ENTRYPOINT ["/_docker_app_script.sh"]
