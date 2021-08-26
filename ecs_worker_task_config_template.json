@@ -1,35 +1,10 @@
 {
   "family": "worker",
   "placementConstraints": [],
-  "requiresAttributes": [
-    {
-      "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
-    },
-    {
-      "name": "ecs.capability.execution-role-awslogs"
-    },
-    {
-      "name": "com.amazonaws.ecs.capability.ecr-auth"
-    },
-    {
-      "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
-    },
-    {
-      "name": "com.amazonaws.ecs.capability.docker-remote-api.1.21"
-    },
-    {
-      "name": "com.amazonaws.ecs.capability.task-iam-role"
-    },
-    {
-      "name": "ecs.capability.execution-role-ecr-pull"
-    }
-  ],
   "executionRoleArn": "arn:aws:iam::290492953667:role/ecs-role",
-  "compatibilities": ["EXTERNAL", "EC2"],
   "volumes": [],
   "requiresCompatibilities": ["EC2"],
   "taskRoleArn": "arn:aws:iam::290492953667:role/ecs-role",
-  "taskDefinitionArn": "arn:aws:ecs:ap-southeast-2:290492953667:task-definition/worker:5",
   "containerDefinitions": [
     {
       "memoryReservation": 128,
