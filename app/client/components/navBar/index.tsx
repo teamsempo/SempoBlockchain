@@ -119,7 +119,7 @@ class NavBar extends React.Component<Props, State> {
             <SubMenu
               key="sub1"
               icon={<DesktopOutlined translate={""} />}
-              title="DASHO"
+              title="Dashboard"
             >
               <Menu.Item key="/">
                 <NavLink to="/">

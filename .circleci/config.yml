@@ -189,21 +189,31 @@ jobs:
             docker tag eth_worker:${CIRCLE_SHA1} ${WORKER_REPOSITORY_URI}:eth_worker_${CIRCLE_SHA1}
             docker push ${WORKER_REPOSITORY_URI}:eth_worker_${CIRCLE_SHA1}
       - run:
-          name: Add updated image to task definition
-          command: sed "s|CIRCLE_SHA1|${CIRCLE_SHA1}|g;" ecs_task_config_template.json > ecs_task_config.json
+          name: Add updated images to task definitions
+          command: |
+            sed "s|CIRCLE_SHA1|${CIRCLE_SHA1}|g;" ecs_app_task_config_template.json > ecs_app_task_config.json
+            sed "s|CIRCLE_SHA1|${CIRCLE_SHA1}|g;" ecs_worker_task_config_template.json > ecs_app_worker_config.json
       - run:
           name: Remove old ECS task
-          command: aws ecs update-service --cluster devecs --service app --desired-count 0
+          command: |
+            aws ecs update-service --cluster devecs --service app --desired-count 0
+            aws ecs update-service --cluster devecs --service worker-ecs --desired-count 0
       - run:
           name: Update ECS Task
-          command: aws ecs register-task-definition --cli-input-json file://ecs_task_config.json
+          command: |
+            aws ecs register-task-definition --cli-input-json file://ecs_app_task_config.json
+            aws ecs register-task-definition --cli-input-json file://ecs_app_worker_config.json
       - run:
           name: Add capacity for new task
-          command: aws ecs update-service --cluster devecs --service app --desired-count 1
+          command: |
+            aws ecs update-service --cluster devecs --service app --desired-count 1
+            aws ecs update-service --cluster devecs --service worker-ecs --desired-count 1
 
       - run:
           name: Deploy
-          command: aws ecs update-service --cluster devecs --service app --task-definition app --force-new-deployment
+          command: |
+            aws ecs update-service --cluster devecs --service app --task-definition app --force-new-deployment
+            aws ecs update-service --cluster devecs --service worker-ecs --task-definition app --force-new-deployment
 
 workflows:
   version: 2
