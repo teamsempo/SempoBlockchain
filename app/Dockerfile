@@ -1,7 +1,7 @@
 FROM tiangolo/uwsgi-nginx-flask:python3.7
 
 RUN apt update \
-  && apt -y install gcc g++ libffi-dev libstdc++-8-dev python3-dev musl-dev libssl-dev curl
+  && apt -y install gcc g++ libffi-dev libstdc++-8-dev python3-dev musl-dev libssl-dev curl bash
 
 COPY ./app/requirements.txt /
 COPY ./test_requirements.txt /
@@ -18,12 +18,16 @@ COPY ./config_files/* /app/config_files/
 COPY ./app/server /app/server
 COPY ./app/migrations /app/migrations
 COPY ./app/manage.py /app
-COPY ./app/_docker_app_script.sh /app/prestart.sh
+COPY ./app/_docker_app_script.sh /app/_docker_app_script.sh
+COPY ./app/run_as_bash.sh /app/prestart.sh
 COPY ./app/test_app /app/test_app
 COPY ./app/.coveragerc /app
 COPY ./app/uwsgi.ini /app
 
 WORKDIR /
+
+RUN chmod +x /app/prestart.sh
+RUN chmod +x /app/_docker_app_script.sh
 
 ARG GIT_HASH
 ENV GIT_HASH=$GIT_HASH
