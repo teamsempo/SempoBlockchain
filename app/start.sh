@@ -34,9 +34,8 @@ else
   echo upgrading dataset
 
   python manage.py update_data
-
+  # Start Supervisor, with Nginx and uWSGI
+  exec /usr/bin/supervisord
 fi
 
-# Start Supervisor, with Nginx and uWSGI
-exec /usr/bin/supervisord
 
