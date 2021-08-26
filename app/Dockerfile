@@ -19,12 +19,12 @@ COPY ./app/server /app/server
 COPY ./app/migrations /app/migrations
 COPY ./app/manage.py /app
 COPY ./app/_docker_app_script.sh /app/_docker_app_script.sh
-COPY ./app/run_as_bash.sh /app/prestart.sh
 COPY ./app/test_app /app/test_app
 COPY ./app/.coveragerc /app
 COPY ./app/uwsgi.ini /app
 
 WORKDIR /
+
 
 RUN chmod +x /app/prestart.sh
 RUN chmod +x /app/_docker_app_script.sh
@@ -35,3 +35,6 @@ ENV STATIC_URL="content"
 
 EXPOSE 80
 EXPOSE 9000
+
+CMD if [ "$CONTAINER_MODE" = "TEST" ] ; then ["/app/_docker_app_script.sh"] ; fi
+COPY ./app/_run_start_script_as_bash.sh /app/prestart.sh

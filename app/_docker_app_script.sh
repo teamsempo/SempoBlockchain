@@ -33,4 +33,3 @@ else
   python manage.py update_data
 
 fi
-
