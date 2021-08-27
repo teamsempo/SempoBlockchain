@@ -234,10 +234,10 @@ workflows:
             branches:
               only:
                 - master
-                - deploy-to-ecs
+                - reload-mercy
 
           requires:
             - build
-            - test:backend
-            - test:worker
-            - test:frontend
+            #- test:backend
+            #- test:worker
+            #- test:frontend
