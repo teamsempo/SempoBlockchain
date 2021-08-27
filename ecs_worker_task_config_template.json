@@ -1,0 +1,154 @@
+{
+  "family": "worker",
+  "placementConstraints": [],
+  "executionRoleArn": "arn:aws:iam::290492953667:role/ecs-role",
+  "volumes": [],
+  "requiresCompatibilities": ["EC2"],
+  "taskRoleArn": "arn:aws:iam::290492953667:role/ecs-role",
+  "containerDefinitions": [
+    {
+      "memoryReservation": 128,
+      "environment": [
+        {
+          "name": "CONTAINER_TYPE",
+          "value": "LOW_PRIORITY_WORKER"
+        },
+        {
+          "name": "DEPLOYMENT_NAME",
+          "value": "ecsdev"
+        },
+        {
+          "name": "SERVER_HAS_S3_AUTH",
+          "value": "true"
+        },
+        {
+          "name": "ECS_ENABLE_TASK_IAM_ROLE",
+          "value": "true"
+        }
+      ],
+      "name": "low_priority_worker",
+      "mountPoints": [],
+      "image": "290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/eth_worker:eth_worker_CIRCLE_SHA1",
+      "cpu": 0,
+      "portMappings": [],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-region": "ap-southeast-2",
+          "awslogs-stream-prefix": "ecs",
+          "awslogs-group": "/ecs/worker"
+        }
+      },
+      "essential": true,
+      "volumesFrom": []
+    },
+    {
+      "memoryReservation": 128,
+      "environment": [
+        {
+          "name": "CONTAINER_TYPE",
+          "value": "HIGH_PRIORITY_WORKER"
+        },
+        {
+          "name": "DEPLOYMENT_NAME",
+          "value": "ecsdev"
+        },
+        {
+          "name": "SERVER_HAS_S3_AUTH",
+          "value": "true"
+        },
+        {
+          "name": "ECS_ENABLE_TASK_IAM_ROLE",
+          "value": "true"
+        }
+      ],
+      "name": "high_priority_worker",
+      "mountPoints": [],
+      "image": "290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/eth_worker:eth_worker_CIRCLE_SHA1",
+      "cpu": 0,
+      "portMappings": [],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-region": "ap-southeast-2",
+          "awslogs-stream-prefix": "ecs",
+          "awslogs-group": "/ecs/worker"
+        }
+      },
+      "essential": true,
+      "volumesFrom": []
+    },
+    {
+      "memoryReservation": 128,
+      "environment": [
+        {
+          "name": "CONTAINER_TYPE",
+          "value": "PROCESSOR"
+        },
+        {
+          "name": "DEPLOYMENT_NAME",
+          "value": "ecsdev"
+        },
+        {
+          "name": "SERVER_HAS_S3_AUTH",
+          "value": "true"
+        },
+        {
+          "name": "ECS_ENABLE_TASK_IAM_ROLE",
+          "value": "true"
+        }
+      ],
+      "name": "processor",
+      "mountPoints": [],
+      "image": "290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/eth_worker:eth_worker_CIRCLE_SHA1",
+      "cpu": 0,
+      "portMappings": [],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-region": "ap-southeast-2",
+          "awslogs-stream-prefix": "ecs",
+          "awslogs-group": "/ecs/worker"
+        }
+      },
+      "essential": true,
+      "volumesFrom": []
+    },
+    {
+      "memoryReservation": 64,
+      "environment": [
+        {
+          "name": "CONTAINER_TYPE",
+          "value": "BEAT"
+        },
+        {
+          "name": "DEPLOYMENT_NAME",
+          "value": "ecsdev"
+        },
+        {
+          "name": "SERVER_HAS_S3_AUTH",
+          "value": "true"
+        },
+        {
+          "name": "ECS_ENABLE_TASK_IAM_ROLE",
+          "value": "true"
+        }
+      ],
+      "name": "beat",
+      "mountPoints": [],
+      "image": "290492953667.dkr.ecr.ap-southeast-2.amazonaws.com/eth_worker:eth_worker_CIRCLE_SHA1",
+      "cpu": 0,
+      "portMappings": [],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-region": "ap-southeast-2",
+          "awslogs-stream-prefix": "ecs",
+          "awslogs-group": "/ecs/worker"
+        }
+      },
+      "essential": true,
+      "volumesFrom": []
+    }
+  ]
+}

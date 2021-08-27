@@ -350,7 +350,7 @@ if config.VERIFY_THIRD_PARTY_SYNC:
         from server.utils.credit_transfer import check_recent_transaction_sync_status
         interval_time = config.THIRD_PARTY_SYNC_ERROR_DETECTION_INTERVAL
         time_to_error = config.THIRD_PARTY_SYNC_ERROR_DETECTION_GRACE_PERIOD
-        scheduler = BackgroundScheduler()
+        scheduler = BackgroundScheduler({'apscheduler.timezone': 'UTC'})
         scheduler.add_job(func=check_recent_transaction_sync_status, trigger="interval", seconds=interval_time, args=[interval_time, time_to_error])
         scheduler.start()
         # Shut down the scheduler when exiting the app

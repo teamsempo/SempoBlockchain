@@ -1,7 +1,9 @@
-#!/usr/bin/env bash
+#! /usr/bin/env bash
+set -e
+
 echo Container mode: $CONTAINER_MODE
 
-cd src
+cd app
 echo upgrading database
 python manage.py db upgrade
 
@@ -32,7 +34,8 @@ else
   echo upgrading dataset
 
   python manage.py update_data
-
-  uwsgi --socket 0.0.0.0:9000 --protocol http  --processes 4 --enable-threads --module=server.wsgi:app --stats :3031 --stats-http --lazy-apps
+  # Start Supervisor, with Nginx and uWSGI
+  exec /usr/bin/supervisord
 fi
+
 
