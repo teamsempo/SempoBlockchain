@@ -284,7 +284,6 @@ class AppQuery(BaseQuery):
 db = SQLAlchemy(
     query_class=AppQuery,
     engine_options={
-        'pre_ping': True,
         'pool_pre_ping': True
     },
     session_options={
