@@ -2,7 +2,7 @@ from server.utils.metrics import filters, metrics_cache, postprocessing_actions,
 from server.utils.metrics.metrics_const import *
 import datetime
 from server import db
-
+import time
 class Metric(object):
     def execute_query(self, user_filters: dict = None, date_filter_attributes=None, enable_caching=True, population_query_result=False, dont_include_timeseries=False, start_date=None, end_date=None, group_by=None):
         """
@@ -17,6 +17,7 @@ class Metric(object):
         :param End_date: End date for metrics queries (for calculating percent change within date range)
         :param group_by: Name of the group-by used, used for metrics cache key names
         """
+        t = time.time()
         actions = {
                     'primary': self.query_actions, 
                     'aggregated_query': self.aggregated_query_actions, 
@@ -24,7 +25,13 @@ class Metric(object):
                     'start_day_query': self.total_query_actions,
                     'end_day_query': self.total_query_actions
                 }
-
+        combinatory_strategies = {
+            'primary': self.query_caching_combinatory_strategy, 
+            'aggregated_query': self.aggregated_query_caching_combinatory_strategy, 
+            'total_query': self.total_query_caching_combinatory_strategy,
+            'start_day_query': self.total_query_caching_combinatory_strategy,
+            'end_day_query': self.total_query_caching_combinatory_strategy
+        }
         # Build the dict of queries to execute. Ungrouped metrics don't have aggregated queries,
         # and sometimes we only want aggregates and totals (based on dont_include_timeseries)
         if self.is_timeseries:
@@ -91,17 +98,15 @@ class Metric(object):
             if not self.bypass_user_filters:
                 filtered_query = filters.apply_filters(filtered_query, user_filters, self.object_model)
 
-            strategy = self.caching_combinatory_strategy
-            if self.is_timeseries and query=='primary':
-                strategy = self.timeseries_caching_combinatory_strategy
-
+            strategy = combinatory_strategies[query]
             result = metrics_cache.execute_with_partial_history_cache(
                 self.metric_name, 
                 filtered_query, 
                 self.object_model, 
                 strategy, 
                 enable_caching,
-                group_by=group_by)
+                group_by=group_by,
+                query_name=query)
 
             if not actions[query]:
                 results[query] = result
@@ -150,8 +155,9 @@ class Metric(object):
             object_model=None,
             filterable_by=None,
             stock_filters=None,
-            timeseries_caching_combinatory_strategy=None,
-            caching_combinatory_strategy=None,
+            query_caching_combinatory_strategy=None,
+            aggregated_query_caching_combinatory_strategy=None,
+            total_query_caching_combinatory_strategy=None,
             bypass_user_filters=False,
             query=None,
             aggregated_query=None,
@@ -171,8 +177,8 @@ class Metric(object):
         :param filterable_by: used to validate whether the custom filters are valid for this case
         :param stock_filters: the base filters required to get this metric to return what we expect, regardless of what
         futher custom filtering we need to do
-        :param timeseries_caching_combinatory_strategy: how new and old timeseries results will be combined
-        :param caching_combinatory_strategy: how new and old non-timeseries results will be combined
+        :param query_caching_combinatory_strategy: how new and old timeseries results will be combined
+        :param aggregated_query_caching_combinatory_strategy: how new and old non-timeseries results will be combined
         :param bypass_user_filters: ignore any user supplied filter
         :param query: the base query of the metric. This could be a timeseries query, or one which only returns a single number
         :param aggregated_query: used only with timeseries metrics, this is the query which defines an aggregated version 
@@ -194,8 +200,6 @@ class Metric(object):
         self.filterable_by = filterable_by or []
         self.object_model = object_model
         self.stock_filters = stock_filters or []
-        self.timeseries_caching_combinatory_strategy = timeseries_caching_combinatory_strategy
-        self.caching_combinatory_strategy = caching_combinatory_strategy
         self.bypass_user_filters = bypass_user_filters
         # Queries
         self.query = query # Base Query (Everything has one of these)
@@ -205,6 +209,10 @@ class Metric(object):
         self.query_actions = query_actions
         self.aggregated_query_actions = aggregated_query_actions
         self.total_query_actions = total_query_actions
+        # Combinatory Strategies
+        self.query_caching_combinatory_strategy = query_caching_combinatory_strategy
+        self.aggregated_query_caching_combinatory_strategy = aggregated_query_caching_combinatory_strategy
+        self.total_query_caching_combinatory_strategy = total_query_caching_combinatory_strategy
 
         self.groupable_attributes = groupable_attributes
         self.value_type = value_type

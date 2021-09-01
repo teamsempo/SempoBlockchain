@@ -4,12 +4,13 @@ import pickle
 import config
 
 SUM = 'SUM'
+TALLY = 'TALLY'
 SUM_OBJECTS ='SUM_OBJECTS'
 COUNT ='COUNT'
 FIRST_COUNT = 'FIRST_COUNT'
 QUERY_ALL = 'QUERY_ALL'
 
-valid_strategies = [SUM, COUNT, SUM_OBJECTS, FIRST_COUNT, QUERY_ALL]
+valid_strategies = [SUM, TALLY, COUNT, SUM_OBJECTS, FIRST_COUNT, QUERY_ALL]
 # Combinatory stategies which aren't cachable
 dumb_strategies = [FIRST_COUNT, QUERY_ALL]
 
@@ -37,11 +38,12 @@ def get_metrics_org_string(org_id):
     return str(org_id)+'_metrics_'
 
 
-def execute_with_partial_history_cache(metric_name, query, object_model, strategy, enable_cache = True, group_by=None):
+def execute_with_partial_history_cache(metric_name, query, object_model, strategy, enable_cache = True, group_by=None, query_name=''):
     # enable_cache pass-thru. This is so we don't cache data when filters are active.
     if strategy in dumb_strategies or not enable_cache:
         return _handle_combinatory_strategy(query, None, strategy)
-
+    if query_name:
+        metric_name = metric_name + '_' + query_name
     # Redis object names
     if g.get('query_organisations'):
         ORG_STRING = get_metrics_org_string(g.query_organisations)
@@ -102,6 +104,13 @@ def _handle_combinatory_strategy(query, cache_result, strategy):
 def _sum_strategy(query, cache_result):
     return float(query.with_session(db.session).first().total or 0) + (cache_result or 0)
 
+
+def _tally_strategy(query, cache_result):
+    a = query.with_session(db.session).all()[0][0]
+    if not cache_result:
+        cache_result = [[0]]
+    return [[float(a or 0) + cache_result[0][0]]]
+    
 def _count_strategy(query, cache_result):
     return query.with_session(db.session).count() + (cache_result or 0)
 
@@ -144,4 +153,4 @@ def _first_count(query, cache_result):
 def _return_all(query, cache_result):
     return query.with_session(db.session).all()
 
-strategy_functions = { SUM: _sum_strategy, COUNT: _count_strategy, SUM_OBJECTS: _sum_list_of_objects, FIRST_COUNT: _first_count, QUERY_ALL: _return_all }
+strategy_functions = { SUM: _sum_strategy, TALLY: _tally_strategy,  COUNT: _count_strategy, SUM_OBJECTS: _sum_list_of_objects, FIRST_COUNT: _first_count, QUERY_ALL: _return_all }
