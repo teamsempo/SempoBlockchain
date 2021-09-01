@@ -8,6 +8,7 @@ from flask_basicauth import BasicAuth
 from celery import Celery
 from pusher import Pusher
 import boto3
+from sqlalchemy import engine
 from twilio.rest import Client as TwilioClient
 import sentry_sdk
 from sentry_sdk import configure_scope
@@ -282,6 +283,10 @@ class AppQuery(BaseQuery):
 
 db = SQLAlchemy(
     query_class=AppQuery,
+    engine_options={
+        'pre_ping': True,
+        'pool_pre_ping': True
+    },
     session_options={
         "expire_on_commit": False,
         "enable_baked_queries": False
