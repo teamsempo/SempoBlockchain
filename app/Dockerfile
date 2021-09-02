@@ -12,7 +12,11 @@ RUN apt remove --purge -y gcc g++ libffi-dev libstdc++-8-dev python3-dev musl-de
 
 RUN apt -y install libcairo2 libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf2.0-0 libffi-dev shared-mime-info
 
-RUN echo "uwsgi_read_timeout 300s;" > /etc/nginx/conf.d/custom_timeout.conf
+RUN echo "uwsgi_send_timeout 300s;" >> /etc/nginx/conf.d/custom_timeout.conf
+RUN echo "uwsgi_connect_timeout 300s;" >> /etc/nginx/conf.d/custom_timeout.conf
+RUN echo "uwsgi_read_timeout 300s;" >> /etc/nginx/conf.d/custom_timeout.conf
+RUN echo "proxy_send_timeout 300s;" >> /etc/nginx/conf.d/custom_timeout.conf
+RUN echo "proxy_read_timeout 300s;" >> /etc/nginx/conf.d/custom_timeout.conf
 
 COPY ./config.py /app/
 RUN mkdir /app/config_files
