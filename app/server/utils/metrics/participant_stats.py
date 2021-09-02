@@ -68,8 +68,8 @@ class ParticipantStats(metric_group.MetricGroup):
             #stock_filters=[filters.beneficiary_filters], # NOTE: Do we still want this filter?
             stock_filters=[],
             query_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
-            aggregated_query_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
-            total_query_caching_combinatory_strategy=metrics_cache.TALLY,
+            aggregated_query_caching_combinatory_strategy=metrics_cache.QUERY_ALL,
+            total_query_caching_combinatory_strategy=metrics_cache.QUERY_ALL,
             filterable_by=self.filterable_attributes,
             query_actions=[FORMAT_TIMESERIES],
             aggregated_query_actions=[FORMAT_AGGREGATE_METRICS],
