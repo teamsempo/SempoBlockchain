@@ -38,20 +38,21 @@ def _load_cache(key):
 def get_metrics_org_string(org_id):
     return str(org_id)+'_metrics_'
 
-def get_first_day(date_filter_attribute):
+def get_first_day(date_filter_attribute, enable_cache = True):
     # We need to get the first day data exists for every table, in order to calculate percentage-changes
     # This is a rather expensive operation, but the result is always the same so we can cache it! 
-    if g.get('query_organisations'):
-        ORG_STRING = get_metrics_org_string(g.query_organisations)
-    else:
-        ORG_STRING = get_metrics_org_string(g.active_organisation.id)
-    FIRST_DAY = f'{ORG_STRING}_FIRST_DAY_{str(date_filter_attribute)}'
-    result = _load_cache(FIRST_DAY)
-    if result:
-        return result
+    if enable_cache:
+        if g.get('query_organisations'):
+            ORG_STRING = get_metrics_org_string(g.query_organisations)
+        else:
+            ORG_STRING = get_metrics_org_string(g.active_organisation.id)
+        FIRST_DAY = f'{ORG_STRING}_FIRST_DAY_{str(date_filter_attribute)}'
+        result = _load_cache(FIRST_DAY)
+        if result:
+            return result
     today = datetime.datetime.now().replace(minute=0, hour=0, second=0, microsecond=0)
     first_day = db.session.query(db.func.min(date_filter_attribute)).scalar() or today
-    if first_day:
+    if first_day and enable_cache:
         _store_cache(FIRST_DAY, first_day)
     return first_day or today
 

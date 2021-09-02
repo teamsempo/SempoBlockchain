@@ -81,7 +81,7 @@ class Metric(object):
                     last_day = datetime.datetime.strptime(end_date, "%Y-%m-%d")
                 if not start_date:
                     # Get first date where data is present if no other date is given
-                    first_day = metrics_cache.get_first_day(date_filter_attribute)
+                    first_day = metrics_cache.get_first_day(date_filter_attribute, enable_caching)
                 else:
                     first_day = datetime.datetime.strptime(start_date, "%Y-%m-%d")
 
