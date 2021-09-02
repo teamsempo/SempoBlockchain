@@ -2,7 +2,6 @@ from server.utils.metrics import filters, metrics_cache, postprocessing_actions,
 from server.utils.metrics.metrics_const import *
 import datetime
 from server import db
-import time
 class Metric(object):
     def execute_query(self, user_filters: dict = None, date_filter_attributes=None, enable_caching=True, population_query_result=False, dont_include_timeseries=False, start_date=None, end_date=None, group_by=None):
         """
@@ -17,7 +16,6 @@ class Metric(object):
         :param End_date: End date for metrics queries (for calculating percent change within date range)
         :param group_by: Name of the group-by used, used for metrics cache key names
         """
-        t = time.time()
         actions = {
                     'primary': self.query_actions, 
                     'aggregated_query': self.aggregated_query_actions, 
@@ -29,8 +27,8 @@ class Metric(object):
             'primary': self.query_caching_combinatory_strategy, 
             'aggregated_query': self.aggregated_query_caching_combinatory_strategy, 
             'total_query': self.total_query_caching_combinatory_strategy,
-            'start_day_query': self.total_query_caching_combinatory_strategy,
-            'end_day_query': self.total_query_caching_combinatory_strategy
+            'start_day_query': metrics_cache.QUERY_ALL,
+            'end_day_query': metrics_cache.QUERY_ALL
         }
         # Build the dict of queries to execute. Ungrouped metrics don't have aggregated queries,
         # and sometimes we only want aggregates and totals (based on dont_include_timeseries)
@@ -83,12 +81,11 @@ class Metric(object):
                     last_day = datetime.datetime.strptime(end_date, "%Y-%m-%d")
                 if not start_date:
                     # Get first date where data is present if no other date is given
-                    first_day = db.session.query(db.func.min(date_filter_attribute)).scalar() or today
+                    first_day = metrics_cache.get_first_day(date_filter_attribute)
                 else:
                     first_day = datetime.datetime.strptime(start_date, "%Y-%m-%d")
 
                 day = first_day if query == 'start_day_query' else last_day
-
                 date_filters = []
                 # To filter for items on day n, we have to filter between day n and day n+1
                 date_filters.append(date_filter_attribute >= day)

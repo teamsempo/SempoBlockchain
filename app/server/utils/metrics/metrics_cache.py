@@ -2,6 +2,7 @@ from server import red, db
 from flask import g
 import pickle
 import config
+import datetime
 
 SUM = 'SUM'
 TALLY = 'TALLY'
@@ -37,6 +38,22 @@ def _load_cache(key):
 def get_metrics_org_string(org_id):
     return str(org_id)+'_metrics_'
 
+def get_first_day(date_filter_attribute):
+    # We need to get the first day data exists for every table, in order to calculate percentage-changes
+    # This is a rather expensive operation, but the result is always the same so we can cache it! 
+    if g.get('query_organisations'):
+        ORG_STRING = get_metrics_org_string(g.query_organisations)
+    else:
+        ORG_STRING = get_metrics_org_string(g.active_organisation.id)
+    FIRST_DAY = f'{ORG_STRING}_FIRST_DAY_{str(date_filter_attribute)}'
+    result = _load_cache(FIRST_DAY)
+    if result:
+        return result
+    today = datetime.datetime.now().replace(minute=0, hour=0, second=0, microsecond=0)
+    first_day = db.session.query(db.func.min(date_filter_attribute)).scalar() or today
+    if first_day:
+        _store_cache(FIRST_DAY, first_day)
+    return first_day or today
 
 def execute_with_partial_history_cache(metric_name, query, object_model, strategy, enable_cache = True, group_by=None, query_name=''):
     # enable_cache pass-thru. This is so we don't cache data when filters are active.
@@ -110,7 +127,7 @@ def _tally_strategy(query, cache_result):
     if not cache_result:
         cache_result = [[0]]
     return [[float(a or 0) + cache_result[0][0]]]
-    
+
 def _count_strategy(query, cache_result):
     return query.with_session(db.session).count() + (cache_result or 0)
 
