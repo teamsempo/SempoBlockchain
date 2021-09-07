@@ -234,10 +234,9 @@ workflows:
             branches:
               only:
                 - master
-                - dev-perf-config
 
           requires:
             - build
-            #- test:backend
-            # - test:worker
-            # - test:frontend
+            - test:backend
+            - test:worker
+            - test:frontend
