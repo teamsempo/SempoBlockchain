@@ -282,6 +282,9 @@ class AppQuery(BaseQuery):
 
 db = SQLAlchemy(
     query_class=AppQuery,
+    engine_options={
+        'pool_pre_ping': True
+    },
     session_options={
         "expire_on_commit": False,
         "enable_baked_queries": False
