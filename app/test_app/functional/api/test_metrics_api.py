@@ -444,7 +444,7 @@ def test_clear_metrics_cache(test_client, complete_admin_auth_token):
     response = clear_metrics()
 
     # Make sure that 4 metrics are removed from the cache
-    assert response.json['data']['removed_entries'] == 4
+    assert response.json['data']['removed_entries'] == 44
     
     # And check that they're well and truly gone from the cache!
     assert not red.get('2_metrics_fake_metric1') 
