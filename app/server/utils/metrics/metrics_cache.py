@@ -3,6 +3,7 @@ from flask import g
 import pickle
 import config
 import datetime
+from server.utils.executor import standard_executor_job
 
 SUM = 'SUM'
 TALLY = 'TALLY'
@@ -115,6 +116,14 @@ def clear_metrics_cache():
     for key in keys:
         red.delete(key)
     return key_count
+
+def rebuild_metrics_cache():
+    @standard_executor_job
+    def _async_rebuild_metrics_cache():
+        from server.utils.metrics.metrics import calculate_transfer_stats
+        calculate_transfer_stats(None, None, None, 'credit_transfer', 'all', False, 'day', 'ungrouped', None)
+        calculate_transfer_stats(None, None, None, 'user', 'all', False, 'day', 'ungrouped', None)
+    _async_rebuild_metrics_cache.submit()
 
 def _handle_combinatory_strategy(query, cache_result, strategy):
     return strategy_functions[strategy](query, cache_result)
