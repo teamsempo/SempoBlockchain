@@ -15,7 +15,7 @@ from server.models.utils import ModelBase, credit_transfer_transfer_usage_associ
 class TransferUsage(ModelBase):
     __tablename__ = 'transfer_usage'
 
-    _name = db.Column(db.String, unique=True)
+    _name = db.Column(db.String, unique=True, index=True)
     is_cashout = db.Column(db.Boolean)
     _icon = db.Column(db.String)
     priority = db.Column(db.Integer)
