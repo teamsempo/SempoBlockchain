@@ -134,7 +134,7 @@ class CacheApi(MethodView):
         Use this after you alter the past so the cache can rebuild itself 
         """
         count = metrics_cache.clear_metrics_cache()
-
+        metrics_cache.rebuild_metrics_cache()
         response_object = {
             'status' : 'success',
             'message': 'Cache erased',

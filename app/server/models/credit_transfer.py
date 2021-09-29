@@ -16,7 +16,7 @@ from server.models.utils import BlockchainTaskableBase, ManyOrgBase, credit_tran
 from server.models.token import Token
 from server.models.transfer_account import TransferAccount
 from server.utils.access_control import AccessControl
-from server.utils.metrics.metrics_cache import clear_metrics_cache
+from server.utils.metrics.metrics_cache import clear_metrics_cache, rebuild_metrics_cache
 
 from server.exceptions import (
     TransferLimitError,
@@ -314,7 +314,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
         if (datetime.datetime.utcnow() - self.created).seconds > 5:
             clear_metrics_cache()
-
+            rebuild_metrics_cache()
         if self.transfer_type == TransferTypeEnum.PAYMENT and self.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT:
             if self.recipient_user and self.recipient_user.transfer_card:
                 self.recipient_user.transfer_card.update_transfer_card()
