@@ -147,7 +147,8 @@ class ProcessVendorPayout(MethodView):
         if request.files:
             flask_file = request.files['file']
             stream = codecs.iterdecode(flask_file.stream, 'utf-8')
-            reader = csv.DictReader(stream)
+            data = [line for line in stream] # Load file into memory to prevent preemptive closing
+            reader = csv.DictReader(data)
         else:
             post_data = request.get_json()
             if not post_data:
