@@ -4,7 +4,7 @@ from flask.views import MethodView
 from server import db, bt
 from server.models.credit_transfer import CreditTransfer
 from server.utils.auth import requires_auth
-
+from server.models.credit_transfer import CreditTransfer
 blockchain_transaction_blueprint = Blueprint('make_blockchain_transaction', __name__)
 
 class BlockchainTransactionRPC(MethodView):
@@ -18,6 +18,11 @@ class BlockchainTransactionRPC(MethodView):
 
         if call == 'RETRY_TASK':
             task_uuid = post_data.get('task_uuid')
+            transfer = db.session.query(CreditTransfer)\
+                .filter(CreditTransfer.blockchain_task_uuid == task_uuid)\
+                .first()
+            if transfer:
+                transfer.send_blockchain_payload_to_worker()
 
             bt.retry_task(task_uuid)
 
