@@ -238,6 +238,3 @@ workflows:
                 - fix-vendor-payout-api
           requires:
             - build
-            - test:backend
-            - test:worker
-            - test:frontend
