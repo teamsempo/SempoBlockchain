@@ -234,7 +234,8 @@ workflows:
             branches:
               only:
                 - master
-                - rebuild-metrics-cache-after-flush
-                - fix-vendor-payout-api
           requires:
             - build
+            - test:backend
+            - test:worker
+            - test:frontend
