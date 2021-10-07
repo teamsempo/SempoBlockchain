@@ -184,13 +184,15 @@ class ProcessVendorPayout(MethodView):
                 transfers.append((tid, None, message))
                 continue
 
-
-            if line['Payment Has Been Made'].upper() == 'TRUE' and line['Bank Payment Date']:
-                transfer.add_approver_and_resolve_as_completed()
-                message = 'Transfer Success'
-            elif line['Payment Has Been Made'] == 'FALSE':
-                transfer.resolve_as_rejected()
-                message = 'Transfer Rejected'
+            try:
+                if line['Payment Has Been Made'].upper() == 'TRUE' and line['Bank Payment Date']:
+                    transfer.add_approver_and_resolve_as_completed()
+                    message = 'Transfer Success'
+                elif line['Payment Has Been Made'] == 'FALSE':
+                    transfer.resolve_as_rejected()
+                    message = 'Transfer Rejected'
+            except Exception as e:
+                message = str(e)
 
             transfers.append((tid, transfer, message))
 
