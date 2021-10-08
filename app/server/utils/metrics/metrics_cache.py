@@ -123,7 +123,11 @@ def rebuild_metrics_cache():
         from server.utils.metrics.metrics import calculate_transfer_stats
         calculate_transfer_stats(None, None, None, 'credit_transfer', 'all', False, 'day', 'ungrouped', None)
         calculate_transfer_stats(None, None, None, 'user', 'all', False, 'day', 'ungrouped', None)
-    _async_rebuild_metrics_cache.submit()
+
+    if not g.get('is_rebuilding'):
+        _async_rebuild_metrics_cache.submit()
+    # ensure we don't rebuild cache several times at the end of a single call
+    g.is_rebuilding = True
 
 def _handle_combinatory_strategy(query, cache_result, strategy):
     return strategy_functions[strategy](query, cache_result)
