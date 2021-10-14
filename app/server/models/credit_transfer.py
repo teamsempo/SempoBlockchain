@@ -14,6 +14,7 @@ from server import db, bt
 from server.models.utils import BlockchainTaskableBase, ManyOrgBase, credit_transfer_transfer_usage_association_table,\
     disbursement_credit_transfer_association_table, credit_transfer_approver_user_association_table
 from server.models.token import Token
+from server.models.user import User
 from server.models.transfer_account import TransferAccount
 from server.utils.access_control import AccessControl
 from server.utils.metrics.metrics_cache import clear_metrics_cache, rebuild_metrics_cache
@@ -248,7 +249,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     def add_approver_and_resolve_as_completed(self, user=None):
         # Adds approver to transfer, resolves as complete if it can!
         if not user:
-            user = g.user
+            user = db.session.query(User).filter(User.id == g.user.id).first()
         if user not in self.approvers:
             self.approvers.append(user)
         if len(self.approvers) == 1:
