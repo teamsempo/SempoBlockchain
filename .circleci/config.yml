@@ -237,7 +237,6 @@ workflows:
             branches:
               only:
                 - master
-                - rebuild-metrics-cache-after-flush
           requires:
             - build
             - test:backend
