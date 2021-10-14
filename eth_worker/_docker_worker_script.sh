@@ -22,7 +22,9 @@ if [ "$CONTAINER_MODE" == 'ETH_WORKER_TEST' ]; then
           exit $ret
         fi
         if [ ! -z "$CODECOV_TOKEN" ]; then # only report if CODECOV_TOKEN is set
-          bash <(curl -s https://codecov.io/bash) -cF python
+          curl -Os https://uploader.codecov.io/latest/linux/codecov
+          chmod +x codecov
+          ./codecov -t ${CODECOV_TOKEN} python
         fi
     else
         echo pass
