@@ -141,7 +141,7 @@ jobs:
           command: |
             curl -Os https://uploader.codecov.io/latest/linux/codecov
             chmod +x codecov
-            ./codecov -t ${CODECOV_TOKEN} javascript
+            ./codecov -t ${CODECOV_TOKEN} -F javascript
   deploy:
     working_directory: ~/project
     docker:
@@ -237,6 +237,7 @@ workflows:
             branches:
               only:
                 - master
+                - rebuild-metrics-cache-after-flush
           requires:
             - build
             - test:backend
