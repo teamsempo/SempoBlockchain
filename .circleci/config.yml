@@ -138,7 +138,10 @@ jobs:
             npm run test:coverage
       - run:
           name: Upload coverage report to Codecov
-          command: bash <(curl -s https://codecov.io/bash) -cF javascript
+          command: |
+            curl -Os https://uploader.codecov.io/latest/linux/codecov
+            chmod +x codecov
+            ./codecov -t ${CODECOV_TOKEN} javascript
   deploy:
     working_directory: ~/project
     docker:
