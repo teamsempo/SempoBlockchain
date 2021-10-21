@@ -42,7 +42,7 @@ services:
       - eth_postgres
 
   postgres:
-    image: "postgres"
+    image: "postgres:buster"
     restart: always
     environment:
       POSTGRES_DB: "sempo_docker"
@@ -50,7 +50,7 @@ services:
       POSTGRES_PASSWORD: "password"
 
   eth_postgres:
-    image: "postgres"
+    image: "postgres:buster"
     restart: always
     environment:
       POSTGRES_DB: "sempo_docker_eth"
