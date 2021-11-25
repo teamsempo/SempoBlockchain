@@ -271,19 +271,16 @@ def test_transfer_account_history(test_client, authed_sempo_admin_user):
     result.json['data']['changes'][0]['created'] = None
     result.json['data']['changes'][1]['created'] = None
     result.json['data']['changes'][2]['created'] = None
-    result.json['data']['changes'][3]['created'] = None
-    result.json['data']['changes'][2]['change_by']['id'] = 123
-    result.json['data']['changes'][3]['change_by']['id'] = 123
+    result.json['data']['changes'][0]['change_by'] = None
+    result.json['data']['changes'][1]['change_by'] = None
+    result.json['data']['changes'][2]['change_by'] = None
     assert result.json == {
         'data':
             {'changes':
             [
-                {'change_by': None, 'column_name': 'name', 'created': None, 'new_value': 'None', 'old_value': None},
                 {'change_by': None, 'column_name': 'is_approved', 'created': None, 'new_value': 'True', 'old_value': 'False'},
-                {'change_by': {'email': 'tristan@withsempo.com', 'first_name': None, 'id': 123, 'last_name': None},
-                    'column_name': 'name', 'created': None, 'new_value': 'Sample Account', 'old_value': 'None'},
-                {'change_by': {'email': 'tristan@withsempo.com', 'first_name': None, 'id': 123, 'last_name': None},
-                    'column_name': 'notes', 'created': None, 'new_value': 'This account has a comment!', 'old_value': ''}
+                {'change_by': None, 'column_name': 'name', 'created': None, 'new_value': 'Sample Account', 'old_value': 'None'},
+                {'change_by': None, 'column_name': 'notes', 'created': None, 'new_value': 'This account has a comment!', 'old_value': ''}
             ]
             }, 'message': 'Successfully Loaded.', 'status': 'success'
         }
