@@ -2,7 +2,9 @@ import pytest
 from server.utils.auth import get_complete_auth_token
 from server.models.transfer_account import TransferAccount
 from server.utils.transfer_enums import TransferStatusEnum
+from server.utils.user import create_transfer_account_user
 from server import db
+from faker import Faker
 import random
 
 @pytest.mark.parametrize("tier, initial_disbursement, is_approved, transfer_status, transfer_account_approver_tier, account_approval_http_status, final_transfer_status, final_is_approved", [   
@@ -224,14 +226,18 @@ def test_bulk_approve_and_disapprove(test_client, authed_sempo_admin_user, creat
         })
     assert transfer_account.is_approved == False
 
-def test_transfer_account_history(test_client, authed_sempo_admin_user, create_transfer_account_user_function):
-    transfer_account = create_transfer_account_user_function.transfer_account
+def test_transfer_account_history(test_client, authed_sempo_admin_user):
+    user = create_transfer_account_user(first_name='Transfer',
+                                        last_name='User 2',
+                                        phone=Faker().msisdn())
+    db.session.commit()
+    transfer_account = user.default_transfer_account
     transfer_account.is_approved = True
     authed_sempo_admin_user.set_held_role('ADMIN', 'superadmin')
     auth = get_complete_auth_token(authed_sempo_admin_user)
     # Update a bunch of stuff
     test_client.put(
-        f"/api/v1/transfer_account/{create_transfer_account_user_function.id}/",
+        f"/api/v1/transfer_account/{transfer_account.id}/",
         headers=dict(
             Authorization=auth,
             Accept='application/json'
@@ -243,7 +249,7 @@ def test_transfer_account_history(test_client, authed_sempo_admin_user, create_t
     })
     # Update some more
     test_client.put(
-        f"/api/v1/transfer_account/{create_transfer_account_user_function.id}/",
+        f"/api/v1/transfer_account/{transfer_account.id}/",
         headers=dict(
             Authorization=auth,
             Accept='application/json'
@@ -255,7 +261,7 @@ def test_transfer_account_history(test_client, authed_sempo_admin_user, create_t
     })
 
     result = test_client.get(
-        f"/api/v1/transfer_account/history/{create_transfer_account_user_function.id}/",
+        f"/api/v1/transfer_account/history/{transfer_account.id}/",
         headers=dict(
             Authorization=auth,
             Accept='application/json'
@@ -264,17 +270,20 @@ def test_transfer_account_history(test_client, authed_sempo_admin_user, create_t
     # Zero the dates because they'll change each time the tests are run
     result.json['data']['changes'][0]['created'] = None
     result.json['data']['changes'][1]['created'] = None
+    result.json['data']['changes'][2]['created'] = None
+    result.json['data']['changes'][3]['created'] = None
+    result.json['data']['changes'][2]['change_by']['id'] = 123
+    result.json['data']['changes'][3]['change_by']['id'] = 123
     assert result.json == {
-        'data': {
-            'changes': [
-                {
-                    'change_by': {'email': 'tristan@withsempo.com', 'first_name': None, 'id': 1, 'last_name': None}, 
-                    'column_name': 'name', 'created': None, 'new_value': 'Sample Account', 'old_value': None
-                }, 
-                {
-                    'change_by': {'email': 'tristan@withsempo.com', 'first_name': None, 'id': 1, 'last_name': None},
-                    'column_name': 'notes', 'created': None, 'new_value': 'This account has a comment!', 'old_value': ''
-                }
-            ]}
-        , 'message': 'Successfully Loaded.', 'status': 'success'}
-    
+        'data':
+            {'changes':
+            [
+                {'change_by': None, 'column_name': 'name', 'created': None, 'new_value': 'None', 'old_value': None},
+                {'change_by': None, 'column_name': 'is_approved', 'created': None, 'new_value': 'True', 'old_value': 'False'},
+                {'change_by': {'email': 'tristan@withsempo.com', 'first_name': None, 'id': 123, 'last_name': None},
+                    'column_name': 'name', 'created': None, 'new_value': 'Sample Account', 'old_value': 'None'},
+                {'change_by': {'email': 'tristan@withsempo.com', 'first_name': None, 'id': 123, 'last_name': None},
+                    'column_name': 'notes', 'created': None, 'new_value': 'This account has a comment!', 'old_value': ''}
+            ]
+            }, 'message': 'Successfully Loaded.', 'status': 'success'
+        }

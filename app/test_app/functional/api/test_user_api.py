@@ -14,6 +14,7 @@ from server.models.transfer_usage import TransferUsage
 from server.models.user import User
 from server.models.transfer_card import TransferCard
 from server.models.organisation import Organisation
+from server.utils.user import create_transfer_account_user
 
 fake = Faker()
 fake.add_provider(phone_number)
@@ -330,14 +331,16 @@ def test_create_user_via_kobo(test_client, init_database, authed_sempo_admin_use
     assert len(data['user']['custom_attributes']) == 2
 
 def test_user_history(test_client, authed_sempo_admin_user, create_transfer_account_user_function):
-    transfer_account = create_transfer_account_user_function.transfer_account
-    user = transfer_account.users[0]
+    user = create_transfer_account_user(first_name='Transfer',
+                                        last_name='User 3',
+                                        phone=Faker().msisdn())
+    db.session.commit()
 
     authed_sempo_admin_user.set_held_role('ADMIN', 'superadmin')
     auth = get_complete_auth_token(authed_sempo_admin_user)
     # Update a bunch of stuff
     test_client.put(
-        f"/api/v1/transfer_account/{create_transfer_account_user_function.id}/",
+        f"/api/v1/transfer_account/{user.id}/",
         headers=dict(
             Authorization=auth,
             Accept='application/json'
@@ -359,7 +362,7 @@ def test_user_history(test_client, authed_sempo_admin_user, create_transfer_acco
         })
 
     result = test_client.get(
-        f"/api/v1/user/history/{create_transfer_account_user_function.id}/",
+        f"/api/v1/user/history/{user.id}/",
         headers=dict(
             Authorization=auth,
             Accept='application/json'
@@ -367,12 +370,13 @@ def test_user_history(test_client, authed_sempo_admin_user, create_transfer_acco
 
     # Zero the dates because they'll change each time the tests are run
     result.json['data']['changes'][0]['created'] = None
+    result.json['data']['changes'][0]['change_by']['id'] = 144
     assert result.json == {
-        'data': 
-            {'changes': [
-                {
-                    'change_by': {'email': 'tristan@withsempo.com', 'first_name': None, 'id': 1, 'last_name': None},
-                    'column_name': 'first_name', 'created': None, 'new_value': 'Alf', 'old_value': 'Transfer'}
-            ]},
+        'data': {
+            'changes': [
+                {'change_by': {'email': 'tristan@withsempo.com', 'first_name': None, 'id': 144, 'last_name': None}, 
+                'column_name': 'first_name', 'created': None, 'new_value': 'Alf', 'old_value': 'Transfer'}
+            ]
+        },
         'message': 'Successfully Loaded.', 'status': 'success'
     }
