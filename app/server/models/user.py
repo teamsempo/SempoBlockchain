@@ -18,6 +18,7 @@ import random
 import string
 import sentry_sdk
 from sqlalchemy import or_, and_
+from server.models.audit_history import track_updates
 
 from server import db, celery_app, bt
 from server.utils.misc import encrypt_string, decrypt_string
@@ -70,7 +71,22 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         created using the POST user API or the bulk upload function
     """
     __tablename__ = 'user'
-
+    audit_history_columns = ['first_name',
+        'last_name',
+        'preferred_language',
+        'primary_blockchain_address',
+        'email',
+        '_phone',
+        '_public_serial_number',
+        'uuid',
+        'nfc_serial_number',
+        'default_currency',
+        '_location',
+        'is_activated',
+        'is_disabled',
+        'terms_accepted',
+    ]
+    
     # override ModelBase deleted to add an index
     created = db.Column(db.DateTime, default=datetime.datetime.utcnow, index=True)
 
@@ -778,3 +794,5 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
             return '<Vendor {} {}>'.format(self.id, self.phone)
         else:
             return '<User {} {}>'.format(self.id, self.phone)
+            
+track_updates(User)

@@ -6,9 +6,10 @@ from sqlalchemy import func, asc, desc
 
 from server import db
 from server.models.utils import paginate_query
+from server.models.audit_history import AuditHistory
 from server.models.transfer_account import TransferAccount, TransferAccountType
 from server.schemas import transfer_accounts_schema, transfer_account_schema, \
-    view_transfer_account_schema, view_transfer_accounts_schema
+    view_transfer_account_schema, view_transfer_accounts_schema, audit_histories_schema
 from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl
 from server.utils.transfer_filter import process_transfer_filters
@@ -246,6 +247,20 @@ class BulkTransferAccountAPI(MethodView):
         }
         return make_response(jsonify(response_object)), 201
 
+class AuditHistoryAPI(MethodView):
+    @requires_auth(allowed_roles={'ADMIN': 'any'}) # Do we want this to be just for superadmins?
+    def get(self, transfer_account_id):
+        history = db.session.query(AuditHistory).filter(AuditHistory.transfer_account_id == transfer_account_id).order_by(AuditHistory.created).all()
+
+        response_object = {
+            'status': 'success',
+            'message': 'Successfully Loaded.',
+            'data': {
+                'changes': audit_histories_schema.dump(history).data
+            }
+        }
+
+        return make_response(jsonify(response_object)), 201
 
 # add Rules for API Endpoints
 transfer_account_blueprint.add_url_rule(
@@ -265,4 +280,10 @@ transfer_account_blueprint.add_url_rule(
     '/transfer_account/bulk/',
     view_func=BulkTransferAccountAPI.as_view('bulk_transfer_account_view'),
     methods=['PUT']
+)
+
+transfer_account_blueprint.add_url_rule(
+    '/transfer_account/history/<int:transfer_account_id>/',
+    view_func=AuditHistoryAPI.as_view('audit_transfer_account_history_view'),
+    methods=['GET']
 )

@@ -328,3 +328,51 @@ def test_create_user_via_kobo(test_client, init_database, authed_sempo_admin_use
     assert data['user']['custom_attributes']['gender'] == 'female'
     assert data['user']['custom_attributes']['my_attribute'] == 'yes_please'
     assert len(data['user']['custom_attributes']) == 2
+
+def test_user_history(test_client, authed_sempo_admin_user, create_transfer_account_user_function):
+    transfer_account = create_transfer_account_user_function.transfer_account
+    user = transfer_account.users[0]
+
+    authed_sempo_admin_user.set_held_role('ADMIN', 'superadmin')
+    auth = get_complete_auth_token(authed_sempo_admin_user)
+    # Update a bunch of stuff
+    test_client.put(
+        f"/api/v1/transfer_account/{create_transfer_account_user_function.id}/",
+        headers=dict(
+            Authorization=auth,
+            Accept='application/json'
+        ),
+        json={
+            'transfer_account_name': 'Sample Account',
+            'approve': True,
+            'notes': 'This account has a comment!'
+    })
+
+    response = test_client.put(
+        f"/api/v1/user/{user.id}/",
+        headers=dict(
+            Authorization=auth,
+            Accept='application/json'
+        ),
+        json={
+            'first_name': 'Alf',
+        })
+
+    result = test_client.get(
+        f"/api/v1/user/history/{create_transfer_account_user_function.id}/",
+        headers=dict(
+            Authorization=auth,
+            Accept='application/json'
+        ))
+
+    # Zero the dates because they'll change each time the tests are run
+    result.json['data']['changes'][0]['created'] = None
+    assert result.json == {
+        'data': 
+            {'changes': [
+                {
+                    'change_by': {'email': 'tristan@withsempo.com', 'first_name': None, 'id': 1, 'last_name': None},
+                    'column_name': 'first_name', 'created': None, 'new_value': 'Alf', 'old_value': 'Transfer'}
+            ]},
+        'message': 'Successfully Loaded.', 'status': 'success'
+    }
