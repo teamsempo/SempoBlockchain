@@ -250,7 +250,7 @@ class BulkTransferAccountAPI(MethodView):
 class AuditHistoryAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'any'}) # Do we want this to be just for superadmins?
     def get(self, transfer_account_id):
-        history = db.session.query(AuditHistory).filter(AuditHistory.transfer_account_id == transfer_account_id).order_by(AuditHistory.created).all()
+        history = db.session.query(AuditHistory).filter(AuditHistory.transfer_account_id == transfer_account_id).order_by(AuditHistory.id).all()
 
         response_object = {
             'status': 'success',
