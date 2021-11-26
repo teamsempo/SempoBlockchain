@@ -339,28 +339,21 @@ def test_user_history(test_client, authed_sempo_admin_user, create_transfer_acco
     authed_sempo_admin_user.set_held_role('ADMIN', 'superadmin')
     auth = get_complete_auth_token(authed_sempo_admin_user)
     # Update a bunch of stuff
-    test_client.put(
-        f"/api/v1/transfer_account/{user.id}/",
+
+    def update_account(json, id):
+        test_client.put(
+        f"/api/v1/user/{id}/",
         headers=dict(
             Authorization=auth,
             Accept='application/json'
         ),
-        json={
-            'transfer_account_name': 'Sample Account',
-            'approve': True,
-            'notes': 'This account has a comment!'
-    })
-
-    response = test_client.put(
-        f"/api/v1/user/{user.id}/",
-        headers=dict(
-            Authorization=auth,
-            Accept='application/json'
-        ),
-        json={
-            'first_name': 'Alf',
-        })
-
+        json=json)
+    
+    update_account({'first_name': 'Transfer'}, user.id)
+    update_account({'first_name': 'Alf'}, user.id)
+    update_account({'last_name': 'lastName'}, user.id)
+    update_account({'last_name': 'Tanner'}, user.id)
+    
     result = test_client.get(
         f"/api/v1/user/history/{user.id}/",
         headers=dict(
@@ -369,8 +362,11 @@ def test_user_history(test_client, authed_sempo_admin_user, create_transfer_acco
         ))
 
     # Zero the dates because they'll change each time the tests are run
-    for c in result.json['data']['changes']: 
+    results = []
+    for c in result.json['data']['changes']:
         c['created'] = None
         c['change_by'] = None
+        results.append(c)
 
-    assert {'change_by': None, 'column_name': 'first_name', 'created': None, 'new_value': 'Alf', 'old_value': 'Transfer'} in result.json['data']['changes']
+    assert {'change_by': None, 'column_name': 'first_name', 'created': None, 'new_value': 'Alf', 'old_value': 'Transfer'} in results
+    assert {'change_by': None, 'column_name': 'last_name', 'created': None, 'new_value': 'Tanner', 'old_value': 'lastName'} in results

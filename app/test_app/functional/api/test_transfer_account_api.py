@@ -235,30 +235,26 @@ def test_transfer_account_history(test_client, authed_sempo_admin_user):
     transfer_account.is_approved = True
     authed_sempo_admin_user.set_held_role('ADMIN', 'superadmin')
     auth = get_complete_auth_token(authed_sempo_admin_user)
+    
+    def update_account(json, id):
+        test_client.put(
+            f"/api/v1/transfer_account/{id}/",
+            headers=dict(
+                Authorization=auth,
+                Accept='application/json'
+            ),
+            json=json
+        )
+
     # Update a bunch of stuff
-    test_client.put(
-        f"/api/v1/transfer_account/{transfer_account.id}/",
-        headers=dict(
-            Authorization=auth,
-            Accept='application/json'
-        ),
-        json={
-            'transfer_account_name': 'Sample Account',
-            'approve': True,
-            'notes': 'This account has a comment!'
-    })
-    # Update some more
-    test_client.put(
-        f"/api/v1/transfer_account/{transfer_account.id}/",
-        headers=dict(
-            Authorization=auth,
-            Accept='application/json'
-        ),
-        json={
-            'transfer_account_name': 'Sample Account',
-            'approve': True,
-            'notes': 'This account has a comment!'
-    })
+    update_account({
+        'transfer_account_name': 'Sample',
+        'approve': True,
+        'notes': 'This account has a comment!'
+    }, transfer_account.id)
+    update_account({'notes': 'This account has a refreshed comment!'}, transfer_account.id)
+    update_account({'approve': False}, transfer_account.id)
+    update_account({'transfer_account_name': 'Sample Account'}, transfer_account.id)
 
     result = test_client.get(
         f"/api/v1/transfer_account/history/{transfer_account.id}/",
@@ -268,9 +264,12 @@ def test_transfer_account_history(test_client, authed_sempo_admin_user):
         ))
 
     # Zero the dates because they'll change each time the tests are run
-    for c in result.json['data']['changes']: 
+    results = []
+    for c in result.json['data']['changes']:
         c['created'] = None
         c['change_by'] = None
-    assert {'change_by': None, 'column_name': 'is_approved', 'created': None, 'new_value': 'True', 'old_value': 'False'} in result.json['data']['changes']
-    assert {'change_by': None, 'column_name': 'name', 'created': None, 'new_value': 'Sample Account', 'old_value': 'None'} in result.json['data']['changes']
-    assert {'change_by': None, 'column_name': 'notes', 'created': None, 'new_value': 'This account has a comment!', 'old_value': ''} in result.json['data']['changes']
+        results.append(c)
+
+    assert {'change_by': None, 'column_name': 'notes', 'created': None, 'new_value': 'This account has a refreshed comment!', 'old_value': 'This account has a comment!'} in results
+    assert {'change_by': None, 'column_name': 'is_approved', 'created': None, 'new_value': 'False', 'old_value': 'True'} in results
+    assert {'change_by': None, 'column_name': 'name', 'created': None, 'new_value': 'Sample Account', 'old_value': 'Sample'} in results
