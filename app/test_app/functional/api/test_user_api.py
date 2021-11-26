@@ -369,14 +369,8 @@ def test_user_history(test_client, authed_sempo_admin_user, create_transfer_acco
         ))
 
     # Zero the dates because they'll change each time the tests are run
-    result.json['data']['changes'][0]['created'] = None
-    result.json['data']['changes'][0]['change_by'] = None
-    assert result.json == {
-        'data': {
-            'changes': [
-                {'change_by': None, 
-                'column_name': 'first_name', 'created': None, 'new_value': 'Alf', 'old_value': 'Transfer'}
-            ]
-        },
-        'message': 'Successfully Loaded.', 'status': 'success'
-    }
+    for c in result.json['data']['changes']: 
+        c['created'] = None
+        c['change_by'] = None
+
+    assert {'change_by': None, 'column_name': 'first_name', 'created': None, 'new_value': 'Alf', 'old_value': 'Transfer'} in result.json['data']['changes']

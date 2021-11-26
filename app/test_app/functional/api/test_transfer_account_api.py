@@ -268,19 +268,9 @@ def test_transfer_account_history(test_client, authed_sempo_admin_user):
         ))
 
     # Zero the dates because they'll change each time the tests are run
-    result.json['data']['changes'][0]['created'] = None
-    result.json['data']['changes'][1]['created'] = None
-    result.json['data']['changes'][2]['created'] = None
-    result.json['data']['changes'][0]['change_by'] = None
-    result.json['data']['changes'][1]['change_by'] = None
-    result.json['data']['changes'][2]['change_by'] = None
-    assert result.json == {
-        'data':
-            {'changes':
-            [
-                {'change_by': None, 'column_name': 'is_approved', 'created': None, 'new_value': 'True', 'old_value': 'False'},
-                {'change_by': None, 'column_name': 'name', 'created': None, 'new_value': 'Sample Account', 'old_value': 'None'},
-                {'change_by': None, 'column_name': 'notes', 'created': None, 'new_value': 'This account has a comment!', 'old_value': ''}
-            ]
-            }, 'message': 'Successfully Loaded.', 'status': 'success'
-        }
+    for c in result.json['data']['changes']: 
+        c['created'] = None
+        c['change_by'] = None
+    assert {'change_by': None, 'column_name': 'is_approved', 'created': None, 'new_value': 'True', 'old_value': 'False'} in result.json['data']['changes']
+    assert {'change_by': None, 'column_name': 'name', 'created': None, 'new_value': 'Sample Account', 'old_value': 'None'} in result.json['data']['changes']
+    assert {'change_by': None, 'column_name': 'notes', 'created': None, 'new_value': 'This account has a comment!', 'old_value': ''} in result.json['data']['changes']
