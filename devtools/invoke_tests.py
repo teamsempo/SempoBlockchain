@@ -21,4 +21,6 @@ if __name__ == '__main__':
     # We do 'test_eth_worker' and 'test_app' because then we can feed -k 'test_app' to only test the app
     # Explicity providing the two directories runs  faster than forcing pycharm to find tests from root
     r_app = pytest.main(['app/test_app'] + flags + sys.argv[1:])
+    r_eth_worker = pytest.main(['eth_worker/test_eth_worker'] + flags + sys.argv[1:])
+    exit(max(r_app, r_eth_worker))
 
