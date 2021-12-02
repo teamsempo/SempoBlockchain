@@ -232,7 +232,7 @@ class ResetPinAPI(MethodView):
             return make_response(jsonify(response_object)), 400
 
 class AuditHistoryAPI(MethodView):
-    @requires_auth(allowed_roles={'ADMIN': 'any'}) # Do we want this to be just for superadmins?
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'}) # Do we want this to be just for superadmins?
     def get(self, user_id):
         history = db.session.query(AuditHistory).filter(AuditHistory.user_id == user_id).order_by(AuditHistory.id).all()
 
