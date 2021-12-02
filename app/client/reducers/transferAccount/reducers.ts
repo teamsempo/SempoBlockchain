@@ -6,13 +6,15 @@ import {
   LoadTransferAccountActionTypes,
   EditTransferAccountActionTypes,
   SetTransferAccountActionTypes,
-  TransfersByUserId
+  TransfersByUserId,
+  LoadTransferAccountHistoryActionTypes
 } from "./types";
 import {
   TransferAccountAction,
   LoadTransferAccountAction,
   EditTransferAccountAction,
-  SetTransferAccountAction
+  SetTransferAccountAction,
+  LoadTransferAccountHistoryAction
 } from "./actions";
 
 import {
@@ -33,17 +35,20 @@ const IdList = (state = initialIdListState, action: TransferAccountAction) => {
 };
 
 export interface Pagination {
-  items: number,
+  items: number;
 }
 
 const initialPaginationState: Pagination = {
-  items: 0,
+  items: 0
 };
 
-const pagination = (state = initialPaginationState, action: TransferAccountAction) => {
+const pagination = (
+  state = initialPaginationState,
+  action: TransferAccountAction
+) => {
   switch (action.type) {
     case TransferAccountActionTypes.UPDATE_TRANSFER_ACCOUNT_PAGINATION:
-      return {items: action.payload};
+      return { items: action.payload };
     default:
       return state;
   }
@@ -163,6 +168,41 @@ const selected = (
       return action.payload;
     case SetTransferAccountActionTypes.RESET_SELECTED:
       return initialSelectedState;
+
+    default:
+      return state;
+  }
+};
+
+interface LoadHistoryStatusState {
+  isRequesting: boolean;
+  error?: Error | null | string;
+  success: Boolean;
+}
+
+const initialLoadHistoryStatusState: LoadHistoryStatusState = {
+  isRequesting: false,
+  error: null,
+  success: false
+};
+
+const loadHistoryStatus = (
+  state = initialLoadHistoryStatusState,
+  action: LoadTransferAccountHistoryAction
+) => {
+  switch (action.type) {
+    case LoadTransferAccountHistoryAction.LOAD_TRANSFER_ACCOUNTS_REQUEST:
+      return { ...state, isRequesting: true };
+
+    case LoadTransferAccountActionTypes.LOAD_TRANSFER_ACCOUNTS_SUCCESS:
+      return {
+        ...state,
+        isRequesting: false,
+        success: true
+      };
+
+    case LoadTransferAccountActionTypes.LOAD_TRANSFER_ACCOUNTS_FAILURE:
+      return { ...state, isRequesting: false, error: action.error };
 
     default:
       return state;

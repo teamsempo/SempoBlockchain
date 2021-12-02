@@ -1,7 +1,8 @@
 import { apiClient } from "./client/apiClient";
 import {
   EditTransferAccountPayload,
-  LoadTransferAccountListPayload
+  LoadTransferAccountListPayload,
+  LoadTransferAccountHistoryPayload
 } from "../reducers/transferAccount/types";
 
 export const loadTransferAccountListAPI = ({
@@ -23,5 +24,16 @@ export const editTransferAccountAPI = ({
     url: "/transfer_account/",
     method: "PUT",
     body: body,
+    path: path
+  });
+
+export const loadTransferAccountHistoryAPI = ({
+  query,
+  path
+}: LoadTransferAccountHistoryPayload) =>
+  apiClient({
+    url: "/transfer_account/history/",
+    method: "GET",
+    query: query,
     path: path
   });

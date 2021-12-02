@@ -9,6 +9,7 @@ import {
 } from "@ant-design/icons";
 
 import NewTransferManager from "../management/newTransferManager.jsx";
+import HistoryDrawer from "../history/historyDrawer.tsx";
 import DateTime from "../dateTime.tsx";
 
 import { EditTransferAccountAction } from "../../reducers/transferAccount/actions";
@@ -47,6 +48,7 @@ class TransferAccountManager extends React.Component {
       transfer_type: "ALL",
       create_transfer_type: "RECLAMATION",
       newTransfer: false,
+      viewHistory: false,
       transfer_amount: "",
       showSpreadsheetData: true,
       balance: "",
@@ -62,6 +64,7 @@ class TransferAccountManager extends React.Component {
     this.handleChange = this.handleChange.bind(this);
     this.editTransferAccount = this.editTransferAccount.bind(this);
     this.onNewTransfer = this.onNewTransfer.bind(this);
+    this.onViewHistory = this.onViewHistory.bind(this);
   }
 
   componentDidMount() {
@@ -155,6 +158,12 @@ class TransferAccountManager extends React.Component {
     this.setState({ is_approved: status });
   }
 
+  onViewHistory() {
+    this.setState(prevState => ({
+      viewHistory: !prevState.viewHistory
+    }));
+  }
+
   onNewTransfer() {
     this.setState(prevState => ({
       newTransfer: !prevState.newTransfer
@@ -233,6 +242,9 @@ class TransferAccountManager extends React.Component {
             <Button onClick={this.onNewTransfer} label={"New Transfer"}>
               New Transfer
             </Button>
+            <Button onClick={this.onViewHistory} label={"View History"}>
+              View Account History
+            </Button>
             <Button
               type="primary"
               onClick={this.editTransferAccount}
@@ -293,6 +305,10 @@ class TransferAccountManager extends React.Component {
             </Select>
           </Descriptions.Item>
         </Descriptions>
+        <HistoryDrawer
+          drawerVisible={this.state.viewHistory}
+          onClose={() => this.onViewHistory()}
+        />
         <NewTransferManager
           modalVisible={this.state.newTransfer}
           transfer_account_ids={[this.props.transfer_account_id]}
