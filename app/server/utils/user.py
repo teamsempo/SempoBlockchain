@@ -31,6 +31,7 @@ from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, L
 from server.utils.internationalization import i18n_for
 from server.utils.misc import rounded_dollars
 from server.utils.multi_chain import get_chain
+from server.utils.audit_history import manually_add_history_entry
 
 def save_photo_and_check_for_duplicate(url, new_filename, image_id):
     save_to_s3_from_url(url, new_filename)
@@ -159,7 +160,6 @@ def update_transfer_account_user(user,
 
     # remove all roles before updating
     user.remove_all_held_roles()
-    flag_modified(user, '_held_roles')
 
     if roles:
         for role in roles:
@@ -298,9 +298,9 @@ def set_custom_attributes(attribute_dict, user):
         
         to_remove = list(filter(lambda a: a.custom_attribute.name == key, custom_attributes))
         for r in to_remove:
+            manually_add_history_entry('user', user.id, key, r.value, value)
             custom_attributes.remove(r)
             db.session.delete(r)
-
         custom_attribute = CustomAttributeUserStorage(
             custom_attribute=custom_attribute, value=value)
 

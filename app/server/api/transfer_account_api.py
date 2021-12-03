@@ -6,7 +6,6 @@ from sqlalchemy import func, asc, desc
 
 from server import db
 from server.models.utils import paginate_query
-from server.models.audit_history import AuditHistory
 from server.models.transfer_account import TransferAccount, TransferAccountType
 from server.schemas import transfer_accounts_schema, transfer_account_schema, \
     view_transfer_account_schema, view_transfer_accounts_schema, audit_histories_schema
@@ -14,6 +13,7 @@ from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl
 from server.utils.transfer_filter import process_transfer_filters
 from server.utils.search import generate_search_query
+from server.utils.audit_history import get_audit_history
 
 transfer_account_blueprint = Blueprint('transfer_account', __name__)
 
@@ -250,8 +250,7 @@ class BulkTransferAccountAPI(MethodView):
 class AuditHistoryAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'superadmin'}) # Do we want this to be just for superadmins?
     def get(self, transfer_account_id):
-        history = db.session.query(AuditHistory).filter(AuditHistory.transfer_account_id == transfer_account_id).order_by(AuditHistory.id).all()
-
+        history = get_audit_history(transfer_account_id, TransferAccount.__tablename__)
         response_object = {
             'status': 'success',
             'message': 'Successfully Loaded.',

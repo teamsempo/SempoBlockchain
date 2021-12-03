@@ -4,13 +4,13 @@ from flask.views import MethodView
 from server import db
 from server.models.utils import paginate_query
 from server.models.user import User
-from server.models.audit_history import AuditHistory
 from server.schemas import user_schema, users_schema, audit_histories_schema
 from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl
 from server.utils import user as UserUtils
 from server.utils.auth import multi_org
 from server.utils.attribute_preprocessor import standard_user_preprocess
+from server.utils.audit_history import get_audit_history
 
 from server.constants import CREATE_USER_SETTINGS
 
@@ -234,7 +234,7 @@ class ResetPinAPI(MethodView):
 class AuditHistoryAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'superadmin'}) # Do we want this to be just for superadmins?
     def get(self, user_id):
-        history = db.session.query(AuditHistory).filter(AuditHistory.user_id == user_id).order_by(AuditHistory.id).all()
+        history = get_audit_history(user_id, User.__tablename__)
 
         response_object = {
             'status': 'success',

@@ -16,7 +16,7 @@ from server.models.exchange import ExchangeContract
 from server.models.organisation import Organisation
 import server.models.credit_transfer
 from server.exceptions import TransferAccountDeletionError, ResourceAlreadyDeletedError
-from server.models.audit_history import track_updates
+from server.utils.audit_history import track_updates
 
 from server.utils.transfer_enums import TransferStatusEnum, TransferSubTypeEnum, TransferModeEnum
 
@@ -36,7 +36,8 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
         'blockchain_address',
         'is_approved',
         'account_type',
-        'notes'
+        'notes',
+        '_deleted'
     ]
 
     name            = db.Column(db.String())
