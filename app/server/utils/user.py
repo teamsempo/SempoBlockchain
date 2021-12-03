@@ -154,8 +154,10 @@ def update_transfer_account_user(user,
 
     if existing_transfer_account:
         user.transfer_accounts.append(existing_transfer_account)
-
     if business_usage:
+        if business_usage != user.business_usage:
+            name = user.business_usage.name if user.business_usage else None
+            manually_add_history_entry('user', user.id, 'Business Usage', name, business_usage.name)
         user.business_usage_id = business_usage.id
 
     # remove all roles before updating
