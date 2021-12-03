@@ -14,6 +14,7 @@ from server.models.transfer_usage import TransferUsage
 from server.models.user import User
 from server.models.transfer_card import TransferCard
 from server.models.organisation import Organisation
+from server.utils.user import create_transfer_account_user
 
 fake = Faker()
 fake.add_provider(phone_number)
@@ -328,3 +329,44 @@ def test_create_user_via_kobo(test_client, init_database, authed_sempo_admin_use
     assert data['user']['custom_attributes']['gender'] == 'female'
     assert data['user']['custom_attributes']['my_attribute'] == 'yes_please'
     assert len(data['user']['custom_attributes']) == 2
+
+def test_user_history(test_client, authed_sempo_admin_user, create_transfer_account_user_function):
+    user = create_transfer_account_user(first_name='Transfer',
+                                        last_name='User 3',
+                                        phone=Faker().msisdn())
+    db.session.commit()
+
+    authed_sempo_admin_user.set_held_role('ADMIN', 'superadmin')
+    auth = get_complete_auth_token(authed_sempo_admin_user)
+    # Update a bunch of stuff
+
+    def update_account(json, id):
+        test_client.put(
+        f"/api/v1/user/{id}/",
+        headers=dict(
+            Authorization=auth,
+            Accept='application/json'
+        ),
+        json=json)
+    
+    update_account({'first_name': 'Transfer'}, user.id)
+    update_account({'first_name': 'Alf'}, user.id)
+    update_account({'last_name': 'lastName'}, user.id)
+    update_account({'last_name': 'Tanner'}, user.id)
+    
+    result = test_client.get(
+        f"/api/v1/user/history/{user.id}/",
+        headers=dict(
+            Authorization=auth,
+            Accept='application/json'
+        ))
+
+    # Zero the dates because they'll change each time the tests are run
+    results = []
+    for c in result.json['data']['changes']:
+        c['created'] = None
+        c['change_by'] = None
+        results.append(c)
+
+    assert {'change_by': None, 'column_name': 'first_name', 'created': None, 'new_value': 'Alf', 'old_value': 'Transfer'} in results
+    assert {'change_by': None, 'column_name': 'last_name', 'created': None, 'new_value': 'Tanner', 'old_value': 'lastName'} in results

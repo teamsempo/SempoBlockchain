@@ -478,6 +478,13 @@ class DisbursementSchema(SchemaBase):
     approvers = fields.Nested(UserSchema, attribute='approvers', many=True, only=("id", "first_name", "last_name", "email"))
     approval_times              = fields.List(fields.DateTime(dump_only=True))
 
+class AuditHistorySchema(Schema):
+    column_name                  = fields.Str()
+    old_value                    = fields.Str()
+    new_value                    = fields.Str()
+    change_by                    = fields.Nested(UserSchema, attribute='change_by', only=("id", "first_name", "last_name", "email"))
+    created                      = fields.DateTime(dump_only=True)
+
 pdf_users_schema = UserSchema(many=True, only=("id", "qr", "first_name", "last_name"))
 
 user_schema = UserSchema(exclude=("qr",
@@ -595,3 +602,6 @@ me_exchanges_schema = ExchangeSchema(many=True)
 
 disbursement_schema = DisbursementSchema()
 disbursements_schema = DisbursementSchema(many=True)
+
+audit_history_schema = AuditHistorySchema()
+audit_histories_schema = AuditHistorySchema(many=True)

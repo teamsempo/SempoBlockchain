@@ -2,7 +2,6 @@ import json
 from typing import Union
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.dialects.postgresql import JSON, JSONB
-from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy import text, Table, cast, String
 from sqlalchemy.sql.functions import func
 from itsdangerous import TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired
@@ -24,6 +23,7 @@ from server.utils.misc import encrypt_string, decrypt_string
 from server.utils.access_control import AccessControl
 from server.utils.phone import proccess_phone_number
 from server.utils.executor import add_after_request_executor_job
+from server.utils.audit_history import track_updates
 
 from server.utils.transfer_account import (
     find_transfer_accounts_with_matching_token
@@ -70,6 +70,23 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         created using the POST user API or the bulk upload function
     """
     __tablename__ = 'user'
+    audit_history_columns = ['first_name',
+        'last_name',
+        'preferred_language',
+        'primary_blockchain_address',
+        'email',
+        '_phone',
+        '_public_serial_number',
+        'uuid',
+        'nfc_serial_number',
+        'default_currency',
+        '_location',
+        'is_activated',
+        'is_disabled',
+        'terms_accepted',
+        '_held_roles',
+        '_deleted'
+    ]
 
     # override ModelBase deleted to add an index
     created = db.Column(db.DateTime, default=datetime.datetime.utcnow, index=True)
@@ -326,7 +343,6 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
             self._held_roles.pop(role, None)
         else:
             self._held_roles[role] = tier
-            flag_modified(self, '_held_roles')
 
     @hybrid_property
     def has_admin_role(self):
@@ -778,3 +794,5 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
             return '<Vendor {} {}>'.format(self.id, self.phone)
         else:
             return '<User {} {}>'.format(self.id, self.phone)
+            
+track_updates(User)
