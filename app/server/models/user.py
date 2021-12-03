@@ -17,7 +17,6 @@ import random
 import string
 import sentry_sdk
 from sqlalchemy import or_, and_
-from server.models.audit_history import track_updates
 
 from server import db, celery_app, bt
 from server.utils.misc import encrypt_string, decrypt_string
