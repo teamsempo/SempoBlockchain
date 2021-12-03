@@ -140,7 +140,8 @@ export const loadTransferAccountHistorySuccess = (
   result: TransferAccountLoadHistoryApiResult
 ) =>
   createAction(
-    LoadTransferAccountHistoryActionTypes.LOAD_TRANSFER_ACCOUNT_HISTORY_SUCCESS
+    LoadTransferAccountHistoryActionTypes.LOAD_TRANSFER_ACCOUNT_HISTORY_SUCCESS,
+    result
   );
 
 export const loadTransferAccountHistoryFailure = (error: string) =>

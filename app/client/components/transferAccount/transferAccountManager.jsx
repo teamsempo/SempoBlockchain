@@ -308,6 +308,7 @@ class TransferAccountManager extends React.Component {
         <HistoryDrawer
           drawerVisible={this.state.viewHistory}
           onClose={() => this.onViewHistory()}
+          id={this.props.transfer_account_id}
         />
         <NewTransferManager
           modalVisible={this.state.newTransfer}

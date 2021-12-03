@@ -178,30 +178,34 @@ interface LoadHistoryStatusState {
   isRequesting: boolean;
   error?: Error | null | string;
   success: Boolean;
+  changes: [];
 }
 
 const initialLoadHistoryStatusState: LoadHistoryStatusState = {
   isRequesting: false,
   error: null,
-  success: false
+  success: false,
+  changes: []
 };
 
-const loadHistoryStatus = (
+const loadHistory = (
   state = initialLoadHistoryStatusState,
   action: LoadTransferAccountHistoryAction
 ) => {
+  console.log(action.type);
   switch (action.type) {
-    case LoadTransferAccountHistoryAction.LOAD_TRANSFER_ACCOUNTS_REQUEST:
+    case LoadTransferAccountHistoryActionTypes.LOAD_TRANSFER_ACCOUNT_HISTORY_REQUEST:
       return { ...state, isRequesting: true };
 
-    case LoadTransferAccountActionTypes.LOAD_TRANSFER_ACCOUNTS_SUCCESS:
+    case LoadTransferAccountHistoryActionTypes.LOAD_TRANSFER_ACCOUNT_HISTORY_SUCCESS:
       return {
         ...state,
         isRequesting: false,
-        success: true
+        success: true,
+        changes: action.payload
       };
 
-    case LoadTransferAccountActionTypes.LOAD_TRANSFER_ACCOUNTS_FAILURE:
+    case LoadTransferAccountHistoryActionTypes.LOAD_TRANSFER_ACCOUNT_HISTORY_FAILURE:
       return { ...state, isRequesting: false, error: action.error };
 
     default:
@@ -215,5 +219,6 @@ export const transferAccounts = combineReducers({
   pagination,
   loadStatus,
   editStatus,
-  selected
+  selected,
+  loadHistory
 });

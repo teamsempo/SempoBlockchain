@@ -4,11 +4,17 @@ import { connect } from "react-redux";
 import { toTitleCase, replaceUnderscores } from "../../utils";
 import { LoadTransferAccountHistoryAction } from "../../reducers/transferAccount/actions";
 import { LoadTransferAccountHistoryPayload } from "../../reducers/transferAccount/types";
+import { ReduxState } from "../../reducers/rootReducer";
+import internal from "assert";
 
 interface Props {
   drawerVisible: boolean;
   onClose: any;
-  LoadTransferAccountHistoryAction: () => typeof LoadTransferAccountHistoryAction;
+  id: number;
+  LoadTransferAccountHistoryAction: (
+    path: number
+  ) => typeof LoadTransferAccountHistoryAction;
+  transferAccountHistory: [];
 }
 
 const mapDispatchToProps = (dispatch: any) => {
@@ -22,25 +28,10 @@ const mapDispatchToProps = (dispatch: any) => {
   };
 };
 
-const data = {
-  data: {
-    changes: [
-      {
-        change_by: {
-          email: "michiel@withsempo.com",
-          first_name: null,
-          id: 1,
-          last_name: null
-        },
-        column_name: "notes",
-        created: "2021-11-29T20:30:19.014788+00:00",
-        new_value: "This is a test note",
-        old_value: "abcsef"
-      }
-    ]
-  },
-  message: "Successfully Loaded.",
-  status: "success"
+const mapStateToProps = (state: ReduxState): any => {
+  return {
+    transferAccountHistory: state.transferAccounts.loadHistory.changes
+  };
 };
 
 class HistoryDrawer extends React.Component<Props> {
@@ -48,11 +39,12 @@ class HistoryDrawer extends React.Component<Props> {
     super(props);
   }
 
+  componentDidMount() {
+    this.props.LoadTransferAccountHistoryAction(this.props.id);
+  }
+
   render() {
-    if (this.props.drawerVisible) {
-      this.props.LoadTransferAccountHistoryAction(4);
-    }
-    const stringList = data.data.changes.map(change => {
+    const stringList = this.props.transferAccountHistory.map(change => {
       return `${toTitleCase(
         replaceUnderscores(change.column_name)
       )} changed from "${change.old_value}" to "${change.new_value}" by ${
@@ -78,6 +70,6 @@ class HistoryDrawer extends React.Component<Props> {
 }
 
 export default connect(
-  null,
+  mapStateToProps,
   mapDispatchToProps
 )(HistoryDrawer);

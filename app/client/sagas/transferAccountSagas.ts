@@ -143,7 +143,7 @@ function* loadTransferAccountHistory({
     const load_result = yield call(loadTransferAccountHistoryAPI, payload);
     yield put(
       LoadTransferAccountHistoryAction.loadTransferAccountHistorySuccess(
-        load_result
+        load_result.data.changes
       )
     );
   } catch (fetch_error) {
