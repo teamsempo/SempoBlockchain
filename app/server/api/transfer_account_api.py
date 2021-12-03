@@ -14,6 +14,7 @@ from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl
 from server.utils.transfer_filter import process_transfer_filters
 from server.utils.search import generate_search_query
+from server.utils.audit_history import get_audit_history
 
 transfer_account_blueprint = Blueprint('transfer_account', __name__)
 
@@ -248,10 +249,9 @@ class BulkTransferAccountAPI(MethodView):
         return make_response(jsonify(response_object)), 201
 
 class AuditHistoryAPI(MethodView):
-    @requires_auth(allowed_roles={'ADMIN': 'any'}) # Do we want this to be just for superadmins?
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'}) 
     def get(self, transfer_account_id):
-        history = db.session.query(AuditHistory).filter(AuditHistory.transfer_account_id == transfer_account_id).order_by(AuditHistory.id).all()
-
+        history = get_audit_history(transfer_account_id, TransferAccount.__tablename__)
         response_object = {
             'status': 'success',
             'message': 'Successfully Loaded.',

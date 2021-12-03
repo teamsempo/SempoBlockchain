@@ -5,6 +5,7 @@ from server import db
 from server.models.kyc_application import KycApplication
 import csv
 from io import StringIO
+from sqlalchemy.orm.attributes import flag_modified
 
 def test_get_vendor_payout_with_withdrawal_limit(test_client, authed_sempo_admin_user, create_transfer_account_user):
     authed_sempo_admin_user.organisations[0].minimum_vendor_payout_withdrawal = 200
@@ -43,8 +44,9 @@ def test_get_vendor_payout(test_client, authed_sempo_admin_user, create_transfer
     kyc = KycApplication(type='INDIVIDUAL')
     user.kyc_applications = [kyc]
     user.kyc_applications[0].kyc_status = 'VERIFIED'
+    flag_modified(user, '_held_roles')
     db.session.commit()
-
+    
     response = test_client.post(
         f"/api/v1/get_vendor_payout/",
         headers=dict(
