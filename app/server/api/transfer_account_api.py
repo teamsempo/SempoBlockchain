@@ -248,7 +248,7 @@ class BulkTransferAccountAPI(MethodView):
         return make_response(jsonify(response_object)), 201
 
 class AuditHistoryAPI(MethodView):
-    @requires_auth(allowed_roles={'ADMIN': 'superadmin'}) # Do we want this to be just for superadmins?
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'}) 
     def get(self, transfer_account_id):
         history = get_audit_history(transfer_account_id, TransferAccount.__tablename__)
         response_object = {
