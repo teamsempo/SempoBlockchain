@@ -129,11 +129,7 @@ function* watchLoadTransferAccounts() {
 }
 
 function* updateStateFromTransferAccountHistory(data: any) {
-  console.log("load_resultload_resultload_result");
-
-  const load_result = yield call(loadTransferAccountHistoryAPI, payload);
-  console.log("load_resultload_resultload_result");
-  console.log(load_result);
+  yield call(loadTransferAccountHistoryAPI, payload);
 }
 
 function* loadTransferAccountHistory({

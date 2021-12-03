@@ -192,7 +192,6 @@ const loadHistory = (
   state = initialLoadHistoryStatusState,
   action: LoadTransferAccountHistoryAction
 ) => {
-  console.log(action.type);
   switch (action.type) {
     case LoadTransferAccountHistoryActionTypes.LOAD_TRANSFER_ACCOUNT_HISTORY_REQUEST:
       return { ...state, isRequesting: true };
