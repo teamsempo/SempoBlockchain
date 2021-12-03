@@ -12,9 +12,10 @@ class AuditHistory(ModelBase):
                                            primaryjoin='AuditHistory.change_by_id == User.id',
                                            lazy=True,
                                            uselist=False)
+                                           
     column_name                 = db.Column(db.String)
     old_value                   = db.Column(db.String)
     new_value                   = db.Column(db.String)
 
-    foreign_table_name = db.Column(db.String, index=True)
-    foreign_id = db.Column(db.Integer, index=True)
+    foreign_table_name          = db.Column(db.String, index=True)
+    foreign_id                  = db.Column(db.Integer, index=True)
