@@ -4,12 +4,13 @@ from flask.views import MethodView
 from server import db
 from server.models.utils import paginate_query
 from server.models.user import User
-from server.schemas import user_schema, users_schema
+from server.schemas import user_schema, users_schema, audit_histories_schema
 from server.utils.auth import requires_auth
 from server.utils.access_control import AccessControl
 from server.utils import user as UserUtils
 from server.utils.auth import multi_org
 from server.utils.attribute_preprocessor import standard_user_preprocess
+from server.utils.audit_history import get_audit_history
 
 from server.constants import CREATE_USER_SETTINGS
 
@@ -230,6 +231,20 @@ class ResetPinAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 400
 
+class AuditHistoryAPI(MethodView):
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'}) 
+    def get(self, user_id):
+        history = get_audit_history(user_id, User.__tablename__)
+
+        response_object = {
+            'status': 'success',
+            'message': 'Successfully Loaded.',
+            'data': {
+                'changes': audit_histories_schema.dump(history).data
+            }
+        }
+
+        return make_response(jsonify(response_object)), 201
 
 # add Rules for API Endpoints
 user_blueprint.add_url_rule(
@@ -250,4 +265,10 @@ user_blueprint.add_url_rule(
     view_func=ResetPinAPI.as_view('reset_pin'),
     methods=['POST'],
     defaults={'user_id': None}
+)
+
+user_blueprint.add_url_rule(
+    '/user/history/<int:user_id>/',
+    view_func=AuditHistoryAPI.as_view('audit_user_history_view'),
+    methods=['GET']
 )

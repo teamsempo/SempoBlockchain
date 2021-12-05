@@ -54,7 +54,8 @@ def standard_executor_job(func):
             if g and g.get('active_organisation'):
                 g.active_organisation = db.session.query(Organisation).filter(Organisation.id == g.active_organisation.id).first() 
                 db.session.merge(g.active_organisation)
-                db.session.merge(g.active_organisation.token)
+                if g.active_organisation.token:
+                    db.session.merge(g.active_organisation.token)
             if g and g.get('user'):
                 g.user = db.session.query(User).filter(User.id == g.user.id).first() 
                 db.session.merge(g.user)

@@ -6,6 +6,7 @@ from server import db
 from server.models.utils import ModelBase
 import server.models.credit_transfer
 from server.utils.transfer_enums import TransferTypeEnum, TransferStatusEnum, TransferSubTypeEnum
+from server.utils.audit_history import manually_add_history_entry
 from server.exceptions import NoTransferCardError
 
 
@@ -36,6 +37,8 @@ class TransferCard(ModelBase):
     def disable(self):
         # disabling cards is permanent, hence no setter to enable a disabled card
         self._is_disabled = True
+        # Adds disabling a card to audit history
+        manually_add_history_entry('user', self.user_id, 'Transfer Card', 'Enabled', 'Disabled')
 
     @hybrid_property
     def is_disabled(self):
