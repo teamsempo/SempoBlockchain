@@ -6,7 +6,6 @@ from sqlalchemy import func, asc, desc
 
 from server import db
 from server.models.utils import paginate_query
-from server.models.audit_history import AuditHistory
 from server.models.transfer_account import TransferAccount, TransferAccountType
 from server.schemas import transfer_accounts_schema, transfer_account_schema, \
     view_transfer_account_schema, view_transfer_accounts_schema, audit_histories_schema
