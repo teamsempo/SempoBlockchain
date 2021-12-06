@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { connect } from "react-redux";
 
 import {
@@ -15,8 +15,6 @@ import {
 } from "antd";
 
 import { StopOutlined, RedoOutlined } from "@ant-design/icons";
-
-import HistoryDrawer from "../history/historyDrawer";
 
 import { GenderTypes } from "./types";
 import ProfilePicture from "../profilePicture";
@@ -56,7 +54,7 @@ interface OuterProps {
   onResetPin: () => void;
   onDeleteUser: () => void;
   onDisableCard: () => void;
-  onViewHistory:() => void;
+  onViewHistory: () => void;
 }
 
 interface StateProps {
@@ -206,9 +204,14 @@ const EditUserForm = (props: Props) => {
               <Button
                 type="primary"
                 onClick={props.onViewHistory}
-                hidden={!(props.adminTier === 'superadmin' || props.adminTier === 'sempoadmin')}
+                hidden={
+                  !(
+                    props.adminTier === "superadmin" ||
+                    props.adminTier === "sempoadmin"
+                  )
+                }
               >
-                  View History
+                View History
               </Button>
               <Button
                 type="text"
@@ -400,8 +403,8 @@ const EditUserForm = (props: Props) => {
         <br />
 
         {Object.keys(customAttributes || {}).length >= 1 ||
-          businessUsageName ||
-          "" ? (
+        businessUsageName ||
+        "" ? (
           <Card title={"Other Attributes"}>
             <Row gutter={24}>{custom_attribute_list || null}</Row>
             {transferUsages.length > 0 ? (
@@ -468,7 +471,7 @@ const mapStateToProps = (state: ReduxState): StateProps => {
     viewHistory: state.viewHistory,
     // @ts-ignore
     activeOrganisation: state.organisations.byId[state.login.organisationId],
-    adminTier: state.login.adminTier,
+    adminTier: state.login.adminTier
   };
 };
 
