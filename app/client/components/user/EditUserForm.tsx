@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { connect } from "react-redux";
 
 import {
@@ -15,6 +15,8 @@ import {
 } from "antd";
 
 import { StopOutlined, RedoOutlined } from "@ant-design/icons";
+
+import HistoryDrawer from "../history/historyDrawer";
 
 import { GenderTypes } from "./types";
 import ProfilePicture from "../profilePicture";
@@ -54,10 +56,14 @@ interface OuterProps {
   onResetPin: () => void;
   onDeleteUser: () => void;
   onDisableCard: () => void;
+  onViewHistory:() => void;
 }
 
 interface StateProps {
   activeOrganisation: Organisation;
+  viewHistory: boolean;
+  history: [];
+  adminTier: any;
 }
 
 type Props = OuterProps & StateProps & IEditUser;
@@ -193,11 +199,17 @@ const EditUserForm = (props: Props) => {
     <div style={{ display: "flex", flexDirection: "column" }}>
       <Form onFinish={onFinish} layout="vertical" form={form}>
         <br />
-
         <Card
           title={"User Details"}
           extra={
             <Space>
+              <Button
+                type="primary"
+                onClick={props.onViewHistory}
+                hidden={!(props.adminTier === 'superadmin' || props.adminTier === 'sempoadmin')}
+              >
+                  View History
+              </Button>
               <Button
                 type="text"
                 danger
@@ -451,8 +463,12 @@ const EditUserForm = (props: Props) => {
 
 const mapStateToProps = (state: ReduxState): StateProps => {
   return {
+    history: state.users.loadHistory.changes,
     // @ts-ignore
-    activeOrganisation: state.organisations.byId[state.login.organisationId]
+    viewHistory: state.viewHistory,
+    // @ts-ignore
+    activeOrganisation: state.organisations.byId[state.login.organisationId],
+    adminTier: state.login.adminTier,
   };
 };
 

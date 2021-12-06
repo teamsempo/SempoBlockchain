@@ -12,7 +12,10 @@ import NewTransferManager from "../management/newTransferManager.jsx";
 import HistoryDrawer from "../history/historyDrawer.tsx";
 import DateTime from "../dateTime.tsx";
 
-import { EditTransferAccountAction } from "../../reducers/transferAccount/actions";
+import {
+  EditTransferAccountAction,
+  LoadTransferAccountHistoryAction
+} from "../../reducers/transferAccount/actions";
 import { formatMoney } from "../../utils";
 import { TransferAccountTypes } from "./types";
 
@@ -21,9 +24,11 @@ const { Option } = Select;
 
 const mapStateToProps = (state, ownProps) => {
   return {
+    adminTier: state.login.adminTier,
     login: state.login,
     creditTransfers: state.creditTransfers,
     transferAccounts: state.transferAccounts,
+    transferAccountHistory: state.transferAccounts.loadHistory.changes,
     users: state.users,
     tokens: state.tokens,
     transferAccount:
@@ -36,6 +41,12 @@ const mapDispatchToProps = dispatch => {
     editTransferAccountRequest: (body, path) =>
       dispatch(
         EditTransferAccountAction.editTransferAccountRequest({ body, path })
+      ),
+    loadTransferAccountHistoryAction: path =>
+      dispatch(
+        LoadTransferAccountHistoryAction.loadTransferAccountHistoryRequest({
+          path
+        })
       )
   };
 };
@@ -162,6 +173,11 @@ class TransferAccountManager extends React.Component {
     this.setState(prevState => ({
       viewHistory: !prevState.viewHistory
     }));
+    if (!this.state.viewHistory) {
+      this.props.loadTransferAccountHistoryAction(
+        this.props.transfer_account_id
+      );
+    }
   }
 
   onNewTransfer() {
@@ -242,7 +258,16 @@ class TransferAccountManager extends React.Component {
             <Button onClick={this.onNewTransfer} label={"New Transfer"}>
               New Transfer
             </Button>
-            <Button onClick={this.onViewHistory} label={"View History"}>
+            <Button
+              hidden={
+                !(
+                  this.props.adminTier === "superadmin" ||
+                  this.props.adminTier === "sempoadmin"
+                )
+              }
+              onClick={this.onViewHistory}
+              label={"View History"}
+            >
               View Account History
             </Button>
             <Button
@@ -308,7 +333,7 @@ class TransferAccountManager extends React.Component {
         <HistoryDrawer
           drawerVisible={this.state.viewHistory}
           onClose={() => this.onViewHistory()}
-          id={this.props.transfer_account_id}
+          changes={this.props.transferAccountHistory}
         />
         <NewTransferManager
           modalVisible={this.state.newTransfer}

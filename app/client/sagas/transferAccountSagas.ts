@@ -128,10 +128,6 @@ function* watchLoadTransferAccounts() {
   );
 }
 
-function* updateStateFromTransferAccountHistory(data: any) {
-  yield call(loadTransferAccountHistoryAPI, payload);
-}
-
 function* loadTransferAccountHistory({
   payload
 }: TransferAccountLoadHistoryApiResult) {
