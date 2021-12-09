@@ -50,7 +50,7 @@ jobs:
           name: Build JS client
           command: |
             cd ./app
-            if [ -f ~/project/PrevClientHash.txt ] && [ "$(cat ~/project/PrevClientHash.txt)" == "$(cat ~/project/ThisClientHash.txt)" ]; then echo build found; else npm run build; fi
+            if [ -f ~/project/PrevClientHash.txt ] && [ "$(cat ~/project/PrevClientHash.txt)" == "$(cat ~/project/ThisClientHash.txt)" ]; then echo build found; else npm run build --max_old_space_size=2048; fi
       - run:
           name: Generate New 'Previous Client Hash'
           command: |
