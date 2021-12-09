@@ -38,7 +38,7 @@ jobs:
       - run:
           name: Generate Client Hash For This Build
           command: |
-            find ~/project/app/client/ ~/project/app/package.json -type f -print0 | sort -z | xargs -0 sha1sum | sha1sum  > ~/project/ThisClientHash.txt
+            find ~/project/app/client/ ~/project/app/package.json -type f -print0 | sort -z | xargs -0 sha1sum | sha1sum | head -n1 | awk '{print $1;}'  > ~/project/ThisClientHash.txt
       - restore_cache:
           keys:
             - client_build-v1-{{ checksum "~/project/ThisClientHash.txt" }}

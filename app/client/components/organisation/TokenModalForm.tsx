@@ -127,7 +127,6 @@ const TokenModalForm: React.FC<IProps> = props => {
 };
 
 const mapStateToProps = (state: any): StateProps => {
-  console.log("abc");
   return {
     tokens: state.tokens
   };
