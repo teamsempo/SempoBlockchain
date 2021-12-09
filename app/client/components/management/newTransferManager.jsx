@@ -28,7 +28,7 @@ class NewTransferManager extends React.Component {
     this.state = {
       action: "select",
       create_transfer_type: "DISBURSEMENT",
-      transfer_amount: 0
+      transfer_amount: ""
     };
     this.handleChange = this.handleChange.bind(this);
     this.handleClick = this.handleClick.bind(this);
@@ -59,7 +59,7 @@ class NewTransferManager extends React.Component {
 
     if (
       this.state.transfer_amount > 0 ||
-      (this.state.transfer_amount === 0 && transfer_type === "BALANCE")
+      (this.state.transfer_amount === "0" && transfer_type === "BALANCE")
     ) {
       if (this.props.transfer_account_ids.length > 1) {
         // BULK TRANSFER
