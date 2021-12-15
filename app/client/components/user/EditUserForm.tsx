@@ -202,7 +202,15 @@ const EditUserForm = (props: Props) => {
           extra={
             <Space>
               <Button
-                type="primary"
+                type="text"
+                danger
+                onClick={props.onDeleteUser}
+                loading={users.deleteStatus.isRequesting}
+              >
+                Delete
+              </Button>
+              <Button
+                type="default"
                 onClick={props.onViewHistory}
                 hidden={
                   !(
@@ -212,14 +220,6 @@ const EditUserForm = (props: Props) => {
                 }
               >
                 View History
-              </Button>
-              <Button
-                type="text"
-                danger
-                onClick={props.onDeleteUser}
-                loading={users.deleteStatus.isRequesting}
-              >
-                Delete
               </Button>
               <Form.Item style={{ margin: 0 }}>
                 <Button

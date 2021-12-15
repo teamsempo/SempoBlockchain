@@ -2,6 +2,8 @@ import React from "react";
 import { Drawer, Timeline } from "antd";
 import { connect } from "react-redux";
 import { toTitleCase, replaceUnderscores } from "../../utils";
+import DateTime from "../dateTime";
+
 interface Props {
   drawerVisible: boolean;
   onClose: any;
@@ -15,12 +17,15 @@ class HistoryDrawer extends React.Component<Props> {
 
   render() {
     const stringList = this.props.changes.map(change => {
-      return `${toTitleCase(
-        replaceUnderscores(change.column_name)
-      )} changed from "${change.old_value}" to "${change.new_value}" by ${
-        change.change_by.email
-      }`;
+      return {
+        item: `${toTitleCase(
+          replaceUnderscores(change.column_name)
+        )} changed from "${change.old_value}" to "${change.new_value}"`,
+        date: change.created,
+        email: change.change_by.email
+      };
     });
+
     return (
       <Drawer
         title="Account History"
@@ -30,8 +35,11 @@ class HistoryDrawer extends React.Component<Props> {
         width={500}
       >
         <Timeline>
-          {stringList.map(item => (
-            <Timeline.Item>{item}</Timeline.Item>
+          {stringList.map((item, index) => (
+            <Timeline.Item key={index}>
+              {item.item} by <a href={"mailto://" + item.email}>{item.email}</a>{" "}
+              at <DateTime created={item.date} useRelativeTime={false} />
+            </Timeline.Item>
           ))}
         </Timeline>
       </Drawer>
