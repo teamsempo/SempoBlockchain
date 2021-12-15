@@ -486,7 +486,7 @@ class InternalCreditTransferAPI(MethodView):
         contract_address = post_data.get('contract_address')
 
         transfer = CreditTransfer.query.execution_options(show_all=True).filter_by(blockchain_hash=blockchain_transaction_hash).first()
-        # Case 1: Transfer exists in the database already. Mark received_third_party_sync as true, fetech it, and return it in that case
+        # Case 1: Transfer exists in the database already. Mark received_third_party_sync as true, fetch it, and return it in that case
         if transfer:
             transfer.received_third_party_sync = True
             credit_transfer = credit_transfer_schema.dump(transfer).data
@@ -534,7 +534,7 @@ class InternalCreditTransferAPI(MethodView):
                         'message': 'Only external users involved in this transfer',
                         'data': {}
                     }
-            # Case 4: One or both of the transfer accounts are affiliated with Sempo accounts. 
+            # Case 4: One or both of the transfer accounts are affiliated with Sempo accounts.
             # This is the only case where we want to generate a new CreditTransfer object.
             else:
                 send_transfer_account = create_transfer_account_if_required(sender_blockchain_address, token, TransferAccountType.EXTERNAL)
@@ -547,7 +547,8 @@ class InternalCreditTransferAPI(MethodView):
                     transfer_type=TransferTypeEnum.PAYMENT,
                     sender_user=maybe_sender_user,
                     recipient_user=maybe_recipient_user,
-                    require_sufficient_balance=False
+                    require_sufficient_balance=False,
+                    received_third_party_sync=True
                 )
 
                 transfer.resolve_as_complete_with_existing_blockchain_transaction(
