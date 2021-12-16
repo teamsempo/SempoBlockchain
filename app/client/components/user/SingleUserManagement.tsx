@@ -2,6 +2,7 @@ import * as React from "react";
 import { connect } from "react-redux";
 import { message } from "antd";
 
+import HistoryDrawer from "../history/historyDrawer";
 import {
   LoadTransferUsagePayload,
   TransferUsage
@@ -11,7 +12,8 @@ import EditUserForm, { IEditUser } from "./EditUserForm";
 import {
   DeleteUserAction,
   EditUserAction,
-  ResetPinAction
+  ResetPinAction,
+  LoadUserHistoryAction
 } from "../../reducers/user/actions";
 import {
   User,
@@ -23,6 +25,7 @@ import { EditTransferCardAction } from "../../reducers/transferCard/actions";
 import { LoadTransferUsagesAction } from "../../reducers/transferUsage/actions";
 
 interface DispatchProps {
+  getHistory: (path: number) => LoadUserHistoryAction;
   loadUsages: (payload: LoadTransferUsagePayload) => LoadTransferUsagesAction;
   editUser: (body: User, path: number) => EditUserAction;
   resetPin: (payload: ResetPinPayload) => ResetPinAction;
@@ -38,6 +41,7 @@ interface StateProps {
   transferCard: ReduxState["transferCard"];
   users: ReduxState["users"];
   selectedUser: any;
+  history: [];
   transferUsages: TransferUsage[];
 }
 
@@ -52,6 +56,12 @@ interface attr_dict {
 }
 
 class SingleUserManagement extends React.Component<Props> {
+  constructor(props: any) {
+    super(props);
+    this.state = {
+      viewHistory: false
+    };
+  }
   onEditUser(form: IEditUser) {
     const { selectedUser } = this.props;
 
@@ -137,18 +147,32 @@ class SingleUserManagement extends React.Component<Props> {
     );
   }
 
+  onViewHistory() {
+    this.setState(prevState => ({
+      viewHistory: !prevState.viewHistory
+    }));
+    this.props.getHistory(this.props.selectedUser.id);
+  }
   render() {
     return (
-      <EditUserForm
-        transferCard={this.props.transferCard}
-        users={this.props.users}
-        selectedUser={this.props.selectedUser}
-        transferUsages={this.props.transferUsages}
-        onSubmit={(form: IEditUser) => this.onEditUser(form)}
-        onResetPin={() => this.onResetPin()}
-        onDeleteUser={() => this.onDeleteUser()}
-        onDisableCard={() => this.onDisableCard()}
-      />
+      <div>
+        <HistoryDrawer
+          drawerVisible={this.state.viewHistory}
+          onClose={() => this.onViewHistory()}
+          changes={this.props.history}
+        />
+        <EditUserForm
+          transferCard={this.props.transferCard}
+          users={this.props.users}
+          selectedUser={this.props.selectedUser}
+          transferUsages={this.props.transferUsages}
+          onSubmit={(form: IEditUser) => this.onEditUser(form)}
+          onResetPin={() => this.onResetPin()}
+          onDeleteUser={() => this.onDeleteUser()}
+          onDisableCard={() => this.onDisableCard()}
+          onViewHistory={() => this.onViewHistory()}
+        />
+      </div>
     );
   }
 }
@@ -158,12 +182,15 @@ const mapStateToProps = (state: ReduxState, ownProps: any): StateProps => {
     transferCard: state.transferCard,
     users: state.users,
     selectedUser: state.users.byId[parseInt(ownProps.userId)],
+    history: state.users.loadHistory.changes,
     transferUsages: state.transferUsages.transferUsages
   };
 };
 
 const mapDispatchToProps = (dispatch: any): DispatchProps => {
   return {
+    getHistory: (path: number) =>
+      dispatch(LoadUserHistoryAction.loadUserHistoryRequest({ path })),
     loadUsages: payload =>
       dispatch(LoadTransferUsagesAction.loadTransferUsagesRequest(payload)),
     editUser: (body: User, path: number) =>

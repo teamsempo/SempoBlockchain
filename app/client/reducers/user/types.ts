@@ -46,9 +46,24 @@ export enum LoadUserActionTypes {
   LOAD_USER_FAILURE = "LOAD_USER_FAILURE"
 }
 
+export enum LoadUserHistoryActionTypes {
+  LOAD_USER_HISTORY_REQUEST = "LOAD_USER_HISTORY_REQUEST",
+  LOAD_USER_HISTORY_SUCCESS = "LOAD_USER_HISTORY_SUCCESS",
+  LOAD_USER_HISTORY_FAILURE = "LOAD_USER_HISTORY_FAILURE"
+}
+
 export interface LoadUserRequestPayload {
   query?: {};
   path: number;
+}
+
+export interface UserLoadHistoryApiResult {
+  type: typeof LoadUserHistoryActionTypes.LOAD_USER_HISTORY_REQUEST;
+  payload: any;
+}
+export interface LoadUserHistoryPayload {
+  query?: {};
+  path?: number;
 }
 
 export enum EditUserActionTypes {

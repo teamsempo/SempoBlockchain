@@ -9,9 +9,13 @@ import {
 } from "@ant-design/icons";
 
 import NewTransferManager from "../management/newTransferManager.jsx";
+import HistoryDrawer from "../history/historyDrawer.tsx";
 import DateTime from "../dateTime.tsx";
 
-import { EditTransferAccountAction } from "../../reducers/transferAccount/actions";
+import {
+  EditTransferAccountAction,
+  LoadTransferAccountHistoryAction
+} from "../../reducers/transferAccount/actions";
 import { formatMoney } from "../../utils";
 import { TransferAccountTypes } from "./types";
 
@@ -20,9 +24,11 @@ const { Option } = Select;
 
 const mapStateToProps = (state, ownProps) => {
   return {
+    adminTier: state.login.adminTier,
     login: state.login,
     creditTransfers: state.creditTransfers,
     transferAccounts: state.transferAccounts,
+    transferAccountHistory: state.transferAccounts.loadHistory.changes,
     users: state.users,
     tokens: state.tokens,
     transferAccount:
@@ -35,6 +41,12 @@ const mapDispatchToProps = dispatch => {
     editTransferAccountRequest: (body, path) =>
       dispatch(
         EditTransferAccountAction.editTransferAccountRequest({ body, path })
+      ),
+    loadTransferAccountHistoryAction: path =>
+      dispatch(
+        LoadTransferAccountHistoryAction.loadTransferAccountHistoryRequest({
+          path
+        })
       )
   };
 };
@@ -47,6 +59,7 @@ class TransferAccountManager extends React.Component {
       transfer_type: "ALL",
       create_transfer_type: "RECLAMATION",
       newTransfer: false,
+      viewHistory: false,
       transfer_amount: "",
       showSpreadsheetData: true,
       balance: "",
@@ -62,6 +75,7 @@ class TransferAccountManager extends React.Component {
     this.handleChange = this.handleChange.bind(this);
     this.editTransferAccount = this.editTransferAccount.bind(this);
     this.onNewTransfer = this.onNewTransfer.bind(this);
+    this.onViewHistory = this.onViewHistory.bind(this);
   }
 
   componentDidMount() {
@@ -155,6 +169,17 @@ class TransferAccountManager extends React.Component {
     this.setState({ is_approved: status });
   }
 
+  onViewHistory() {
+    this.setState(prevState => ({
+      viewHistory: !prevState.viewHistory
+    }));
+    if (!this.state.viewHistory) {
+      this.props.loadTransferAccountHistoryAction(
+        this.props.transfer_account_id
+      );
+    }
+  }
+
   onNewTransfer() {
     this.setState(prevState => ({
       newTransfer: !prevState.newTransfer
@@ -234,6 +259,18 @@ class TransferAccountManager extends React.Component {
               New Transfer
             </Button>
             <Button
+              hidden={
+                !(
+                  this.props.adminTier === "superadmin" ||
+                  this.props.adminTier === "sempoadmin"
+                )
+              }
+              onClick={this.onViewHistory}
+              label={"View History"}
+            >
+              View Account History
+            </Button>
+            <Button
               type="primary"
               onClick={this.editTransferAccount}
               loading={this.props.transferAccounts.editStatus.isRequesting}
@@ -293,6 +330,11 @@ class TransferAccountManager extends React.Component {
             </Select>
           </Descriptions.Item>
         </Descriptions>
+        <HistoryDrawer
+          drawerVisible={this.state.viewHistory}
+          onClose={() => this.onViewHistory()}
+          changes={this.props.transferAccountHistory}
+        />
         <NewTransferManager
           modalVisible={this.state.newTransfer}
           transfer_account_ids={[this.props.transfer_account_id]}
