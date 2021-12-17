@@ -54,10 +54,14 @@ interface OuterProps {
   onResetPin: () => void;
   onDeleteUser: () => void;
   onDisableCard: () => void;
+  onViewHistory: () => void;
 }
 
 interface StateProps {
   activeOrganisation: Organisation;
+  viewHistory: boolean;
+  history: [];
+  adminTier: any;
 }
 
 type Props = OuterProps & StateProps & IEditUser;
@@ -193,7 +197,6 @@ const EditUserForm = (props: Props) => {
     <div style={{ display: "flex", flexDirection: "column" }}>
       <Form onFinish={onFinish} layout="vertical" form={form}>
         <br />
-
         <Card
           title={"User Details"}
           extra={
@@ -205,6 +208,18 @@ const EditUserForm = (props: Props) => {
                 loading={users.deleteStatus.isRequesting}
               >
                 Delete
+              </Button>
+              <Button
+                type="default"
+                onClick={props.onViewHistory}
+                hidden={
+                  !(
+                    props.adminTier === "superadmin" ||
+                    props.adminTier === "sempoadmin"
+                  )
+                }
+              >
+                View History
               </Button>
               <Form.Item style={{ margin: 0 }}>
                 <Button
@@ -388,8 +403,8 @@ const EditUserForm = (props: Props) => {
         <br />
 
         {Object.keys(customAttributes || {}).length >= 1 ||
-          businessUsageName ||
-          "" ? (
+        businessUsageName ||
+        "" ? (
           <Card title={"Other Attributes"}>
             <Row gutter={24}>{custom_attribute_list || null}</Row>
             {transferUsages.length > 0 ? (
@@ -451,8 +466,12 @@ const EditUserForm = (props: Props) => {
 
 const mapStateToProps = (state: ReduxState): StateProps => {
   return {
+    history: state.users.loadHistory.changes,
     // @ts-ignore
-    activeOrganisation: state.organisations.byId[state.login.organisationId]
+    viewHistory: state.viewHistory,
+    // @ts-ignore
+    activeOrganisation: state.organisations.byId[state.login.organisationId],
+    adminTier: state.login.adminTier
   };
 };
 

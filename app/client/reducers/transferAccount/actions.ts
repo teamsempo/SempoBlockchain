@@ -5,7 +5,9 @@ import {
   SetTransferAccountActionTypes,
   TransfersByUserId,
   LoadTransferAccountListPayload,
-  EditTransferAccountPayload
+  EditTransferAccountPayload,
+  LoadTransferAccountHistoryActionTypes,
+  TransferAccountLoadHistoryApiResult
 } from "./types";
 import { CreditTransfer } from "../creditTransfer/types";
 import { createAction, ActionsUnion } from "../../reduxUtils";
@@ -30,7 +32,6 @@ export const updateTransferAccountIdList = (IdList: number[]) =>
     TransferAccountActionTypes.UPDATE_TRANSFER_ACCOUNT_ID_LIST,
     IdList
   );
-
 
 export const updateTransferAccountPagination = (items: number) =>
   createAction(
@@ -125,4 +126,35 @@ export const EditTransferAccountAction = {
 
 export type EditTransferAccountAction = ActionsUnion<
   typeof EditTransferAccountAction
+>;
+
+export const loadTransferAccountHistoryRequest = (
+  payload: LoadTransferAccountListPayload
+) =>
+  createAction(
+    LoadTransferAccountHistoryActionTypes.LOAD_TRANSFER_ACCOUNT_HISTORY_REQUEST,
+    payload
+  );
+
+export const loadTransferAccountHistorySuccess = (
+  result: TransferAccountLoadHistoryApiResult
+) =>
+  createAction(
+    LoadTransferAccountHistoryActionTypes.LOAD_TRANSFER_ACCOUNT_HISTORY_SUCCESS,
+    result
+  );
+
+export const loadTransferAccountHistoryFailure = (error: string) =>
+  createAction(
+    LoadTransferAccountHistoryActionTypes.LOAD_TRANSFER_ACCOUNT_HISTORY_FAILURE,
+    error
+  );
+
+export const LoadTransferAccountHistoryAction = {
+  loadTransferAccountHistoryRequest,
+  loadTransferAccountHistorySuccess,
+  loadTransferAccountHistoryFailure
+};
+export type LoadTransferAccountHistoryAction = ActionsUnion<
+  typeof LoadTransferAccountHistoryAction
 >;

@@ -7,7 +7,8 @@ import {
   LoadUserActionTypes,
   EditUserActionTypes,
   DeleteUserActionTypes,
-  ResetPinActionTypes
+  ResetPinActionTypes,
+  LoadUserHistoryActionTypes
 } from "./types";
 import {
   UserListAction,
@@ -15,7 +16,8 @@ import {
   EditUserAction,
   LoadUserAction,
   DeleteUserAction,
-  ResetPinAction
+  ResetPinAction,
+  LoadUserHistoryAction
 } from "./actions";
 
 import { DEEEEEEP } from "../../utils";
@@ -153,11 +155,51 @@ const createStatus = (
   }
 };
 
+interface LoadHistoryStatusState {
+  isRequesting: boolean;
+  error?: Error | null | string;
+  success: Boolean;
+  changes: any;
+  visible: boolean;
+}
+
+const initialLoadHistoryStatusState: LoadHistoryStatusState = {
+  isRequesting: false,
+  error: null,
+  success: false,
+  changes: [],
+  visible: false
+};
+
+const loadHistory = (
+  state = initialLoadHistoryStatusState,
+  action: LoadUserHistoryAction
+) => {
+  switch (action.type) {
+    case LoadUserHistoryActionTypes.LOAD_USER_HISTORY_REQUEST:
+      return { ...state, isRequesting: true };
+
+    case LoadUserHistoryActionTypes.LOAD_USER_HISTORY_SUCCESS:
+      return {
+        ...state,
+        isRequesting: false,
+        success: true,
+        changes: action.payload
+      };
+
+    case LoadUserHistoryActionTypes.LOAD_USER_HISTORY_FAILURE:
+      return { ...state, isRequesting: false, error: action.error };
+
+    default:
+      return state;
+  }
+};
 export const users = combineReducers({
   byId,
   loadStatus,
   editStatus,
   deleteStatus,
   createStatus,
-  pinStatus
+  pinStatus,
+  loadHistory
 });

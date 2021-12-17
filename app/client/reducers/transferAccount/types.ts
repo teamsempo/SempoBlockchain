@@ -13,13 +13,19 @@ export enum TransferAccountActionTypes {
   DEEP_UPDATE_TRANSFER_ACCOUNTS = "DEEP_UPDATE_TRANSFER_ACCOUNTS",
   UPDATE_TRANSFER_ACCOUNTS_CREDIT_TRANSFERS = "UPDATE_TRANSFER_ACCOUNTS_CREDIT_TRANSFERS",
   UPDATE_TRANSFER_ACCOUNTS = "UPDATE_TRANSFER_ACCOUNTS",
-  UPDATE_TRANSFER_ACCOUNT_ID_LIST = "UPDATE_TRANSFER_ACCOUNT_ID_LIST",
+  UPDATE_TRANSFER_ACCOUNT_ID_LIST = "UPDATE_TRANSFER_ACCOUNT_ID_LIST"
 }
 
 export enum LoadTransferAccountActionTypes {
   LOAD_TRANSFER_ACCOUNTS_REQUEST = "LOAD_TRANSFER_ACCOUNTS_REQUEST",
   LOAD_TRANSFER_ACCOUNTS_SUCCESS = "LOAD_TRANSFER_ACCOUNTS_SUCCESS",
   LOAD_TRANSFER_ACCOUNTS_FAILURE = "LOAD_TRANSFER_ACCOUNTS_FAILURE"
+}
+
+export enum LoadTransferAccountHistoryActionTypes {
+  LOAD_TRANSFER_ACCOUNT_HISTORY_REQUEST = "LOAD_TRANSFER_ACCOUNT_HISTORY_REQUEST",
+  LOAD_TRANSFER_ACCOUNT_HISTORY_SUCCESS = "LOAD_TRANSFER_ACCOUNT_HISTORY_SUCCESS",
+  LOAD_TRANSFER_ACCOUNT_HISTORY_FAILURE = "LOAD_TRANSFER_ACCOUNT_HISTORY_FAILURE"
 }
 
 export enum EditTransferAccountActionTypes {
@@ -50,6 +56,10 @@ export interface TransferAccountLoadApiResult {
   payload: any;
 }
 
+export interface TransferAccountLoadHistoryApiResult {
+  type: typeof LoadTransferAccountHistoryActionTypes.LOAD_TRANSFER_ACCOUNT_HISTORY_REQUEST;
+  payload: any;
+}
 export interface TransferAccountEditApiResult {
   type: typeof EditTransferAccountActionTypes.EDIT_TRANSFER_ACCOUNT_REQUEST;
   payload: any;
@@ -65,6 +75,11 @@ export interface TransfersByUserId {
 }
 
 export interface LoadTransferAccountListPayload {
+  query?: {};
+  path?: number;
+}
+
+export interface LoadTransferAccountHistoryPayload {
   query?: {};
   path?: number;
 }

@@ -10,7 +10,8 @@ import {
   editUserAPI,
   deleteUserAPI,
   createUserAPI,
-  resetPinAPI
+  resetPinAPI,
+  loadUserHistoryAPI
 } from "../api/userAPI";
 
 import { TransferAccountAction } from "../reducers/transferAccount/actions";
@@ -22,7 +23,8 @@ import {
   EditUserAction,
   LoadUserAction,
   ResetPinAction,
-  UserListAction
+  UserListAction,
+  LoadUserHistoryAction
 } from "../reducers/user/actions";
 
 import {
@@ -36,6 +38,8 @@ import {
   LoadUserRequestPayload,
   ResetPinActionTypes,
   ResetPinPayload,
+  LoadUserHistoryActionTypes,
+  UserLoadHistoryApiResult,
   UserData,
   UserByIDs
 } from "../reducers/user/types";
@@ -206,12 +210,35 @@ function* watchCreateUser() {
   yield takeEvery(CreateUserActionTypes.CREATE_USER_REQUEST, createUser);
 }
 
+function* loadUserHistory({ payload }: UserLoadHistoryApiResult) {
+  try {
+    const load_result = yield call(loadUserHistoryAPI, payload);
+    yield put(
+      LoadUserHistoryAction.loadUserHistorySuccess(load_result.data.changes)
+    );
+  } catch (fetch_error) {
+    const error = yield call(handleError, fetch_error);
+
+    yield put(LoadUserHistoryAction.loadUserHistoryFailure(error.message));
+
+    message.error(error.message);
+  }
+}
+
+function* watchLoadUserHistory() {
+  yield takeEvery(
+    LoadUserHistoryActionTypes.LOAD_USER_HISTORY_REQUEST,
+    loadUserHistory
+  );
+}
+
 export default function* userSagas() {
   yield all([
     watchLoadUser(),
     watchEditUser(),
     watchDeleteUser(),
     watchCreateUser(),
-    watchResetPin()
+    watchResetPin(),
+    watchLoadUserHistory()
   ]);
 }

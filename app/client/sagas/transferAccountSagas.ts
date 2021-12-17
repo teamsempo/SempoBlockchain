@@ -8,7 +8,8 @@ import { transferAccountSchema } from "../schemas";
 import {
   LoadTransferAccountAction,
   TransferAccountAction,
-  EditTransferAccountAction
+  EditTransferAccountAction,
+  LoadTransferAccountHistoryAction
 } from "../reducers/transferAccount/actions";
 import { LoadCreditTransferAction } from "../reducers/creditTransfer/actions";
 import { UserListAction } from "../reducers/user/actions";
@@ -16,9 +17,11 @@ import { TokenListAction } from "../reducers/token/actions";
 
 import {
   LoadTransferAccountActionTypes,
+  LoadTransferAccountHistoryActionTypes,
   EditTransferAccountActionTypes,
   TransferAccountEditApiResult,
   TransferAccountLoadApiResult,
+  TransferAccountLoadHistoryApiResult,
   LoadTransferAccountListPayload
 } from "../reducers/transferAccount/types";
 
@@ -30,7 +33,8 @@ import {
 
 import {
   loadTransferAccountListAPI,
-  editTransferAccountAPI
+  editTransferAccountAPI,
+  loadTransferAccountHistoryAPI
 } from "../api/transferAccountAPI";
 
 function* updateStateFromTransferAccount(data: TransferAccountData) {
@@ -124,6 +128,36 @@ function* watchLoadTransferAccounts() {
   );
 }
 
+function* loadTransferAccountHistory({
+  payload
+}: TransferAccountLoadHistoryApiResult) {
+  try {
+    const load_result = yield call(loadTransferAccountHistoryAPI, payload);
+    yield put(
+      LoadTransferAccountHistoryAction.loadTransferAccountHistorySuccess(
+        load_result.data.changes
+      )
+    );
+  } catch (fetch_error) {
+    const error = yield call(handleError, fetch_error);
+
+    yield put(
+      LoadTransferAccountHistoryAction.loadTransferAccountHistoryFailure(
+        error.message
+      )
+    );
+
+    message.error(error.message);
+  }
+}
+
+function* watchLoadTransferAccountHistory() {
+  yield takeEvery(
+    LoadTransferAccountHistoryActionTypes.LOAD_TRANSFER_ACCOUNT_HISTORY_REQUEST,
+    loadTransferAccountHistory
+  );
+}
+
 function* editTransferAccount({ payload }: TransferAccountEditApiResult) {
   try {
     const edit_response = yield call(editTransferAccountAPI, payload);
@@ -150,5 +184,9 @@ function* watchEditTransferAccount() {
 }
 
 export default function* transferAccountSagas() {
-  yield all([watchLoadTransferAccounts(), watchEditTransferAccount()]);
+  yield all([
+    watchLoadTransferAccounts(),
+    watchEditTransferAccount(),
+    watchLoadTransferAccountHistory()
+  ]);
 }

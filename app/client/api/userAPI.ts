@@ -4,7 +4,8 @@ import {
   DeleteUserPayload,
   EditUserPayload,
   LoadUserRequestPayload,
-  ResetPinPayload
+  ResetPinPayload,
+  LoadUserHistoryPayload
 } from "../reducers/user/types";
 
 export const loadUserAPI = ({ query, path }: LoadUserRequestPayload) =>
@@ -21,3 +22,11 @@ export const deleteUserAPI = ({ path }: DeleteUserPayload) =>
 
 export const resetPinAPI = ({ body }: ResetPinPayload) =>
   apiClient({ url: "/user/reset_pin/", method: "POST", body: body });
+
+export const loadUserHistoryAPI = ({ query, path }: LoadUserHistoryPayload) =>
+  apiClient({
+    url: "/user/history/",
+    method: "GET",
+    query: query,
+    path: path
+  });
