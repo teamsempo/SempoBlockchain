@@ -4,7 +4,7 @@ from pyexcelerate import Workbook
 from datetime import datetime, timedelta
 import random, string, os
 from sqlalchemy import and_, or_, desc
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, aliased
 
 from dateutil import parser
 
@@ -39,13 +39,6 @@ def generate_export(post_data):
     #  TODO: implement date_range
     date_range = post_data.get('date_range')  # last day, previous week, or all
 
-    payable_period_type   = post_data.get('payable_period_type', 'month')        # day, week, month
-    payable_period_length = post_data.get('payable_period_length', 1)      # Integer, ie "payable every _2_ months"
-    payable_epoch         = post_data.get('payable_epoch')              # When did the very first cycle begin?
-
-    payable_period_start_date = post_data.get('payable_period_start_date') # any sort of reasonable date string for custom date period
-    payable_period_end_date = post_data.get('payable_period_end_date')
-
     transfer_account_columns = [
         {'header': 'Account ID',            'query_type': 'db',     'query': 'id'},
         {'header': 'User ID',               'query_type': 'custom', 'query': 'user_id'},
@@ -61,8 +54,6 @@ def generate_export(post_data):
         {'header': 'Current Balance',       'query_type': 'custom', 'query': 'balance'},
         {'header': 'Amount Received',       'query_type': 'custom', 'query': 'received'},
         {'header': 'Amount Sent',           'query_type': 'custom', 'query': 'sent'}
-        # {'header': 'Prev. Period Payable',  'query_type': 'custom', 'query': 'prev_period_payable'},
-        # {'header': 'Total Payable',         'query_type': 'custom', 'query': 'total_payable'},
     ]
 
     credit_transfer_columns = [
@@ -81,7 +72,6 @@ def generate_export(post_data):
     # need to add Balance (Payable)
 
     random_string = ''.join(random.choices(string.ascii_letters, k=5))
-    # TODO MAKE THIS API AUTHED
     time = str(datetime.utcnow())
 
     base_filename = current_app.config['DEPLOYMENT_NAME'] + '-id' + str(g.user.id) + '-' + str(time[0:10]) + '-' + random_string
@@ -92,15 +82,12 @@ def generate_export(post_data):
     wb = Workbook()
     ws = wb.new_sheet("transfer_accounts")
 
-    # ws1 = wb.create_sheet(title='transfer_accounts')
-
     start_date = None
     end_date = None
     user_filter = None
 
     for index, column in enumerate(transfer_account_columns):
         ws[1][index+1] = column['header']
-
 
     # Create transfer_accounts workbook headers
     for index, column in enumerate(transfer_account_columns):
@@ -149,14 +136,28 @@ def generate_export(post_data):
         exclude_accounts = post_data.get('exclude_accounts', [])
 
         if include_accounts:
-            transfer_accounts = db.session.query(TransferAccount).options().filter(TransferAccount.id.in_(include_accounts))
+            transfer_accounts = db.session.query(TransferAccount)\
+                .filter(TransferAccount.id.in_(include_accounts))
             transfer_accounts = partition_query(transfer_accounts)
+            user_accounts = (ta.primary_user for ta in transfer_accounts)
         else:
+            print('search')
+            print('search')
+            print('search')
+            print('search')
+            print('search')
             search_query = generate_search_query(search_string, filters, order=desc, sort_by_arg='rank', include_user=True)
-            search_query = search_query.filter(TransferAccount.id.notin_(exclude_accounts))
+            search_query = search_query.filter(TransferAccount.id.notin_(exclude_accounts))\
+                .options(joinedload(User.transfer_accounts))
+            sender = aliased(User)
+            recipient = aliased(User)
+            transfer_query = search_query.join(sender, sender.id == User.id)\
+                .join(recipient, recipient.id == User.id)\
+                .join(CreditTransfer, or_((recipient.id == CreditTransfer.recipient_user_id), (sender.id == CreditTransfer.sender_user_id)))\
+                .with_entities(CreditTransfer)\
+
             results = partition_query(search_query)
-            transfer_accounts = [r[0] for r in results] # Get TransferAccount (TransferAccount, searchRank, User)
-        user_accounts = [ta.primary_user for ta in transfer_accounts]
+            user_accounts = (r[2] for r in results) # Get TransferAccount (TransferAccount, searchRank, User)        
     else:
         user_accounts = User.query.filter(
             or_(User.has_beneficiary_role == True, User.has_vendor_role == True)
@@ -177,11 +178,10 @@ def generate_export(post_data):
         return make_response(jsonify(response_object)), 201
 
     if user_accounts is not None:
+        
         custom_attribute_columns = []
-
         for index, user_account in enumerate(user_accounts):
             transfer_account = user_account.transfer_account
-
             if transfer_account:
                 for jindix, column in enumerate(transfer_account_columns):
                     if column['query_type'] == 'db':
@@ -210,91 +210,6 @@ def generate_export(post_data):
                     elif column['query'] == 'sent':
                         sent_amount = transfer_account.total_sent
                         cell_contents = sent_amount / 100
-                    elif column['query'] == 'prev_period_payable':
-                        if payable_period_start_date and payable_period_end_date:
-                            prior_period_start = parser.parse(payable_period_start_date)
-                            prior_period_end   = parser.parse(payable_period_end_date)
-                        else:
-                            if payable_epoch is None:
-                                payable_epoch = transfer_account.created
-                            else:
-                                payable_epoch = parser.parse(str(payable_epoch))
-
-                            prior_period_start, prior_period_end = find_last_period_dates(payable_epoch, datetime.utcnow(),payable_period_type,payable_period_length)
-
-                            in_for_period = 0
-
-                        # All funds start of last period, up to end of last period, NOT including after last period
-                        in_transactions = CreditTransfer.query.filter(and_(
-                            CreditTransfer.recipient_transfer_account_id == transfer_account.id,
-                            CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
-                            CreditTransfer.resolved_date.between(prior_period_start,prior_period_end)
-                        ))
-                        in_transactions = partition_query(in_transactions)
-                        for transaction in in_transactions:
-                            in_for_period += transaction.transfer_amount
-
-                        out_for_period = 0
-
-                        # Out transactions DO NOT include reimbursements (withdrawals) from the previous month
-                        out_transactions = CreditTransfer.query.filter(and_(
-                            CreditTransfer.sender_transfer_account_id == transfer_account.id,
-                            CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
-                            CreditTransfer.resolved_date.between(prior_period_start, prior_period_end),
-                            CreditTransfer.transfer_type != TransferTypeEnum.WITHDRAWAL
-                        ))
-                        out_transactions = partition_query(out_transactions)
-
-                        for transaction in out_transactions:
-                            out_for_period += transaction.transfer_amount
-
-                        payable_balance = in_for_period - out_for_period
-
-                        cell_contents = payable_balance/100
-
-                    elif column['query'] == 'total_payable':
-
-                        if  payable_period_end_date:
-                            prior_period_end   = parser.parse(payable_period_end_date)
-                        else:
-
-                            if payable_epoch is None:
-                                payable_epoch = transfer_account.created
-                            else:
-                                payable_epoch = parser.parse(str(payable_epoch))
-
-                            prior_period_start, prior_period_end = find_last_period_dates(payable_epoch, datetime.utcnow(),payable_period_type,payable_period_length)
-
-                        in_for_period = 0
-
-                        # All funds in from epoch, up to end of last period, NOT including after last period
-                        in_transactions = CreditTransfer.query.filter(and_(
-                            CreditTransfer.recipient_transfer_account_id == transfer_account.id,
-                            CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
-                            CreditTransfer.resolved_date.between(payable_epoch,prior_period_end)
-                        ))
-                        in_transactions = partition_query(in_transactions)
-
-                        for transaction in in_transactions:
-                            in_for_period += transaction.transfer_amount
-
-                        out_for_period = 0
-
-                        # All funds out over all time, _including_ withdrawals
-                        out_transactions = CreditTransfer.query.filter(and_(
-                            CreditTransfer.sender_transfer_account_id == transfer_account.id,
-                            CreditTransfer.transfer_status == TransferStatusEnum.COMPLETE,
-                            CreditTransfer.resolved_date.between(payable_epoch, datetime.utcnow())
-                        ))
-                        out_transactions = partition_query(out_transactions)
-
-                        for transaction in out_transactions:
-                            out_for_period += transaction.transfer_amount
-
-                        payable_balance = in_for_period - out_for_period
-
-                        cell_contents = payable_balance/100
-
                     else:
                         cell_contents = ""
 
@@ -317,9 +232,11 @@ def generate_export(post_data):
         if include_custom_attributes:
             for index, column_name in enumerate(custom_attribute_columns):
                 ws[1][index + 1 + len(transfer_account_columns)] = column_name
-
+    print('R')
     if include_transfers and user_accounts is not None:
+        print('--')
         base_credit_transfer_query= CreditTransfer.query.enable_eagerloads(False)
+        base_credit_transfer_query = transfer_query
         if start_date and end_date is not None:
             credit_transfer_list = base_credit_transfer_query.filter(
                 CreditTransfer.created.between(start_date, end_date)
@@ -328,14 +245,15 @@ def generate_export(post_data):
         if date_range == 'all':
             credit_transfer_list = base_credit_transfer_query
 
-        credit_transfer_list = partition_query(credit_transfer_list)
+        credit_transfer_list = base_credit_transfer_query.options(joinedload(CreditTransfer.transfer_usages))
+        #credit_transfer_list = partition_query(credit_transfer_list)
         transfer_sheet = wb.new_sheet("credit_transfers")
-
         # Create credit_transfers workbook headers
         for index, column in enumerate(credit_transfer_columns):
             transfer_sheet[1][index+1] = column['header']
         if credit_transfer_list is not None:
             for index, credit_transfer in enumerate(credit_transfer_list):
+                print(credit_transfer)
                 for jindix, column in enumerate(credit_transfer_columns):
                     if column['query_type'] == 'db':
                         cell_contents = "{0}".format(getattr(credit_transfer, column['query']))
