@@ -44,6 +44,7 @@ def test_get_vendor_payout(test_client, authed_sempo_admin_user, create_transfer
     kyc = KycApplication(type='INDIVIDUAL')
     user.kyc_applications = [kyc]
     user.kyc_applications[0].kyc_status = 'VERIFIED'
+    user.phone = '+19025551234'
     flag_modified(user, '_held_roles')
     db.session.commit()
     
@@ -103,7 +104,7 @@ def test_get_vendor_payout(test_client, authed_sempo_admin_user, create_transfer
     assert transfer.recipient_transfer_account == user.transfer_account.token.float_account
     assert transfer.transfer_status == TransferStatusEnum.PENDING
 
-def test_process_vendor_payout_approve(test_client, authed_sempo_admin_user, create_transfer_account_user):
+def test_process_vendor_payout_approve(test_client, authed_sempo_admin_user, create_transfer_account_user, mock_sms_apis):
     auth = get_complete_auth_token(authed_sempo_admin_user)
     user = create_transfer_account_user
     user.transfer_account.is_vendor = True
@@ -113,6 +114,7 @@ def test_process_vendor_payout_approve(test_client, authed_sempo_admin_user, cre
     user.transfer_account.set_balance_offset(1000)
     user.transfer_account.is_approved=True
     user.is_phone_verified = True
+    user.phone = '+19025551234'
     user.kyc_applications[0].kyc_status = 'VERIFIED'
 
     db.session.commit()
@@ -127,8 +129,10 @@ def test_process_vendor_payout_approve(test_client, authed_sempo_admin_user, cre
             'csv_data': f"""ID,Phone,First Name,Last Name,Created,Current Balance,Total Sent,Total Received,Approved,Beneficiary,Vendor,Transfer ID,UnitAmount,Payment Has Been Made,Bank Payment Date\n4,{user.phone},Transfer,User,SOME DATE,10.0,10.000000000000,0,True,False,True,1,10.0,TRUE,09/30/2020"""
         }
     )
+    messages = mock_sms_apis
     transfer = user.transfer_account.credit_sends[0]
     assert transfer.transfer_status == TransferStatusEnum.COMPLETE
+    assert messages[0] == {'phone': '+19025551234', 'message': 'Hello Transfer, a total of 10 AUD has been deposited into your account.'}
     transfer.transfer_status = TransferStatusEnum.PENDING
 
 def test_process_vendor_payout_reject(test_client, authed_sempo_admin_user, create_transfer_account_user):
@@ -170,6 +174,7 @@ def test_process_vendor_payout_pending(test_client, authed_sempo_admin_user, cre
     user.transfer_account.set_balance_offset(1000)
     user.transfer_account.is_approved=True
     user.is_phone_verified = True
+    user.phone = '+19025551234'
     user.kyc_applications[0].kyc_status = 'VERIFIED'
 
     db.session.commit()
