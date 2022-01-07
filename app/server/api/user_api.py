@@ -231,6 +231,27 @@ class ResetPinAPI(MethodView):
             }
             return make_response(jsonify(response_object)), 400
 
+class PasswordResetAPI(MethodView):
+    @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
+    def put(self, user_id):
+        user = User.query.get(user_id)
+        if user is not None:
+            user.reset_password()
+
+            response_object = {
+                'status': 'success',
+                'message': 'Successfully reset password for user.',
+                'data': {
+                    'user': user_schema.dump(user).data
+                }
+            }
+            return make_response(jsonify(response_object)), 200
+        else:
+            response_object = {
+                'message': 'No user to reset password for',
+            }
+            return make_response(jsonify(response_object)), 400
+
 class AuditHistoryAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'superadmin'}) 
     def get(self, user_id):
@@ -265,6 +286,12 @@ user_blueprint.add_url_rule(
     view_func=ResetPinAPI.as_view('reset_pin'),
     methods=['POST'],
     defaults={'user_id': None}
+)
+
+user_blueprint.add_url_rule(
+    '/user/<int:user_id>/password-reset/',
+    view_func=PasswordResetAPI.as_view('reset_password'),
+    methods=['PUT'],
 )
 
 user_blueprint.add_url_rule(

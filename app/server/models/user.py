@@ -24,6 +24,7 @@ from server.utils.access_control import AccessControl
 from server.utils.phone import proccess_phone_number
 from server.utils.executor import add_after_request_executor_job
 from server.utils.audit_history import track_updates
+from server.utils.amazon_ses import send_reset_email
 
 from server.utils.transfer_account import (
     find_transfer_accounts_with_matching_token
@@ -680,6 +681,11 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
 
         if organisation:
             self.add_user_to_organisation(organisation, is_admin=True)
+
+    def reset_password(self):
+        password_reset_token = self.encode_single_use_JWS('R')
+        self.save_password_reset_token(password_reset_token)
+        send_reset_email(password_reset_token, self.email)
 
     def add_user_to_organisation(self, organisation: Organisation, is_admin=False):
         if not self.default_organisation:
