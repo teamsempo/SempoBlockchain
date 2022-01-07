@@ -132,8 +132,8 @@ class Exchange(BlockchainTaskableBase):
     from_token_id = db.Column(db.Integer, db.ForeignKey("token.id"))
     to_token_id = db.Column(db.Integer, db.ForeignKey("token.id"))
 
-    from_transfer_id = db.Column(db.Integer, db.ForeignKey("credit_transfer.id"))
-    to_transfer_id = db.Column(db.Integer, db.ForeignKey("credit_transfer.id"))
+    from_transfer_id = db.Column(db.Integer, db.ForeignKey("credit_transfer.id"), index=True)
+    to_transfer_id = db.Column(db.Integer, db.ForeignKey("credit_transfer.id"), index=True)
 
     @staticmethod
     def get_exchange_rate(from_token, to_token):

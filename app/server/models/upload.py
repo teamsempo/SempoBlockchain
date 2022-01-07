@@ -16,7 +16,7 @@ class UploadedResource(ModelBase):
     user_filename               = db.Column(db.String)
     reference                   = db.Column(db.String)
 
-    credit_transfer_id          = db.Column(db.Integer, db.ForeignKey("credit_transfer.id"))
+    credit_transfer_id          = db.Column(db.Integer, db.ForeignKey("credit_transfer.id"), index=True)
     user_id                     = db.Column(db.Integer, db.ForeignKey("user.id"))
     kyc_application_id          = db.Column(db.Integer, db.ForeignKey('kyc_application.id'))
 
