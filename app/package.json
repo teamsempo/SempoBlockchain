@@ -102,6 +102,7 @@
     "moment": "^2.22.2",
     "normalizr": "^3.3.0",
     "omit.js": "^2.0.2",
+    "prettier": "^2.5.1",
     "prop-types": "^15.6.2",
     "pusher": "^5.0.0",
     "pusher-redux": "^0.3.9",
