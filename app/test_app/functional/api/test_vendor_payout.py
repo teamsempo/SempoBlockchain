@@ -105,6 +105,7 @@ def test_get_vendor_payout(test_client, authed_sempo_admin_user, create_transfer
     assert transfer.transfer_status == TransferStatusEnum.PENDING
 
 def test_process_vendor_payout_approve(test_client, authed_sempo_admin_user, create_transfer_account_user, mock_sms_apis):
+    config.PAYOUT_SMS = True
     auth = get_complete_auth_token(authed_sempo_admin_user)
     user = create_transfer_account_user
     user.transfer_account.is_vendor = True
