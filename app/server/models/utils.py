@@ -241,7 +241,7 @@ class OneOrgBase(object):
     Forces all database queries on associated objects to provide an organisation ID or specify show_all=True flag
     """
 
-    is_public = db.Column(db.Boolean, default=False)
+    is_public = db.Column(db.Boolean, default=False, index=True)
 
     @declared_attr
     def organisation_id(cls):
@@ -255,7 +255,7 @@ class ManyOrgBase(object):
     Forces all database queries on associated objects to provide an organisation ID or specify show_all=True flag
     """
 
-    is_public = db.Column(db.Boolean, default=False)
+    is_public = db.Column(db.Boolean, default=False, index=True)
 
     @declared_attr
     def organisations(cls):
