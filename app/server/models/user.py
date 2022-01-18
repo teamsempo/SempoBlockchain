@@ -716,6 +716,9 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         secret = pyotp.random_base32()
         self._TFA_secret = encrypt_string(secret)
 
+    def reset_TFA(self):
+        self.TFA_enabled = False
+
     def get_TFA_secret(self):
         return decrypt_string(self._TFA_secret)
 

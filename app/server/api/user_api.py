@@ -235,9 +235,19 @@ class PasswordResetAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'superadmin'})
     def put(self, user_id):
         user = User.query.get(user_id)
+        reset_tfa = request.args.get('reset_tfa', False) == 'true'
         if user is not None:
-            user.reset_password()
+            if reset_tfa and AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'sempoadmin'):
+                user.reset_TFA()
+            if reset_tfa and not AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'sempoadmin'):
+                response_object = {
+                    'status': 'fail',
+                    'message': 'Only Sempo admininstrators may reset TFA codes.',
+                }
+                return make_response(jsonify(response_object)), 403
 
+            user.reset_password()
+            
             response_object = {
                 'status': 'success',
                 'message': 'Successfully reset password for user.',
