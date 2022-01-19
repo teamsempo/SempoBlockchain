@@ -32,8 +32,8 @@ def create_transfer_account_for_user(user: User, token: Token, balance: float, i
 
 
 @pytest.mark.parametrize("user_type,limit,preferred_language,sample_text", [
-    ("standard", None, "en", "Your Sarafu-Network balances are as follows: SM1 200.00\nSM2 350.00\nCall 0757628885 for more info"),
-    ("standard", None, "sw", "Akaunti yako ya Sarafu-Network ina salio yafuatayo: SM1 200.00\nSM2 350.00\nPiga 0757628885 kwa usaidizi zaidi"),
+    ("standard", None, "en", "Your balances are as follows: SM1 200.00\nSM2 350.00\nCall 0757628885 for more info"),
+    ("standard", None, "sw", "Akaunti yako ya ina salio yafuatayo: SM1 200.00\nSM2 350.00\nPiga 0757628885 kwa usaidizi zaidi"),
     ("group", 0.5, "en", "in 30"),
     ("group", 0.5, "sw", "siku 30")
 ])

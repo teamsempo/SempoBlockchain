@@ -1,7 +1,7 @@
 en:
-  kenya:
+  sempo:
     initial_language_selection: |
-      CON Welcome to Sarafu
+      CON Welcome to Sempo
       1. English
       2. Kiswahili
       3. Help
@@ -12,7 +12,7 @@ en:
       CON Enter your PIN again
       0. Back
     start: |
-      CON Welcome to Sarafu
+      CON Welcome to Sempo
       1. Send
       2. My Account
       3. Market Place
@@ -192,18 +192,18 @@ en:
     transfer_amount_error_sms: You have reached your trade limit. Please contact 0757628885 to increase your limit.
     insufficient_balance_sms: |
       Payment of %{amount} %{token_name} to %{recipient} has failed due to insufficent balance.
-      Your Sarafu-Network balances are as follows: %{token_balances}
+      Your balances are as follows: %{token_balances}
     send_token_error_sms: Payment of %{amount} %{token_name} to %{recipient} has failed. Please try again later.
     send_balance_exchange_limit_sms: |
-      Your Sarafu-Network balances are as follows: %{token_balances}
+      Your balances are as follows: %{token_balances}
       You can trade a maximum of %{token_exchanges} in %{limit_period} days.
       Call 0757628885 for more info
     send_balance_exchange_sms: |
-      Your Sarafu-Network balances are as follows: %{token_balances}
+      Your balances are as follows: %{token_balances}
       You can exchange the following: %{token_exchanges}
       Call 0757628885 for more info
     send_balance_sms: |
-      Your Sarafu-Network balances are as follows: %{token_balances}
+      Your balances are as follows: %{token_balances}
       Call 0757628885 for more info
-    pin_change_success_sms: Your Sarafu Network PIN was successfully changed.
-    pin_change_error_sms: Your Sarafu Network Pin was not changed. Call 0757628885 for help
+    pin_change_success_sms: Your PIN was successfully changed.
+    pin_change_error_sms: Your Pin was not changed. Call 0757628885 for help

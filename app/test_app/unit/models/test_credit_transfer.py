@@ -56,7 +56,7 @@ def test_prior_task_requirements(test_client, init_database):
     ie one that prevents an unrecoverable state from being reached
     """
 
-    token = TokenFactory(name='Sarafu', symbol='Sarafu')
+    token = TokenFactory(name='SempoBucks', symbol='SempoBucks')
     organisation = OrganisationFactory(token=token, country_code='AU')
     g.active_organisation = organisation
     ta1 = TransferAccountFactory(token=token, organisation=organisation)

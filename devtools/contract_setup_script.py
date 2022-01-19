@@ -259,7 +259,7 @@ class Setup(object):
 
     def ussd_request(self, organisation_name, token_id):
 
-        r = requests.post(url=self.api_host + 'ussd/kenya',
+        r = requests.post(url=self.api_host + 'ussd',
                           headers=dict(Authorization=self.api_token, Accept='application/json'),
                           json={
                               'token_id': token_id,
