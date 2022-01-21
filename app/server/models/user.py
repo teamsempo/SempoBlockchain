@@ -718,6 +718,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
 
     def reset_TFA(self):
         self.TFA_enabled = False
+        self._TFA_secret = None
 
     def get_TFA_secret(self):
         return decrypt_string(self._TFA_secret)
