@@ -697,9 +697,10 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
             self.transfer_accounts.append(organisation.org_level_transfer_account)
 
     def is_TFA_required(self):
-        for tier in current_app.config['TFA_REQUIRED_ROLES']:
-            if AccessControl.has_exact_role(self.roles, 'ADMIN', tier):
-                return True
+        if current_app.config['TFA_REQUIRED_ROLES']:
+            for tier in current_app.config['TFA_REQUIRED_ROLES']:
+                if AccessControl.has_exact_role(self.roles, 'ADMIN', tier):
+                    return True
         else:
             return False
 
