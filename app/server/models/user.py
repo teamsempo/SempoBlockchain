@@ -701,8 +701,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
             for tier in current_app.config['TFA_REQUIRED_ROLES']:
                 if AccessControl.has_exact_role(self.roles, 'ADMIN', tier):
                     return True
-        else:
-            return False
+        return False
 
     def is_TFA_secret_set(self):
         return bool(self._TFA_secret)
