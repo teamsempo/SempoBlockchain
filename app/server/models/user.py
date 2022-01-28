@@ -703,11 +703,11 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
             self.transfer_accounts.append(organisation.org_level_transfer_account)
 
     def is_TFA_required(self):
-        for tier in current_app.config['TFA_REQUIRED_ROLES']:
-            if AccessControl.has_exact_role(self.roles, 'ADMIN', tier):
-                return True
-        else:
-            return False
+        if current_app.config['TFA_REQUIRED_ROLES']:
+            for tier in current_app.config['TFA_REQUIRED_ROLES']:
+                if AccessControl.has_exact_role(self.roles, 'ADMIN', tier):
+                    return True
+        return False
 
     def is_TFA_secret_set(self):
         return bool(self._TFA_secret)
@@ -718,6 +718,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
 
     def reset_TFA(self):
         self.TFA_enabled = False
+        self._TFA_secret = None
 
     def get_TFA_secret(self):
         return decrypt_string(self._TFA_secret)
