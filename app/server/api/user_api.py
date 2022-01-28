@@ -299,7 +299,7 @@ user_blueprint.add_url_rule(
 )
 
 user_blueprint.add_url_rule(
-    '/user/<int:user_id>/password-reset/',
+    '/user/password-reset/<int:user_id>/',
     view_func=PasswordResetAPI.as_view('reset_password'),
     methods=['PUT'],
 )
