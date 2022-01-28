@@ -287,7 +287,7 @@ def _base_setup(s, reserve_token_id):
 
     org_id = s.create_cic_organisation(
         organisation_name='ACME Org',
-        custom_welcome_message_key='grassroots',
+        custom_welcome_message_key='custom',
         timezone='Australia/Melbourne',
         country_code='AU',
         exchange_contract_id=exchange_contract_id,

@@ -162,13 +162,13 @@ en:
     exit_use_exchange_menu: END Recipient phone number is an agent. To exchange, use exchange menu
     exit_invalid_token_agent: END Agent phone number is incorrect
     exit_not_registered: |
-      END Kusajili tuma: jina, nambari ya simu, eneo na biashara yako kwa 0757628885
-      To register send: name, number, location and business to 0757628885
+      END Kusajili tuma: jina, nambari ya simu, eneo na biashara
+      To register send: name, number, location and business
     exit_invalid_exchange_amount: END The amount entered is insufficient. Please provide an amount of 40 or more.
     language_change_sms: Your preferred language has been changed successfully.
     opt_out_of_market_place_sms: You have successfully opted out of the marketplace.
-    upsell_message_sender: "Recipient %{recipient_phone} is not yet registered. Please call or send their Name, Phone number, business and location to 0757628885"
-    upsell_message_recipient: "%{first_name} %{last_name} tried to send you %{token_name} but you are not registered. Send your information: name, phone number, area of residence, and the type of business you run 0757628885."
+    upsell_message_sender: "Recipient %{recipient_phone} is not yet registered. Please call or send their Name, Phone number, business and location to Sempo"
+    upsell_message_recipient: "%{first_name} %{last_name} tried to send you %{token_name} but you are not registered. Send your information: name, phone number, area of residence, and the type of business you run to Sempo."
     send_directory_listing_message: "%{community_token_name} %{business_type} Market\n%{directory_listing_users}"
     no_directory_listing_found_message: Sorry we couldn't find businesses from your community that match your search criteria.
     send_token_sender_sms: Successfully sent a payment of %{amount} %{token_name} to %{other_user} on %{date} for %{reason} at %{time}. New %{token_name} balance is %{balance}
@@ -184,12 +184,12 @@ en:
       Exchange Rate:
       For 1 %{token_name} you get %{exchange_rate} KSH
       1000 %{token_name} = %{exchange_sample_value} KSH
-    exchange_not_allowed_error_sms: Only a group account can exchange please contact 0757628885 for help
+    exchange_not_allowed_error_sms: Only a group account can exchange please contact the administrator
     exchange_count_error_sms: Sorry you have exceeded your %{token} exchange limit. You are allowed %{count} transaction per %{limit_period} days
     exchange_fraction_error_sms: Sorry you have exceeded your %{token} exchange limit. You are allowed up to %{percent} of your balance
     exchange_amount_error_sms: Sorry you have exceeded your %{token} transfer amount limit. You are allowed up to %{amount} %{token} per %{limit_period} days
     maximum_per_transaction_error_sms: You can only exchange a maximum of %{amount} at a time.
-    transfer_amount_error_sms: You have reached your trade limit. Please contact 0757628885 to increase your limit.
+    transfer_amount_error_sms: You have reached your trade limit.
     insufficient_balance_sms: |
       Payment of %{amount} %{token_name} to %{recipient} has failed due to insufficent balance.
       Your balances are as follows: %{token_balances}
@@ -197,13 +197,10 @@ en:
     send_balance_exchange_limit_sms: |
       Your balances are as follows: %{token_balances}
       You can trade a maximum of %{token_exchanges} in %{limit_period} days.
-      Call 0757628885 for more info
     send_balance_exchange_sms: |
       Your balances are as follows: %{token_balances}
       You can exchange the following: %{token_exchanges}
-      Call 0757628885 for more info
     send_balance_sms: |
       Your balances are as follows: %{token_balances}
-      Call 0757628885 for more info
     pin_change_success_sms: Your PIN was successfully changed.
-    pin_change_error_sms: Your Pin was not changed. Call 0757628885 for help
+    pin_change_error_sms: Your Pin was not changed.
