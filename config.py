@@ -133,6 +133,7 @@ FEEDBACK_TRIGGERED_WHEN_TRANSFER_COUNT_ABOVE = int(config_parser['APP']['FEEDBAC
 LIMIT_EXCHANGE_RATE = float(config_parser['APP'].get('LIMIT_EXCHANGE_RATE', 1))
 CASHOUT_INCENTIVE_PERCENT = float(config_parser['APP'].get('CASHOUT_INCENTIVE_PERCENT', 0))
 ONBOARDING_SMS = config_parser['APP'].getboolean('ONBOARDING_SMS', False)
+PAYOUT_SMS = config_parser['APP'].getboolean('PAYOUT_SMS', True)
 TFA_REQUIRED_ROLES = config_parser['APP']['TFA_REQUIRED_ROLES'].split(',')
 MOBILE_VERSION = config_parser['APP']['MOBILE_VERSION']
 SEMPOADMIN_EMAILS = config_parser['APP'].get('sempoadmin_emails', '').split(',')
