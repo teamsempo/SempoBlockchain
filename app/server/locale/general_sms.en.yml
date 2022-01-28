@@ -4,3 +4,4 @@ en:
     custom: Hello %{first_name} you have been registered on Test Network! Your balance is %{balance} %{token}.
   terms: By using the service, you agree to the terms and conditions at https://withsempo.com/legal/platform-terms.
   pin_reset: Dial 1234 to change your PIN
+  payout_message: Hello %{first_name}, a total of %{amount} %{token} has been deposited into your account.

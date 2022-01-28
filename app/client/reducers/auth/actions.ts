@@ -18,13 +18,15 @@ import {
   ValidateTfaPayload,
   DeleteInviteActionTypes,
   DeleteInvitePayload,
+  AdminResetPasswordActionTypes,
+  AdminResetPasswordPayload,
   LoginSuccessPayload,
   LoginActionTypes,
   LoginPartialPayload,
   UPDATE_ADMIN_USER_LIST,
   AdminUserByIDs,
   InviteUserListActionTypes,
-  InviteByIDs
+  InviteByIDs,
 } from "./types";
 
 import { createAction, ActionsUnion } from "../../reduxUtils";
@@ -42,7 +44,7 @@ export const LoginAction = {
   loginFailure: (error: string) =>
     createAction(LoginActionTypes.LOGIN_FAILURE, error),
   logout: () => createAction(LoginActionTypes.LOGOUT),
-  apiLogout: () => createAction(LoginActionTypes.API_LOGOUT)
+  apiLogout: () => createAction(LoginActionTypes.API_LOGOUT),
 };
 // type declaration merging with above
 export type LoginAction = ActionsUnion<typeof LoginAction>;
@@ -53,7 +55,7 @@ export const RegisterAction = {
   registerSuccess: () => createAction(RegisterActionTypes.REGISTER_SUCCESS),
   registerFailure: (error: string) =>
     createAction(RegisterActionTypes.REGISTER_FAILURE, error),
-  deactivateRegister: () => createAction(RegisterActionTypes.REGISTER_INACTIVE)
+  deactivateRegister: () => createAction(RegisterActionTypes.REGISTER_INACTIVE),
 };
 export type RegisterAction = ActionsUnion<typeof RegisterAction>;
 
@@ -63,7 +65,7 @@ export const ActivateAccountAction = {
   activateAccountSuccess: () =>
     createAction(ActivateActionTypes.ACTIVATE_SUCCESS),
   activateAccountFailure: (error: string) =>
-    createAction(ActivateActionTypes.ACTIVATE_FAILURE, error)
+    createAction(ActivateActionTypes.ACTIVATE_FAILURE, error),
 };
 export type ActivateAccountAction = ActionsUnion<typeof ActivateAccountAction>;
 
@@ -73,7 +75,7 @@ export const ResetPasswordEmailAction = {
   passwordResetEmailSuccess: () =>
     createAction(ResetPasswordEmailActionTypes.REQUEST_RESET_SUCCESS),
   passwordResetEmailFailure: (error: string) =>
-    createAction(ResetPasswordEmailActionTypes.REQUEST_RESET_FAILURE, error)
+    createAction(ResetPasswordEmailActionTypes.REQUEST_RESET_FAILURE, error),
 };
 export type ResetPasswordEmailAction = ActionsUnion<
   typeof ResetPasswordEmailAction
@@ -85,13 +87,13 @@ export const ResetPasswordAction = {
   resetPasswordSuccess: () =>
     createAction(ResetPasswordActionTypes.RESET_PASSWORD_SUCCESS),
   resetPasswordFailure: (error: string) =>
-    createAction(ResetPasswordActionTypes.RESET_PASSWORD_FAILURE, error)
+    createAction(ResetPasswordActionTypes.RESET_PASSWORD_FAILURE, error),
 };
 export type ResetPasswordAction = ActionsUnion<typeof ResetPasswordAction>;
 
 export const AdminUserListAction = {
   updateAdminUserList: (admins: AdminUserByIDs) =>
-    createAction(UPDATE_ADMIN_USER_LIST, admins)
+    createAction(UPDATE_ADMIN_USER_LIST, admins),
 };
 export type AdminUserListAction = ActionsUnion<typeof AdminUserListAction>;
 
@@ -102,7 +104,7 @@ export const InviteUserListAction = {
       invites
     ),
   updateInviteUsers: (invites: InviteByIDs) =>
-    createAction(InviteUserListActionTypes.UPDATE_INVITE_USER_LIST, invites)
+    createAction(InviteUserListActionTypes.UPDATE_INVITE_USER_LIST, invites),
 };
 export type InviteUserListAction = ActionsUnion<typeof InviteUserListAction>;
 
@@ -112,7 +114,7 @@ export const LoadAdminUserListAction = {
   loadAdminUserListSuccess: () =>
     createAction(LoadAdminUserListActionTypes.LOAD_ADMIN_USER_SUCCESS),
   loadAdminUserListFailure: (error: string) =>
-    createAction(LoadAdminUserListActionTypes.LOAD_ADMIN_USER_FAILURE, error)
+    createAction(LoadAdminUserListActionTypes.LOAD_ADMIN_USER_FAILURE, error),
 };
 export type LoadAdminUserListAction = ActionsUnion<
   typeof LoadAdminUserListAction
@@ -124,7 +126,7 @@ export const EditAdminUserAction = {
   editAdminUserSuccess: () =>
     createAction(EditAdminUserActionTypes.EDIT_ADMIN_USER_SUCCESS),
   editAdminUserFailure: (error: string) =>
-    createAction(EditAdminUserActionTypes.EDIT_ADMIN_USER_FAILURE, error)
+    createAction(EditAdminUserActionTypes.EDIT_ADMIN_USER_FAILURE, error),
 };
 export type EditAdminUserAction = ActionsUnion<typeof EditAdminUserAction>;
 
@@ -134,7 +136,7 @@ export const InviteUserAction = {
   inviteUserSuccess: () =>
     createAction(InviteUserActionTypes.INVITE_USER_SUCCESS),
   inviteUserFailure: (error: string) =>
-    createAction(InviteUserActionTypes.INVITE_USER_FAILURE, error)
+    createAction(InviteUserActionTypes.INVITE_USER_FAILURE, error),
 };
 export type InviteUserAction = ActionsUnion<typeof InviteUserAction>;
 
@@ -144,9 +146,27 @@ export const DeleteInviteAction = {
   deleteInviteSuccess: () =>
     createAction(DeleteInviteActionTypes.DELETE_INVITE_SUCCESS),
   deleteInviteFailure: (error: string) =>
-    createAction(DeleteInviteActionTypes.DELETE_INVITE_FAILURE, error)
+    createAction(DeleteInviteActionTypes.DELETE_INVITE_FAILURE, error),
 };
 export type DeleteInviteAction = ActionsUnion<typeof DeleteInviteAction>;
+
+export const AdminResetPasswordAction = {
+  adminResetPasswordRequest: (payload: AdminResetPasswordPayload) =>
+    createAction(
+      AdminResetPasswordActionTypes.ADMIN_RESET_PASSWORD_REQUEST,
+      payload
+    ),
+  adminResetPasswordSuccess: () =>
+    createAction(AdminResetPasswordActionTypes.ADMIN_RESET_PASSWORD_SUCCESS),
+  adminResetPasswordFailure: (error: string) =>
+    createAction(
+      AdminResetPasswordActionTypes.ADMIN_RESET_PASSWORD_FAILURE,
+      error
+    ),
+};
+export type AdminResetPasswordAction = ActionsUnion<
+  typeof AdminResetPasswordAction
+>;
 
 export const ValidateTfaAction = {
   validateTFARequest: (payload: ValidateTfaPayload) =>
@@ -154,6 +174,6 @@ export const ValidateTfaAction = {
   validateTFASuccess: () =>
     createAction(ValidateTfaActionTypes.VALIDATE_TFA_SUCCESS),
   validateTFAFailure: (error: string) =>
-    createAction(ValidateTfaActionTypes.VALIDATE_TFA_FAILURE, error)
+    createAction(ValidateTfaActionTypes.VALIDATE_TFA_FAILURE, error),
 };
 export type ValidateTfaAction = ActionsUnion<typeof ValidateTfaAction>;

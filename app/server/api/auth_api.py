@@ -556,9 +556,7 @@ class RequestPasswordResetEmailAPI(MethodView):
         user = User.query.filter(func.lower(User.email)==email).execution_options(show_all=True).first()
 
         if user:
-            password_reset_token = user.encode_single_use_JWS('R')
-            user.save_password_reset_token(password_reset_token)
-            send_reset_email(password_reset_token, email)
+            user.reset_password()
 
         response_object = {
             'status': 'success',
