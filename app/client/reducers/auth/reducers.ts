@@ -12,9 +12,10 @@ import {
   EditAdminUserActionTypes,
   InviteUserActionTypes,
   DeleteInviteActionTypes,
+  AdminResetPasswordActionTypes,
   ValidateTfaActionTypes,
   InviteByIDs,
-  AdminUserByIDs
+  AdminUserByIDs,
 } from "./types";
 
 import {
@@ -28,7 +29,8 @@ import {
   EditAdminUserAction,
   InviteUserAction,
   DeleteInviteAction,
-  ValidateTfaAction
+  AdminResetPasswordAction,
+  ValidateTfaAction,
 } from "./actions";
 
 interface RequestingState {
@@ -40,7 +42,7 @@ interface RequestingState {
 const initialState: RequestingState = {
   isRequesting: false,
   success: false,
-  error: null
+  error: null,
 };
 
 export const register = (state = initialState, action: RegisterAction) => {
@@ -54,7 +56,7 @@ export const register = (state = initialState, action: RegisterAction) => {
         ...state,
         isRequesting: false,
         registerSuccess: false,
-        error: action.error || "unknown error"
+        error: action.error || "unknown error",
       };
     case RegisterActionTypes.REGISTER_INACTIVE:
       return initialState;
@@ -77,7 +79,7 @@ export const activate = (
         ...state,
         isRequesting: false,
         activateSuccess: false,
-        error: action.error || "unknown error"
+        error: action.error || "unknown error",
       };
     default:
       return state;
@@ -98,7 +100,7 @@ export const requestResetEmailState = (
         ...state,
         isRequesting: false,
         success: false,
-        error: action.error || "unknown error"
+        error: action.error || "unknown error",
       };
     default:
       return state;
@@ -119,7 +121,7 @@ export const resetPasswordState = (
         ...state,
         isRequesting: false,
         success: false,
-        error: action.error || "unknown error"
+        error: action.error || "unknown error",
       };
     default:
       return state;
@@ -161,7 +163,7 @@ interface UserListState {
 const initialLoadStatusState: UserListState = {
   isRequesting: false,
   success: false,
-  error: null
+  error: null,
 };
 
 export const loadStatus = (
@@ -178,7 +180,7 @@ export const loadStatus = (
         ...state,
         isRequesting: false,
         success: false,
-        error: action.error
+        error: action.error,
       };
     default:
       return state;
@@ -233,13 +235,30 @@ export const deleteStatus = (
   }
 };
 
+export const adminResetPasswordStatus = (
+  state = initialState,
+  action: AdminResetPasswordAction
+) => {
+  switch (action.type) {
+    case AdminResetPasswordActionTypes.ADMIN_RESET_PASSWORD_REQUEST:
+      return { ...state, isRequesting: true, error: null, success: false };
+    case AdminResetPasswordActionTypes.ADMIN_RESET_PASSWORD_SUCCESS:
+      return { ...state, isRequesting: false, success: true };
+    case AdminResetPasswordActionTypes.ADMIN_RESET_PASSWORD_FAILURE:
+      return { ...state, isRequesting: false, error: action.error };
+    default:
+      return state;
+  }
+};
+
 export const adminUsers = combineReducers({
   adminsById,
   invitesById,
   loadStatus,
   editStatus,
   createStatus,
-  deleteStatus
+  deleteStatus,
+  adminResetPasswordStatus,
 });
 
 export const validateTFA = (
@@ -255,7 +274,7 @@ export const validateTFA = (
       return {
         ...state,
         isRequesting: false,
-        error: action.error || "unknown error"
+        error: action.error || "unknown error",
       };
     default:
       return state;
