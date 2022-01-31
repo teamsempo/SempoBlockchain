@@ -6,7 +6,6 @@ cryptography==3.4.4
 flower==0.9.3
 eventlet==0.31.0
 idna==2.10
-kombu==4.6.11
 psycopg2-binary==2.8.5
 py-evm==0.3.0a18
 py-solc==3.2.0
