@@ -5,7 +5,7 @@ env_loglevel = os.environ.get('LOGLEVEL', 'DEBUG')
 logging.basicConfig(level=env_loglevel)
 logg = logging.getLogger(__name__)
 
-VERSION = '2.0.6'  # Remember to bump this in every PR
+VERSION = '2.1.2'  # Remember to bump this in every PR
 
 logg.info('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
@@ -133,7 +133,8 @@ FEEDBACK_TRIGGERED_WHEN_TRANSFER_COUNT_ABOVE = int(config_parser['APP']['FEEDBAC
 LIMIT_EXCHANGE_RATE = float(config_parser['APP'].get('LIMIT_EXCHANGE_RATE', 1))
 CASHOUT_INCENTIVE_PERCENT = float(config_parser['APP'].get('CASHOUT_INCENTIVE_PERCENT', 0))
 ONBOARDING_SMS = config_parser['APP'].getboolean('ONBOARDING_SMS', False)
-TFA_REQUIRED_ROLES = config_parser['APP']['TFA_REQUIRED_ROLES'].split(',')
+PAYOUT_SMS = config_parser['APP'].getboolean('PAYOUT_SMS', True)
+TFA_REQUIRED_ROLES = config_parser['APP']['TFA_REQUIRED_ROLES'].split(',') if config_parser['APP']['TFA_REQUIRED_ROLES'] else None
 MOBILE_VERSION = config_parser['APP']['MOBILE_VERSION']
 SEMPOADMIN_EMAILS = config_parser['APP'].get('sempoadmin_emails', '').split(',')
 DEFAULT_COUNTRY = config_parser['APP'].get('default_country')

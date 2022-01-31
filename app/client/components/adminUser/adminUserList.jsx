@@ -6,44 +6,47 @@ import { Card, Table, Tag, Menu, Button, Dropdown } from "antd";
 import {
   LoadAdminUserListAction,
   EditAdminUserAction,
-  DeleteInviteAction
+  AdminResetPasswordAction,
+  DeleteInviteAction,
 } from "../../reducers/auth/actions";
 import LoadingSpinner from "../loadingSpinner.jsx";
 
-const mapStateToProps = state => {
+const mapStateToProps = (state) => {
   return {
     login: state.login,
     loggedIn: state.login.userId != null,
     adminUsers: state.adminUsers,
     //todo: not the cleanest, but need to make IDs unique
     adminUserList: Object.keys(state.adminUsers.adminsById)
-      .map(id => state.adminUsers.adminsById[id])
-      .map(i => {
+      .map((id) => state.adminUsers.adminsById[id])
+      .map((i) => {
         if (typeof i.id !== "string") {
           i.id = "u" + i.id;
         }
         return i;
       }),
     inviteUserList: Object.keys(state.adminUsers.invitesById)
-      .map(id => state.adminUsers.invitesById[id])
-      .map(i => {
+      .map((id) => state.adminUsers.invitesById[id])
+      .map((i) => {
         if (typeof i.id !== "string") {
           i.id = "i" + i.id;
         }
         return i;
       }),
-    updateUserRequest: state.updateUserRequest
+    updateUserRequest: state.updateUserRequest,
   };
 };
 
-const mapDispatchToProps = dispatch => {
+const mapDispatchToProps = (dispatch) => {
   return {
     loadUserList: () =>
       dispatch(LoadAdminUserListAction.loadAdminUserListRequest()),
     updateUser: (body, query) =>
       dispatch(EditAdminUserAction.editAdminUserRequest({ body, query })),
-    deleteInvite: payload =>
-      dispatch(DeleteInviteAction.deleteInviteRequest(payload))
+    resetPassword: (path) =>
+      dispatch(AdminResetPasswordAction.adminResetPasswordRequest({ path })),
+    deleteInvite: (payload) =>
+      dispatch(DeleteInviteAction.deleteInviteRequest(payload)),
   };
 };
 
@@ -55,7 +58,7 @@ class AdminUserList extends React.Component {
       pages: null,
       loading: true,
       action: false,
-      user_id: null
+      user_id: null,
     };
   }
 
@@ -70,10 +73,12 @@ class AdminUserList extends React.Component {
       this.props.updateUser(
         {
           invite_id: userId,
-          resend: true
+          resend: true,
         },
         {}
       );
+    } else if (query === "reset_pw") {
+      this.props.resetPassword(userId);
     } else if (query === "delete") {
       this.props.deleteInvite({ body: { invite_id: parseInt(userId) } });
     } else {
@@ -81,7 +86,7 @@ class AdminUserList extends React.Component {
         {
           user_id: userId,
           admin_tier: query,
-          deactivated: deactivated
+          deactivated: deactivated,
         },
         {}
       );
@@ -118,30 +123,31 @@ class AdminUserList extends React.Component {
       {
         query: "superadmin",
         display: "Change to Super Admin",
-        deactivated: null
+        deactivated: null,
       },
       { query: "admin", display: "Change to Admin", deactivated: null },
       { query: "subadmin", display: "Change to Enroller", deactivated: null },
-      { query: "view", display: "Change to View Only", deactivated: null }
+      { query: "view", display: "Change to View Only", deactivated: null },
+      { query: "reset_pw", display: "Reset Password", deactivated: null },
     ];
 
     if (typeof item.is_disabled === "undefined") {
       // email invite
       default_action_items = [
         { query: "resend", display: "Resend Invite", deactivated: false },
-        { query: "delete", display: "Delete Invite", deactivated: true }
+        { query: "delete", display: "Delete Invite", deactivated: true },
       ];
     } else if (item.is_disabled) {
       default_action_items.push({
         query: null,
         display: "Enable User",
-        deactivated: false
+        deactivated: false,
       });
     } else {
       default_action_items.push({
         query: null,
         display: "Disable User",
-        deactivated: true
+        deactivated: true,
       });
     }
     const menu = (
@@ -156,7 +162,7 @@ class AdminUserList extends React.Component {
                     : i.deactivated === true
                     ? "red"
                     : null,
-                width: "100%"
+                width: "100%",
               }}
               key={i.query}
               onClick={() =>
@@ -192,7 +198,7 @@ class AdminUserList extends React.Component {
           style={{
             justifyContent: "center",
             display: "flex",
-            padding: "10vh 10vw"
+            padding: "10vh 10vw",
           }}
         >
           <LoadingSpinner />
@@ -210,25 +216,25 @@ class AdminUserList extends React.Component {
         {
           title: "Name",
           dataIndex: "email",
-          key: "email"
+          key: "email",
         },
         {
           title: "Account Type",
           dataIndex: "admin_tier",
-          key: "admin_tier"
+          key: "admin_tier",
         },
         {
           title: "Status",
           dataIndex: "id",
           key: "id",
-          render: (id, record) => this.displayCorrectStatus(record)
+          render: (id, record) => this.displayCorrectStatus(record),
         },
         {
           title: "Action",
           dataIndex: "id",
           key: "id",
-          render: (id, record) => this.displayActionComponent(record)
-        }
+          render: (id, record) => this.displayActionComponent(record),
+        },
       ];
 
       return (
@@ -263,7 +269,7 @@ class AdminUserList extends React.Component {
           style={{
             justifyContent: "center",
             display: "flex",
-            padding: "10vh 10vw"
+            padding: "10vh 10vw",
           }}
         >
           <p>You don't have access to admin list.</p>
@@ -276,7 +282,7 @@ class AdminUserList extends React.Component {
         style={{
           justifyContent: "center",
           display: "flex",
-          padding: "10vh 10vw"
+          padding: "10vh 10vw",
         }}
       >
         <p>Something went wrong.</p>
@@ -285,7 +291,4 @@ class AdminUserList extends React.Component {
   }
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(AdminUserList);
+export default connect(mapStateToProps, mapDispatchToProps)(AdminUserList);
