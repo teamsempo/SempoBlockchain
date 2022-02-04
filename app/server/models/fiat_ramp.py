@@ -7,12 +7,17 @@ from server.constants import PAYMENT_METHODS
 from server import db
 from server.models.credit_transfer import CreditTransfer
 from server.models.token import Token
+from server.utils.flutterwave import make_withdrawal
 import datetime
 
 class FiatRampStatusEnum(enum.Enum):
     PENDING = 'PENDING'
     FAILED = 'FAILED'
     COMPLETE = 'COMPLETE'
+
+class FiatRampDirection(enum.Enum):
+    INGRESS = 'INGRESS'
+    EGRESS = 'EGRESS'
 
 
 class FiatRamp(ModelBase):
@@ -30,7 +35,7 @@ class FiatRamp(ModelBase):
     payment_amount              = db.Column(db.Integer, default=0)
     payment_reference           = db.Column(db.String)
     payment_status              = db.Column(db.Enum(FiatRampStatusEnum), default=FiatRampStatusEnum.PENDING)
-
+    payment_direction           = db.Column(db.Enum(FiatRampDirection), default=FiatRampDirection.EGRESS)
     credit_transfer_id          = db.Column(db.Integer, db.ForeignKey(CreditTransfer.id))
     token_id                    = db.Column(db.Integer, db.ForeignKey(Token.id))
 
@@ -48,6 +53,12 @@ class FiatRamp(ModelBase):
         self._payment_method = payment_method
 
     def resolve_as_complete(self):
+        if self.payment_method == 'FLUTTERWAVE':
+            try:
+                make_withdrawal(self)
+            except Exception as e:
+                self.resolve_as_rejected(str(e))
+                return
         self.updated = datetime.datetime.utcnow()
         self.payment_status = FiatRampStatusEnum.COMPLETE
 
@@ -56,6 +67,7 @@ class FiatRamp(ModelBase):
         self.payment_status = FiatRampStatusEnum.FAILED
 
         if message:
+            if not self.payment_metadata: self.payment_metadata = {}
             self.payment_metadata['message'] = message
 
     def __init__(self, **kwargs):

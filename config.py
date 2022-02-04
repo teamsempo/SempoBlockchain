@@ -266,6 +266,12 @@ AT_USERNAME = secrets_parser["AFRICASTALKING"]["username"]
 AT_API_KEY = secrets_parser["AFRICASTALKING"]["api_key"]
 AT_SENDER_ID = secrets_parser["AFRICASTALKING"].get("at_sender_id")
 
+USE_FLUTTERWAVE_PAYOUTS     = config_parser['APP'].getboolean('use_flutterwave_payouts', False)
+if USE_FLUTTERWAVE_PAYOUTS:
+    FLUTTERWAVE_APP_ID          = config_parser['FLUTTERWAVE'].get('app_id', None)
+    FLUTTEWAVE_SECRET_KEY       = secrets_parser['FLUTTERWAVE'].get('secret_key', None)
+    FLUTTERWAVE_ENCRYPTION_KEY  = secrets_parser['FLUTTERWAVE'].get('encryption_key', None)
+
 try:
     from ecdsa import SigningKey, NIST192p
 

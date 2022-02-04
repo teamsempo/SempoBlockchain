@@ -410,7 +410,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                  require_sufficient_balance=True,
                  received_third_party_sync=False
                  ):
-
+        from server.models.fiat_ramp import FiatRamp, FiatRampDirection
         if amount < 0:
             raise Exception("Negative amount provided")
         self.transfer_amount = amount
@@ -432,7 +432,13 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
         if transfer_type is TransferTypeEnum.WITHDRAWAL:
             self.recipient_transfer_account = self.sender_transfer_account.token.float_account
-
+            # If you manually make a fiat ramp, it'll override the automatic one generated for withdrawals here
+            if not fiat_ramp and current_app.config['USE_FLUTTERWAVE_PAYOUTS']:
+                self.fiat_ramp = FiatRamp(
+                    payment_amount=self.transfer_amount,
+                    payment_method='FLUTTERWAVE', # TODO: Change to an org setting once new methods are introduced
+                    payment_direction=FiatRampDirection.EGRESS,
+                )
         try:
             self.recipient_transfer_account = recipient_transfer_account or self.recipient_transfer_account or self._select_transfer_account(
                 self.token,
