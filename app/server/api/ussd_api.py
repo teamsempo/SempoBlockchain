@@ -5,13 +5,13 @@ from server import db
 from server.utils.auth import show_all, requires_auth
 from server.models.ussd import UssdMenu
 from server.utils.user import get_user_by_phone
-from server.utils.ussd.kenya_ussd_processor import KenyaUssdProcessor
+from server.utils.ussd.ussd_processor import UssdProcessor
 from server.utils.ussd.ussd import menu_display_text_in_lang, create_or_update_session
 
 ussd_blueprint = Blueprint('ussd', __name__)
 
 
-class ProcessKenyaUssd(MethodView):
+class ProcessUssd(MethodView):
     """
         USSD Entry method
         Method: POST
@@ -35,16 +35,16 @@ class ProcessKenyaUssd(MethodView):
         service_code = post_data.get('serviceCode')
 
         if phone_number:
-            user = get_user_by_phone(phone_number, 'KE')
+            user = get_user_by_phone(phone_number)
             # api chains all inputs that came through with *
             latest_input = user_input.split('*')[-1]
             if None in [user, session_id]:
                 current_menu = UssdMenu.find_by_name('exit_not_registered')
                 text = menu_display_text_in_lang(current_menu, user)
             else:
-                current_menu = KenyaUssdProcessor.process_request(session_id, latest_input, user)
+                current_menu = UssdProcessor.process_request(session_id, latest_input, user)
                 ussd_session = create_or_update_session(session_id, user, current_menu, user_input, service_code)
-                text = KenyaUssdProcessor.custom_display_text(current_menu, ussd_session)
+                text = UssdProcessor.custom_display_text(current_menu, ussd_session)
 
                 if "CON" not in text and "END" not in text:
                     raise Exception("no menu found. text={}, user={}, menu={}, session={}".format(text, user.id, current_menu.name, ussd_session.id))
@@ -61,7 +61,7 @@ class ProcessKenyaUssd(MethodView):
 
 
 ussd_blueprint.add_url_rule(
-    '/ussd/kenya',
-    view_func=ProcessKenyaUssd.as_view('ussd_kenya__view'),
+    '/ussd',
+    view_func=ProcessUssd.as_view('ussd_view'),
     methods=['POST']
 )

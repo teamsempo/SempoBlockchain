@@ -200,7 +200,7 @@ For more commands, see Alembic documentation: https://alembic.sqlalchemy.org/en/
 
 **For main app:**
 
-First, setup your database `sempo_blockchain_local`, using the username and password from the local config file.
+First, setup your database `sempo_app`, using the username and password from the local config file.
 
 Next, to update your database to the latest migration file:
 
