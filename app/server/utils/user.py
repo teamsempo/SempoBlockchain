@@ -792,7 +792,7 @@ def default_token(user: User) -> Token:
     return token
 
 
-def get_user_by_phone(phone: str, region: str, should_raise=False) -> Optional[User]:
+def get_user_by_phone(phone: str, region: Optional[str] = None, should_raise=False) -> Optional[User]:
     try:
         user = User.query.execution_options(show_all=True).filter_by(
             phone=proccess_phone_number(phone_number=phone, region=region)
