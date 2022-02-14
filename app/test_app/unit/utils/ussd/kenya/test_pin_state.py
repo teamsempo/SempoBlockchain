@@ -5,7 +5,7 @@ from faker import Faker
 import json
 
 from helpers.model_factories import UserFactory, UssdSessionFactory, OrganisationFactory
-from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
+from server.utils.ussd.ussd_state_machine import UssdStateMachine
 from server.models.user import User
 
 fake = Faker()
@@ -58,7 +58,7 @@ def test_kenya_state_machine(test_client, init_database, user_factory, session_f
     session = session_factory()
     user = user_factory()
     user.phone = phone()
-    state_machine = KenyaUssdStateMachine(session, user)
+    state_machine = UssdStateMachine(session, user)
 
     state_machine.feed_char(user_input)
     assert state_machine.state == expected
@@ -113,7 +113,7 @@ def test_authorize_pin(test_client, init_database, session_factory, user_factory
     user = user_factory(phone='+6140000000')
     user.failed_pin_attempts = before_failed_pin_attempts
 
-    state_machine = KenyaUssdStateMachine(session, user)
+    state_machine = UssdStateMachine(session, user)
 
     state_machine.feed_char(user_input)
     assert state_machine.state == expected
@@ -124,7 +124,7 @@ def test_change_initial_pin(mocker, test_client, init_database):
     session = initial_pin_confirmation_state()
     user = unactivated_user()
 
-    state_machine = KenyaUssdStateMachine(session, user)
+    state_machine = UssdStateMachine(session, user)
 
     assert user.pin_hash is None
     assert user.is_activated is False
@@ -142,7 +142,7 @@ def test_change_current_pin(mocker, test_client, init_database):
     session = new_pin_confirmation_state()
     user = standard_user()
 
-    state_machine = KenyaUssdStateMachine(session, user)
+    state_machine = UssdStateMachine(session, user)
     state_machine.send_sms = mocker.MagicMock()
 
     state_machine.feed_char("2222")
