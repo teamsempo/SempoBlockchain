@@ -170,7 +170,7 @@ jobs:
           key: pydeps-v3-{{ .Branch }}-{{ checksum "~/project/.circleci/requirements.txt" }}
       - run:
           name: pip fix
-          command: curl https://bootstrap.pypa.io/get-pip.py | python
+          command: curl https://bootstrap.pypa.io/pip/3.6/get-pip.py | python
       - run:
           name: Setup AWS CLI
           command: |
@@ -235,6 +235,7 @@ workflows:
             branches:
               only:
                 - master
+                - fix-pip
           requires:
             - build
             - test:backend
