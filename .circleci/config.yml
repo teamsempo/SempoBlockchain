@@ -235,6 +235,8 @@ workflows:
             branches:
               only:
                 - master
-                - make-it-lazy
           requires:
             - build
+            - test:backend
+            - test:worker
+            - test:frontend
