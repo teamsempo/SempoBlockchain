@@ -35,35 +35,33 @@ def get_custom_attribute_filters(distinct_sender_and_recipient = False):
     attribute_options = db.session.query(CustomAttribute)\
         .filter(CustomAttribute.filter_visibility != MetricsVisibility.HIDDEN)\
         .all()
-
     # Build those into filters objects
     filters = {}
-    #for ao in attribute_options:
-    #    print('-a-')
-    #    if distinct_sender_and_recipient:
-    #        if ao.filter_visibility in [MetricsVisibility.SENDER_AND_RECIPIENT, MetricsVisibility.SENDER]:
-    #            filters[ao.name + ',sender'] = {
-    #                'name': 'Sender ' + ao.name.capitalize(),
-    #                'table': CustomAttributeUserStorage.__tablename__,
-    #                'sender_or_recipient': SENDER,
-    #                'type': TransferFilterEnum.DISCRETE,
-    #                'values': ao.existing_options
-    #            }
-    #        if ao.filter_visibility in [MetricsVisibility.SENDER_AND_RECIPIENT, MetricsVisibility.RECIPIENT]:
-    #            filters[ao.name + ',recipient'] = {
-    #                'name': 'Recipient ' + ao.name.capitalize(),
-    #                'table': CustomAttributeUserStorage.__tablename__,
-    #                'sender_or_recipient': RECIPIENT,
-    #                'type': TransferFilterEnum.DISCRETE,
-    #                'values': ao.existing_options
-    #            }
-    #    else:
-    #        filters[ao.name] = {
-    #            'name': ao.name.capitalize(),
-    #            'table': CustomAttributeUserStorage.__tablename__,
-    #            'type': TransferFilterEnum.DISCRETE,
-    #            'values': ao.existing_options
-    #        }
+    for ao in attribute_options:
+        if distinct_sender_and_recipient:
+            if ao.filter_visibility in [MetricsVisibility.SENDER_AND_RECIPIENT, MetricsVisibility.SENDER]:
+                filters[ao.name + ',sender'] = {
+                    'name': 'Sender ' + ao.name.capitalize(),
+                    'table': CustomAttributeUserStorage.__tablename__,
+                    'sender_or_recipient': SENDER,
+                    'type': TransferFilterEnum.DISCRETE,
+                    'values': ao.existing_options
+                }
+            if ao.filter_visibility in [MetricsVisibility.SENDER_AND_RECIPIENT, MetricsVisibility.RECIPIENT]:
+                filters[ao.name + ',recipient'] = {
+                    'name': 'Recipient ' + ao.name.capitalize(),
+                    'table': CustomAttributeUserStorage.__tablename__,
+                    'sender_or_recipient': RECIPIENT,
+                    'type': TransferFilterEnum.DISCRETE,
+                    'values': ao.existing_options
+                }
+        else:
+            filters[ao.name] = {
+                'name': ao.name.capitalize(),
+                'table': CustomAttributeUserStorage.__tablename__,
+                'type': TransferFilterEnum.DISCRETE,
+                'values': ao.existing_options
+            }
     return filters
 
 class Filters(object):
