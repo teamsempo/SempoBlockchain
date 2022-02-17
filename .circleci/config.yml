@@ -235,7 +235,6 @@ workflows:
             branches:
               only:
                 - master
-                - fix-pip
           requires:
             - build
             - test:backend
