@@ -6,7 +6,7 @@ from faker import Faker
 from helpers.model_factories import UserFactory, UssdSessionFactory, OrganisationFactory
 from helpers.utils import fake_transfer_mapping
 from server import db
-from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
+from server.utils.ussd.ussd_state_machine import UssdStateMachine
 from server.models.user import User
 from server.models.transfer_usage import TransferUsage
 
@@ -82,7 +82,7 @@ def test_kenya_state_machine(test_client, init_database, user_factory, session_f
     user = user_factory()
     user.phone = phone()
     db.session.commit()
-    state_machine = KenyaUssdStateMachine(session, user)
+    state_machine = UssdStateMachine(session, user)
 
     state_machine.feed_char(user_input)
     assert state_machine.state == expected
@@ -97,7 +97,7 @@ def test_change_language_initial(mocker, test_client, init_database, session_fac
     user = standard_user()
     assert user.preferred_language is None
 
-    state_machine = KenyaUssdStateMachine(session, user)
+    state_machine = UssdStateMachine(session, user)
 
     state_machine.feed_char(user_input)
     assert state_machine.state == "initial_pin_entry"
@@ -113,7 +113,7 @@ def test_change_language(mocker, test_client, init_database, session_factory, us
     user.phone = phone()
     assert user.preferred_language is None
 
-    state_machine = KenyaUssdStateMachine(session, user)
+    state_machine = UssdStateMachine(session, user)
     state_machine.send_sms = mocker.MagicMock()
 
     state_machine.feed_char(user_input)
@@ -127,7 +127,7 @@ def test_opt_out_of_marketplace(mocker, test_client, init_database):
     user = standard_user()
     user.phone = phone()
     assert next(filter(lambda x: x.key == 'market_enabled', user.custom_attributes), None) is None
-    state_machine = KenyaUssdStateMachine(session, user)
+    state_machine = UssdStateMachine(session, user)
     state_machine.send_sms = mocker.MagicMock()
 
     state_machine.feed_char("0000")
@@ -141,7 +141,7 @@ def test_save_directory_info(mocker, test_client, init_database):
     user = standard_user()
     user.phone = phone()
     assert next(filter(lambda x: x.key == 'bio', user.custom_attributes), None) is None
-    state_machine = KenyaUssdStateMachine(session, user)
+    state_machine = UssdStateMachine(session, user)
     state_machine.send_sms = mocker.MagicMock()
 
     state_machine.feed_char("My Bio")
@@ -155,7 +155,7 @@ def test_balance_inquiry(mocker, test_client, init_database):
     user = standard_user()
     user.phone = phone()
 
-    state_machine = KenyaUssdStateMachine(session, user)
+    state_machine = UssdStateMachine(session, user)
     inquire_balance = mocker.MagicMock()
     mocker.patch('server.ussd_tasker.inquire_balance', inquire_balance)
 
@@ -169,7 +169,7 @@ def test_send_directory_listing(mocker, test_client, init_database):
     session.session_data = {'transfer_usage_mapping': fake_transfer_mapping(6), 'usage_menu': 0}
     user = standard_user()
     user.phone = phone()
-    state_machine = KenyaUssdStateMachine(session, user)
+    state_machine = UssdStateMachine(session, user)
     transfer_usage = TransferUsage.find_or_create("Food")
 
     send_directory_listing = mocker.MagicMock()
@@ -188,7 +188,7 @@ def test_terms_only_sent_once(mocker, test_client, init_database, mock_sms_apis)
     inquire_balance = mocker.MagicMock()
     mocker.patch('server.ussd_tasker.inquire_balance', inquire_balance)
 
-    state_machine = KenyaUssdStateMachine(session, user)
+    state_machine = UssdStateMachine(session, user)
     state_machine.feed_char('0000')
 
     db.session.commit()
@@ -197,7 +197,7 @@ def test_terms_only_sent_once(mocker, test_client, init_database, mock_sms_apis)
 
     assert len(messages) == 1
 
-    state_machine = KenyaUssdStateMachine(session, user)
+    state_machine = UssdStateMachine(session, user)
     state_machine.feed_char('0000')
 
     assert len(messages) == 1

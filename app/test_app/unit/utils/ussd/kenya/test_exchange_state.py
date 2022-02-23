@@ -7,7 +7,7 @@ from server import db
 
 from helpers.model_factories import UserFactory, UssdSessionFactory, OrganisationFactory
 from helpers.utils import make_kenyan_phone
-from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
+from server.utils.ussd.ussd_state_machine import UssdStateMachine
 from server.models.user import User
 
 fake = Faker()
@@ -54,7 +54,7 @@ def test_kenya_state_machine(test_client, init_database, user_factory, session_f
     session = session_factory()
     user = user_factory()
     user.phone = phone()
-    state_machine = KenyaUssdStateMachine(session, user)
+    state_machine = UssdStateMachine(session, user)
 
     state_machine.feed_char(user_input)
     assert state_machine.state == expected
@@ -64,7 +64,7 @@ def test_invalid_user_recipient(test_client, init_database):
     user = standard_user()
     user.phone = phone()
 
-    state_machine = KenyaUssdStateMachine(session, user)
+    state_machine = UssdStateMachine(session, user)
     state_machine.feed_char("1234")
 
     assert state_machine.state == "exit_invalid_token_agent"
@@ -78,7 +78,7 @@ def test_user_recipient(test_client, init_database):
 
     user_recipient = UserFactory(phone=make_kenyan_phone(phone()))
 
-    state_machine = KenyaUssdStateMachine(session, user)
+    state_machine = UssdStateMachine(session, user)
     state_machine.feed_char(user_recipient.phone)
 
     assert state_machine.state == "exit_invalid_token_agent"
@@ -93,7 +93,7 @@ def test_agent_recipient(test_client, init_database):
     agent_recipient = UserFactory(phone=make_kenyan_phone(phone()))
     agent_recipient.set_held_role('TOKEN_AGENT', 'token_agent')
 
-    state_machine = KenyaUssdStateMachine(session, user)
+    state_machine = UssdStateMachine(session, user)
     state_machine.feed_char(agent_recipient.phone)
 
     assert state_machine.state == "exchange_token_amount_entry"
@@ -118,7 +118,7 @@ def test_exchange_token(mocker, test_client, init_database, create_transfer_acco
     user = standard_user()
     user.phone = phone()
 
-    state_machine = KenyaUssdStateMachine(exchange_token_confirmation, user)
+    state_machine = UssdStateMachine(exchange_token_confirmation, user)
     exchange_token = mocker.MagicMock()
     mocker.patch('server.ussd_tasker.exchange_token', exchange_token)
 
