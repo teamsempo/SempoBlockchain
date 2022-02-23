@@ -235,8 +235,6 @@ workflows:
             branches:
               only:
                 - master
+                - fix-gzip
           requires:
             - build
-            - test:backend
-            - test:worker
-            - test:frontend
