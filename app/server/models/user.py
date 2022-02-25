@@ -4,7 +4,6 @@ from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.dialects.postgresql import JSON, JSONB
 from sqlalchemy import text, Table, cast, String
 from sqlalchemy.sql.functions import func
-from sqlalchemy.orm.attributes import flag_modified
 from itsdangerous import TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired
 from cryptography.fernet import Fernet
 import pyotp
@@ -345,7 +344,6 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
             self._held_roles.pop(role, None)
         else:
             self._held_roles[role] = tier
-        flag_modified(self, '_held_roles')
         
     @hybrid_property
     def has_admin_role(self):
