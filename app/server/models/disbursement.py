@@ -35,21 +35,25 @@ class Disbursement(ModelBase, OneOrgBase):
     _disbursement_amount_wei = db.Column(db.Numeric(27), default=0)
 
     creator_user = db.relationship('User',
-                                    primaryjoin='User.id == Disbursement.creator_user_id')
+                                    primaryjoin='User.id == Disbursement.creator_user_id',
+                                    lazy=True)
 
     transfer_accounts = db.relationship(
         "TransferAccount",
         secondary=disbursement_transfer_account_association_table,
-        back_populates="disbursements")
+        back_populates="disbursements",
+        lazy=True)
 
     credit_transfers = db.relationship(
         "CreditTransfer",
         secondary=disbursement_credit_transfer_association_table,
-        back_populates="disbursement")
+        back_populates="disbursement",
+        lazy=True)
 
     approvers = db.relationship(
         "User",
         secondary=disbursement_approver_user_association_table,
+        lazy=True
     )
     approval_times = db.Column(db.ARRAY(db.DateTime), default=[])
     

@@ -63,7 +63,7 @@ def test_golden_path_send_token(mocker, test_client,
 
     def req(text):
         response = test_client.post(
-            f'/api/v1/ussd/kenya?username={org.external_auth_username}&password={org.external_auth_password}',
+            f'/api/v1/ussd?username={org.external_auth_username}&password={org.external_auth_password}',
             headers=dict(Accept='application/json'),
             json={'sessionId': session_id,
                   'phoneNumber': sender.phone,
