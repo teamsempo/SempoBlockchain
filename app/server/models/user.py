@@ -344,7 +344,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
             self._held_roles.pop(role, None)
         else:
             self._held_roles[role] = tier
-        
+
     @hybrid_property
     def has_admin_role(self):
         return AccessControl.has_any_tier(self.roles, 'ADMIN')
