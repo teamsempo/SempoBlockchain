@@ -9,7 +9,7 @@
     "test:watch": "jest --watch",
     "test:clear": "jest --clearCache",
     "test:coverage": "jest --coverage --maxWorkers 2",
-    "dev": "NODE_ENV=dev && webpack -d --watch",
+    "dev": "NODE_ENV=dev && webpack --mode=development --watch",
     "build": "NODE_ENV=prod && webpack --mode=production",
     "analyze": "source-map-explorer server/static/javascript/dist/main.bundle.*",
     "bundle-report": "webpack-bundle-analyzer --port 4200 server/static/javascript/dist/stats.json",
