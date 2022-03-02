@@ -1,7 +1,7 @@
 sw:
-  kenya:
+  sempo:
     initial_language_selection: |
-      CON Welcome to Sarafu
+      CON Welcome to Sempo
       1. English
       2. Kiswahili
       3. Help
@@ -12,7 +12,7 @@ sw:
       CON Weka PIN yako tena
       0. Nyuma
     start: |
-      CON Karibu Sarafu
+      CON Karibu Sempo
       1. Tuma
       2. Akaunti Yangu
       3. Sokoni
@@ -159,12 +159,12 @@ sw:
     exit_use_exchange_menu: END Mpokeaji wa nambari ni wakala. Ili kubadilisha, tumia ubadilishaji
     exit_invalid_token_agent: END wakala wa nambari hapatikani au sio sahihi
     exit_not_registered: |
-      END Haujasajiliwa kwa Sarafu. Kusajili tuma: jina, nambari ya simu, eneo na biashara yako kwa 0757628885
+      END Haujasajiliwa kwa Sempo. Kusajili tuma: jina, nambari ya simu, eneo na biashara yako kwa Sempo
     exit_invalid_exchange_amount: END Kiwango ulichoweka hakitoshi. Tafadhali weka kiwango cha 40 au zaidi.
     language_change_sms: Lugha imebadilishwa.
     opt_out_of_market_place_sms: Ombi lako la kuondoka sokoni limekamilika.
-    upsell_message_sender: "Mpokeaji %{recipient_phone} hajasajiliwa kwa Sarafu. Tuma maelezo yake: jina, nambari ya simu, eneo, na aina ya biashara yake kwa 0757628885."
-    upsell_message_recipient: "%{first_name} %{last_name} amejaribu kukutumia %{token_name} lakini hujasajili. Tuma maelezo yako: jina, eneo, na aina ya biashara yako kwa 0757628885."
+    upsell_message_sender: "Mpokeaji %{recipient_phone} hajasajiliwa kwa Sempo. Tuma maelezo yake: jina, nambari ya simu, eneo, na aina ya biashara yake kwa Sempo."
+    upsell_message_recipient: "%{first_name} %{last_name} amejaribu kukutumia %{token_name} lakini hujasajili. Tuma maelezo yako: jina, eneo, na aina ya biashara yako kwa Sempo."
     send_directory_listing_message: "%{community_token_name} Soko ya %{business_type}\n%{directory_listing_users}"
     no_directory_listing_found_message: Samahani hatukuweza kupata biashara kutoka kwa jumuiya yako inayofanana na utafutaji wako.
     send_token_sender_sms: Umetuma %{amount} %{token_name} kwa %{other_user} tarehe %{date} kusudi %{reason} saa %{time}. Salio lako la %{token_name} ni %{balance}
@@ -180,25 +180,22 @@ sw:
       Kiwango cha ubadilishaji:
       Kwa kila 1 %{token_name} utapata %{exchange_rate} KSH
       1000 %{token_name} = %{exchange_sample_value} KSH
-    exchange_not_allowed_error_sms: Kikundi pekee kinakubaliwa kubadilisha. Kwa maelezo piga 0757628885
+    exchange_not_allowed_error_sms: Kikundi pekee kinakubaliwa kubadilisha.
     exchange_count_error_sms: Samahani umepitisha kiwango cha kubadilisha %{token}. Unakubaliwa kubadilisha mara %{count} kwa siku %{limit_period} pekee
     exchange_fraction_error_sms: Samahani umepitisha kiwango cha kubadilisha %{token}. Unakubaliwa kubadilisha %{percent}% ya salio lako
     exchange_amount_error_sms: Samahani umepitisha kiwango cha kubadilisha %{token}. Unakubaliwa kubadilisha %{token} %{amount} kwa siku {limit_period} pekee
-    transfer_amount_error_sms: Umefikisha kiwango cha utumizi wa Sarafu. Tafadhali wasiliana nasi kwa 0757628885 ili kuongeza zaidi matumizi ya Sarafu
+    transfer_amount_error_sms: Umefikisha kiwango cha utumizi wa Sempo.
     insufficient_balance_sms: |
       Malipo ya %{amount} %{token_name} kwa %{recipient} halijakamilika kwa sababu salio lako haitoshi.
-      Akaunti yako ya Sarafu-Network ina salio yafuatayo: %{token_balances}
+      Akaunti yako ya Sempo-Network ina salio yafuatayo: %{token_balances}
     send_token_error_sms: Malipo ya %{amount} %{token_name} kwa %{recipient} halijakamilika. Jaribu tena baadaye.
     send_balance_exchange_limit_sms: |
-      Akaunti yako ya Sarafu-Network ina salio yafuatayo: %{token_balances}
+      Akaunti yako ya Sempo-Network ina salio yafuatayo: %{token_balances}
       Waweza tumia kiwango cha juu %{token_exchanges} kila siku %{limit_period}
-      Piga 0757628885 kwa usaidizi zaidi
     send_balance_exchange_sms: |
-      Akaunti yako ya Sarafu-Network ina salio yafuatayo: %{token_balances}
+      Akaunti yako ya Sempo-Network ina salio yafuatayo: %{token_balances}
       Waweza badilisha kwa viwango vifuatavyo: %{token_exchanges}
-      Piga 0757628885 kwa usaidizi zaidi
     send_balance_sms: |
-      Akaunti yako ya Sarafu-Network ina salio yafuatayo: %{token_balances}
-      Piga 0757628885 kwa usaidizi zaidi
-    pin_change_success_sms: PIN yako ya Sarafu Network imebadilishwa.
-    pin_change_error_sms: PIN yako ya Sarafu Network haijabadilishwa. Piga simu 0757628885 kwa usaidizi
+      Akaunti yako ya Sempo-Network ina salio yafuatayo: %{token_balances}
+    pin_change_success_sms: PIN yako ya Sempo Network imebadilishwa.
+    pin_change_error_sms: PIN yako ya Sempo Network haijabadilishwa.

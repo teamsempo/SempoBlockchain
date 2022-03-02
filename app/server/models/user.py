@@ -193,7 +193,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
                                lazy='dynamic', foreign_keys='Feedback.user_id')
 
     custom_attributes = db.relationship("CustomAttributeUserStorage", backref='user',
-                                        lazy='joined', foreign_keys='CustomAttributeUserStorage.user_id')
+                                        lazy=True, foreign_keys='CustomAttributeUserStorage.user_id')
 
     exchanges = db.relationship("Exchange", backref="user")
 
