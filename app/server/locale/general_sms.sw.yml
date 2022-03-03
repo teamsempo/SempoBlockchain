@@ -1,6 +1,6 @@
 sw:
   welcome:
     generic: Habari %{first_name}, umesajiliwa kwa Sempo! Salio yako ni %{balance} %{token}.
-    grassroots: Habari %{first_name}, umesajiliwa kwa huduma ya sarafu! Salio lako ni %{token} %{balance}. Kutumia bonyeza *384*96# kwa Safaricom au *483*46# Airtel. Kwa Usaidizi 0757628885
+    custom: Habari %{first_name}, umesajiliwa kwa huduma ya test! Salio lako ni %{token} %{balance}.
   terms: Kwa kutumia hii huduma, umekubali sheria na masharti yafuatayo https://withsempo.com/legal/platform-terms.
-  pin_reset: Bonyeza *384*96# Safaricom ama *483*46# Airtel kubadilisha PIN yako
+  pin_reset: Bonyeza 1234 kubadilisha PIN yako

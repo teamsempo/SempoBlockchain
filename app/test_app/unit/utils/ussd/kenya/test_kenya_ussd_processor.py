@@ -4,11 +4,11 @@ from functools import partial
 from helpers.utils import fake_transfer_mapping
 from server.models.transfer_usage import TransferUsage
 from server.models.ussd import UssdMenu
-from server.utils.ussd.kenya_ussd_processor import KenyaUssdProcessor
+from server.utils.ussd.ussd_processor import UssdProcessor
 
 from helpers.model_factories import UserFactory, UssdSessionFactory
 from server import db
-from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
+from server.utils.ussd.ussd_state_machine import UssdStateMachine
 
 standard_user = partial(UserFactory)
 
@@ -45,8 +45,8 @@ def test_custom_display_text(test_client, init_database, menu_name, language, ex
         real_usage1.translations = {'en': 'Education', 'sw': 'Elimu'}
         real_usage2 = TransferUsage.find_or_create('Health')
         real_usage2.translations = {'en': 'Health', 'sw': 'Afya'}
-        mapping[real_at_idx] = KenyaUssdStateMachine.make_usage_mapping(real_usage1)
-        mapping[real_at_idx + 1] = KenyaUssdStateMachine.make_usage_mapping(real_usage2)
+        mapping[real_at_idx] = UssdStateMachine.make_usage_mapping(real_usage1)
+        mapping[real_at_idx + 1] = UssdStateMachine.make_usage_mapping(real_usage2)
         user = standard_user()
         user.preferred_language = language
 
@@ -58,8 +58,8 @@ def test_custom_display_text(test_client, init_database, menu_name, language, ex
 
         start_state.user = user
 
-        menu = UssdMenu(name=menu_name, display_key="ussd.kenya.{}".format(menu_name))
-        resulting_menu = KenyaUssdProcessor.custom_display_text(
+        menu = UssdMenu(name=menu_name, display_key="ussd.sempo.{}".format(menu_name))
+        resulting_menu = UssdProcessor.custom_display_text(
             menu, start_state)
 
         for expected in expecteds:

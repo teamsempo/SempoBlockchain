@@ -106,7 +106,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         "Disbursement",
         secondary=disbursement_credit_transfer_association_table,
         back_populates="credit_transfers",
-        uselist=False
+        uselist=False,
+        lazy=True
     )
 
     approvers = db.relationship(
