@@ -197,6 +197,7 @@ jobs:
       - run:
           name: Upload static assets to S3
           command: |
+            aws s3 rm s3://sempo-dev-static/static --recursive
             aws s3 sync app/server/static s3://sempo-dev-static/static
       - run:
           name: Remove old ECS task
