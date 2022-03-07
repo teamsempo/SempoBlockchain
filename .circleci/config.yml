@@ -240,7 +240,8 @@ workflows:
             branches:
               only:
                 - master
-                - update-nginx
-                - remove-redirects
           requires:
             - build
+            - test:backend
+            - test:worker
+            - test:frontend
