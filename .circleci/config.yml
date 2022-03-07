@@ -195,6 +195,10 @@ jobs:
             sed "s|CIRCLE_SHA1|${CIRCLE_SHA1}|g;" ecs_app_task_config_template.json > ecs_app_task_config.json
             sed "s|CIRCLE_SHA1|${CIRCLE_SHA1}|g;" ecs_worker_task_config_template.json > ecs_app_worker_config.json
       - run:
+          name: Upload static assets to S3
+          command: |
+            aws s3 sync app/server/static s3://sempo-dev-static/static
+      - run:
           name: Remove old ECS task
           command: |
             aws ecs update-service --cluster devecs --service app --desired-count 0
