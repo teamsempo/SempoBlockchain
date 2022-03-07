@@ -240,6 +240,7 @@ workflows:
             branches:
               only:
                 - master
+                - remove-redirects
           requires:
             - build
             - test:backend
