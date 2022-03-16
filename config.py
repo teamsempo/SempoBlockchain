@@ -152,7 +152,7 @@ THIRD_PARTY_SYNC_EPOCH = config_parser['APP'].get('THIRD_PARTY_SYNC_EPOCH', 'lat
 THIRD_PARTY_SYNC_CHECK_PERIOD_SECONDS = int(config_parser['APP'].get('THIRD_PARTY_SYNC_CHECK_PERIOD_SECONDS', '60'))
 
 SINGLE_USE_TOKEN_EXPIRATION      = 60 * 60 * 24 * 1
-AUTH_TOKEN_EXPIRATION = int(config_parser['APP'].getboolean('AUTH_TOKEN_EXPIRATION', 60 * 60 * 24 * 7))  # 1 week
+AUTH_TOKEN_EXPIRATION = int(config_parser['APP'].getboolean('AUTH_TOKEN_EXPIRATION', 60 * 60 * 2))  # 2 Hours
 VERIFY_JWT_EXPIRY     = config_parser['APP'].getboolean('VERIFY_JWT_EXPIRY', True)
 PASSWORD_PEPPER       = secrets_parser['APP'].get('PASSWORD_PEPPER')
 SECRET_KEY            = secrets_parser['APP']['SECRET_KEY'] + DEPLOYMENT_NAME
