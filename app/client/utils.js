@@ -4,11 +4,16 @@ import { LoginAction } from "./reducers/auth/actions";
 import store from "./createStore.js";
 import { USER_FILTER_TYPE } from "./constants";
 
-export const getActiveToken = (state) =>
-  state.tokens.byId[
-    state.organisations.byId[state.login.organisationId] &&
-      state.organisations.byId[state.login.organisationId].token
-  ];
+export const getActiveToken = (state) => {
+  if (state.tokens) {
+    return state.tokens.byId[
+      state.organisations.byId[state.login.organisationId] &&
+        state.organisations.byId[state.login.organisationId].token
+    ];
+  } else {
+    return false;
+  }
+};
 
 export function formatMoney(
   amount,
@@ -17,11 +22,12 @@ export function formatMoney(
   thousands = ",",
   currency
 ) {
-  const display_decimals = getActiveToken(store.getState()).display_decimals;
+  const activeToken = getActiveToken(store.getState());
+  const displayDecimals = activeToken ? activeToken.display_decimals : 2;
 
   try {
     decimalCount = Math.abs(decimalCount);
-    decimalCount = isNaN(decimalCount) ? display_decimals : decimalCount;
+    decimalCount = isNaN(decimalCount) ? displayDecimals : decimalCount;
 
     const negativeSign = amount < 0 ? "-" : "";
 
