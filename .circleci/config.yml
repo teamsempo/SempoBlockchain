@@ -240,9 +240,6 @@ workflows:
             branches:
               only:
                 - master
-                - remove-redirects
+                - hide-headers
           requires:
             - build
-            - test:backend
-            - test:worker
-            - test:frontend
