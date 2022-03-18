@@ -7,15 +7,15 @@ import { LoginAction } from "../../reducers/auth/actions";
 
 import TFAForm from "./TFAForm.jsx";
 
-const mapStateToProps = state => {
+const mapStateToProps = (state) => {
   return {
-    login_status: state.login
+    login_status: state.login,
   };
 };
 
-const mapDispatchToProps = dispatch => {
+const mapDispatchToProps = (dispatch) => {
   return {
-    loginRequest: payload => dispatch(LoginAction.loginRequest(payload))
+    loginRequest: (payload) => dispatch(LoginAction.loginRequest(payload)),
   };
 };
 
@@ -30,12 +30,12 @@ export class LoginFormContainer extends React.Component {
     this.props.loginRequest({
       body: {
         username: values.email,
-        password: values.password
-      }
+        password: values.password,
+      },
     });
   }
 
-  onFinishFailed = errorInfo => {
+  onFinishFailed = (errorInfo) => {
     // console.log("Failed:", errorInfo);
   };
 
@@ -60,7 +60,7 @@ export class LoginFormContainer extends React.Component {
   }
 }
 
-const LoginForm = function(props) {
+const LoginForm = function (props) {
   return (
     <div>
       <Form
@@ -80,6 +80,7 @@ const LoginForm = function(props) {
           aria-label="Password"
           name="password"
           rules={[{ required: true, message: "Please enter your password!" }]}
+          autocomplete="off"
         >
           <Input
             placeholder="Password"
@@ -103,7 +104,4 @@ const LoginForm = function(props) {
     </div>
   );
 };
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(LoginFormContainer);
+export default connect(mapStateToProps, mapDispatchToProps)(LoginFormContainer);
