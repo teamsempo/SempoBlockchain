@@ -7,7 +7,7 @@ describe("test formatMoney", () => {
     [-200, undefined, undefined, undefined, "AUD", "-200.00 AUD"],
     [undefined, undefined, undefined, undefined, "AUD", "0.00 AUD"],
     [2, 1, undefined, undefined, "USD", "2.0 USD"],
-    [999999, 4, ".", ",", "R", "999,999.0000 R"]
+    [999999, 4, ".", ",", "R", "999,999.0000 R"],
   ])(
     ".formatMoney(%i, %i, %s, %s, %s) == %s",
     (amount, decimalCount, decimal, thousands, currency, expected) => {
@@ -22,7 +22,7 @@ describe("test URL functions", () => {
   test("test parseQuery", () => {
     expect(utils.parseQuery("?is_deleted=true&foo=bar")).toStrictEqual({
       foo: "bar",
-      is_deleted: "true"
+      is_deleted: "true",
     });
   });
 
@@ -43,7 +43,7 @@ describe("test URL functions", () => {
   });
 });
 
-describe("test localStorage", () => {
+describe("test sessionStorage", () => {
   const orgId = "1";
   const TFAToken = "abcdadsf123123123";
   const sessionToken = "asfdasfd91234pfa";
@@ -51,7 +51,7 @@ describe("test localStorage", () => {
   describe("orgId", () => {
     test("test setOrgIds", () => {
       utils.storeOrgIds(orgId);
-      expect(localStorage).toHaveProperty("orgIds", orgId);
+      expect(sessionStorage).toHaveProperty("orgIds", orgId);
     });
 
     test("test getOrgIds", () => {
@@ -60,14 +60,14 @@ describe("test localStorage", () => {
 
     test("test removeOrgIds", () => {
       utils.removeOrgIds();
-      expect(localStorage).not.toHaveProperty("orgIds", orgId);
+      expect(sessionStorage).not.toHaveProperty("orgIds", orgId);
     });
   });
 
   describe("TFAToken", () => {
     test("test storeTFAToken", () => {
       utils.storeTFAToken(TFAToken);
-      expect(localStorage).toHaveProperty("TFAToken", TFAToken);
+      expect(sessionStorage).toHaveProperty("TFAToken", TFAToken);
     });
 
     test("test getTFAToken", () => {
@@ -76,14 +76,14 @@ describe("test localStorage", () => {
 
     test("test removeTFAToken", () => {
       utils.removeTFAToken();
-      expect(localStorage).not.toHaveProperty("TFAToken", TFAToken);
+      expect(sessionStorage).not.toHaveProperty("TFAToken", TFAToken);
     });
   });
 
   describe("sessionToken", () => {
     test("test storeSessionToken", () => {
       utils.storeSessionToken(sessionToken);
-      expect(localStorage).toHaveProperty("sessionToken", sessionToken);
+      expect(sessionStorage).toHaveProperty("sessionToken", sessionToken);
     });
 
     test("test getToken - sessionToken only", () => {
@@ -98,7 +98,7 @@ describe("test localStorage", () => {
 
     test("test removeSessionToken", () => {
       utils.removeSessionToken();
-      expect(localStorage).not.toHaveProperty("sessionToken", sessionToken);
+      expect(sessionStorage).not.toHaveProperty("sessionToken", sessionToken);
     });
   });
 });
@@ -124,9 +124,9 @@ test("get_zero_filled_values", () => {
     { date: "2020-07-03T00:00:00", value: 11 },
     {
       date: "2020-07-05T00:00:00",
-      value: 1
+      value: 1,
     },
-    { date: "2020-07-08T00:00:00", value: 1 }
+    { date: "2020-07-08T00:00:00", value: 1 },
   ];
   const date_values = [
     "2020-07-03T00:00:00",
@@ -134,9 +134,9 @@ test("get_zero_filled_values", () => {
     "2020-07-05T00:00:00",
     "2020-07-06T00:00:00",
     "2020-07-07T00:00:00",
-    "2020-07-08T00:00:00"
+    "2020-07-08T00:00:00",
   ];
-  const date_array = date_values.map(date => new Date(date));
+  const date_array = date_values.map((date) => new Date(date));
   expect(
     utils.get_zero_filled_values("value", value_array, date_array)
   ).toStrictEqual([11, 0, 1, 0, 0, 1]);
