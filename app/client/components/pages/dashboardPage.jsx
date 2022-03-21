@@ -18,21 +18,19 @@ import MetricsCard from "../dashboard/MetricsCard";
 import MasterWalletCard from "../dashboard/MasterWalletCard";
 import { Default, Mobile } from "../helpers/responsive";
 
-const mapStateToProps = state => {
+const mapStateToProps = (state) => {
   return {
     creditTransfers: state.creditTransfers,
-    login: state.login
+    login: state.login,
   };
 };
 
-const mapDispatchToProps = dispatch => {
+const mapDispatchToProps = (dispatch) => {
   return {
-    loadCreditTransferList: query =>
-      dispatch(
-        LoadCreditTransferAction.loadCreditTransferRequest({ query })
-      ),
-    activateAccount: payload =>
-      dispatch(ActivateAccountAction.activateAccountRequest(payload))
+    loadCreditTransferList: (query) =>
+      dispatch(LoadCreditTransferAction.loadCreditTransferRequest({ query })),
+    activateAccount: (payload) =>
+      dispatch(ActivateAccountAction.activateAccountRequest(payload)),
   };
 };
 
@@ -42,7 +40,7 @@ class DashboardPage extends React.Component {
     this.state = {
       liveFeedExpanded: false,
       subscribe,
-      unsubscribe
+      unsubscribe,
     };
   }
 
@@ -52,10 +50,10 @@ class DashboardPage extends React.Component {
     let page = 1;
     this.props.loadCreditTransferList({
       per_page: per_page,
-      page: page
+      page: page,
     });
 
-    let liveFeedExpandedStr = localStorage.getItem("liveFeedExpanded");
+    let liveFeedExpandedStr = sessionStorage.getItem("liveFeedExpanded");
 
     if (liveFeedExpandedStr) {
       this.setState({ liveFeedExpanded: liveFeedExpandedStr === "true" });
@@ -71,7 +69,7 @@ class DashboardPage extends React.Component {
 
     this.setState({ liveFeedExpanded });
 
-    localStorage.setItem("liveFeedExpanded", liveFeedExpanded.toString());
+    sessionStorage.setItem("liveFeedExpanded", liveFeedExpanded.toString());
   }
 
   subscribe() {
@@ -121,23 +119,23 @@ class DashboardPage extends React.Component {
             [
               "daily_transaction_count",
               "Transfer Count",
-              "Total number of transfers"
+              "Total number of transfers",
             ],
             [
               "users_who_made_purchase",
               "Unique Participants",
-              "Unique participants who have sent a transfer"
+              "Unique participants who have sent a transfer",
             ],
             [
               "transfer_amount_per_user",
               "Average Volume",
-              "Average amount transferred per participant"
+              "Average amount transferred per participant",
             ],
             [
               "trades_per_user",
               "Average Count",
-              "Average number of transfers per participant"
-            ]
+              "Average number of transfers per participant",
+            ],
           ]}
         />
         <MetricsCard
@@ -150,18 +148,18 @@ class DashboardPage extends React.Component {
             [
               "active_users",
               "Active Participants",
-              "Number of unique participants who have sent a transfer"
+              "Number of unique participants who have sent a transfer",
             ],
             [
               "total_population_cumulative",
               "Cumulative Participants",
-              "Cumulative number of new participants created"
+              "Cumulative number of new participants created",
             ],
             [
               "users_created",
               "New Participants",
-              "Number of new participants created"
-            ]
+              "Number of new participants created",
+            ],
           ]}
         />
       </React.Fragment>
@@ -262,7 +260,4 @@ class DashboardPage extends React.Component {
   }
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(DashboardPage);
+export default connect(mapStateToProps, mapDispatchToProps)(DashboardPage);

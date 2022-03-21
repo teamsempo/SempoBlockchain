@@ -4,7 +4,7 @@ import { LoginAction } from "./reducers/auth/actions";
 import store from "./createStore.js";
 import { USER_FILTER_TYPE } from "./constants";
 
-export const getActiveToken = state =>
+export const getActiveToken = (state) =>
   state.tokens.byId[
     state.organisations.byId[state.login.organisationId] &&
       state.organisations.byId[state.login.organisationId].token
@@ -45,7 +45,7 @@ export function formatMoney(
   }
 }
 
-export const toCurrency = amount => {
+export const toCurrency = (amount) => {
   return Math.round((amount / 100) * 100) / 100;
 };
 
@@ -54,7 +54,7 @@ const overwriteMerge = (destinationArray, sourceArray) => sourceArray;
 export function DEEEEEEP(parent_object, child_object_to_add) {
   // update object state data with new data, while keeping untouched old data, overwrite array
   return merge(parent_object, child_object_to_add, {
-    arrayMerge: overwriteMerge
+    arrayMerge: overwriteMerge,
   });
 }
 
@@ -66,11 +66,11 @@ export function addCreditTransferIdsToTransferAccount(
   return merge(parent_object, child_object_to_add);
 }
 
-export const generateQueryString = query => {
+export const generateQueryString = (query) => {
   let query_string = "?";
 
   if (query) {
-    Object.keys(query).map(query_key => {
+    Object.keys(query).map((query_key) => {
       let string_term = query_key + "=" + query[query_key] + "&";
       query_string = query_string.concat(string_term);
     });
@@ -89,11 +89,10 @@ export const generateQueryString = query => {
   return response_string.slice(0, -1);
 };
 
-export const parseQuery = queryString => {
+export const parseQuery = (queryString) => {
   var query = {};
-  var pairs = (queryString[0] === "?"
-    ? queryString.substr(1)
-    : queryString
+  var pairs = (
+    queryString[0] === "?" ? queryString.substr(1) : queryString
   ).split("&");
   for (var i = 0; i < pairs.length; i++) {
     var pair = pairs[i].split("=");
@@ -135,7 +134,7 @@ export const generateFormattedURL = (url, query, path) => {
   return new URL(urlPath, baseUrl).href;
 };
 
-export const handleResponse = response => {
+export const handleResponse = (response) => {
   if (response.ok) {
     return response.json();
   }
@@ -159,46 +158,46 @@ export function* handleError(error) {
   return { message, status };
 }
 
-const extractJson = error => {
+const extractJson = (error) => {
   return error.json();
 };
 
-export const storeOrgIds = orgIds => {
-  localStorage.setItem("orgIds", orgIds);
+export const storeOrgIds = (orgIds) => {
+  sessionStorage.setItem("orgIds", orgIds);
 };
 
-export const removeOrgIds = orgId => {
-  localStorage.removeItem("orgIds");
+export const removeOrgIds = (orgId) => {
+  sessionStorage.removeItem("orgIds");
 };
 
 export const getOrgIds = () => {
   try {
-    return localStorage.getItem("orgIds");
+    return sessionStorage.getItem("orgIds");
   } catch (err) {
     removeOrgIds();
     return null;
   }
 };
 
-export const storeSessionToken = token => {
-  localStorage.setItem("sessionToken", token);
+export const storeSessionToken = (token) => {
+  sessionStorage.setItem("sessionToken", token);
 };
 
 export const removeSessionToken = () => {
-  localStorage.removeItem("sessionToken");
+  sessionStorage.removeItem("sessionToken");
 };
 
-export const storeTFAToken = token => {
-  localStorage.setItem("TFAToken", token);
+export const storeTFAToken = (token) => {
+  sessionStorage.setItem("TFAToken", token);
 };
 
 export const removeTFAToken = () => {
-  localStorage.removeItem("TFAToken");
+  sessionStorage.removeItem("TFAToken");
 };
 
 export const getTFAToken = () => {
   try {
-    return localStorage.getItem("TFAToken");
+    return sessionStorage.getItem("TFAToken");
   } catch (err) {
     removeTFAToken();
     return null;
@@ -207,8 +206,8 @@ export const getTFAToken = () => {
 
 export const getToken = () => {
   try {
-    let sessionToken = localStorage.getItem("sessionToken");
-    let TFAToken = localStorage.getItem("TFAToken");
+    let sessionToken = sessionStorage.getItem("sessionToken");
+    let TFAToken = sessionStorage.getItem("TFAToken");
 
     if (TFAToken) {
       return sessionToken + "|" + TFAToken;
@@ -221,7 +220,7 @@ export const getToken = () => {
   }
 };
 
-export const replaceUnderscores = stringlike => {
+export const replaceUnderscores = (stringlike) => {
   if (stringlike) {
     return stringlike.toString().replace(/_/g, " ");
   } else {
@@ -229,9 +228,9 @@ export const replaceUnderscores = stringlike => {
   }
 };
 
-export const toTitleCase = stringlike => {
+export const toTitleCase = (stringlike) => {
   if (stringlike) {
-    return stringlike.replace(/\w\S*/g, function(txt) {
+    return stringlike.replace(/\w\S*/g, function (txt) {
       return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
     });
   } else {
@@ -239,7 +238,7 @@ export const toTitleCase = stringlike => {
   }
 };
 
-export const replaceSpaces = stringlike => {
+export const replaceSpaces = (stringlike) => {
   if (stringlike) {
     return stringlike.toString().replace(/ /g, "-");
   } else {
@@ -262,9 +261,9 @@ export const getDateArray = (start, end) => {
 export const get_zero_filled_values = (key, value_array, date_array) => {
   let value_dict = {};
 
-  value_array.map(data => (value_dict[new Date(data.date)] = data[key]));
+  value_array.map((data) => (value_dict[new Date(data.date)] = data[key]));
 
-  let transaction_volume = date_array.map(date => {
+  let transaction_volume = date_array.map((date) => {
     if (value_dict[date] !== undefined) {
       return value_dict[date];
     } else {
@@ -275,12 +274,12 @@ export const get_zero_filled_values = (key, value_array, date_array) => {
   return transaction_volume;
 };
 
-export const processFiltersForQuery = filters => {
+export const processFiltersForQuery = (filters) => {
   let encoded_filters = encodeURIComponent("");
   let delimiter = ":";
   // let encoded_filters = encodeURIComponent("%$user_filters%");
 
-  filters.forEach(filter => {
+  filters.forEach((filter) => {
     encoded_filters += encodeURIComponent(filter.attribute);
     let parsed_filter = "";
     if (
@@ -289,7 +288,7 @@ export const processFiltersForQuery = filters => {
     ) {
       let rule = "(IN)";
       let allowed_vals = "";
-      filter.allowedValues.forEach(value => {
+      filter.allowedValues.forEach((value) => {
         allowed_vals += encodeURIComponent(value) + ",";
       });
 
@@ -320,15 +319,17 @@ export const parseEncodedParams = (allowedFilters, params) => {
   let inequalityMapper = {
     EQ: "=",
     LT: "<",
-    GT: ">"
+    GT: ">",
   };
 
   return params
     .split(":")
-    .filter(item => item)
+    .filter((item) => item)
     .map((param, i) => {
       //Tokenize across parentheses
-      let [attribute, comparator, value] = param.split(/[()]+/).filter(e => e);
+      let [attribute, comparator, value] = param
+        .split(/[()]+/)
+        .filter((e) => e);
 
       let matchedFilter = allowedFilters[attribute];
       if (!matchedFilter) {
@@ -340,7 +341,7 @@ export const parseEncodedParams = (allowedFilters, params) => {
           type: matchedFilter.type,
           attribute: decodeURIComponent(attribute),
           allowedValues: value.split(",").map(decodeURIComponent),
-          id: i + 1
+          id: i + 1,
         };
       }
 
@@ -348,7 +349,7 @@ export const parseEncodedParams = (allowedFilters, params) => {
         type: inequalityMapper[comparator] || inequalityMapper["EQ"],
         attribute: decodeURIComponent(attribute),
         threshold: value,
-        id: i + 1
+        id: i + 1,
       };
     });
 };
@@ -356,7 +357,7 @@ export const parseEncodedParams = (allowedFilters, params) => {
 export function hexToRgb(hex) {
   // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
   var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-  hex = hex.replace(shorthandRegex, function(m, r, g, b) {
+  hex = hex.replace(shorthandRegex, function (m, r, g, b) {
     return r + r + g + g + b + b;
   });
 
@@ -365,7 +366,7 @@ export function hexToRgb(hex) {
     ? {
         r: parseInt(result[1], 16),
         g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
+        b: parseInt(result[3], 16),
       }
     : null;
 }

@@ -72,9 +72,9 @@
         authEndpoint: "/api/pusher/superauth",
         auth: {
           headers: {
-            Authorization: localStorage.getItem("sessionToken")
-          }
-        }
+            Authorization: sessionStorage.getItem("sessionToken"),
+          },
+        },
       });
 
       var channel = pusher.subscribe(
@@ -83,15 +83,15 @@
 
       var qrcode = new QRCode("qrcode", {
         text: "{{ qr_code }}",
-        correctLevel: QRCode.CorrectLevel.L
+        correctLevel: QRCode.CorrectLevel.L,
       });
 
-      channel.bind("qr_code", function(data) {
+      channel.bind("qr_code", function (data) {
         console.log(data);
         qrcode.makeCode(data);
       });
 
-      channel.bind("status", function(data) {
+      channel.bind("status", function (data) {
         document.getElementById("status").innerHTML = JSON.stringify(data);
       });
     </script>
