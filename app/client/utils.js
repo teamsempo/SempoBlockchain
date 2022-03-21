@@ -4,11 +4,16 @@ import { LoginAction } from "./reducers/auth/actions";
 import store from "./createStore.js";
 import { USER_FILTER_TYPE } from "./constants";
 
-export const getActiveToken = (state) =>
-  state.tokens.byId[
-    state.organisations.byId[state.login.organisationId] &&
-      state.organisations.byId[state.login.organisationId].token
-  ];
+export const getActiveToken = (state) => {
+  if (state.tokens) {
+    return state.tokens.byId[
+      state.organisations.byId[state.login.organisationId] &&
+        state.organisations.byId[state.login.organisationId].token
+    ];
+  } else {
+    return false;
+  }
+};
 
 export function formatMoney(
   amount,
@@ -17,9 +22,12 @@ export function formatMoney(
   thousands = ",",
   currency
 ) {
+  const activeToken = getActiveToken(store.getState());
+  const displayDecimals = activeToken ? activeToken.display_decimals : 2;
+
   try {
     decimalCount = Math.abs(decimalCount);
-    decimalCount = isNaN(decimalCount) ? 2 : decimalCount;
+    decimalCount = isNaN(decimalCount) ? displayDecimals : decimalCount;
 
     const negativeSign = amount < 0 ? "-" : "";
 
@@ -181,6 +189,7 @@ export const getOrgIds = () => {
 
 export const storeSessionToken = (token) => {
   sessionStorage.setItem("sessionToken", token);
+
 };
 
 export const removeSessionToken = () => {

@@ -6,7 +6,7 @@ logging.basicConfig(level=env_loglevel)
 logg = logging.getLogger(__name__)
 
 
-VERSION = '2.1.5'  # Remember to bump this in every PR
+VERSION = '2.1.7'  # Remember to bump this in every PR
 
 logg.info('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
