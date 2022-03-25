@@ -11,7 +11,7 @@ import {
   Input,
   Space,
   Select,
-  Divider
+  Divider,
 } from "antd";
 
 import { StopOutlined, RedoOutlined } from "@ant-design/icons";
@@ -77,7 +77,7 @@ const EditUserForm = (props: Props) => {
     let account_types = [];
     let { selectedUser, transferUsages } = props;
     let transferUsage = transferUsages.filter(
-      t => t.id === selectedUser.business_usage_id
+      (t) => t.id === selectedUser.business_usage_id
     )[0];
     let transferUsageName = transferUsage && transferUsage.name;
     let customAttributes = selectedUser && selectedUser.custom_attributes;
@@ -88,7 +88,7 @@ const EditUserForm = (props: Props) => {
     let custom_attr_keys =
       (customAttributes && Object.keys(customAttributes)) || [];
     let attr_dict = {};
-    custom_attr_keys.map(key => {
+    custom_attr_keys.map((key) => {
       (attr_dict as attr_dict)[key] = customAttributes[key];
       return attr_dict;
     });
@@ -103,7 +103,7 @@ const EditUserForm = (props: Props) => {
       oneTimeCode: selectedUser.one_time_code,
       failedPinAttempts: selectedUser.failed_pin_attempts,
       businessUsage: transferUsageName,
-      ...attr_dict
+      ...attr_dict,
     });
   };
 
@@ -118,25 +118,26 @@ const EditUserForm = (props: Props) => {
 
   const optionizeUsages = () => {
     return props.transferUsages
-      .map(transferUsage => {
+      .map((transferUsage) => {
         return {
           name: transferUsage.name,
-          value: transferUsage.name
+          value: transferUsage.name,
         };
       })
       .concat({
         name: "Other",
-        value: "other"
+        value: "other",
       });
   };
 
   const onFinish = (values: any) => {
-    props.onSubmit(values);
+    window.confirm("Are you sure you wish to save changes?") &&
+      props.onSubmit(values);
   };
 
   const { selectedUser, transferUsages, users, transferCard } = props;
   let transferUsage = transferUsages.filter(
-    t => t.id === selectedUser.business_usage_id
+    (t) => t.id === selectedUser.business_usage_id
   )[0];
 
   let validRoles = props.activeOrganisation.valid_roles;
@@ -264,8 +265,8 @@ const EditUserForm = (props: Props) => {
                         );
                       }
                       return FormValidation.antPhone(value);
-                    }
-                  })
+                    },
+                  }),
                 ]}
               >
                 <AdaptedPhoneInput isPhoneNumber />
@@ -287,8 +288,8 @@ const EditUserForm = (props: Props) => {
                         );
                       }
                       return Promise.resolve();
-                    }
-                  })
+                    },
+                  }),
                 ]}
               >
                 <Input
@@ -383,8 +384,8 @@ const EditUserForm = (props: Props) => {
                 rules={[
                   {
                     validator: (_: any, value: any) =>
-                      FormValidation.antPhone(value)
-                  }
+                      FormValidation.antPhone(value),
+                  },
                 ]}
               >
                 <AdaptedPhoneInput isPhoneNumber />
@@ -442,8 +443,8 @@ const EditUserForm = (props: Props) => {
                           rules={[
                             {
                               required: true,
-                              message: "Please specify the category!"
-                            }
+                              message: "Please specify the category!",
+                            },
                           ]}
                         >
                           <Input />
@@ -471,7 +472,7 @@ const mapStateToProps = (state: ReduxState): StateProps => {
     viewHistory: state.viewHistory,
     // @ts-ignore
     activeOrganisation: state.organisations.byId[state.login.organisationId],
-    adminTier: state.login.adminTier
+    adminTier: state.login.adminTier,
   };
 };
 
