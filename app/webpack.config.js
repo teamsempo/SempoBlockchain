@@ -4,7 +4,6 @@ const fs = require("fs");
 const APP_DIR = path.resolve(__dirname, "client");
 const BUILD_DIR = path.resolve(__dirname, "server/static/javascript/dist");
 const CleanWebpackPlugin = require("clean-webpack-plugin");
-const CompressionPlugin = require("compression-webpack-plugin");
 const BundleAnalyzerPlugin =
   require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 const MomentLocalesPlugin = require("moment-locales-webpack-plugin");
@@ -21,8 +20,6 @@ module.exports = function (env, argv) {
     entry: APP_DIR + "/index.jsx",
     plugins: [
       new CleanWebpackPlugin([BUILD_DIR]),
-
-      new CompressionPlugin(),
 
       new MomentLocalesPlugin({
         localesToKeep: ["es-us"],

@@ -143,7 +143,7 @@ class TokenSchema(SchemaBase):
     address             = fields.Str()
     symbol              = fields.Str()
     name                = fields.Str()
-
+    display_decimals    = fields.Int()
     def get_exchange_rates(self, obj):
         rates = {}
         for to_token in self.context.get('exchange_pairs', []):

@@ -8,7 +8,7 @@ SENDER_PHONE = os.environ.get('SENDER_PHONE')
 
 def req(session_id, text):
     r = requests.post(
-        f'{host}/api/v1/ussd/kenya?username={EXTERNAL_AUTH_USERNAME}&password={EXTERNAL_AUTH_PASSWORD}',
+        f'{host}/api/v1/ussd?username={EXTERNAL_AUTH_USERNAME}&password={EXTERNAL_AUTH_PASSWORD}',
         headers=dict(Accept='application/json'),
         json={'sessionId': session_id,
               'phoneNumber': SENDER_PHONE,
