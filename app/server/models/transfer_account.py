@@ -91,20 +91,22 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
         "Disbursement",
         secondary=disbursement_transfer_account_association_table,
         back_populates="transfer_accounts",
-        lazy='joined'
+        lazy=True
     )
     credit_sends = db.relationship(
         'CreditTransfer',
         foreign_keys='CreditTransfer.sender_transfer_account_id',
         back_populates='sender_transfer_account',
-        order_by='desc(CreditTransfer.id)'
+        order_by='desc(CreditTransfer.id)',
+        lazy=True
     )
 
     credit_receives = db.relationship(
         'CreditTransfer',
         foreign_keys='CreditTransfer.recipient_transfer_account_id',
         back_populates='recipient_transfer_account',
-        order_by='desc(CreditTransfer.id)'
+        order_by='desc(CreditTransfer.id)',
+        lazy=True
     )
 
     spend_approvals_given = db.relationship('SpendApproval', backref='giving_transfer_account',

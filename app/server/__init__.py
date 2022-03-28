@@ -134,11 +134,6 @@ def register_blueprints(app):
         g.executor_jobs: ExecutorJobList = []
         g.is_after_request = False
 
-        if request.url.startswith('http://') and '.withsempo.com' in request.url:
-            url = request.url.replace('http://', 'https://', 1)
-            code = 301
-            return redirect(url, code=code)
-
     @app.after_request
     def after_request(response):
         from server.utils import pusher_utils

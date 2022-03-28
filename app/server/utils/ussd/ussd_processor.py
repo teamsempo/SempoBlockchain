@@ -4,12 +4,12 @@ import math
 from server.models.ussd import UssdMenu, UssdSession
 from server.models.user import User
 from server.utils.user import get_user_by_phone, default_token
-from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine, ITEMS_PER_MENU, USSD_MAX_LENGTH
+from server.utils.ussd.ussd_state_machine import UssdStateMachine, ITEMS_PER_MENU, USSD_MAX_LENGTH
 from server.utils.internationalization import i18n_for
 from server.utils.credit_transfer import cents_to_dollars
 
 
-class KenyaUssdProcessor:
+class UssdProcessor:
     @staticmethod
     def process_request(session_id: str, user_input: str, user: User) -> UssdMenu:
         session: Optional[UssdSession] = UssdSession.query.filter_by(session_id=session_id).first()
@@ -20,7 +20,7 @@ class KenyaUssdProcessor:
             elif user_input == '0':
                 return UssdMenu.find_by_name(session.state).parent()
             else:
-                new_state = KenyaUssdProcessor.next_state(session, user_input, user)
+                new_state = UssdProcessor.next_state(session, user_input, user)
                 return UssdMenu.find_by_name(new_state)
         # new session
         else:
@@ -36,7 +36,7 @@ class KenyaUssdProcessor:
 
     @staticmethod
     def next_state(session: UssdSession, user_input: str, user: User) -> UssdMenu:
-        state_machine = KenyaUssdStateMachine(session, user)
+        state_machine = UssdStateMachine(session, user)
         state_machine.feed_char(user_input)
         new_state = state_machine.state
 
@@ -51,7 +51,7 @@ class KenyaUssdProcessor:
         last_index = 0
         for index, usage in enumerate(most_relevant_usages[list_start:]):
             current_usages.append(usage)
-            menu_options = KenyaUssdProcessor.create_usages_list(current_usages, user)
+            menu_options = UssdProcessor.create_usages_list(current_usages, user)
 
             if len(menu_options) + blank_len > USSD_MAX_LENGTH or index + 1 > ITEMS_PER_MENU:
                 continue
@@ -89,7 +89,7 @@ class KenyaUssdProcessor:
                 return i18n_for(user, "{}.bio".format(menu.display_key), user_bio=bio_text)
 
         if menu.name == 'send_token_confirmation':
-            recipient = get_user_by_phone(ussd_session.get_data('recipient_phone'), 'KE', True)
+            recipient = get_user_by_phone(ussd_session.get_data('recipient_phone'), should_raise=True)
             recipient_phone = recipient.user_details()
             token = default_token(user)
             transaction_amount = ussd_session.get_data('transaction_amount')
@@ -103,7 +103,7 @@ class KenyaUssdProcessor:
             )
 
         if menu.name == 'exchange_token_confirmation':
-            agent = get_user_by_phone(ussd_session.get_data('agent_phone'), 'KE', True)
+            agent = get_user_by_phone(ussd_session.get_data('agent_phone'), should_raise=True)
             agent_phone = agent.user_details()
             token = default_token(user)
             exchange_amount = ussd_session.get_data('exchange_amount')
@@ -141,7 +141,7 @@ class KenyaUssdProcessor:
 
             most_relevant_usages = ussd_session.get_data('transfer_usage_mapping')
 
-            options = KenyaUssdProcessor.fit_usages(
+            options = UssdProcessor.fit_usages(
                 ussd_session,
                 most_relevant_usages,
                 blank_len,
@@ -170,7 +170,7 @@ class KenyaUssdProcessor:
             if start_of_list + ITEMS_PER_MENU > total_usages:
                 part = 'first' if start_of_list == 0 else 'last'
                 current_usages = most_relevant_usages[start_of_list:total_usages]
-                menu_options = KenyaUssdProcessor.create_usages_list(current_usages, user)
+                menu_options = UssdProcessor.create_usages_list(current_usages, user)
 
                 translated_menu = i18n_for(
                     user, "{}.{}".format(menu.display_key, part),
@@ -191,7 +191,7 @@ class KenyaUssdProcessor:
 
             blank_len = len(blank_template)
 
-            options = KenyaUssdProcessor.fit_usages(
+            options = UssdProcessor.fit_usages(
                 ussd_session,
                 most_relevant_usages,
                 blank_len,
