@@ -250,7 +250,7 @@ def create_filter(test_client, init_database, create_organisation):
 def create_blacklisted_token(authed_sempo_admin_user):
     from server.models.blacklist_token import BlacklistToken
     auth_token = authed_sempo_admin_user.encode_auth_token().decode()
-    blacklist_token = BlacklistToken(token=auth_token)
+    blacklist_token = BlacklistToken(token=auth_token, user_id=authed_sempo_admin_user.id)
     db.session.add(blacklist_token)
     db.session.commit()
     return blacklist_token

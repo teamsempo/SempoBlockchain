@@ -5,7 +5,7 @@ from server.models.token import Token
 from server.models.transfer_account import TransferAccount
 from server.models.transfer_usage import TransferUsage
 from server.models.user import User
-from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
+from server.utils.ussd.ussd_state_machine import UssdStateMachine
 
 
 def will_func_test_blockchain():
@@ -37,7 +37,7 @@ def fake_transfer_mapping(length: int):
     transfer_usage = TransferUsage.find_or_create("Food")
     db.session.commit()
     for i in range(length):
-        mapping.append(KenyaUssdStateMachine.make_usage_mapping(transfer_usage))
+        mapping.append(UssdStateMachine.make_usage_mapping(transfer_usage))
 
     return mapping
 

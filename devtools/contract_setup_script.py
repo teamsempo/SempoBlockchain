@@ -259,7 +259,7 @@ class Setup(object):
 
     def ussd_request(self, organisation_name, token_id):
 
-        r = requests.post(url=self.api_host + 'ussd/kenya',
+        r = requests.post(url=self.api_host + 'ussd',
                           headers=dict(Authorization=self.api_token, Accept='application/json'),
                           json={
                               'token_id': token_id,
@@ -287,7 +287,7 @@ def _base_setup(s, reserve_token_id):
 
     org_id = s.create_cic_organisation(
         organisation_name='ACME Org',
-        custom_welcome_message_key='grassroots',
+        custom_welcome_message_key='custom',
         timezone='Australia/Melbourne',
         country_code='AU',
         exchange_contract_id=exchange_contract_id,
