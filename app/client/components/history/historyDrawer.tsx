@@ -23,9 +23,7 @@ class HistoryDrawer extends React.Component<Props> {
       const column_name = toTitleCase(replaceUnderscores(change.column_name));
       const created = change.created;
       return {
-        item: `${toTitleCase(
-          replaceUnderscores(column_name)
-        )} changed from "${old_value}" to "${new_value}"`,
+        item: `${column_name} changed from "${old_value}" to "${new_value}"`,
         date: created,
         email: email,
       };
