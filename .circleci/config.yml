@@ -240,6 +240,8 @@ workflows:
             branches:
               only:
                 - master
-                - x-forwarded-for-who
           requires:
             - build
+            - test:backend
+            - test:worker
+            - test:frontend
