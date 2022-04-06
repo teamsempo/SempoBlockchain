@@ -31,6 +31,8 @@ class CreditTransferStatsApi(MethodView):
             - token_id: (Default: None) If multi-org is being used, and the orgs have different tokens, this lets the user choose
                 which token's stats to present
         """
+        print('REMOTE')
+        print(request.remote_addr)
         print('HEADERS')
         print('HEADERS')
         print('HEADERS')
