@@ -310,18 +310,9 @@ def tfa_logic(user, tfa_token, ignore_tfa_requirement=False):
 
 def check_ip(user):
     real_ip_address = request.remote_addr
-    print(real_ip_address)
-    print(real_ip_address)
-    print(real_ip_address)
-    print(real_ip_address)
-
     if real_ip_address is not None and not IpAddress.check_user_ips(user, real_ip_address):
         # IP exists in request and is not already saved
         new_ip = IpAddress(ip=real_ip_address)
-        print(real_ip_address)
-        print(real_ip_address)
-        print(real_ip_address)
-        print(real_ip_address)
         new_ip.user = user
         db.session.add(new_ip)
 
