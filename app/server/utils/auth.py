@@ -230,8 +230,7 @@ def requires_auth(f=None,
                     except NotImplementedError:
                         g.active_organisation = None
 
-                    proxies = request.headers.getlist("X-Forwarded-For")
-                    check_ip(proxies, user, num_proxy=1)
+                    check_ip(user)
 
                     # updates the validated user last seen timestamp
                     user.update_last_seen_ts()
@@ -309,20 +308,13 @@ def tfa_logic(user, tfa_token, ignore_tfa_requirement=False):
     return None
 
 
-def check_ip(proxies, user, num_proxy=0):
-    """
-    Proxies can be faked easily. Assumes there is a set number of proxies in production.
-    Todo: make this more robust
-    """
-    correct_ip_index = num_proxy + 1
-
-    if len(proxies) >= correct_ip_index:
-        real_ip_address = proxies[-correct_ip_index]  # get the correct referring client ip
-        if real_ip_address is not None and not IpAddress.check_user_ips(user, real_ip_address):
-            # IP exists in request and is not already saved
-            new_ip = IpAddress(ip=real_ip_address)
-            new_ip.user = user
-            db.session.add(new_ip)
+def check_ip(user):
+    real_ip_address = request.remote_addr
+    if real_ip_address is not None and not IpAddress.check_user_ips(user, real_ip_address):
+        # IP exists in request and is not already saved
+        new_ip = IpAddress(ip=real_ip_address)
+        new_ip.user = user
+        db.session.add(new_ip)
 
 
 def verify_slack_requests(f=None):
