@@ -118,13 +118,17 @@ def clear_metrics_cache():
     return key_count
 
 def rebuild_metrics_cache():
+    CACHE_REBUILDING = 'CACHE_REBUILDING'
+    TRUE = 'TRUE'
     @standard_executor_job
     def _async_rebuild_metrics_cache():
+        red.set(CACHE_REBUILDING, TRUE, 3600)
         from server.utils.metrics.metrics import calculate_transfer_stats
         calculate_transfer_stats(None, None, None, 'credit_transfer', 'all', False, 'day', 'ungrouped', None)
         calculate_transfer_stats(None, None, None, 'user', 'all', False, 'day', 'ungrouped', None)
+        red.delete(CACHE_REBUILDING)
 
-    if not g.get('is_rebuilding'):
+    if not g.get('is_rebuilding') and not red.get(CACHE_REBUILDING):
         _async_rebuild_metrics_cache.submit()
     # ensure we don't rebuild cache several times at the end of a single call
     g.is_rebuilding = True
