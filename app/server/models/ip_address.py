@@ -9,7 +9,7 @@ from server.models.utils import ModelBase
 class IpAddress(ModelBase):
     __tablename__               = 'ip_address'
 
-    _ip                         = db.Column(INET)
+    _ip                         = db.Column(INET, index=True)
     country                     = db.Column(db.String)
 
     user_id                     = db.Column(db.Integer, db.ForeignKey('user.id'))
