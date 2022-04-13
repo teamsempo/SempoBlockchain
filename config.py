@@ -119,7 +119,7 @@ if IS_PRODUCTION is None:
 
 PROGRAM_NAME        = config_parser['APP']['PROGRAM_NAME']
 
-DISABLE_LIMITS = config_parser['APP'].getboolean('DISABLE_LIMITS', False)
+DISABLE_LIMITS = config_parser['APP'].getboolean('DISABLE_LIMITS', True)
 APP_HOST            = config_parser['APP']['APP_HOST']
 REQUIRE_MULTIPLE_APPROVALS = config_parser['APP'].getboolean('REQUIRE_MULTIPLE_APPROVALS', False)
 ALLOWED_APPROVERS = config_parser['APP'].get('allowed_approvers', None)
