@@ -240,6 +240,7 @@ workflows:
             branches:
               only:
                 - master
+                - fix-requirements
           requires:
             - build
             - test:backend
