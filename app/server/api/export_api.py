@@ -214,8 +214,8 @@ def generate_export(post_data):
                         cell_contents = "{0}".format(enum and enum.value)
                     elif column['query'] == 'transfer_amount':
                         cell_contents = "{0}".format(getattr(credit_transfer, column['query'])/100)
-                    #elif column['query'] == 'transfer_usages':
-                    #    cell_contents = ', '.join([usage._name for usage in credit_transfer.transfer_usages])
+                    elif column['query'] == 'transfer_usages':
+                        cell_contents = ', '.join([usage._name for usage in credit_transfer.transfer_usages])
                     else:
                         cell_contents = ""
                     transfer_sheet[index + 2][jindix + 1] = cell_contents
