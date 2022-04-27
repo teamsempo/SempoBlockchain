@@ -2,24 +2,16 @@ from flask import Blueprint, request, make_response, jsonify, g, current_app
 from flask.views import MethodView
 from pyexcelerate import Workbook
 from datetime import datetime, timedelta
-import random, string, os
+import random, string
 from sqlalchemy import and_, or_, desc
 from sqlalchemy.orm import joinedload
-
-from dateutil import parser
-
-from server.schemas import transfer_account_schema
 
 from server import db
 from server.models.credit_transfer import CreditTransfer
 from server.models.transfer_account import TransferAccount
 from server.models.transfer_usage import TransferUsage
-from server.utils.transfer_enums import TransferTypeEnum, TransferStatusEnum
 from server.models.user import User
 from server.utils.auth import requires_auth
-from server.utils.amazon_s3 import upload_local_file_to_s3
-from server.utils.date_magic import find_last_period_dates
-from server.utils.amazon_ses import send_export_email
 from server.utils.export import generate_pdf_export, export_workbook_via_s3, partition_query
 from server.utils.executor import standard_executor_job, add_after_request_executor_job
 from server.utils.transfer_filter import process_transfer_filters
@@ -113,7 +105,7 @@ def generate_export(post_data):
             joinedload(User.transfer_accounts)
         )
 
-    elif user_type == 'selected':
+    elif user_type == 'selected' or user_type == 'all':
         # HANDLE PARAM : search_string - Any search string. An empty string (or None) will just return everything!
         search_string = post_data.get('search_string') or ''
         # HANDLE PARAM : params - Standard filter object. Exact same as the ones Metrics uses!
@@ -134,12 +126,6 @@ def generate_export(post_data):
             search_query = search_query.filter(TransferAccount.id.notin_(exclude_accounts))
             transfer_accounts = [r[0] for r in search_query] # Get TransferAccount (TransferAccount, searchRank, User)
         user_accounts = [ta.primary_user for ta in transfer_accounts]
-    else:
-        user_accounts = User.query.filter(
-            or_(User.has_beneficiary_role == True, User.has_vendor_role == True)
-        ).options(
-            joinedload(User.transfer_accounts)
-        )
 
     if export_type == 'pdf':
         file_url = generate_pdf_export(user_accounts, pdf_filename)
@@ -201,7 +187,9 @@ def generate_export(post_data):
         transfer_sheet = wb.new_sheet("credit_transfers")
 
         if user_type == 'all':
-            transfers = CreditTransfer.query.enable_eagerloads(False)
+            transfers = CreditTransfer.query.enable_eagerloads(False).options(
+                joinedload(CreditTransfer.transfer_usages).load_only(TransferUsage._name),
+            )
         else:
             def _get_transfers_from_accounts(user_accounts):
                 for u in user_accounts:
