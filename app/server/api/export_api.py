@@ -16,7 +16,6 @@ from server.utils.export import generate_pdf_export, export_workbook_via_s3, par
 from server.utils.executor import standard_executor_job, add_after_request_executor_job
 from server.utils.transfer_filter import process_transfer_filters
 from server.utils.search import generate_search_query
-from server.models.utils import credit_transfer_transfer_usage_association_table
 
 export_blueprint = Blueprint('export', __name__)
 
