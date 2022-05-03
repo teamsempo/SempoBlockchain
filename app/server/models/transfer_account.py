@@ -284,8 +284,8 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
         return (self._balance_wei or 0) / int(1e18)
 
     def get_or_create_system_transfer_approval(self):
-        sys_blockchain_address = self.organisation.system_blockchain_address
-
+        org = self.organisation or g.user.default_organisation
+        sys_blockchain_address = org.system_blockchain_address
         approval = self.get_approval(sys_blockchain_address)
 
         if not approval:

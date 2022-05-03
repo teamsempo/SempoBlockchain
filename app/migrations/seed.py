@@ -390,6 +390,7 @@ def create_float_transfer_account(app):
                 token=t,
                 is_approved=True
             )
+            float_transfer_account.organisation = Organisation.master_organisation()
             db.session.add(float_transfer_account)
             db.session.flush()
             t.float_account = float_transfer_account
