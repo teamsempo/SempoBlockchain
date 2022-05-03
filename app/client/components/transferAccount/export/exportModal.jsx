@@ -5,36 +5,36 @@ const { Option } = Select;
 
 import { ExportAction } from "../../../reducers/export/actions";
 
-const mapStateToProps = state => {
+const mapStateToProps = (state) => {
   return {
     export: state.export,
-    selectedTransferAccounts: state.transferAccounts.selected
+    selectedTransferAccounts: state.transferAccounts.selected,
   };
 };
 
-const mapDispatchToProps = dispatch => {
+const mapDispatchToProps = (dispatch) => {
   return {
     resetExport: () => dispatch(ExportAction.exportReset()),
-    newExport: body => dispatch(ExportAction.exportRequest({ body }))
+    newExport: (body) => dispatch(ExportAction.exportRequest({ body })),
   };
 };
 
-const ExportModal = props => {
+const ExportModal = (props) => {
   const [form] = Form.useForm();
 
   const onFinish = (values) => {
-    values['date_range'] = "all"
-    if (values['user_type']==='selected') {
-      values['search_string'] = props.search_string
-      values['params'] = props.params
-      values['include_accounts'] = props.include_accounts
-      values['exclude_accounts'] = props.exclude_accounts
+    values["date_range"] = "all";
+    if (values["user_type"] === "selected") {
+      values["search_string"] = props.search_string;
+      values["params"] = props.params;
+      values["include_accounts"] = props.include_accounts;
+      values["exclude_accounts"] = props.exclude_accounts;
     }
     props.newExport(values);
     props.handleCancel();
-  }
+  };
 
-  const onFinishFailed = errorInfo => {
+  const onFinishFailed = (errorInfo) => {
     console.log("Failed:", errorInfo);
   };
 
@@ -63,7 +63,7 @@ const ExportModal = props => {
         <Form.Item
           name="export_type"
           label="Export Type"
-          initialValue={'spreadsheet'}
+          initialValue={"spreadsheet"}
         >
           <Select style={{ width: "150px" }}>
             <Option key={"spreadsheet"}> Spreadsheet </Option>
@@ -74,11 +74,14 @@ const ExportModal = props => {
         <Form.Item
           name="user_type"
           label="Participant Type"
-          initialValue={'all'}
+          initialValue={"all"}
         >
           <Select style={{ width: "150px" }}>
             <Option key={"all"}> All </Option>
-            <Option key={"selected"} disabled={!props.hasSelected}> Selected </Option>
+            <Option key={"selected"} disabled={!props.hasSelected}>
+              {" "}
+              Selected{" "}
+            </Option>
             <Option key={"beneficiary"}>
               {" "}
               {window.BENEFICIARY_TERM_PLURAL}{" "}
@@ -94,17 +97,22 @@ const ExportModal = props => {
           <Checkbox />
         </Form.Item>
         <Form.Item
+          name="include_sent_and_received"
+          label="Include Amount Sent and Amount Received"
+          valuePropName="checked"
+        >
+          <Checkbox />
+        </Form.Item>
+        <Form.Item
           name="include_custom_attributes"
           label="Include Custom Attributes"
-          valuePropName="checked">
+          valuePropName="checked"
+        >
           <Checkbox />
         </Form.Item>
       </Form>
     </Modal>
-  )
-}
+  );
+};
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(ExportModal);
+export default connect(mapStateToProps, mapDispatchToProps)(ExportModal);
