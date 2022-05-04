@@ -7,9 +7,6 @@ commands:
       to:
         type: string
         default: "World"
-    working_directory: ~/project
-    docker:
-      - image: circleci/python:3.6-node
     steps:
       - checkout
       - setup_remote_docker
