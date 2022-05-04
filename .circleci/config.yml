@@ -254,7 +254,7 @@ workflows:
                 - master
                 - ci-deploy-different-branches
           requires:
-            #- build
+            - build
             #- test-backend
             #- test-worker
             #- test-frontend
