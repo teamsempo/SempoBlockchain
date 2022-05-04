@@ -4,9 +4,16 @@ commands:
   deploy:
     description: "A very simple command for demonstration purposes"
     parameters:
-      to:
+      app-service:
         type: string
-        default: "World"
+        default: "app"
+      worker-service:
+        type: string
+        default: "worker-ecs"
+      cluster:
+        type: string
+        default: "devecs"
+
     steps:
       - checkout
       - setup_remote_docker
@@ -65,8 +72,8 @@ commands:
       - run:
           name: Remove old ECS task
           command: |
-            aws ecs update-service --cluster devecs --service app --desired-count 0
-            aws ecs update-service --cluster devecs --service worker-ecs --desired-count 0
+            aws ecs update-service --cluster << parameters.cluster >> --service << parameters.app-service >> --desired-count 0
+            aws ecs update-service --cluster << parameters.cluster >> --service << parameters.worker-service >> --desired-count 0
       - run:
           name: Update ECS Task
           command: |
@@ -75,14 +82,14 @@ commands:
       - run:
           name: Add capacity for new task
           command: |
-            aws ecs update-service --cluster devecs --service app --desired-count 1
-            aws ecs update-service --cluster devecs --service worker-ecs --desired-count 1
+            aws ecs update-service --cluster << parameters.cluster >> --service << parameters.app-service >> --desired-count 1
+            aws ecs update-service --cluster << parameters.cluster >> --service << parameters.worker-service >> --desired-count 1
 
       - run:
           name: Deploy
           command: |
-            aws ecs update-service --cluster devecs --service app --task-definition app --force-new-deployment
-            aws ecs update-service --cluster devecs --service worker-ecs --task-definition worker --force-new-deployment
+            aws ecs update-service --cluster << parameters.cluster >> --service << parameters.app-service >> --task-definition app --force-new-deployment
+            aws ecs update-service --cluster << parameters.cluster >> --service << parameters.worker-service >> --task-definition worker --force-new-deployment
 
 jobs:
   build:
@@ -231,7 +238,9 @@ jobs:
       - image: circleci/python:3.6-node
     steps:
       - deploy: # invoke command "sayhello"
-          to: "Lev"
+          app-service: "app"
+          worker-service: "worker-ecs"
+          cluster: "devecs"
 
 workflows:
   version: 2
