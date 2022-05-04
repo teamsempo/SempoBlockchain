@@ -238,13 +238,13 @@ workflows:
   main_workflow:
     jobs:
       - build
-      - test:backend:
+      - test-backend:
           requires:
             - build
-      - test:worker:
+      - test-worker:
           requires:
             - build
-      - test:frontend:
+      - test-frontend:
           requires:
             - build
       - deploy_dev:
@@ -255,6 +255,6 @@ workflows:
                 - ci-deploy-different-branches
           requires:
             #- build
-            #- test:backend
-            #- test:worker
-            #- test:frontend
+            #- test-backend
+            #- test-worker
+            #- test-frontend
