@@ -225,7 +225,7 @@ jobs:
       - run:
           name: Upload coverage report to Codecov
           command: bash <(curl -s https://codecov.io/bash) -cF javascript
-  deploy_dev:
+  deploy-dev:
     working_directory: ~/project
     docker:
       - image: circleci/python:3.6-node
@@ -247,7 +247,7 @@ workflows:
       - test-frontend:
           requires:
             - build
-      - deploy_dev:
+      - deploy-dev:
           filters:
             branches:
               only:
