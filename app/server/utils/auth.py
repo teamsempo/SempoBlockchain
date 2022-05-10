@@ -1,6 +1,7 @@
 import time
 from functools import wraps, partial
 from flask import request, g, make_response, jsonify, current_app
+import datetime
 from server import db
 from server.constants import DENOMINATION_DICT
 from server.models.currency_conversion import CurrencyConversion
@@ -310,12 +311,15 @@ def tfa_logic(user, tfa_token, ignore_tfa_requirement=False):
 
 def check_ip(user):
     real_ip_address = request.remote_addr
-    if real_ip_address is not None and not IpAddress.check_user_ips(user, real_ip_address):
+    if real_ip_address is not None:
+        address = IpAddress.check_user_ips(user, real_ip_address)
         # IP exists in request and is not already saved
-        new_ip = IpAddress(ip=real_ip_address)
-        new_ip.user = user
-        db.session.add(new_ip)
-
+        if not address:
+            new_ip = IpAddress(ip=real_ip_address)
+            new_ip.user = user
+            db.session.add(new_ip)
+        else:
+            address.updated = datetime.datetime.utcnow()
 
 def verify_slack_requests(f=None):
     """
