@@ -178,12 +178,13 @@ class CreditTransferSchema(BlockchainTaskableSchemaBase):
         elif ['transfer_status'] == 'REJECTED':
             return None
 
-    resolved                = fields.DateTime(attribute='resolved_date')
-    transfer_amount         = fields.Function(lambda obj: int(obj.transfer_amount))
-    transfer_type           = fields.Function(lambda obj: obj.transfer_type.value)
-    transfer_subtype        = fields.Function(lambda obj: obj.transfer_subtype.value)
-    transfer_mode           = fields.Function(lambda obj: obj.transfer_mode.value)
-    transfer_status         = fields.Function(lambda obj: obj.transfer_status.value)
+    resolved                           = fields.DateTime(attribute='resolved_date')
+    transfer_amount                    = fields.Function(lambda obj: int(obj.transfer_amount))
+    transfer_type                      = fields.Function(lambda obj: obj.transfer_type.value)
+    transfer_subtype                   = fields.Function(lambda obj: obj.transfer_subtype.value)
+    transfer_mode                      = fields.Function(lambda obj: obj.transfer_mode.value)
+    transfer_status                    = fields.Function(lambda obj: obj.transfer_status.value)
+    transfer_card_public_serial_number = fields.Function(lambda obj: obj.transfer_card.public_serial_number if obj.transfer_card else None)
 
     transfer_use            = fields.Function(lambda obj: obj.transfer_use)
 
@@ -535,10 +536,10 @@ synchronization_filter_schema = SynchronizationFilterSchema()
 
 view_credit_transfer_schema = CreditTransferSchema(exclude=(
 "sender_user", "recipient_user", "lat", "lng", "attached_images"))
+
 view_credit_transfers_schema = CreditTransferSchema(many=True, exclude=(
-"sender_user", "recipient_user", "lat", "lng", "attached_images"))
-view_credit_transfer_schema = CreditTransferSchema(exclude=(
-"sender_user", "recipient_user", "lat", "lng", "attached_images"))
+"sender_user", "recipient_user", "lat", "lng", "attached_images", "transfer_card_public_serial_number"))
+
 
 transfer_cards_schema = TransferCardSchema(many=True, exclude=("id", "created"))
 transfer_card_schema = TransferCardSchema(exclude=("id", "created"))
