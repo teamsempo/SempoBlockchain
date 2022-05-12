@@ -10,9 +10,12 @@ commands:
       worker-service:
         type: string
         default: "worker-ecs"
-      cluster:
+      app-task:
         type: string
-        default: "devecs"
+        default: "app"
+      worker-task:
+        type: string
+        default: "worker-ecs"
 
     steps:
       - checkout
@@ -62,7 +65,7 @@ commands:
       - run:
           name: Add updated images to task definitions
           command: |
-            python devtools/deploy_tools/build_task_definition.py app worker ${CIRCLE_SHA1}
+            python devtools/deploy_tools/build_task_definition.py << parameters.app-task >> << parameters.worker-task >> ${CIRCLE_SHA1}
       - run:
           name: Upload static assets to S3
           command: |
@@ -236,11 +239,11 @@ jobs:
     docker:
       - image: circleci/python:3.6-node
     steps:
-      - deploy: # invoke command "sayhello"
+      - deploy:
           app-service: "app"
           worker-service: "worker-ecs"
-          cluster: "devecs"
-
+          app-task: "app"
+          worker-task: "worker"
 workflows:
   version: 2
   main_workflow:
