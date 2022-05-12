@@ -96,8 +96,8 @@ commands:
       - run:
           name: Deploy
           command: |
-            aws ecs update-service --cluster << parameters.cluster >> --service << parameters.app-service >> --task-definition app --force-new-deployment
-            aws ecs update-service --cluster << parameters.cluster >> --service << parameters.worker-service >> --task-definition worker --force-new-deployment
+            aws ecs update-service --cluster << parameters.cluster >> --service << parameters.app-service >> --task-definition  << parameters.app-task >> --force-new-deployment
+            aws ecs update-service --cluster << parameters.cluster >> --service << parameters.worker-service >> --task-definition << parameters.worker-task >> --force-new-deployment
 
 jobs:
   build:
