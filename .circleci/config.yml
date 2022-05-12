@@ -95,7 +95,7 @@ commands:
       - run:
           name: Reboot to New Service
           command: |
-            python devtools/deploy_tools/halt_tasks.py << parameters.--cluster >>
+            python devtools/deploy_tools/halt_tasks.py << parameters.cluster >>
       - run:
           name: Deploy
           command: |
