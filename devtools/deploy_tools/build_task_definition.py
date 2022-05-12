@@ -16,7 +16,6 @@ def replace_container_url(definition, new_url):
     for a in definition['containerDefinitions']:
         a['image'] = new_url
 
-print(sys.argv)
 stream = os.popen('aws ecs describe-task-definition --task-definition '+ sys.argv[1])
 output = stream.read()
 task_definition = json.loads(output)['taskDefinition']
