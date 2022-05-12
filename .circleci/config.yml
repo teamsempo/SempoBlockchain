@@ -78,7 +78,7 @@ commands:
             aws s3 rm s3://<< parameters.frontend-bucket >>/static --recursive
             aws s3 sync app/server/static s3://<< parameters.frontend-bucket >>/static
       - run:
-          name: Remove old ECS task
+          name: Remove old ECS task requirement
           command: |
             aws ecs update-service --cluster << parameters.cluster >> --service << parameters.app-service >> --desired-count 0
             aws ecs update-service --cluster << parameters.cluster >> --service << parameters.worker-service >> --desired-count 0
@@ -92,7 +92,10 @@ commands:
           command: |
             aws ecs update-service --cluster << parameters.cluster >> --service << parameters.app-service >> --desired-count 1
             aws ecs update-service --cluster << parameters.cluster >> --service << parameters.worker-service >> --desired-count 1
-
+      - run:
+          name: Reboot to New Service
+          command: |
+            python devtools/deploy_tools/halt_tasks.py << parameters.--cluster >>
       - run:
           name: Deploy
           command: |
