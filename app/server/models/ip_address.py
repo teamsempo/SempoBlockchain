@@ -17,11 +17,8 @@ class IpAddress(ModelBase):
     @staticmethod
     def check_user_ips(user, ip_address):
         # check whether ip address is saved for a given user
-        res = IpAddress.query.filter_by(ip=ip_address, user_id=user.id).first()
-        if res:
-            return True
-        else:
-            return False
+        return IpAddress.query.filter_by(ip=ip_address, user_id=user.id).first()
+
 
     @hybrid_property
     def ip(self):
