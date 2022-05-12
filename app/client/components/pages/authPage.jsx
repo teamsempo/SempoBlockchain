@@ -11,17 +11,17 @@ import RequestResetEmailForm from "../auth/requestResetEmailForm.jsx";
 
 import { parseQuery } from "../../utils";
 
-const mapStateToProps = state => {
+const mapStateToProps = (state) => {
   return {
     loggedIn: state.login.userId !== null,
-    loginState: state.login
+    loginState: state.login,
   };
 };
 
-const mapDispatchToProps = dispatch => {
+const mapDispatchToProps = (dispatch) => {
   return {
-    activateAccount: payload =>
-      dispatch(ActivateAccountAction.activateAccountRequest(payload))
+    activateAccount: (payload) =>
+      dispatch(ActivateAccountAction.activateAccountRequest(payload)),
   };
 };
 
@@ -31,7 +31,7 @@ export class authPage extends React.Component {
     this.state = {
       redirectToReferrer: false,
       email: null,
-      referralCode: null
+      referralCode: null,
     };
   }
 
@@ -46,7 +46,7 @@ export class authPage extends React.Component {
       this.setState({
         login: !parsed.r === "true",
         email: parsed.u,
-        referralCode: parsed.c
+        referralCode: parsed.c,
       });
     }
   }
@@ -113,17 +113,14 @@ export class authPage extends React.Component {
   }
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(authPage);
+export default connect(mapStateToProps, mapDispatchToProps)(authPage);
 
 const Login = () => (
   <div>
     <LoginForm />
     <Footer>
       <FooterText>
-        Don’t have a Sempo account?
+        Don’t have a Sempo account??
         <FooterLink to="/login/sign-up">Signup</FooterLink>
       </FooterText>
     </Footer>
