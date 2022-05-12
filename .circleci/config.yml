@@ -255,7 +255,7 @@ jobs:
     steps:
       - deploy:
           app-service: "app-service"
-          worker-service: "worker-service"
+          worker-service: "zwe-worker"
           app-task: "zwe-app"
           worker-task: "zwe-worker"
           frontend-bucket: "sempo-zwe-static"
