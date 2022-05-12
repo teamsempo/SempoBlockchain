@@ -19,6 +19,10 @@ commands:
       frontend-bucket:
         type: string
         default: "sempo-dev-static"
+      cluster:
+        type: string
+        default: "devecs"
+
     steps:
       - checkout
       - setup_remote_docker
@@ -247,6 +251,7 @@ jobs:
           app-task: "app"
           worker-task: "worker"
           frontend-bucket: "sempo-dev-static"
+          cluster: "devecs"
 
 workflows:
   version: 2
