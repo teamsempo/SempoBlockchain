@@ -75,8 +75,8 @@ commands:
       - run:
           name: Upload static assets to S3
           command: |
-            aws s3 rm s3://sempo-dev-static/static --recursive
-            aws s3 sync app/server/static s3://sempo-dev-static/static
+            aws s3 rm s3://<< parameters.frontend-bucket >>/static --recursive
+            aws s3 sync app/server/static s3://<< parameters.frontend-bucket >>/static
       - run:
           name: Remove old ECS task
           command: |
@@ -253,6 +253,19 @@ jobs:
           frontend-bucket: "sempo-dev-static"
           cluster: "devecs"
 
+  deploy-zwe:
+    working_directory: ~/project
+    docker:
+      - image: circleci/python:3.6-node
+    steps:
+      - deploy:
+          app-service: "app-service"
+          worker-service: "worker-service"
+          app-task: "zwe-app"
+          worker-task: "zwe-worker"
+          frontend-bucket: "sempo-zwe-static"
+          cluster: "zwe"
+
 workflows:
   version: 2
   main_workflow:
@@ -267,6 +280,16 @@ workflows:
       - test-frontend:
           requires:
             - build
+
+      - deploy-zwe:
+          filters:
+            branches:
+              only:
+                - master
+                - ci-deploy-different-branches
+          requires:
+            - build
+
       - deploy-dev:
           filters:
             branches:
