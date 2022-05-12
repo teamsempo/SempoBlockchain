@@ -1,6 +1,6 @@
 {
   "name": "SempoBlockchain",
-  "version": "2.0.7",
+  "version": "2.0.8",
   "description": "Sempo blockchain web app using Python-Flask and React",
   "main": "index.js",
   "homepage": "./",
