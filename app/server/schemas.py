@@ -50,7 +50,7 @@ class BlockchainTaskableSchemaBase(SchemaBase):
 
 class UserSchema(SchemaBase):
 
-    first_name              = "Michiel"
+    first_name              = fields.Str()
     last_name               = fields.Str()
     preferred_language      = fields.Str()
 

@@ -120,7 +120,7 @@ const Login = () => (
     <LoginForm />
     <Footer>
       <FooterText>
-        Don’t have a Sempo account??
+        Don’t have a Sempo account?
         <FooterLink to="/login/sign-up">Signup</FooterLink>
       </FooterText>
     </Footer>
