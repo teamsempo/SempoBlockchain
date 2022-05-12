@@ -62,8 +62,7 @@ commands:
       - run:
           name: Add updated images to task definitions
           command: |
-            sed "s|CIRCLE_SHA1|${CIRCLE_SHA1}|g;" ecs_app_task_config_template.json > ecs_app_task_config.json
-            sed "s|CIRCLE_SHA1|${CIRCLE_SHA1}|g;" ecs_worker_task_config_template.json > ecs_app_worker_config.json
+            python devtools/deploy_tools/build_task_definition.py app worker ${CIRCLE_SHA1}
       - run:
           name: Upload static assets to S3
           command: |
