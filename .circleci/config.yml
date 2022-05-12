@@ -78,11 +78,6 @@ commands:
             aws s3 rm s3://<< parameters.frontend-bucket >>/static --recursive
             aws s3 sync app/server/static s3://<< parameters.frontend-bucket >>/static
       - run:
-          name: Remove old ECS task
-          command: |
-            aws ecs update-service --cluster << parameters.cluster >> --service << parameters.app-service >> --desired-count 0
-            aws ecs update-service --cluster << parameters.cluster >> --service << parameters.worker-service >> --desired-count 0
-      - run:
           name: Update ECS Task
           command: |
             aws ecs register-task-definition --cli-input-json file://ecs_app_task_config.json
