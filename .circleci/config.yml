@@ -291,7 +291,7 @@ jobs:
           app-service: "app"
           worker-service: "worker"
           app-task: "vut-app"
-          worker-task: "vut-app"
+          worker-task: "vut-worker"
           frontend-bucket: "sempo-vut-static"
           cluster: "vut"
 
