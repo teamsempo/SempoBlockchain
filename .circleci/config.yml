@@ -350,7 +350,6 @@ workflows:
             branches:
               only:
                 - zwe
-                - ci-deploy-different-branches
           requires:
             - build
             - test-backend
@@ -361,7 +360,6 @@ workflows:
             branches:
               only:
                 - slb
-                - ci-deploy-different-branches
           requires:
             - build
             - test-backend
@@ -372,7 +370,6 @@ workflows:
             branches:
               only:
                 - vut
-                - ci-deploy-different-branches
           requires:
             - build
             - test-backend
@@ -383,7 +380,6 @@ workflows:
             branches:
               only:
                 - ugx
-                - ci-deploy-different-branches
           requires:
             - build
             - test-backend
@@ -397,9 +393,9 @@ workflows:
                 - ci-deploy-different-branches
           requires:
             - build
-            - test-backend
-            - test-worker
-            - test-frontend
+            #- test-backend
+            #- test-worker
+            #- test-frontend
 
       - deploy-dev:
           filters:
