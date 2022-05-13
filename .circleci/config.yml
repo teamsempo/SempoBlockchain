@@ -269,6 +269,45 @@ jobs:
           frontend-bucket: "sempo-zwe-static"
           cluster: "zwe"
 
+  deploy-slb:
+    working_directory: ~/project
+    docker:
+      - image: circleci/python:3.6-node
+    steps:
+      - deploy:
+          app-service: "app"
+          worker-service: "worker"
+          app-task: "slb-app"
+          worker-task: "slb-worker"
+          frontend-bucket: "sempo-slb-static"
+          cluster: "slb-cluster"
+
+  deploy-vut:
+    working_directory: ~/project
+    docker:
+      - image: circleci/python:3.6-node
+    steps:
+      - deploy:
+          app-service: "app"
+          worker-service: "worker"
+          app-task: "vut-app"
+          worker-task: "vut-app"
+          frontend-bucket: "sempo-vut-static"
+          cluster: "vut"
+
+  deploy-ugx:
+    working_directory: ~/project
+    docker:
+      - image: circleci/python:3.6-node
+    steps:
+      - deploy:
+          app-service: "app"
+          worker-service: "worker"
+          app-task: "ugx-app"
+          worker-task: "ugx-worker"
+          frontend-bucket: "sempo-ugx-static"
+          cluster: "ugx"
+
 workflows:
   version: 2
   main_workflow:
@@ -292,9 +331,43 @@ workflows:
                 - ci-deploy-different-branches
           requires:
             - build
-            #- test-backend
-            #- test-worker
-            #- test-frontend
+            - test-backend
+            - test-worker
+            - test-frontend
+      - deploy-slb:
+          filters:
+            branches:
+              only:
+                - slb
+                - ci-deploy-different-branches
+          requires:
+            - build
+            - test-backend
+            - test-worker
+            - test-frontend
+      - deploy-vut:
+          filters:
+            branches:
+              only:
+                - vut
+                - ci-deploy-different-branches
+          requires:
+            - build
+            - test-backend
+            - test-worker
+            - test-frontend
+      - deploy-ugx:
+          filters:
+            branches:
+              only:
+                - ugx
+                - ci-deploy-different-branches
+          requires:
+            - build
+            - test-backend
+            - test-worker
+            - test-frontend
+
       - deploy-dev:
           filters:
             branches:
