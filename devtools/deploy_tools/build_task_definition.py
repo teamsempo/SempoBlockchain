@@ -16,7 +16,7 @@ def replace_container_url(definition, new_url):
     for a in definition['containerDefinitions']:
         a['image'] = new_url
 
-stream = os.popen('aws ecs describe-task-definition --task-definition '+ sys.argv[1])
+stream = os.popen(f'aws ecs describe-task-definition --task-definition {sys.argv[1]} --region {sys.argv[4]}')
 output = stream.read()
 task_definition = json.loads(output)['taskDefinition']
 strip_def(task_definition)
@@ -24,7 +24,7 @@ replace_container_url(task_definition, APP_REPO_BASE_URL+sys.argv[3])
 app_file = open('ecs_app_task_config.json', 'w')
 app_file.write(json.dumps(task_definition))
 
-stream = os.popen('aws ecs describe-task-definition --task-definition '+ sys.argv[2])
+stream = os.popen(f'aws ecs describe-task-definition --task-definition {sys.argv[2]} --region {sys.argv[4]}')
 output = stream.read()
 task_definition = json.loads(output)['taskDefinition']
 strip_def(task_definition)
