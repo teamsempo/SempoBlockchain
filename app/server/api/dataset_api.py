@@ -76,6 +76,7 @@ def execute_dataset_import(dataset, header_positions, is_vendor, custom_attribut
     for idx, datarow in enumerate(dataset):
         attribute_dict = { 'custom_attributes': {} }
         contains_anything = False
+        percent_complete = ((idx+1)/len(dataset))*100
         for key, header_label in header_positions.items():
             attribute = datarow.get(key)
             if attribute and (header_label in custom_attributes):
@@ -94,7 +95,6 @@ def execute_dataset_import(dataset, header_positions, is_vendor, custom_attribut
                 db.session.commit()
             else:
                 db.session.flush()
-            percent_complete = ((idx+1)/len(dataset))*100
 
             yield {
                 'message': 'success' if percent_complete == 100 else 'pending',
