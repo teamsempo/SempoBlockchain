@@ -83,6 +83,10 @@ commands:
             aws ecs update-service --cluster << parameters.cluster >> --service << parameters.app-service >> --desired-count 0
             aws ecs update-service --cluster << parameters.cluster >> --service << parameters.worker-service >> --desired-count 0
       - run:
+          name: Halt old services
+          command: |
+            python devtools/deploy_tools/halt_tasks.py << parameters.cluster >>
+      - run:
           name: Update ECS Task
           command: |
             aws ecs register-task-definition --cli-input-json file://ecs_app_task_config.json
@@ -92,10 +96,6 @@ commands:
           command: |
             aws ecs update-service --cluster << parameters.cluster >> --service << parameters.app-service >> --desired-count 1
             aws ecs update-service --cluster << parameters.cluster >> --service << parameters.worker-service >> --desired-count 1
-      - run:
-          name: Reboot to New Service
-          command: |
-            python devtools/deploy_tools/halt_tasks.py << parameters.cluster >>
       - run:
           name: Deploy
           command: |
@@ -292,9 +292,9 @@ workflows:
                 - ci-deploy-different-branches
           requires:
             - build
-            - test-backend
-            - test-worker
-            - test-frontend
+            #- test-backend
+            #- test-worker
+            #- test-frontend
       - deploy-dev:
           filters:
             branches:
