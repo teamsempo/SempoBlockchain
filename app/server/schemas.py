@@ -472,6 +472,7 @@ class DisbursementSchema(SchemaBase):
     total_disbursement_amount   = fields.Int()
     label                       = fields.Str()
     state                       = fields.Str()
+    completion_status           = fields.Str(attribute='completion')
     transfer_type               = fields.Str()
     disbursement_amount         = fields.Int()
     creator_user = fields.Nested(UserSchema, attribute='creator_user', only=("id", "first_name", "last_name", "email"))
