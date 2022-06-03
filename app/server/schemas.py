@@ -204,6 +204,8 @@ class CreditTransferSchema(BlockchainTaskableSchemaBase):
 
     sender_transfer_card_id = fields.Int()
 
+    resolution_message = fields.Str()
+
     from_exchange_to_transfer_id = fields.Function(lambda obj: obj.from_exchange.to_transfer.id)
 
     attached_images = fields.Nested(UploadedResourceSchema, many=True)
