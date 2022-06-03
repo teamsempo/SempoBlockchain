@@ -286,7 +286,7 @@ class TransferAccountSchema(SchemaBase):
 
     transfer_account_name   = fields.Str()
     is_vendor               = fields.Boolean()
-
+    is_beneficiary          = fields.Boolean()
     payable_period_type     = fields.Str()
     payable_period_length   = fields.Int()
     payable_epoch           = fields.Str()
