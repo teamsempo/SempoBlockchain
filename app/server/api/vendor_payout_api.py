@@ -95,6 +95,7 @@ class VendorPayoutAPI(MethodView):
             if relist_existing:
                 withdrawals = (CreditTransfer.query
                                .filter(CreditTransfer.sender_transfer_account_id == v.id)
+                               .filter(CreditTransfer.transfer_type == TransferTypeEnum.WITHDRAWAL)
                                .filter(CreditTransfer.transfer_status == TransferStatusEnum.PENDING).all())
             else:
                 withdrawals = []

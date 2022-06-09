@@ -6,29 +6,29 @@ import { DollarOutlined } from "@ant-design/icons";
 
 import {
   LoadCreditTransferAction,
-  ModifyCreditTransferAction
+  ModifyCreditTransferAction,
 } from "../../reducers/creditTransfer/actions";
 import organizationWrapper from "../organizationWrapper.jsx";
 import {
   getActiveToken,
   replaceUnderscores,
   toCurrency,
-  toTitleCase
+  toTitleCase,
 } from "../../utils";
 
 const mapStateToProps = (state, ownProps) => {
   return {
     activeToken: getActiveToken(state),
-    creditTransfer: state.creditTransfers.byId[ownProps.creditTransferId]
+    creditTransfer: state.creditTransfers.byId[ownProps.creditTransferId],
   };
 };
 
-const mapDispatchToProps = dispatch => {
+const mapDispatchToProps = (dispatch) => {
   return {
-    loadCreditTransferList: path =>
+    loadCreditTransferList: (path) =>
       dispatch(LoadCreditTransferAction.loadCreditTransferListRequest(path)),
-    modifyTransferRequest: payload =>
-      dispatch(ModifyCreditTransferAction.modifyTransferRequest(payload))
+    modifyTransferRequest: (payload) =>
+      dispatch(ModifyCreditTransferAction.modifyTransferRequest(payload)),
   };
 };
 
@@ -36,13 +36,13 @@ class SingleCreditTransfer extends React.Component {
   handleClick(action) {
     this.props.modifyTransferRequest({
       body: { action: action },
-      path: this.props.creditTransferId
+      path: this.props.creditTransferId,
     });
   }
-  navigateToUser = accountId => {
+  navigateToUser = (accountId) => {
     window.location.assign("/users/" + accountId);
   };
-  navigateToTransferAccount = accountId => {
+  navigateToTransferAccount = (accountId) => {
     window.location.assign("/accounts/" + accountId);
   };
 
@@ -54,6 +54,8 @@ class SingleCreditTransfer extends React.Component {
       // Transfer Metadata
       const blockchainId = creditTransfer.blockchain_task_uuid;
       const blockchainStatus = creditTransfer.blockchain_status;
+
+      const transferUsages = creditTransfer.transfer_uses.join(", ");
 
       const transferStatus = creditTransfer.transfer_status;
       const transferMode = creditTransfer.transfer_mode;
@@ -77,6 +79,9 @@ class SingleCreditTransfer extends React.Component {
       const senderTransferAccountID = creditTransfer.sender_transfer_account;
       const recipientTransferAccountID =
         creditTransfer.recipient_transfer_account;
+
+      const transferCardSerialNumber =
+        creditTransfer.transfer_card_public_serial_number || "";
 
       const actionsDisabled =
         creditTransfer.transfer_status !== "PENDING" &&
@@ -142,6 +147,9 @@ class SingleCreditTransfer extends React.Component {
             <Descriptions.Item label={"Blockchain UUID"}>
               {blockchainId}
             </Descriptions.Item>
+            <Descriptions.Item label={"Transfer Uses"}>
+              {transferUsages}
+            </Descriptions.Item>
           </Descriptions>
 
           <Descriptions title={"Transfer Metadata"}>
@@ -174,6 +182,9 @@ class SingleCreditTransfer extends React.Component {
               >
                 {senderUserID}
               </a>
+            </Descriptions.Item>
+            <Descriptions.Item label={"Transfer Card Serial Number"}>
+              {transferCardSerialNumber}
             </Descriptions.Item>
           </Descriptions>
 

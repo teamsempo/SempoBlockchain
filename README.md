@@ -47,11 +47,12 @@ brew install cairo && brew install pango
 
 Download and install python 3.8 and its respective pip and virtualenv. Then:
 
-from devtools directory:
+from root directory:
 
 ```
 python3 -m venv venv
 source venv/bin/activate
+cd devtools
 ./install_python_requirements.sh
 ```
 
