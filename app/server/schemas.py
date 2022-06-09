@@ -527,7 +527,8 @@ view_transfer_account_schema = TransferAccountSchema(
         "credit_receives.recipient_transfer_account",
         "credit_receives.recipient_user",
         "credit_receives.sender_user",
-        "users"
+        "users",
+        "notes"
     ))
 
 view_transfer_accounts_schema = TransferAccountSchema(many=True, exclude=("credit_sends", "credit_receives", "users"))
@@ -538,10 +539,10 @@ credit_transfers_schema = CreditTransferSchema(many=True)
 synchronization_filter_schema = SynchronizationFilterSchema()
 
 view_credit_transfer_schema = CreditTransferSchema(exclude=(
-"sender_user", "recipient_user", "lat", "lng", "attached_images"))
+"sender_user", "recipient_user", "lat", "lng", "attached_images" "authorising_user_email"))
 
 view_credit_transfers_schema = CreditTransferSchema(many=True, exclude=(
-"sender_user", "recipient_user", "lat", "lng", "attached_images", "transfer_card_public_serial_number"))
+"sender_user", "recipient_user", "lat", "lng", "attached_images", "authorising_user_email", "transfer_card_public_serial_number"))
 
 
 transfer_cards_schema = TransferCardSchema(many=True, exclude=("id", "created"))

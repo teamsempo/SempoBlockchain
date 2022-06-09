@@ -309,17 +309,17 @@ class StandardTransferAccountList extends React.Component<
       },
     ];
 
+    const isViewer = !(
+      this.props.adminTier === "superadmin" ||
+      this.props.adminTier === "sempoadmin"
+    );
+
     return (
       <>
         <QueryConstructor
           onQueryChange={(query: Query) => this.updateQueryData(query)}
           filterObject="user"
-          disabled={
-            !(
-              this.props.adminTier === "superadmin" ||
-              this.props.adminTier === "sempoadmin"
-            )
-          }
+          disabled={isViewer}
           pagination={{
             page: this.state.page,
             per_page: this.state.per_page,
@@ -329,8 +329,8 @@ class StandardTransferAccountList extends React.Component<
           params={this.state.params}
           searchString={this.state.searchString}
           orderedTransferAccounts={transferAccounts.IdList}
-          actionButtons={actionButtons}
-          dataButtons={dataButtons}
+          actionButtons={isViewer ? [] : actionButtons}
+          dataButtons={isViewer ? [] : dataButtons}
           onSelectChange={(s: React.Key[], u: React.Key[], a: boolean) =>
             this.onSelectChange(s, u, a)
           }

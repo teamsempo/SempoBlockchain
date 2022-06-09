@@ -242,9 +242,9 @@ class CreditTransferList extends React.Component<Props> {
           : "Transfer Account " + transfer.recipient_transfer_account_id;
 
         if (transfer.transfer_type === "DISBURSEMENT") {
-          sender_name = email;
+          sender_name = email || "Administrator";
         } else if (transfer.transfer_type === "RECLAMATION") {
-          recipient_name = email;
+          recipient_name = email || "Administrator";
         }
 
         if (transfer.transfer_status === "COMPLETE") {
