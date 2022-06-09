@@ -48,6 +48,11 @@ class BlockchainTaskableSchemaBase(SchemaBase):
     blockchain_task_uuid  = fields.Str(dump_only=True)
     blockchain_status   = fields.Function(lambda obj: obj.blockchain_status.name)
 
+class TransferUsageSchema(Schema):
+    id                  = fields.Int(dump_only=True)
+    name                = fields.Str()
+    default             = fields.Boolean()
+
 class UserSchema(SchemaBase):
 
     first_name              = fields.Str()
@@ -186,7 +191,12 @@ class CreditTransferSchema(BlockchainTaskableSchemaBase):
     transfer_status                    = fields.Function(lambda obj: obj.transfer_status.value)
     transfer_card_public_serial_number = fields.Function(lambda obj: obj.transfer_card.public_serial_number if obj.transfer_card else None)
 
-    transfer_use            = fields.Function(lambda obj: obj.transfer_use)
+    transfer_uses            = fields.Nested(
+        TransferUsageSchema,
+        attribute='transfer_usages',
+        many=True,
+        only=('name')
+    )
 
     transfer_metadata = fields.Function(lambda obj: obj.transfer_metadata)
     token = fields.Nested(TokenSchema, only=('id', 'symbol'))
@@ -440,13 +450,6 @@ class OrganisationSchema(SchemaBase):
     #users               = fields.Nested('server.schemas.UserSchema', many=True)
     #transfer_accounts   = fields.Nested('server.schemas.TransferAccountSchema', many=True)
     #credit_transfers    = fields.Nested('server.schemas.CreditTransferSchema', many=True)
-
-
-class TransferUsageSchema(Schema):
-    id                  = fields.Int(dump_only=True)
-    name                = fields.Str()
-    default             = fields.Boolean()
-
 class SynchronizationFilterSchema(Schema):
     id                          = fields.Int(dump_only=True)
     contract_address            = fields.Str()

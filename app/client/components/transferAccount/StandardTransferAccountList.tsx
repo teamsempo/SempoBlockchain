@@ -246,7 +246,7 @@ class StandardTransferAccountList extends React.Component<
       disbursement_amount: amount,
       transfer_type: this.state.transferType,
       label: this.state.label,
-      params: this.state.params,
+      params: decodeURI(this.state.params),
       search_string: this.state.searchString,
       include_accounts: include_accounts,
       exclude_accounts: exclude_accounts,
