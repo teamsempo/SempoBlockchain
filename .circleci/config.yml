@@ -393,9 +393,9 @@ workflows:
                 - ci-deploy-different-branches
           requires:
             - build
-            #- test-backend
-            #- test-worker
-            #- test-frontend
+            - test-backend
+            - test-worker
+            - test-frontend
 
       - deploy-dev:
           filters:

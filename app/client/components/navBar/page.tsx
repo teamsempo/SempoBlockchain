@@ -213,7 +213,7 @@ const Page: React.FunctionComponent<OuterProps> = (props) => {
             </React.Suspense>
           </Content>
           {footer ? (
-            <Footer style={{ textAlign: "center" }}>Sempo ©2022</Footer>
+            <Footer style={{ textAlign: "center" }}>Sempo ©2017-2022</Footer>
           ) : null}
         </Layout>
       </Layout>
