@@ -117,8 +117,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     )
 
     def add_message(self, message):
-        dated_message = f"[{datetime.datetime.utcnow()}:: {message}]"
-        self.resolution_message = dated_message
+        self.resolution_message = message
 
     # TODO: Apply this to all transfer amounts/balances, work out the correct denominator size
     @hybrid_property
