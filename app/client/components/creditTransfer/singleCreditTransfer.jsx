@@ -55,6 +55,8 @@ class SingleCreditTransfer extends React.Component {
       const blockchainId = creditTransfer.blockchain_task_uuid;
       const blockchainStatus = creditTransfer.blockchain_status;
 
+      const transferUsages = creditTransfer.transfer_uses.join(", ");
+
       const transferStatus = creditTransfer.transfer_status;
       const transferMode = creditTransfer.transfer_mode;
       const resolutionMessage = creditTransfer.resolution_message;
@@ -148,6 +150,8 @@ class SingleCreditTransfer extends React.Component {
             </Descriptions.Item>
             <Descriptions.Item label={"Resolution Message"}>
               {resolutionMessage}
+            <Descriptions.Item label={"Transfer Uses"}>
+              {transferUsages}
             </Descriptions.Item>
           </Descriptions>
 
