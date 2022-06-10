@@ -426,7 +426,7 @@ def proccess_create_or_modify_user_request(
     account_types = attribute_dict.get('account_types', [])
     if isinstance(account_types, str):
         account_types = account_types.split(',')
-
+        account_types = list(map(lambda t: t.strip(), account_types))
     referred_by = attribute_dict.get('referred_by')
 
     blockchain_address = attribute_dict.get('blockchain_address')

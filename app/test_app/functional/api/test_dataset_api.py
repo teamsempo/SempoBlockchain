@@ -7,7 +7,6 @@ from server.utils.executor import get_job_key
 from server import red, db
 from openpyxl import Workbook
 import json
-import time
 
 fake = Faker()
 fake.add_provider(phone_number)
@@ -65,23 +64,27 @@ def test_dataset_api(test_client, authed_sempo_admin_user):
             {
                 "0": "Alf",
                 "1": "Melmac",
-                "2": "19027192211"
+                "2": "19027192211",
+                "3": "vendor"
             },
             {
                 "0": "Alf",
                 "1": "Tanner",
-                "2": "19027192211" # Same phone number, should trigger update
+                "2": "19027192211", # Same phone number, should trigger update
+                "3": "beneficiary",
             },
             {
                 "0": "Willie",
                 "1": "Tanner",
-                "2": "19027192222"
+                "2": "19027192222",
+                "3": "vendor"
             }
         ],
         "headerPositions": {
             "0": "first_name",
             "1": "last_name",
-            "2": "phone"
+            "2": "phone",
+            "3": "account_types"
         },
         "country": "",
         "saveName": "",
@@ -89,7 +92,6 @@ def test_dataset_api(test_client, authed_sempo_admin_user):
     }
 
     auth = get_complete_auth_token(authed_sempo_admin_user)
-    
     response = test_client.post(
         f"/api/v1/dataset/",
         headers=dict(
@@ -99,6 +101,12 @@ def test_dataset_api(test_client, authed_sempo_admin_user):
         json=data
     )
 
+    alf = db.session.query(User).filter(User.phone=='+19027192211').first()
+    assert alf.is_vendor == False 
+
+    willie = db.session.query(User).filter(User.phone=='+19027192222').first()
+    assert willie.is_vendor == True 
+    
     redis_id = get_job_key(authed_sempo_admin_user.id, response.json['task_uuid']) 
     status = { 'percent_complete': 0 }
     status = json.loads(red.get(redis_id))
