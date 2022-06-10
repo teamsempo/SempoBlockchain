@@ -150,6 +150,7 @@ class SingleCreditTransfer extends React.Component {
             </Descriptions.Item>
             <Descriptions.Item label={"Resolution Message"}>
               {resolutionMessage}
+            </Descriptions.Item>
             <Descriptions.Item label={"Transfer Uses"}>
               {transferUsages}
             </Descriptions.Item>
