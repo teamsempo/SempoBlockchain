@@ -6,11 +6,11 @@ const { Option } = Select;
 import { ReduxState, sempoObjects } from "../../reducers/rootReducer";
 import {
   EditTransferAccountPayload,
-  LoadTransferAccountListPayload
+  LoadTransferAccountListPayload,
 } from "../../reducers/transferAccount/types";
 import {
   EditTransferAccountAction,
-  LoadTransferAccountAction
+  LoadTransferAccountAction,
 } from "../../reducers/transferAccount/actions";
 
 import QueryConstructor, { Query } from "../filterModule/queryConstructor";
@@ -20,7 +20,7 @@ import ExportModal from "./export/exportModal.jsx";
 
 import {
   CreateBulkTransferBody,
-  TransferTypes
+  TransferTypes,
 } from "../../reducers/bulkTransfer/types";
 import { getActiveToken } from "../../utils";
 import { apiActions, CreateRequestAction } from "../../genericState";
@@ -44,7 +44,7 @@ interface DispatchProps {
   ) => CreateRequestAction;
   loadTransferAccountList: ({
     query,
-    path
+    path,
   }: LoadTransferAccountListPayload) => LoadTransferAccountAction;
 }
 
@@ -75,7 +75,7 @@ const mapStateToProps = (state: ReduxState): StateProps => {
     transferAccounts: state.transferAccounts,
     bulkTransfers: state.bulkTransfers,
     login: state.login,
-    organisations: state.organisations
+    organisations: state.organisations,
   };
 };
 
@@ -87,11 +87,11 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => {
       dispatch(apiActions.create(sempoObjects.bulkTransfers, body)),
     loadTransferAccountList: ({
       query,
-      path
+      path,
     }: LoadTransferAccountListPayload) =>
       dispatch(
         LoadTransferAccountAction.loadTransferAccountsRequest({ query, path })
-      )
+      ),
   };
 };
 
@@ -118,7 +118,7 @@ class StandardTransferAccountList extends React.Component<
       searchString: "",
       awaitingEditSuccess: false,
       page: 1,
-      per_page: 10
+      per_page: 10,
     };
   }
 
@@ -140,8 +140,8 @@ class StandardTransferAccountList extends React.Component<
           params: this.state.params,
           search_string: this.state.searchString,
           page: this.state.page,
-          per_page: this.state.per_page
-        }
+          per_page: this.state.per_page,
+        },
       });
     }
   }
@@ -154,7 +154,7 @@ class StandardTransferAccountList extends React.Component<
     this.setState({
       selectedRowKeys,
       unselectedRowKeys,
-      allSelected
+      allSelected,
     });
   };
 
@@ -162,7 +162,7 @@ class StandardTransferAccountList extends React.Component<
     let per_page = pageSize || 10;
     this.setState({
       page,
-      per_page
+      per_page,
     });
   };
 
@@ -202,9 +202,9 @@ class StandardTransferAccountList extends React.Component<
         params: this.state.params,
         search_string: this.state.searchString,
         include_accounts: include_accounts,
-        exclude_accounts: exclude_accounts
+        exclude_accounts: exclude_accounts,
       },
-      path: "bulk"
+      path: "bulk",
     });
   }
 
@@ -212,7 +212,7 @@ class StandardTransferAccountList extends React.Component<
     this.setState({
       params: query.params,
       searchString: query.searchString,
-      page: 1
+      page: 1,
     });
   }
 
@@ -244,10 +244,10 @@ class StandardTransferAccountList extends React.Component<
       disbursement_amount: amount,
       transfer_type: this.state.transferType,
       label: this.state.label,
-      params: this.state.params,
+      params: decodeURI(this.state.params),
       search_string: this.state.searchString,
       include_accounts: include_accounts,
-      exclude_accounts: exclude_accounts
+      exclude_accounts: exclude_accounts,
     });
   }
 
@@ -261,7 +261,7 @@ class StandardTransferAccountList extends React.Component<
       unselectedRowKeys,
       allSelected,
       params,
-      searchString
+      searchString,
     } = this.state;
 
     let include_accounts, exclude_accounts;
@@ -284,27 +284,27 @@ class StandardTransferAccountList extends React.Component<
     const actionButtons = [
       {
         label: "Approve",
-        onClick: (IdList: React.Key[]) => this.setApproval(true)
+        onClick: (IdList: React.Key[]) => this.setApproval(true),
       },
       {
         label: "Unapprove",
-        onClick: (IdList: React.Key[]) => this.setApproval(false)
+        onClick: (IdList: React.Key[]) => this.setApproval(false),
       },
       {
         label: "Create Bulk Transfer",
-        onClick: (IdList: React.Key[]) => this.showBulkTransferModal()
-      }
+        onClick: (IdList: React.Key[]) => this.showBulkTransferModal(),
+      },
     ];
 
     const dataButtons = [
       {
         label: "Import",
-        onClick: () => this.toggleImportModal()
+        onClick: () => this.toggleImportModal(),
       },
       {
         label: "Export",
-        onClick: () => this.toggleExportModal()
-      }
+        onClick: () => this.toggleExportModal(),
+      },
     ];
 
     return (
@@ -314,7 +314,7 @@ class StandardTransferAccountList extends React.Component<
           filterObject="user"
           pagination={{
             page: this.state.page,
-            per_page: this.state.per_page
+            per_page: this.state.per_page,
           }}
         />
         <TransferAccountList
@@ -330,7 +330,7 @@ class StandardTransferAccountList extends React.Component<
             currentPage: this.state.page,
             items: this.props.transferAccounts.pagination.items,
             onChange: (page: number, perPage: number | undefined) =>
-              this.onPaginateChange(page, perPage)
+              this.onPaginateChange(page, perPage),
           }}
         />
         <ImportModal
@@ -368,7 +368,7 @@ class StandardTransferAccountList extends React.Component<
               onClick={() => this.createBulkTransferFromState()}
             >
               Create
-            </Button>
+            </Button>,
           ]}
         >
           <Space direction="vertical" size="large">
@@ -376,7 +376,7 @@ class StandardTransferAccountList extends React.Component<
               <span>Label: </span>
               <Input
                 placeholder="Untitled"
-                onChange={e => this.setState({ label: e.target.value })}
+                onChange={(e) => this.setState({ label: e.target.value })}
               />
             </Space>
             <Space>
