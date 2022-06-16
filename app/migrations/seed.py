@@ -380,8 +380,8 @@ def create_float_transfer_account(app):
     print_section_title('Creating/Updating Float Transfer Accounts')
     tokens = db.session.query(Token).execution_options(show_all=True)
     for t in tokens:
-        print(f'Creating Float Account for {t.name}')
         if t.float_account is None:
+            print(f'Creating Float Account for {t.name}')
             chain_config = app.config['CHAINS'][app.config['DEFAULT_CHAIN']]
 
             float_transfer_account = TransferAccount(
