@@ -59,6 +59,7 @@ class SingleCreditTransfer extends React.Component {
 
       const transferStatus = creditTransfer.transfer_status;
       const transferMode = creditTransfer.transfer_mode;
+      const resolutionMessage = creditTransfer.resolution_message;
 
       const createDate = moment
         .utc(creditTransfer.created)
@@ -146,6 +147,9 @@ class SingleCreditTransfer extends React.Component {
             </Descriptions.Item>
             <Descriptions.Item label={"Blockchain UUID"}>
               {blockchainId}
+            </Descriptions.Item>
+            <Descriptions.Item label={"Resolution Message"}>
+              {resolutionMessage}
             </Descriptions.Item>
             <Descriptions.Item label={"Transfer Uses"}>
               {transferUsages}

@@ -394,6 +394,10 @@ def create_float_transfer_account(app):
             db.session.add(float_transfer_account)
             db.session.flush()
             t.float_account = float_transfer_account
+        else:
+            print('Patching float account')
+            if not t.float_account.organisation:
+                t.float_account.organisation = Organisation.master_organisation()
         t.float_account.is_public = True
         db.session.commit()
     print_section_conclusion('Done Creating/Updating Float Wallet')
