@@ -103,28 +103,23 @@ def test_admin_reset_user_pin(mocker, test_client, init_database, create_transfe
 @pytest.mark.parametrize("preferred_language, org_key, expected_welcome, expected_terms, phone", [
 
     (None, None,
-     'Hello Magoo, you have been registered on Sempo! Your balance is 100.00 Sarafu.',
+     'Hello Magoo, you have been registered on Sempo! Your balance is 100.00 Dollars.',
      'By using the service, you agree to the terms and conditions at https://withsempo.com/legal/platform-terms.', '123456789'),
 
-    (None, "grassroots",
-     'Hello Magoo you have been registered on Sarafu Network! Your balance is 100.00 Sarafu. To use dial *384*96# Safaricom or *483*46# Airtel. For help 0757628885',
+    (None, "custom",
+     'Hello Magoo you have been registered on Test Network! Your balance is 100.00 Dollars.',
      'By using the service, you agree to the terms and conditions at https://withsempo.com/legal/platform-terms.', '223456789'),
 
     ('sw', None,
-     'Habari Magoo, umesajiliwa kwa Sempo! Salio yako ni 100.00 Sarafu.',
+     'Habari Magoo, umesajiliwa kwa Sempo! Salio yako ni 100.00 Dollars.',
      'Kwa kutumia hii huduma, umekubali sheria na masharti yafuatayo https://withsempo.com/legal/platform-terms.', '323456789'),
-
-    ('sw', 'grassroots',
-     'Habari Magoo, umesajiliwa kwa huduma ya sarafu! Salio lako ni Sarafu 100.00. Kutumia bonyeza *384*96# kwa Safaricom au *483*46# Airtel. Kwa Usaidizi 0757628885',
-     'Kwa kutumia hii huduma, umekubali sheria na masharti yafuatayo https://withsempo.com/legal/platform-terms.', '423456789'),
-
 ])
 def test_send_welcome_sms(mocker, test_client, init_database, mock_sms_apis,
                           preferred_language, org_key, expected_welcome, expected_terms, phone):
     from flask import g
     from server import db
 
-    token = TokenFactory(name='Sarafu', symbol='Sarafu')
+    token = TokenFactory(name='Dollars', symbol='Dollars')
     organisation = OrganisationFactory(custom_welcome_message_key=org_key, token=token, country_code='AU')
     g.active_organisation = organisation
     transfer_account = TransferAccountFactory(token=token, organisation=organisation)

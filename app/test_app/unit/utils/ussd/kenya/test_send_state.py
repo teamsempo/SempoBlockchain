@@ -7,7 +7,7 @@ import json
 from helpers.model_factories import UserFactory, UssdSessionFactory, TokenFactory, OrganisationFactory
 from helpers.utils import make_kenyan_phone, fake_transfer_mapping
 from server import db
-from server.utils.ussd.kenya_ussd_state_machine import KenyaUssdStateMachine
+from server.utils.ussd.ussd_state_machine import UssdStateMachine
 from server.models.user import User
 
 fake = Faker()
@@ -19,7 +19,7 @@ phone = partial(fake.msisdn)
 def standard_user(test_client, init_database):
     from flask import g
 
-    token = TokenFactory(name='Sarafu', symbol='Sarafu')
+    token = TokenFactory(name='SempoBucks', symbol='SempoBucks')
     organisation = OrganisationFactory(token=token, country_code='AU')
     g.active_organisation = organisation
 
@@ -67,7 +67,7 @@ send_token_confirmation_state = partial(UssdSessionFactory, state="send_token_co
      (send_token_confirmation_state, "3", "exit_invalid_menu_option"),
      (send_token_confirmation_state, "asdf", "exit_invalid_menu_option"),
  ])
-def test_kenya_state_machine(test_client, init_database, standard_user, session_factory, user_input, expected):
+def test_state_machine(test_client, init_database, standard_user, session_factory, user_input, expected):
     session = session_factory()
     session.session_data = {
         'transfer_usage_mapping': fake_transfer_mapping(10),
@@ -75,7 +75,7 @@ def test_kenya_state_machine(test_client, init_database, standard_user, session_
         'usage_index_stack': [0, 8]
     }
     db.session.commit()
-    state_machine = KenyaUssdStateMachine(session, standard_user)
+    state_machine = UssdStateMachine(session, standard_user)
 
     state_machine.feed_char(user_input)
     assert state_machine.state == expected
@@ -83,7 +83,7 @@ def test_kenya_state_machine(test_client, init_database, standard_user, session_
 
 def test_invalid_user_recipient(mocker, test_client, init_database, standard_user):
     session = send_enter_recipient_state()
-    state_machine = KenyaUssdStateMachine(session, standard_user)
+    state_machine = UssdStateMachine(session, standard_user)
     state_machine.send_sms = mocker.MagicMock()
     state_machine.feed_char("1234")
 
@@ -98,7 +98,7 @@ def test_invalid_recipient(
 
     invalid_recipient_phone = "+61234567890"
 
-    state_machine = KenyaUssdStateMachine(session, standard_user)
+    state_machine = UssdStateMachine(session, standard_user)
     state_machine.send_sms = mocker.MagicMock()
     state_machine.feed_char(invalid_recipient_phone)
 
@@ -121,7 +121,7 @@ def test_invalid_phone_number(
 
     invalid_recipient_phone = "1"
 
-    state_machine = KenyaUssdStateMachine(session, standard_user)
+    state_machine = UssdStateMachine(session, standard_user)
     state_machine.send_sms = mocker.MagicMock()
     state_machine.feed_char(invalid_recipient_phone)
 
@@ -136,7 +136,7 @@ def test_standard_recipient(test_client, init_database, standard_user):
 
     recipient_user = UserFactory(phone=make_kenyan_phone(phone()))
 
-    state_machine = KenyaUssdStateMachine(session, standard_user)
+    state_machine = UssdStateMachine(session, standard_user)
     state_machine.feed_char(recipient_user.phone)
 
     assert state_machine.state == "send_token_amount"
@@ -149,7 +149,7 @@ def test_agent_recipient(test_client, init_database, standard_user):
     agent_recipient = UserFactory(phone=make_kenyan_phone(phone()))
     agent_recipient.set_held_role('TOKEN_AGENT', 'token_agent')
 
-    state_machine = KenyaUssdStateMachine(session, standard_user)
+    state_machine = UssdStateMachine(session, standard_user)
     state_machine.feed_char(agent_recipient.phone)
 
     assert state_machine.state == "exit_use_exchange_menu"
@@ -172,7 +172,7 @@ def test_send_token(mocker, test_client, init_database, create_transfer_account_
         )
     )
 
-    state_machine = KenyaUssdStateMachine(send_token_confirmation, standard_user)
+    state_machine = UssdStateMachine(send_token_confirmation, standard_user)
     send_token = mocker.MagicMock()
     mocker.patch('server.ussd_tasker.send_token', send_token)
 

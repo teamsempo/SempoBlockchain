@@ -1,4 +1,110 @@
-version: 2.0
+version: 2.1
+
+commands:
+  deploy:
+    description: "A very simple command for demonstration purposes"
+    parameters:
+      app-service:
+        type: string
+        default: "app"
+      worker-service:
+        type: string
+        default: "worker-ecs"
+      app-task:
+        type: string
+        default: "app"
+      worker-task:
+        type: string
+        default: "worker-ecs"
+      frontend-bucket:
+        type: string
+        default: "sempo-dev-static"
+      cluster:
+        type: string
+        default: "devecs"
+      region:
+        type: string
+        default: "ap-southeast-2"
+
+    steps:
+      - checkout
+      - setup_remote_docker
+      - attach_workspace:
+          at: ~/project
+      - run:
+          name: Check deploy Authorisation
+          command: |
+            if [ -z "$AWS_ACCESS_KEY_ID" ]; then
+              echo "No AWS_ACCESS_KEY_ID is set! Failing..."
+              exit 1;
+            fi
+      - run:
+          name: Load Docker Images
+          command: |
+            docker load -i docker-cache/images.tar
+
+      - run:
+          name: Prepare for pyth venv install
+          command: |
+            sudo chown -R circleci:circleci /usr/local/bin
+            sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
+      - restore_cache:
+          key: pydeps-v3-{{ .Branch }}-{{ checksum "~/project/.circleci/requirements.txt" }}
+      - run:
+          name: pip fix
+          command: curl https://bootstrap.pypa.io/pip/3.6/get-pip.py | python
+      - run:
+          name: Setup AWS CLI
+          command: |
+            pip install -r ~/project/.circleci/requirements.txt
+      - save_cache:
+          key: pydeps-v3-{{ .Branch }}-{{ checksum "~/project/.circleci/requirements.txt" }}
+          paths:
+            - ".venv"
+            - "/usr/local/bin"
+            - "/usr/local/lib/python3.6/site-packages"
+      - run:
+          name: Push Docker Image
+          command: |
+            eval $(aws ecr get-login --no-include-email --region ${REPOSITORY_REGION});
+            docker tag server:${CIRCLE_SHA1} ${APP_REPOSITORY_URI}:server_${CIRCLE_SHA1}
+            docker push ${APP_REPOSITORY_URI}:server_${CIRCLE_SHA1}
+            docker tag eth_worker:${CIRCLE_SHA1} ${WORKER_REPOSITORY_URI}:eth_worker_${CIRCLE_SHA1}
+            docker push ${WORKER_REPOSITORY_URI}:eth_worker_${CIRCLE_SHA1}
+      - run:
+          name: Add updated images to task definitions
+          command: |
+            python devtools/deploy_tools/build_task_definition.py << parameters.app-task >> << parameters.worker-task >> ${CIRCLE_SHA1} << parameters.region >>
+      - run:
+          name: Upload static assets to S3
+          command: |
+            aws s3 rm s3://<< parameters.frontend-bucket >>/static --recursive
+            aws s3 sync app/server/static s3://<< parameters.frontend-bucket >>/static
+      - run:
+          name: Remove old ECS task requirement
+          command: |
+            aws ecs update-service --cluster << parameters.cluster >> --service << parameters.app-service >> --desired-count 0 --region << parameters.region >>
+            aws ecs update-service --cluster << parameters.cluster >> --service << parameters.worker-service >> --desired-count 0 --region << parameters.region >>
+      - run:
+          name: Halt old services
+          command: |
+            python devtools/deploy_tools/halt_tasks.py << parameters.cluster >> << parameters.region >>
+      - run:
+          name: Update ECS Task
+          command: |
+            aws ecs register-task-definition --cli-input-json file://ecs_app_task_config.json --region << parameters.region >>
+            aws ecs register-task-definition --cli-input-json file://ecs_app_worker_config.json --region << parameters.region >>
+      - run:
+          name: Add capacity for new task
+          command: |
+            aws ecs update-service --cluster << parameters.cluster >> --service << parameters.app-service >> --desired-count 1 --region << parameters.region >>
+            aws ecs update-service --cluster << parameters.cluster >> --service << parameters.worker-service >> --desired-count 1 --region << parameters.region >>
+      - run:
+          name: Deploy
+          command: |
+            aws ecs update-service --cluster << parameters.cluster >> --service << parameters.app-service >> --task-definition  << parameters.app-task >> --force-new-deployment --region << parameters.region >>
+            aws ecs update-service --cluster << parameters.cluster >> --service << parameters.worker-service >> --task-definition << parameters.worker-task >> --force-new-deployment --region << parameters.region >>
+
 jobs:
   build:
     working_directory: ~/project
@@ -80,7 +186,7 @@ jobs:
             - app/server/static/javascript/dist
             - docker-cache
 
-  test:backend:
+  test-backend:
     working_directory: ~/project
     docker:
       - image: circleci/python:3.6-node
@@ -101,7 +207,7 @@ jobs:
             export GIT_HASH=$CIRCLE_SHA1
             export IMAGE_TAG=$CIRCLE_SHA1
             docker-compose -f docker-compose.yml -f docker-compose.ci.yml up --exit-code-from app
-  test:worker:
+  test-worker:
     working_directory: ~/project
     docker:
       - image: circleci/python:3.6-node
@@ -122,7 +228,7 @@ jobs:
             export GIT_HASH=$CIRCLE_SHA1
             export IMAGE_TAG=$CIRCLE_SHA1
             docker-compose -f docker-compose.yml -f docker-compose.ci.yml up --exit-code-from eth_worker
-  test:frontend:
+  test-frontend:
     working_directory: ~/project
     docker:
       - image: circleci/python:3.6-node
@@ -140,103 +246,164 @@ jobs:
       - run:
           name: Upload coverage report to Codecov
           command: bash <(curl -s https://codecov.io/bash) -cF javascript
-  deploy:
+  deploy-dev:
     working_directory: ~/project
     docker:
       - image: circleci/python:3.6-node
     steps:
-      - checkout
-      - setup_remote_docker
-      - attach_workspace:
-          at: ~/project
-      - run:
-          name: Check deploy Authorisation
-          command: |
-            if [ -z "$AWS_ACCESS_KEY_ID" ]; then
-              echo "No AWS_ACCESS_KEY_ID is set! Failing..."
-              exit 1;
-            fi
-      - run:
-          name: Load Docker Images
-          command: |
-            docker load -i docker-cache/images.tar
+      - deploy:
+          app-service: "app"
+          worker-service: "worker-ecs"
+          app-task: "app"
+          worker-task: "worker"
+          frontend-bucket: "sempo-dev-static"
+          cluster: "devecs"
+          region: "ap-southeast-2"
 
-      - run:
-          name: Prepare for pyth venv install
-          command: |
-            sudo chown -R circleci:circleci /usr/local/bin
-            sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
-      - restore_cache:
-          key: pydeps-v3-{{ .Branch }}-{{ checksum "~/project/.circleci/requirements.txt" }}
-      - run:
-          name: pip fix
-          command: curl https://bootstrap.pypa.io/get-pip.py | python
-      - run:
-          name: Setup AWS CLI
-          command: |
-            pip install -r ~/project/.circleci/requirements.txt
-      - save_cache:
-          key: pydeps-v3-{{ .Branch }}-{{ checksum "~/project/.circleci/requirements.txt" }}
-          paths:
-            - ".venv"
-            - "/usr/local/bin"
-            - "/usr/local/lib/python3.6/site-packages"
-      - run:
-          name: Push Docker Image
-          command: |
-            eval $(aws ecr get-login --no-include-email --region ${REPOSITORY_REGION});
-            docker tag server:${CIRCLE_SHA1} ${APP_REPOSITORY_URI}:server_${CIRCLE_SHA1}
-            docker push ${APP_REPOSITORY_URI}:server_${CIRCLE_SHA1}
-            docker tag eth_worker:${CIRCLE_SHA1} ${WORKER_REPOSITORY_URI}:eth_worker_${CIRCLE_SHA1}
-            docker push ${WORKER_REPOSITORY_URI}:eth_worker_${CIRCLE_SHA1}
-      - run:
-          name: Add updated images to task definitions
-          command: |
-            sed "s|CIRCLE_SHA1|${CIRCLE_SHA1}|g;" ecs_app_task_config_template.json > ecs_app_task_config.json
-            sed "s|CIRCLE_SHA1|${CIRCLE_SHA1}|g;" ecs_worker_task_config_template.json > ecs_app_worker_config.json
-      - run:
-          name: Remove old ECS task
-          command: |
-            aws ecs update-service --cluster devecs --service app --desired-count 0
-            aws ecs update-service --cluster devecs --service worker-ecs --desired-count 0
-      - run:
-          name: Update ECS Task
-          command: |
-            aws ecs register-task-definition --cli-input-json file://ecs_app_task_config.json
-            aws ecs register-task-definition --cli-input-json file://ecs_app_worker_config.json
-      - run:
-          name: Add capacity for new task
-          command: |
-            aws ecs update-service --cluster devecs --service app --desired-count 1
-            aws ecs update-service --cluster devecs --service worker-ecs --desired-count 1
+  deploy-zwe:
+    working_directory: ~/project
+    docker:
+      - image: circleci/python:3.6-node
+    steps:
+      - deploy:
+          app-service: "app-service"
+          worker-service: "zwe-worker"
+          app-task: "zwe-app"
+          worker-task: "zwe-worker"
+          frontend-bucket: "sempo-zwe-static"
+          cluster: "zwe"
+          region: "ap-southeast-2"
 
-      - run:
-          name: Deploy
-          command: |
-            aws ecs update-service --cluster devecs --service app --task-definition app --force-new-deployment
-            aws ecs update-service --cluster devecs --service worker-ecs --task-definition worker --force-new-deployment
+  deploy-slb:
+    working_directory: ~/project
+    docker:
+      - image: circleci/python:3.6-node
+    steps:
+      - deploy:
+          app-service: "app"
+          worker-service: "worker"
+          app-task: "slb-app"
+          worker-task: "slb-worker"
+          frontend-bucket: "sempo-slb-static"
+          cluster: "slb-cluster"
+          region: "ap-southeast-2"
+
+  deploy-vut:
+    working_directory: ~/project
+    docker:
+      - image: circleci/python:3.6-node
+    steps:
+      - deploy:
+          app-service: "app"
+          worker-service: "worker"
+          app-task: "vut-app"
+          worker-task: "vut-worker"
+          frontend-bucket: "sempo-vut-static"
+          cluster: "vut"
+          region: "ap-southeast-2"
+
+  deploy-ugx:
+    working_directory: ~/project
+    docker:
+      - image: circleci/python:3.6-node
+    steps:
+      - deploy:
+          app-service: "app"
+          worker-service: "worker"
+          app-task: "ugx-app"
+          worker-task: "ugx-worker"
+          frontend-bucket: "sempo-ugx-static"
+          cluster: "ugx"
+          region: "ap-southeast-2"
+
+  deploy-demo:
+    working_directory: ~/project
+    docker:
+      - image: circleci/python:3.6-node
+    steps:
+      - deploy:
+          app-service: "app-service"
+          worker-service: "worker-service"
+          app-task: "app"
+          worker-task: "worker"
+          frontend-bucket: "sempo-demo-static"
+          cluster: "demo"
+          region: "us-east-1"
 
 workflows:
   version: 2
   main_workflow:
     jobs:
       - build
-      - test:backend:
+      - test-backend:
           requires:
             - build
-      - test:worker:
+      - test-worker:
           requires:
             - build
-      - test:frontend:
+      - test-frontend:
           requires:
             - build
-      - deploy:
+
+      - deploy-zwe:
+          filters:
+            branches:
+              only:
+                - zwe
+          requires:
+            - build
+            - test-backend
+            - test-worker
+            - test-frontend
+      - deploy-slb:
+          filters:
+            branches:
+              only:
+                - slb
+          requires:
+            - build
+            - test-backend
+            - test-worker
+            - test-frontend
+      - deploy-vut:
+          filters:
+            branches:
+              only:
+                - vut
+          requires:
+            - build
+            - test-backend
+            - test-worker
+            - test-frontend
+      - deploy-ugx:
+          filters:
+            branches:
+              only:
+                - ugx
+          requires:
+            - build
+            - test-backend
+            - test-worker
+            - test-frontend
+      - deploy-demo:
+          filters:
+            branches:
+              only:
+                - demo
+                - ci-deploy-different-branches
+          requires:
+            - build
+            - test-backend
+            - test-worker
+            - test-frontend
+
+      - deploy-dev:
           filters:
             branches:
               only:
                 - master
           requires:
             - build
-            - test:backend
-            - test:worker
-            - test:frontend
+            - test-backend
+            - test-worker
+            - test-frontend

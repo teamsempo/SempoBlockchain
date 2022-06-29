@@ -91,20 +91,22 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
         "Disbursement",
         secondary=disbursement_transfer_account_association_table,
         back_populates="transfer_accounts",
-        lazy='joined'
+        lazy=True
     )
     credit_sends = db.relationship(
         'CreditTransfer',
         foreign_keys='CreditTransfer.sender_transfer_account_id',
         back_populates='sender_transfer_account',
-        order_by='desc(CreditTransfer.id)'
+        order_by='desc(CreditTransfer.id)',
+        lazy=True
     )
 
     credit_receives = db.relationship(
         'CreditTransfer',
         foreign_keys='CreditTransfer.recipient_transfer_account_id',
         back_populates='recipient_transfer_account',
-        order_by='desc(CreditTransfer.id)'
+        order_by='desc(CreditTransfer.id)',
+        lazy=True
     )
 
     spend_approvals_given = db.relationship('SpendApproval', backref='giving_transfer_account',
@@ -282,8 +284,8 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
         return (self._balance_wei or 0) / int(1e18)
 
     def get_or_create_system_transfer_approval(self):
-        sys_blockchain_address = self.organisation.system_blockchain_address
-
+        org = self.organisation or g.user.default_organisation
+        sys_blockchain_address = org.system_blockchain_address
         approval = self.get_approval(sys_blockchain_address)
 
         if not approval:

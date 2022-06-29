@@ -23,7 +23,6 @@ from server.utils.metrics.metrics_cache import clear_metrics_cache, rebuild_metr
 
 disbursement_blueprint = Blueprint('disbursement', __name__)
 
-
 @status_checkable_executor_job
 def make_transfers(disbursement_id, auto_resolve=False):
     send_transfer_account = g.user.default_organisation.queried_org_level_transfer_account
@@ -31,6 +30,8 @@ def make_transfers(disbursement_id, auto_resolve=False):
     from server.models.transfer_account import TransferAccount
     from server.models.disbursement import Disbursement
     disbursement = db.session.query(Disbursement).filter(Disbursement.id == disbursement_id).first()
+    disbursement.mark_processing()
+    db.session.commit()
     for idx, ta in enumerate(disbursement.transfer_accounts):
         try:
             user = ta.primary_user
@@ -78,6 +79,8 @@ def make_transfers(disbursement_id, auto_resolve=False):
             'percent_complete': math.floor(percent_complete),
             'data': {'credit_transfers': credit_transfers_schema.dump(disbursement.credit_transfers).data}
         }
+    disbursement.mark_complete()
+    db.session.commit()
     clear_metrics_cache()
     rebuild_metrics_cache()
 class MakeDisbursementAPI(MethodView):
@@ -206,6 +209,7 @@ class DisbursementAPI(MethodView):
                 .options(joinedload(Disbursement.credit_transfers))\
                 .first()
             disbursement.notes = notes
+            
             if not disbursement:
                 return { 'message': f'Disbursement with ID \'{disbursement_id}\' not found' }, 400
 

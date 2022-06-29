@@ -52,7 +52,8 @@ SPREADSHEET_UPLOAD_REQUESTED_ATTRIBUTES = [
     # (attribute_name, display name)
     ('first_name', 'first names'),
     ('last_name', 'last names'),
-    ('phone', 'phone numbers')
+    ('phone', 'phone numbers'),
+    ('public_serial_number', 'public serial numbers')
 ]
 
 DENOMINATION_DICT = {

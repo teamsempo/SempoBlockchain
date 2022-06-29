@@ -6,19 +6,19 @@ const { Option } = Select;
 import { CreditTransferAction } from "../../reducers/creditTransfer/actions";
 import { getActiveToken, toTitleCase } from "../../utils";
 
-const mapStateToProps = state => {
+const mapStateToProps = (state) => {
   return {
     transferAccounts: state.transferAccounts,
     creditTransfers: state.creditTransfers,
     login: state.login,
-    activeToken: getActiveToken(state)
+    activeToken: getActiveToken(state),
   };
 };
 
-const mapDispatchToProps = dispatch => {
+const mapDispatchToProps = (dispatch) => {
   return {
-    createTransferRequest: body =>
-      dispatch(CreditTransferAction.createTransferRequest({ body }))
+    createTransferRequest: (body) =>
+      dispatch(CreditTransferAction.createTransferRequest({ body })),
   };
 };
 
@@ -28,7 +28,7 @@ class NewTransferManager extends React.Component {
     this.state = {
       action: "select",
       create_transfer_type: "DISBURSEMENT",
-      transfer_amount: 0
+      transfer_amount: 0,
     };
     this.handleChange = this.handleChange.bind(this);
     this.handleClick = this.handleClick.bind(this);
@@ -40,8 +40,8 @@ class NewTransferManager extends React.Component {
   }
 
   handleClick() {
-    this.setState(prevState => ({
-      newTransfer: !prevState.newTransfer
+    this.setState((prevState) => ({
+      newTransfer: !prevState.newTransfer,
     }));
   }
 
@@ -90,7 +90,7 @@ class NewTransferManager extends React.Component {
             recipient_transfer_accounts_ids,
             transfer_amount,
             target_balance,
-            transfer_type
+            transfer_type,
           });
       } else if (this.props.transfer_account_ids.length === 1) {
         // SINGLE TRANSFER
@@ -122,7 +122,7 @@ class NewTransferManager extends React.Component {
             sender_transfer_account_id,
             transfer_amount,
             target_balance,
-            transfer_type
+            transfer_type,
           });
       } else {
         window.alert("Must select at least one user");
@@ -166,7 +166,7 @@ class NewTransferManager extends React.Component {
               </span>
               <span>{toTitleCase(this.state.create_transfer_type)}</span>
             </span>
-          </Button>
+          </Button>,
         ]}
       >
         <Space direction="vertical" size="large">
@@ -174,7 +174,7 @@ class NewTransferManager extends React.Component {
             <span>Transfer Type: </span>
             <Select
               defaultValue={this.state.create_transfer_type}
-              onChange={transferType =>
+              onChange={(transferType) =>
                 this.setState({ create_transfer_type: transferType })
               }
             >
@@ -184,11 +184,11 @@ class NewTransferManager extends React.Component {
             </Select>
           </Space>
           <Space>
-            <span>Transfer Amount: </span>
+            <span>Transfer Amount (per recipient): </span>
             <InputNumber
               defaultValue={this.state.transfer_amount}
               min={0}
-              onChange={amount => this.setState({ transfer_amount: amount })}
+              onChange={(amount) => this.setState({ transfer_amount: amount })}
             />
             {tokenSymbol}
           </Space>
@@ -198,7 +198,4 @@ class NewTransferManager extends React.Component {
   }
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(NewTransferManager);
+export default connect(mapStateToProps, mapDispatchToProps)(NewTransferManager);

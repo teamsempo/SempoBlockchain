@@ -41,7 +41,7 @@ class TokenProcessor(object):
     @staticmethod
     def send_sms(user, message_key, **kwargs):
         # if we use token processor similarly for other countries later, can generalize country to init
-        message = i18n_for(user, "ussd.kenya.{}".format(message_key), **kwargs)
+        message = i18n_for(user, "ussd.sempo.{}".format(message_key), **kwargs)
         send_message(user.phone, message)
 
     @staticmethod

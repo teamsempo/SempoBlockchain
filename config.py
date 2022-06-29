@@ -5,7 +5,8 @@ env_loglevel = os.environ.get('LOGLEVEL', 'DEBUG')
 logging.basicConfig(level=env_loglevel)
 logg = logging.getLogger(__name__)
 
-VERSION = '2.1.2'  # Remember to bump this in every PR
+
+VERSION = '2.1.15'  # Remember to bump this in every PR
 
 logg.info('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
@@ -118,7 +119,7 @@ if IS_PRODUCTION is None:
 
 PROGRAM_NAME        = config_parser['APP']['PROGRAM_NAME']
 
-DISABLE_LIMITS = config_parser['APP'].getboolean('DISABLE_LIMITS', False)
+DISABLE_LIMITS = config_parser['APP'].getboolean('DISABLE_LIMITS', True)
 APP_HOST            = config_parser['APP']['APP_HOST']
 REQUIRE_MULTIPLE_APPROVALS = config_parser['APP'].getboolean('REQUIRE_MULTIPLE_APPROVALS', False)
 ALLOWED_APPROVERS = config_parser['APP'].get('allowed_approvers', None)
@@ -151,7 +152,7 @@ THIRD_PARTY_SYNC_EPOCH = config_parser['APP'].get('THIRD_PARTY_SYNC_EPOCH', 'lat
 THIRD_PARTY_SYNC_CHECK_PERIOD_SECONDS = int(config_parser['APP'].get('THIRD_PARTY_SYNC_CHECK_PERIOD_SECONDS', '60'))
 
 SINGLE_USE_TOKEN_EXPIRATION      = 60 * 60 * 24 * 1
-AUTH_TOKEN_EXPIRATION = int(config_parser['APP'].getboolean('AUTH_TOKEN_EXPIRATION', 60 * 60 * 24 * 7))  # 1 week
+AUTH_TOKEN_EXPIRATION = int(config_parser['APP'].getboolean('AUTH_TOKEN_EXPIRATION', 60 * 60 * 2))  # 2 Hours
 VERIFY_JWT_EXPIRY     = config_parser['APP'].getboolean('VERIFY_JWT_EXPIRY', True)
 PASSWORD_PEPPER       = secrets_parser['APP'].get('PASSWORD_PEPPER')
 SECRET_KEY            = secrets_parser['APP']['SECRET_KEY'] + DEPLOYMENT_NAME

@@ -7,17 +7,17 @@ import { StyledButton, Input } from "../styledElements";
 
 import { SpreadsheetAction } from "../../reducers/spreadsheet/actions";
 
-const mapStateToProps = state => {
+const mapStateToProps = (state) => {
   return {
-    saveState: state.datasetSave
+    saveState: state.datasetSave,
   };
 };
 
-const mapDispatchToProps = dispatch => {
+const mapDispatchToProps = (dispatch) => {
   return {
-    saveDataset: body =>
+    saveDataset: (body) =>
       dispatch(SpreadsheetAction.saveDatasetRequest({ body })),
-    resetUploadState: () => dispatch(SpreadsheetAction.resetUploadState())
+    resetUploadState: () => dispatch(SpreadsheetAction.resetUploadState()),
   };
 };
 
@@ -34,14 +34,14 @@ class uploadedTable extends React.Component {
       customAttribute: null,
       country: "",
       saveName: "",
-      saveError: null
+      saveError: null,
     };
     this.keyFunction = this.keyFunction.bind(this);
   }
 
   componentWillMount() {
     this.dataList = Object.keys(this.props.data.table_data).map(
-      id => this.props.data.table_data[id]
+      (id) => this.props.data.table_data[id]
     );
   }
   componentDidMount() {
@@ -76,32 +76,32 @@ class uploadedTable extends React.Component {
 
     headerPositions[this.state.selectedColumn] = headerName;
     this.setState({
-      headerPositions: headerPositions
+      headerPositions: headerPositions,
     });
   }
 
   unsetHeader(headerName) {
     var headerPositions = this.state.headerPositions;
 
-    Object.keys(headerPositions).forEach(key => {
+    Object.keys(headerPositions).forEach((key) => {
       if (headerPositions[key] === headerName) {
         delete headerPositions[key];
 
         this.setState({
-          selectedColumn: key
+          selectedColumn: key,
         });
       }
     });
 
     this.setState({
-      headerPositions: headerPositions
+      headerPositions: headerPositions,
     });
   }
 
   clearSelected() {
     this.setState({
       selectedRow: null,
-      selectedColumn: null
+      selectedColumn: null,
     });
   }
 
@@ -112,7 +112,7 @@ class uploadedTable extends React.Component {
       customAttributes: this.state.customAttributeList,
       country: this.state.country,
       saveName: this.state.saveName,
-      isVendor: this.props.is_vendor
+      isVendor: this.props.is_vendor,
     };
 
     this.props.saveDataset(dataset);
@@ -148,7 +148,7 @@ class uploadedTable extends React.Component {
 
     this.setState({
       customAttribute: null,
-      customAttributeList: newcustomAttributeList
+      customAttributeList: newcustomAttributeList,
     });
 
     this.clearSelected();
@@ -161,18 +161,17 @@ class uploadedTable extends React.Component {
     if (normalised_index < 0) {
       this.setState({
         selectedColumn:
-          this.state.selectedColumn === column.id ? null : column.id
+          this.state.selectedColumn === column.id ? null : column.id,
       });
     } else if (normalised_index === 0) {
       this.setState(
         {
           selectedColumn:
-            this.state.selectedColumn === column.id ? null : column.id
+            this.state.selectedColumn === column.id ? null : column.id,
         },
         () => {
-          let first_row_item = this.props.data.table_data[0][
-            this.state.selectedColumn
-          ];
+          let first_row_item =
+            this.props.data.table_data[0][this.state.selectedColumn];
           if (first_row_item) {
             this.setState({ customAttribute: first_row_item });
           }
@@ -181,7 +180,7 @@ class uploadedTable extends React.Component {
     } else if (normalised_index === 1) {
       this.setState({
         selectedRow:
-          this.state.selectedRow === rowInfo.index ? null : rowInfo.index
+          this.state.selectedRow === rowInfo.index ? null : rowInfo.index,
       });
     }
   }
@@ -199,15 +198,14 @@ class uploadedTable extends React.Component {
   }
 
   guessColumn(requested_attribute_name) {
-    let column_index_guess = this.props.data.column_firstrows[
-      requested_attribute_name
-    ];
+    let column_index_guess =
+      this.props.data.column_firstrows[requested_attribute_name];
 
     console.log("guess", column_index_guess);
 
     if (isFinite(column_index_guess)) {
       this.setState({
-        selectedColumn: column_index_guess
+        selectedColumn: column_index_guess,
       });
     }
   }
@@ -222,9 +220,8 @@ class uploadedTable extends React.Component {
 
     //First handle the current step:
     if (current_normalised_step_index < 0) {
-      var requested_attribute = this.props.data.requested_attributes[
-        current_step_index
-      ];
+      var requested_attribute =
+        this.props.data.requested_attributes[current_step_index];
       this.setHeader(requested_attribute[0]);
     } else {
       switch (current_normalised_step_index) {
@@ -233,7 +230,7 @@ class uploadedTable extends React.Component {
         case 1:
           this.setState({
             selectedRow: null,
-            firstDataRow: this.state.selectedRow || 0
+            firstDataRow: this.state.selectedRow || 0,
           });
           break;
 
@@ -248,9 +245,8 @@ class uploadedTable extends React.Component {
     this.clearSelected();
 
     if (new_normalised_step_index < 0) {
-      let new_requested_attribute = this.props.data.requested_attributes[
-        new_step_index
-      ];
+      let new_requested_attribute =
+        this.props.data.requested_attributes[new_step_index];
       this.unsetHeader(new_requested_attribute[0]);
       if (increment > 0) {
         this.guessColumn(new_requested_attribute[0]);
@@ -272,7 +268,7 @@ class uploadedTable extends React.Component {
       step: Math.min(
         this.state.step + increment,
         this.props.data.requested_attributes.length + 2
-      )
+      ),
     });
   }
 
@@ -285,13 +281,13 @@ class uploadedTable extends React.Component {
   }
 
   render() {
-    var columnList = Object.keys(this.dataList[0]).map(id => {
+    var columnList = Object.keys(this.dataList[0]).map((id) => {
       return {
         Header:
           id in this.state.headerPositions
             ? this.state.headerPositions[id]
             : "",
-        accessor: id.toString()
+        accessor: id.toString(),
       };
     });
 
@@ -303,8 +299,8 @@ class uploadedTable extends React.Component {
           selectedColumn={this.state.selectedColumn}
           customAttributes={this.state.customAttributeList}
           customAttribute={this.state.customAttribute}
-          onCustomAttributeKeyPress={e => this.onCustomAttributeKeyPress(e)}
-          handleCustomAttributeClick={item =>
+          onCustomAttributeKeyPress={(e) => this.onCustomAttributeKeyPress(e)}
+          handleCustomAttributeClick={(item) =>
             this.handleCustomAttributeClick(item)
           }
           handleAddClick={() => this.handleAddClick()}
@@ -336,19 +332,20 @@ class uploadedTable extends React.Component {
           sortable={false}
           getTheadThProps={(state, rowInfo, column, instance) => {
             return {
-              onClick: e => this.handleTableClick(e, column, rowInfo, rowInfo),
+              onClick: (e) =>
+                this.handleTableClick(e, column, rowInfo, rowInfo),
               style: {
                 height: "35px",
                 fontWeight: 600,
-                background: "#eee"
-              }
+                background: "#eee",
+              },
             };
           }}
           getPaginationProps={() => {
             return {
               style: {
-                display: "None"
-              }
+                display: "None",
+              },
             };
           }}
           getTdProps={(state, rowInfo, column, instance) => {
@@ -370,11 +367,12 @@ class uploadedTable extends React.Component {
                 : "#ccc";
 
             return {
-              onClick: e => this.handleTableClick(e, column, rowInfo, instance),
+              onClick: (e) =>
+                this.handleTableClick(e, column, rowInfo, instance),
               style: {
                 background: background,
-                color: color
-              }
+                color: color,
+              },
             };
           }}
         />
@@ -396,7 +394,7 @@ class uploadedTable extends React.Component {
         <div
           style={{
             display: this.props.saveState.saved ? "none" : "flex",
-            justifyContent: "space-between"
+            justifyContent: "space-between",
           }}
         >
           <StyledButton
@@ -434,7 +432,7 @@ class uploadedTable extends React.Component {
   }
 }
 
-const SaveSheetFields = function(props) {
+const SaveSheetFields = function (props) {
   if (props.isSaving) {
     return <StepSpecificFieldsContainer>Saving...</StepSpecificFieldsContainer>;
   }
@@ -468,18 +466,18 @@ const SaveSheetFields = function(props) {
   return <StepSpecificFieldsContainer></StepSpecificFieldsContainer>;
 };
 
-const CustomColumnFields = function(props) {
+const CustomColumnFields = function (props) {
   if (props.selectedColumn) {
     return (
       <StepSpecificFieldsContainer>
         <CustomList
           customAttributes={props.customAttributes}
-          handleClick={item => props.handleCustomAttributeClick(item)}
+          handleClick={(item) => props.handleCustomAttributeClick(item)}
         />
         <div>Please add a label:</div>
         <CustomInput
           value={props.customAttribute}
-          onCustomAttributeKeyPress={e => props.onCustomAttributeKeyPress(e)}
+          onCustomAttributeKeyPress={(e) => props.onCustomAttributeKeyPress(e)}
         />
         <StyledButton onClick={() => props.handleAddClick()} label={"Add"}>
           {" "}
@@ -492,7 +490,7 @@ const CustomColumnFields = function(props) {
       <StepSpecificFieldsContainer>
         <CustomList
           customAttributes={props.customAttributes}
-          handleClick={item => props.handleCustomAttributeClick(item)}
+          handleClick={(item) => props.handleCustomAttributeClick(item)}
         />
       </StepSpecificFieldsContainer>
     );
@@ -501,17 +499,18 @@ const CustomColumnFields = function(props) {
 
 class CustomInput extends React.Component {
   componentDidMount() {
-    console.log(this.nameInput);
-    this.nameInput.focus();
+    if (this.nameInput) {
+      this.nameInput.focus();
+    }
   }
   render() {
     return (
       <Input
         type="text"
-        onChange={e => this.props.onCustomAttributeKeyPress(e)}
+        onChange={(e) => this.props.onCustomAttributeKeyPress(e)}
         placeholder="label"
         value={this.props.value}
-        innerRef={input => {
+        innerRef={(input) => {
           this.nameInput = input;
         }}
         aria-label={this.props.value}
@@ -520,10 +519,10 @@ class CustomInput extends React.Component {
   }
 }
 
-const CustomList = function(props) {
+const CustomList = function (props) {
   return (
     <ListContainer>
-      {props.customAttributes.map(item => (
+      {props.customAttributes.map((item) => (
         <ListItem key={item} onClick={() => props.handleClick(item)}>
           {item}
 
@@ -534,7 +533,7 @@ const CustomList = function(props) {
   );
 };
 
-const Prompt = function(props) {
+const Prompt = function (props) {
   let beneficiaryTermPlural = window.BENEFICIARY_TERM_PLURAL;
 
   var account_type = props.is_vendor ? "vendors" : `${beneficiaryTermPlural}`;
@@ -568,10 +567,7 @@ const Prompt = function(props) {
   );
 };
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(uploadedTable);
+export default connect(mapStateToProps, mapDispatchToProps)(uploadedTable);
 
 const PromptText = styled.div`
   font-size: 1.2em;
