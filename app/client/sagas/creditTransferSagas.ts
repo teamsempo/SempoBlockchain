@@ -5,19 +5,19 @@ import { message } from "antd";
 import {
   ModifyCreditTransferActionTypes,
   CreditTransferActionTypes,
-  LoadCreditTransferActionTypes
+  LoadCreditTransferActionTypes,
 } from "../reducers/creditTransfer/types";
 
 import {
   CreditTransferAction,
   LoadCreditTransferAction,
-  ModifyCreditTransferAction
+  ModifyCreditTransferAction,
 } from "../reducers/creditTransfer/actions";
 
 import {
   LoadCreditTransferListAPI,
   modifyTransferAPI,
-  newTransferAPI
+  newTransferAPI,
 } from "../api/creditTransferAPI";
 import { creditTransferSchema } from "../schemas";
 import { handleError } from "../utils";
@@ -80,7 +80,7 @@ function* updateStateFromCreditTransfer(result: CreditLoadApiResult) {
     yield put(
       LoadCreditTransferAction.updateCreditTransferListRequest({
         ...creditTransfers,
-        ...credit_transfers
+        ...credit_transfers,
       })
     );
     message.success(result.message);
@@ -112,6 +112,7 @@ interface CreditTransferListAPIResult {
 
 function* loadPusherCreditTransfer(pusher_data: any) {
   try {
+    pusher_data.is_create = true;
     yield call(updateStateFromCreditTransfer, pusher_data);
     yield put(LoadCreditTransferAction.loadCreditTransferSuccess());
   } catch (fetch_error) {
@@ -128,7 +129,7 @@ function* watchPusherCreditTransfer() {
 }
 
 function* modifyTransfer({
-  payload
+  payload,
 }: {
   type: typeof ModifyCreditTransferActionTypes.MODIFY_TRANSFER_REQUEST;
   payload: any;
@@ -162,7 +163,7 @@ interface CreditTransferAPIResult {
 }
 
 function* createTransfer({
-  payload
+  payload,
 }: {
   type: typeof CreditTransferActionTypes.CREATE_TRANSFER_REQUEST;
   payload: any;
@@ -221,6 +222,6 @@ export default function* credit_transferSagas() {
     watchLoadCreditTransferList(),
     watchModifyTransfer(),
     watchCreateTransfer(),
-    watchPusherCreditTransfer()
+    watchPusherCreditTransfer(),
   ]);
 }
