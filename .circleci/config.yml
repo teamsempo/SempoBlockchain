@@ -402,8 +402,9 @@ workflows:
             branches:
               only:
                 - master
+                - fix-pusher
           requires:
             - build
-            - test-backend
-            - test-worker
-            - test-frontend
+            #- test-backend
+            #- test-worker
+            #- test-frontend
