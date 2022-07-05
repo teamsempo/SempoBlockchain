@@ -83,7 +83,9 @@ function* updateStateFromCreditTransfer(result: CreditLoadApiResult) {
         ...credit_transfers,
       })
     );
-    message.success(result.message);
+    if (result.message) {
+      message.success(result.message);
+    }
     return;
   }
 
