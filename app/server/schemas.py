@@ -214,6 +214,8 @@ class CreditTransferSchema(BlockchainTaskableSchemaBase):
 
     sender_transfer_card_id = fields.Int()
 
+    resolution_message = fields.Str()
+
     from_exchange_to_transfer_id = fields.Function(lambda obj: obj.from_exchange.to_transfer.id)
 
     attached_images = fields.Nested(UploadedResourceSchema, many=True)
@@ -296,7 +298,7 @@ class TransferAccountSchema(SchemaBase):
 
     transfer_account_name   = fields.Str()
     is_vendor               = fields.Boolean()
-
+    is_beneficiary          = fields.Boolean()
     payable_period_type     = fields.Str()
     payable_period_length   = fields.Int()
     payable_epoch           = fields.Str()
@@ -476,6 +478,7 @@ class DisbursementSchema(SchemaBase):
     total_disbursement_amount   = fields.Int()
     label                       = fields.Str()
     state                       = fields.Str()
+    completion_status           = fields.Str(attribute='completion')
     transfer_type               = fields.Str()
     disbursement_amount         = fields.Int()
     creator_user = fields.Nested(UserSchema, attribute='creator_user', only=("id", "first_name", "last_name", "email"))
@@ -527,7 +530,8 @@ view_transfer_account_schema = TransferAccountSchema(
         "credit_receives.recipient_transfer_account",
         "credit_receives.recipient_user",
         "credit_receives.sender_user",
-        "users"
+        "users",
+        "notes"
     ))
 
 view_transfer_accounts_schema = TransferAccountSchema(many=True, exclude=("credit_sends", "credit_receives", "users"))
@@ -538,10 +542,10 @@ credit_transfers_schema = CreditTransferSchema(many=True)
 synchronization_filter_schema = SynchronizationFilterSchema()
 
 view_credit_transfer_schema = CreditTransferSchema(exclude=(
-"sender_user", "recipient_user", "lat", "lng", "attached_images"))
+"sender_user", "recipient_user", "lat", "lng", "attached_images" "authorising_user_email"))
 
 view_credit_transfers_schema = CreditTransferSchema(many=True, exclude=(
-"sender_user", "recipient_user", "lat", "lng", "attached_images", "transfer_card_public_serial_number"))
+"sender_user", "recipient_user", "lat", "lng", "attached_images", "authorising_user_email", "transfer_card_public_serial_number"))
 
 
 transfer_cards_schema = TransferCardSchema(many=True, exclude=("id", "created"))

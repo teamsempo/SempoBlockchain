@@ -14,23 +14,23 @@ import QueryConstructor from "../filterModule/queryConstructor";
 import TransferAccountList from "../transferAccount/TransferAccountList";
 const { TextArea } = Input;
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   bulkTransfers: state.bulkTransfers,
   activeToken: getActiveToken(state),
-  transferAccounts: state.transferAccounts
+  transferAccounts: state.transferAccounts,
 });
 
-const mapDispatchToProps = dispatch => {
+const mapDispatchToProps = (dispatch) => {
   return {
-    loadBulkDisbursement: path =>
+    loadBulkDisbursement: (path) =>
       dispatch(apiActions.load(sempoObjects.bulkTransfers, path)),
     modifyBulkDisbursement: (path, body) =>
-      dispatch(apiActions.modify(sempoObjects.bulkTransfers, path, body))
+      dispatch(apiActions.modify(sempoObjects.bulkTransfers, path, body)),
   };
 };
 
 class SingleBulkDisbursementPage extends React.Component {
-  navigateToUser = accountId => {
+  navigateToUser = (accountId) => {
     window.location.assign("/users/" + accountId);
   };
 
@@ -38,7 +38,7 @@ class SingleBulkDisbursementPage extends React.Component {
     super(props);
     this.state = {
       page: 1,
-      per_page: 10
+      per_page: 10,
     };
   }
 
@@ -46,7 +46,7 @@ class SingleBulkDisbursementPage extends React.Component {
     let per_page = pageSize || 10;
     this.setState({
       page,
-      per_page
+      per_page,
     });
   };
 
@@ -59,7 +59,7 @@ class SingleBulkDisbursementPage extends React.Component {
     let bulkId = this.props.match.params.bulkId;
     this.props.modifyBulkDisbursement(bulkId, {
       action: "APPROVE",
-      notes: this.state.notes
+      notes: this.state.notes,
     });
   }
 
@@ -67,7 +67,7 @@ class SingleBulkDisbursementPage extends React.Component {
     let bulkId = this.props.match.params.bulkId;
     this.props.modifyBulkDisbursement(bulkId, {
       action: "REJECT",
-      notes: this.state.notes
+      notes: this.state.notes,
     });
   }
 
@@ -99,6 +99,7 @@ class SingleBulkDisbursementPage extends React.Component {
     }
 
     let status = bulkItem && bulkItem.state;
+    let completion_status = bulkItem && bulkItem.completion_status;
     let transferType = bulkItem && bulkItem.transfer_type;
     let creatorUser = bulkItem && bulkItem.creator_user;
     let approvalTimes = (bulkItem && bulkItem.approval_times) || [];
@@ -109,10 +110,7 @@ class SingleBulkDisbursementPage extends React.Component {
       const spacer = index + 1 == approversList.length ? "" : ", ";
       const approvalTime = approvalTimes[index]
         ? " at " +
-          moment
-            .utc(approvalTimes[index])
-            .local()
-            .format("YYYY-MM-DD HH:mm:ss")
+          moment.utc(approvalTimes[index]).local().format("YYYY-MM-DD HH:mm:ss")
         : "";
       return (
         <div>
@@ -146,6 +144,17 @@ class SingleBulkDisbursementPage extends React.Component {
       tag = <Tag color="#e2a963">Pending</Tag>;
     } else {
       tag = <Tag color="#f16853">Rejected</Tag>;
+    }
+
+    let completion_tag;
+    if (completion_status === "COMPLETE") {
+      completion_tag = <Tag color="#9bdf56">Complete</Tag>;
+    } else if (completion_status === "PROCESSING") {
+      completion_tag = <Tag color="#d48806">Processing</Tag>;
+    } else if (completion_status === "PENDING") {
+      completion_tag = <Tag color="#e2a963">Pending</Tag>;
+    } else {
+      completion_tag = <Tag color="#e2a963">Unknown</Tag>;
     }
 
     return (
@@ -184,7 +193,11 @@ class SingleBulkDisbursementPage extends React.Component {
             </p>
             <p>
               {" "}
-              <b>Current status:</b> {tag}
+              <b>Approval status:</b> {tag}
+            </p>
+            <p>
+              {" "}
+              <b>Processing status:</b> {completion_tag}
             </p>
             <p>
               {" "}
@@ -209,7 +222,7 @@ class SingleBulkDisbursementPage extends React.Component {
               {bulkItem &&
                 bulkItem.errors &&
                 bulkItem.errors.length > 0 &&
-                bulkItem.errors.map(error => {
+                bulkItem.errors.map((error) => {
                   return <Tag color="#f16853">{error}</Tag>;
                 })}
             </p>
@@ -224,7 +237,7 @@ class SingleBulkDisbursementPage extends React.Component {
                   value={this.state.notes || notes}
                   placeholder=""
                   autoSize
-                  onChange={e => this.setState({ notes: e.target.value })}
+                  onChange={(e) => this.setState({ notes: e.target.value })}
                 />
               )}
             </p>
@@ -254,13 +267,13 @@ class SingleBulkDisbursementPage extends React.Component {
             style={{ margin: "10px" }}
           >
             <QueryConstructor
-              onQueryChange={query => {}}
+              onQueryChange={(query) => {}}
               filterObject="user"
               providedParams={bulkItem && bulkItem.search_filter_params}
               providedSearchString={bulkItem && bulkItem.search_string}
               pagination={{
                 page: this.state.page,
-                per_page: this.state.per_page
+                per_page: this.state.per_page,
               }}
               disabled={true}
             />
@@ -277,7 +290,7 @@ class SingleBulkDisbursementPage extends React.Component {
                 currentPage: this.state.page,
                 items: this.props.transferAccounts.pagination.items,
                 onChange: (page, perPage) =>
-                  this.onPaginateChange(page, perPage)
+                  this.onPaginateChange(page, perPage),
               }}
             />
           </Card>

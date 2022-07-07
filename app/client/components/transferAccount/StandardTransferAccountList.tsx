@@ -28,6 +28,7 @@ import { apiActions, CreateRequestAction } from "../../genericState";
 type numberInput = string | number | null | undefined;
 
 interface StateProps {
+  adminTier: any;
   activeToken: any;
   transferAccounts: any;
   bulkTransfers: any;
@@ -71,6 +72,7 @@ type Props = StateProps & DispatchProps & OuterProps;
 
 const mapStateToProps = (state: ReduxState): StateProps => {
   return {
+    adminTier: state.login.adminTier,
     activeToken: getActiveToken(state),
     transferAccounts: state.transferAccounts,
     bulkTransfers: state.bulkTransfers,
@@ -252,7 +254,7 @@ class StandardTransferAccountList extends React.Component<
   }
 
   render() {
-    const { transferAccounts, bulkTransfers } = this.props;
+    const { transferAccounts, bulkTransfers, adminTier } = this.props;
     const {
       exportModalVisible,
       importModalVisible,
@@ -307,11 +309,18 @@ class StandardTransferAccountList extends React.Component<
       },
     ];
 
+    const isViewer = !(
+      this.props.adminTier === "superadmin" ||
+      this.props.adminTier === "sempoadmin" ||
+      this.props.adminTier === "admin"
+    );
+
     return (
       <>
         <QueryConstructor
           onQueryChange={(query: Query) => this.updateQueryData(query)}
           filterObject="user"
+          disabled={isViewer}
           pagination={{
             page: this.state.page,
             per_page: this.state.per_page,
@@ -321,8 +330,8 @@ class StandardTransferAccountList extends React.Component<
           params={this.state.params}
           searchString={this.state.searchString}
           orderedTransferAccounts={transferAccounts.IdList}
-          actionButtons={actionButtons}
-          dataButtons={dataButtons}
+          actionButtons={isViewer ? [] : actionButtons}
+          dataButtons={isViewer ? [] : dataButtons}
           onSelectChange={(s: React.Key[], u: React.Key[], a: boolean) =>
             this.onSelectChange(s, u, a)
           }

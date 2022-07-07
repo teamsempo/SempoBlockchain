@@ -9,6 +9,7 @@ import CreditTransferList from "./CreditTransferList";
 import { getActiveToken } from "../../utils";
 
 interface StateProps {
+  adminTier: any;
   activeToken: any;
   transferAccounts: any;
   creditTransfers: any;
@@ -32,11 +33,12 @@ type Props = StateProps & OuterProps;
 
 const mapStateToProps = (state: ReduxState): StateProps => {
   return {
+    adminTier: state.login.adminTier,
     activeToken: getActiveToken(state),
     transferAccounts: state.transferAccounts,
     creditTransfers: state.creditTransfers,
     users: state.users,
-    login: state.login
+    login: state.login,
   };
 };
 
@@ -51,7 +53,7 @@ class StandardCreditTransferList extends React.Component<
       label: "",
       searchString: "",
       page: 1,
-      per_page: 10
+      per_page: 10,
     };
   }
 
@@ -59,7 +61,7 @@ class StandardCreditTransferList extends React.Component<
     let per_page = pageSize || 10;
     this.setState({
       page,
-      per_page
+      per_page,
     });
   };
 
@@ -67,21 +69,27 @@ class StandardCreditTransferList extends React.Component<
     this.setState({
       params: query.params,
       searchString: query.searchString,
-      page: 1
+      page: 1,
     });
   }
 
   render() {
-    const { transferAccounts, creditTransfers, users } = this.props;
+    const { transferAccounts, creditTransfers, users, adminTier } = this.props;
     return (
       <>
         <QueryConstructor
           onQueryChange={(query: Query) => this.updateQueryData(query)}
           filterObject="credit_transfer"
           queryType="credit_transfer"
+          disabled={
+            !(
+              this.props.adminTier === "superadmin" ||
+              this.props.adminTier === "sempoadmin"
+            )
+          }
           pagination={{
             page: this.state.page,
-            per_page: this.state.per_page
+            per_page: this.state.per_page,
           }}
           transferAccountId={this.props.transferAccountId}
         />
@@ -95,7 +103,7 @@ class StandardCreditTransferList extends React.Component<
             currentPage: this.state.page,
             items: this.props.creditTransfers.pagination.items,
             onChange: (page: number, perPage: number | undefined) =>
-              this.onPaginateChange(page, perPage)
+              this.onPaginateChange(page, perPage),
           }}
         />
       </>
