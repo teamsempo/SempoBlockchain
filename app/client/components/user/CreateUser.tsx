@@ -26,14 +26,10 @@ interface StateProps {
   activeOrganisation?: Organisation;
 }
 
-interface OuterProps {
-  isVendor: boolean;
-}
-
 interface ComponentState {}
 
 type Form = ICreateUserUpdate;
-type Props = DispatchProps & StateProps & OuterProps;
+type Props = DispatchProps & StateProps;
 
 class CreateUserUpdated extends React.Component<Props, ComponentState> {
   constructor(props: Props) {
@@ -82,8 +78,8 @@ class CreateUserUpdated extends React.Component<Props, ComponentState> {
         location: form.location,
         business_usage_name: businessUsage,
         referred_by: form.referredBy,
-        account_types: form.accountTypes
-      }
+        account_types: form.accountTypes,
+      },
     });
   }
 
@@ -142,7 +138,7 @@ const mapStateToProps = (state: ReduxState): StateProps => {
     users: state.users,
     transferUsages: state.transferUsages.transferUsages,
     //@ts-ignore
-    activeOrganisation: state.organisations.byId[state.login.organisationId]
+    activeOrganisation: state.organisations.byId[state.login.organisationId],
   };
 };
 
@@ -154,11 +150,8 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => {
     loadTransferUsages: () =>
       dispatch(LoadTransferUsagesAction.loadTransferUsagesRequest({})),
     loadOrganisation: () =>
-      dispatch(LoadOrganisationAction.loadOrganisationRequest())
+      dispatch(LoadOrganisationAction.loadOrganisationRequest()),
   };
 };
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(CreateUserUpdated);
+export default connect(mapStateToProps, mapDispatchToProps)(CreateUserUpdated);
