@@ -99,7 +99,7 @@
     "libphonenumber-js": "^1.7.26",
     "lodash": "^4.17.15",
     "match-sorter": "^2.2.3",
-    "moment": "^2.29.2",
+    "moment": "^2.29.4",
     "normalizr": "^3.3.0",
     "omit.js": "^2.0.2",
     "prettier": "^2.5.1",
