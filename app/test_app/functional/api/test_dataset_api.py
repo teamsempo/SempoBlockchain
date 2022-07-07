@@ -88,7 +88,6 @@ def test_dataset_api(test_client, authed_sempo_admin_user):
         },
         "country": "",
         "saveName": "",
-        "isVendor": False
     }
 
     auth = get_complete_auth_token(authed_sempo_admin_user)
