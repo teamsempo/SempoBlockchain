@@ -7,39 +7,39 @@ import { RegisterAction } from "../../reducers/auth/actions";
 
 import TFAForm from "./TFAForm.jsx";
 
-const mapStateToProps = state => {
+const mapStateToProps = (state) => {
   return {
     register_status: state.register,
-    login_status: state.login
+    login_status: state.login,
   };
 };
 
-const mapDispatchToProps = dispatch => {
+const mapDispatchToProps = (dispatch) => {
   return {
-    registerRequest: payload =>
-      dispatch(RegisterAction.registerRequest(payload))
+    registerRequest: (payload) =>
+      dispatch(RegisterAction.registerRequest(payload)),
   };
 };
 
-const RegisterFormContainer = props => {
+const RegisterFormContainer = (props) => {
   const [form] = Form.useForm();
   useEffect(() => {
     form.setFieldsValue({
-      email: props.email
+      email: props.email,
     });
   }, [props.email]);
 
-  const onFinish = values => {
+  const onFinish = (values) => {
     props.registerRequest({
       body: {
         username: values.email,
         password: values.password,
-        referral_code: props.referralCode
-      }
+        referral_code: props.referralCode,
+      },
     });
   };
 
-  const onFinishFailed = errorInfo => {
+  const onFinishFailed = (errorInfo) => {
     console.log("Failed:", errorInfo);
   };
 
@@ -108,8 +108,8 @@ const RegisterFormContainer = props => {
                 return Promise.reject("Passwords do not match");
               }
               return Promise.resolve();
-            }
-          })
+            },
+          }),
         ]}
         aria-label="password"
         dependencies={["retypePassword"]}
@@ -117,7 +117,8 @@ const RegisterFormContainer = props => {
         <PasswordInput
           inputProps={{
             placeholder: "Password",
-            type: "password"
+            minLength: "8",
+            type: "password",
           }}
         />
       </Form.Item>
@@ -133,8 +134,8 @@ const RegisterFormContainer = props => {
                 return Promise.reject("Passwords do not match");
               }
               return Promise.resolve();
-            }
-          })
+            },
+          }),
         ]}
         dependencies={["password"]}
       >

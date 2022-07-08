@@ -71,7 +71,7 @@ class SpreadsheetUploadAPI(MethodView):
         return make_response(jsonify(reponse_object)), 200
 
 @status_checkable_executor_job
-def execute_dataset_import(dataset, header_positions, is_vendor, custom_attributes):
+def execute_dataset_import(dataset, header_positions, custom_attributes):
     diagnostics = []
     for idx, datarow in enumerate(dataset):
         attribute_dict = { 'custom_attributes': {} }
@@ -79,7 +79,9 @@ def execute_dataset_import(dataset, header_positions, is_vendor, custom_attribut
         percent_complete = ((idx+1)/len(dataset))*100
         for key, header_label in header_positions.items():
             attribute = datarow.get(key)
-            if attribute and (header_label in custom_attributes):
+            if header_label.strip() == "account_types":
+                attribute_dict[header_label] = attribute
+            elif attribute and (header_label in custom_attributes):
                 attribute_dict['custom_attributes'][header_label] = attribute
             elif attribute:
                 contains_anything = True
@@ -113,7 +115,6 @@ class DatasetAPI(MethodView):
     def post(self):
         # get the post data
         post_data = request.get_json()
-        is_vendor = post_data.get('isVendor', False)
         header_positions = post_data.get('headerPositions')
         dataset = post_data.get('data')
         custom_attributes = post_data.get('customAttributes', [])
@@ -121,7 +122,6 @@ class DatasetAPI(MethodView):
         task_uuid = add_after_request_checkable_executor_job(execute_dataset_import, kwargs={ 
             'dataset': dataset, 
             'header_positions': header_positions, 
-            'is_vendor':is_vendor, 
             'custom_attributes': custom_attributes 
         })
 
