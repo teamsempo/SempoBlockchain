@@ -1,6 +1,6 @@
 from flask import make_response
 from server import db
-from server.utils.phone import send_message
+from server.utils.phone import send_translated_message
 from server.models.kyc_application import KycApplication
 from server.models.user import User
 from server.utils.namescan import run_namescam_aml_check
@@ -176,7 +176,7 @@ def get_user_from_id(user_id, payload):
     return user
 
 
-def approve_user(message_blocks, username, message_ts, phone):
+def approve_user(message_blocks, username, message_ts, user):
     new_message_blocks = message_blocks[:len(message_blocks) - 1]
     new_message_blocks.append(dict(type='context', elements=[
         {"type": 'mrkdwn',
@@ -188,9 +188,8 @@ def approve_user(message_blocks, username, message_ts, phone):
         blocks=new_message_blocks
     )
 
-    if phone:
-        send_message(to_phone=phone,
-                             message='Hooray! Your identity has been successfully verified and Sempo account limits lifted.')
+    if user.phone:
+        send_translated_message(user, 'general_sms.kyc_approved')
 
     return make_response("", 200)
 
@@ -407,7 +406,7 @@ def slack_controller(payload):
 
             # Update the message to show we've verified a user
             message_blocks = payload['message']['blocks']
-            return approve_user(message_blocks, username=payload['user']['username'], message_ts=payload["message"]["ts"], phone=user.phone)
+            return approve_user(message_blocks, username=payload['user']['username'], message_ts=payload["message"]["ts"], user=user)
 
         elif "deny" in payload['actions'][0]['value']:
             user_id = payload['actions'][0]['value'].split('-')[1]
@@ -429,8 +428,7 @@ def slack_controller(payload):
             )
 
             if user.phone:
-                send_message(to_phone=user.phone,
-                                     message="Unfortunately, we couldn't verify your identity with the documents provided. Please open the Sempo app to retry or contact our customer support.")
+                send_translated_message(user, 'document_verify_fail')
 
             return make_response("", 200)
 
@@ -494,7 +492,7 @@ def slack_controller(payload):
             if aml_result['number_of_matches'] == 0 or avg_match_rate < 75:
                 # Instant Approval
                 kyc.kyc_status = 'VERIFIED'
-                return approve_user(new_message_blocks, username=payload['user']['name'], message_ts=payload["state"], phone=user.phone)
+                return approve_user(new_message_blocks, username=payload['user']['name'], message_ts=payload["state"], user=user)
 
             else:
                 # Manual Review Required
@@ -565,8 +563,7 @@ def slack_controller(payload):
             kyc.kyc_actions = doc_outcomes
 
             if user.phone:
-                send_message(to_phone=user.phone,
-                                     message="Unfortunately, we had a problem verifying your identity. Please open the Sempo app to retry or contact our customer support.")
+                send_translated_message(user, 'general_sms.id_verify_fail')
 
             db.session.flush()
 
