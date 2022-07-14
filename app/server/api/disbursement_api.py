@@ -20,7 +20,6 @@ from server.models.utils import paginate_query
 from server.utils.executor import status_checkable_executor_job, add_after_request_checkable_executor_job
 from server.utils.access_control import AccessControl
 from server.utils.metrics.metrics_cache import clear_metrics_cache, rebuild_metrics_cache
-from server.exceptions import InsufficientBalanceError
 
 disbursement_blueprint = Blueprint('disbursement', __name__)
 
