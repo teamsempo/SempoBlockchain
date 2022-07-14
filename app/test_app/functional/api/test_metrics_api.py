@@ -16,6 +16,7 @@ zero_time = datetime(2019, 1, 15)
 def generate_timeseries_metrics(create_organisation):
     # Generates metrics over timeline
     # User1 and User2 made today
+    create_organisation.queried_org_level_transfer_account.set_balance_offset(10000000000)
     user1 = create_transfer_account_user(first_name='Ricky',
                                     phone="+19025551234",
                                     organisation=create_organisation,
@@ -360,7 +361,7 @@ def test_get_summed_metrics(
     db.session.commit()
     response = get_metrics(metric_type)
     assert response.status_code == status_code
-
+    print(response.data)
     if response.json:
         returned_stats = response.json['data']['transfer_stats']
     else:
@@ -374,6 +375,9 @@ def test_get_summed_metrics(
                 assert returned_stats[do] == desired_output[do]
             else:
                 assert returned_stats[do]['type'] == desired_output[do]['type']
+                print('_--_---')
+                print(returned_stats[do]['aggregate'])
+                print(desired_output[do]['aggregate'])
                 assert returned_stats[do]['aggregate'] == desired_output[do]['aggregate']
                 for timeseries_category in returned_stats[do]['timeseries']:
                     sorted_returned_stats = ts_sort(returned_stats[do]['timeseries'][timeseries_category])
