@@ -9,7 +9,6 @@ from server.utils.amazon_s3 import get_file_url
 from server.models.user import User
 from server.models.exchange import Exchange
 from server.exceptions import SubexchangeNotFound
-import config 
 
 def gen_qr(data):
     out = BytesIO()
