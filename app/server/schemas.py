@@ -445,7 +445,6 @@ class OrganisationSchema(SchemaBase):
     minimum_vendor_payout_withdrawal = fields.Function(lambda obj: int(obj.minimum_vendor_payout_withdrawal))
     country_code = fields.Function(lambda obj: str(obj.country_code))
     timezone = fields.Function(lambda obj: str(obj.timezone))
-    kyc_enabled = fields.Str(config.KYC_ENABLED)
 
     token               = fields.Nested('server.schemas.TokenSchema')
 
