@@ -361,7 +361,6 @@ def test_get_summed_metrics(
     db.session.commit()
     response = get_metrics(metric_type)
     assert response.status_code == status_code
-    print(response.data)
     if response.json:
         returned_stats = response.json['data']['transfer_stats']
     else:
@@ -375,9 +374,6 @@ def test_get_summed_metrics(
                 assert returned_stats[do] == desired_output[do]
             else:
                 assert returned_stats[do]['type'] == desired_output[do]['type']
-                print('_--_---')
-                print(returned_stats[do]['aggregate'])
-                print(desired_output[do]['aggregate'])
                 assert returned_stats[do]['aggregate'] == desired_output[do]['aggregate']
                 for timeseries_category in returned_stats[do]['timeseries']:
                     sorted_returned_stats = ts_sort(returned_stats[do]['timeseries'][timeseries_category])
