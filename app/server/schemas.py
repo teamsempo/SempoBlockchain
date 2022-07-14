@@ -5,12 +5,11 @@ from marshmallow import Schema, fields, post_dump
 import toastedmarshmallow
 import qrcode
 
-from server.models.custom_attribute import CustomAttribute
 from server.utils.amazon_s3 import get_file_url
 from server.models.user import User
 from server.models.exchange import Exchange
 from server.exceptions import SubexchangeNotFound
-
+import config 
 
 def gen_qr(data):
     out = BytesIO()
@@ -446,6 +445,7 @@ class OrganisationSchema(SchemaBase):
     minimum_vendor_payout_withdrawal = fields.Function(lambda obj: int(obj.minimum_vendor_payout_withdrawal))
     country_code = fields.Function(lambda obj: str(obj.country_code))
     timezone = fields.Function(lambda obj: str(obj.timezone))
+    kyc_enabled = fields.Str(config.KYC_ENABLED)
 
     token               = fields.Nested('server.schemas.TokenSchema')
 
