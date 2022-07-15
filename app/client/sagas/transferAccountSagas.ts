@@ -8,17 +8,21 @@ import { transferAccountSchema } from "../schemas";
 import {
   LoadTransferAccountAction,
   TransferAccountAction,
-  EditTransferAccountAction
+  EditTransferAccountAction,
+  LoadTransferAccountHistoryAction
 } from "../reducers/transferAccount/actions";
-import { CreditTransferAction } from "../reducers/creditTransfer/actions";
+import { LoadCreditTransferAction } from "../reducers/creditTransfer/actions";
 import { UserListAction } from "../reducers/user/actions";
 import { TokenListAction } from "../reducers/token/actions";
 
 import {
   LoadTransferAccountActionTypes,
+  LoadTransferAccountHistoryActionTypes,
   EditTransferAccountActionTypes,
   TransferAccountEditApiResult,
-  TransferAccountLoadApiResult
+  TransferAccountLoadApiResult,
+  TransferAccountLoadHistoryApiResult,
+  LoadTransferAccountListPayload
 } from "../reducers/transferAccount/types";
 
 import {
@@ -29,7 +33,8 @@ import {
 
 import {
   loadTransferAccountListAPI,
-  editTransferAccountAPI
+  editTransferAccountAPI,
+  loadTransferAccountHistoryAPI
 } from "../api/transferAccountAPI";
 
 function* updateStateFromTransferAccount(data: TransferAccountData) {
@@ -58,16 +63,13 @@ function* updateStateFromTransferAccount(data: TransferAccountData) {
   }
 
   const credit_sends = normalizedData.entities.credit_sends;
-  if (credit_sends) {
-    yield put(
-      CreditTransferAction.updateCreditTransferListRequest(credit_sends)
-    );
-  }
-
   const credit_receives = normalizedData.entities.credit_receives;
-  if (credit_receives) {
+  if (credit_sends || credit_receives) {
     yield put(
-      CreditTransferAction.updateCreditTransferListRequest(credit_receives)
+      LoadCreditTransferAction.updateCreditTransferListRequest({
+        ...credit_sends,
+        ...credit_receives
+      })
     );
   }
 
@@ -103,7 +105,7 @@ function* loadTransferAccounts({ payload }: TransferAccountLoadApiResult) {
     if (load_result.items) {
       yield put(
         TransferAccountAction.updateTransferAccountPagination(load_result.items)
-      )
+      );
     }
     yield put(
       LoadTransferAccountAction.loadTransferAccountsSuccess(
@@ -123,6 +125,36 @@ function* watchLoadTransferAccounts() {
   yield takeEvery(
     LoadTransferAccountActionTypes.LOAD_TRANSFER_ACCOUNTS_REQUEST,
     loadTransferAccounts
+  );
+}
+
+function* loadTransferAccountHistory({
+  payload
+}: TransferAccountLoadHistoryApiResult) {
+  try {
+    const load_result = yield call(loadTransferAccountHistoryAPI, payload);
+    yield put(
+      LoadTransferAccountHistoryAction.loadTransferAccountHistorySuccess(
+        load_result.data.changes
+      )
+    );
+  } catch (fetch_error) {
+    const error = yield call(handleError, fetch_error);
+
+    yield put(
+      LoadTransferAccountHistoryAction.loadTransferAccountHistoryFailure(
+        error.message
+      )
+    );
+
+    message.error(error.message);
+  }
+}
+
+function* watchLoadTransferAccountHistory() {
+  yield takeEvery(
+    LoadTransferAccountHistoryActionTypes.LOAD_TRANSFER_ACCOUNT_HISTORY_REQUEST,
+    loadTransferAccountHistory
   );
 }
 
@@ -152,5 +184,9 @@ function* watchEditTransferAccount() {
 }
 
 export default function* transferAccountSagas() {
-  yield all([watchLoadTransferAccounts(), watchEditTransferAccount()]);
+  yield all([
+    watchLoadTransferAccounts(),
+    watchEditTransferAccount(),
+    watchLoadTransferAccountHistory()
+  ]);
 }

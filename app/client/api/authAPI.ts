@@ -8,7 +8,8 @@ import {
   ResetEmailPayload,
   ResetPasswordPayload,
   UpdateUserPayload,
-  ValidateTfaPayload
+  ValidateTfaPayload,
+  AdminResetPasswordPayload,
 } from "../reducers/auth/types";
 
 export const requestApiToken = ({ body }: LoginRequestPayload) =>
@@ -18,7 +19,7 @@ export const requestApiToken = ({ body }: LoginRequestPayload) =>
     isAuthed: false,
     isTFA: true,
     body: body,
-    errorHandling: false
+    errorHandling: false,
   });
 
 export const refreshApiToken = () =>
@@ -30,7 +31,7 @@ export const registerAPI = ({ body }: RegisterRequestPayload) =>
     method: "POST",
     isAuthed: false,
     body: body,
-    errorHandling: false
+    errorHandling: false,
   });
 
 export const activateAPI = ({ body }: ActivatePayload) =>
@@ -39,7 +40,7 @@ export const activateAPI = ({ body }: ActivatePayload) =>
     method: "POST",
     isAuthed: false,
     body: body,
-    errorHandling: false
+    errorHandling: false,
   });
 
 export const requestResetEmailAPI = ({ body }: ResetEmailPayload) =>
@@ -47,7 +48,7 @@ export const requestResetEmailAPI = ({ body }: ResetEmailPayload) =>
     url: "/auth/request_reset_email/",
     method: "POST",
     isAuthed: false,
-    body: body
+    body: body,
   });
 
 export const GetTFAAPI = () => apiClient({ url: "/auth/tfa/", method: "GET" });
@@ -69,7 +70,7 @@ export const updateUserAPI = ({ body, query }: UpdateUserPayload) =>
     url: "/auth/permissions/",
     method: "PUT",
     body: body,
-    query: query
+    query: query,
   });
 
 export const deleteInviteAPI = ({ body }: DeleteInvitePayload) =>
@@ -77,3 +78,10 @@ export const deleteInviteAPI = ({ body }: DeleteInvitePayload) =>
 
 export const inviteUserAPI = ({ body }: InviteUserPayload) =>
   apiClient({ url: "/auth/permissions/", method: "POST", body: body });
+
+export const adminResetPasswordAPI = ({ path }: AdminResetPasswordPayload) =>
+  apiClient({
+    url: "/user/password-reset/",
+    method: "PUT",
+    path: path,
+  });

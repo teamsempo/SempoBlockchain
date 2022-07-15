@@ -1,6 +1,7 @@
 en:
   welcome:
     generic: Hello %{first_name}, you have been registered on Sempo! Your balance is %{balance} %{token}.
-    grassroots: Hello %{first_name} you have been registered on Sarafu Network! Your balance is %{balance} %{token}. To use dial *384*96# Safaricom or *483*46# Airtel. For help 0757628885
+    custom: Hello %{first_name} you have been registered on Test Network! Your balance is %{balance} %{token}.
   terms: By using the service, you agree to the terms and conditions at https://withsempo.com/legal/platform-terms.
-  pin_reset: Dial *384*96# Safaricom or *483*46# Airtel to change your PIN
+  pin_reset: Dial 1234 to change your PIN
+  payout_message: Hello %{first_name}, a total of %{amount} %{token} has been deposited into your account.

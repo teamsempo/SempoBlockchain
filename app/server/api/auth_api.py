@@ -12,12 +12,14 @@ from server.models.blacklist_token import BlacklistToken
 from server.utils.auth import requires_auth, tfa_logic, show_all, create_user_response_object
 from server.utils.access_control import AccessControl
 from server.utils import user as UserUtils
+from server.utils.rate_limit import rate_limit
 from server.utils.phone import proccess_phone_number
 from server.utils.amazon_ses import send_reset_email, send_activation_email, send_invite_email, \
     send_invite_email_to_existing_user
 from server.utils.misc import decrypt_string, attach_host
 from server.utils.multi_chain import get_chain
 from sqlalchemy.sql import func
+from sqlalchemy.orm.attributes import flag_modified
 
 import random
 
@@ -318,7 +320,6 @@ class LoginAPI(MethodView):
         post_data = request.get_json()
         user = None
         phone = None
-
         email = post_data.get('username', '') or post_data.get('email', '')
         email = email.lower() if email else ''
         password = post_data.get('password')
@@ -328,6 +329,16 @@ class LoginAPI(MethodView):
 
         password_empty = password == '' or password is None
         pin_empty = pin == '' or pin is None
+
+        ratelimit_key = email or post_data.get('phone')
+        if ratelimit_key:
+            limit = rate_limit("login_"+ratelimit_key, 25)
+            if limit:
+                response_object = {
+                    'status': 'fail',
+                    'message': f'Please try again in {limit} minutes'
+                }
+                return make_response(jsonify(response_object)), 403
 
         # First try to match email
         if email:
@@ -429,9 +440,9 @@ class LoginAPI(MethodView):
                     'message': 'Account has not been activated. Please check your emails.'
                 }
                 return make_response(jsonify(response_object)), 401
-
             if post_data.get('deviceInfo'):
-                UserUtils.save_device_info(post_data.get('deviceInfo'), user)
+                deviceInfo = post_data.get('deviceInfo')
+                UserUtils.save_device_info(deviceInfo, user)
 
             auth_token = user.encode_auth_token()
 
@@ -485,7 +496,7 @@ class LogoutAPI(MethodView):
             resp = User.decode_auth_token(auth_token)
             if not isinstance(resp, str):
                 # mark the token as blacklisted
-                blacklist_token = BlacklistToken(token=auth_token)
+                blacklist_token = BlacklistToken(token=auth_token, user_id=resp['id'])
                 try:
                     # insert the token
                     db.session.add(blacklist_token)
@@ -534,12 +545,19 @@ class RequestPasswordResetEmailAPI(MethodView):
             }
 
             return make_response(jsonify(response_object)), 401
+
+        limit = rate_limit("password_reset_"+email, 25)
+        if limit:
+            response_object = {
+                'status': 'fail',
+                'message': f'Please try again in {limit} minutes'
+            }
+            return make_response(jsonify(response_object)), 403
+
         user = User.query.filter(func.lower(User.email)==email).execution_options(show_all=True).first()
 
         if user:
-            password_reset_token = user.encode_single_use_JWS('R')
-            user.save_password_reset_token(password_reset_token)
-            send_reset_email(password_reset_token, email)
+            user.reset_password()
 
         response_object = {
             'status': 'success',
@@ -608,7 +626,8 @@ class ResetPasswordAPI(MethodView):
 
         # Check authorisation using regular auth
         elif auth_header and auth_header != 'null' and old_password:
-            auth_token = auth_header.split(" ")[0]
+            split_header = auth_header.split("|")
+            auth_token = split_header[0]
 
             resp = User.decode_auth_token(auth_token)
 
@@ -620,7 +639,7 @@ class ResetPasswordAPI(MethodView):
 
                 return make_response(jsonify(response_object)), 401
 
-            user = User.query.filter_by(id=resp.get('user_id')).execution_options(show_all=True).first()
+            user = User.query.filter_by(id=resp.get('id')).execution_options(show_all=True).first()
 
             if not user:
                 response_object = {
@@ -857,7 +876,7 @@ class PermissionsAPI(MethodView):
 
             if admin_tier:
                 user.set_held_role('ADMIN',admin_tier)
-
+                flag_modified(user, '_held_roles')
             if deactivated is not None:
                 user.is_disabled = deactivated
 

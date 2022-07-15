@@ -1,7 +1,7 @@
 import pytest
 
 from sql_persistence.interface import SQLPersistenceInterface
-from sql_persistence.models import BlockchainTransaction, SynchronizedBlock
+from sql_persistence.models import BlockchainTransaction
 from eth_manager.blockchain_sync import blockchain_sync_constants
 import datetime
 
@@ -73,8 +73,6 @@ class TestModels:
 
     # Tests get_blockchain_history
     def test_get_blockchain_transaction_history(self, mocker, blockchain_sync, processor, db_session):
-        # Need a valid filter object since get_blockchain_transaction_history creates and modifies 
-        # the SynchronizedBlock table, which has needs to be linked to a tx filter foreign key
         filter = blockchain_sync.add_transaction_filter(
             self.contract_address,
             self.contract_type,
@@ -106,11 +104,6 @@ class TestModels:
         for event in events:
             # Have to consume generator for test to halt
             assert event == None
-
-        blocks = db_session.query(SynchronizedBlock).all()
-        for b in blocks:
-            assert b.status == 'SUCCESS'
-        assert len(blocks) == 500
         
     def test_synchronize_third_party_transactions(
             self, mocker, blockchain_sync, processor, persistence_module: SQLPersistenceInterface
@@ -142,6 +135,50 @@ class TestModels:
         blockchain_sync_constants.BLOCKS_PER_REQUEST=5000
         blockchain_sync.synchronize_third_party_transactions()
         assert ranges == [(1, 2, 5001), (1, 5002, 10001), (1, 10002, 12000), (2, 2, 5001), (2, 5002, 10001), (2, 10002, 12000)]
+
+    def test_skip(self, mocker, blockchain_sync, processor, persistence_module: SQLPersistenceInterface):
+        # Create filters for this function to consume
+        tf = blockchain_sync.add_transaction_filter(
+            '0x000090c5a236130E5D51260A2A5Bfde834C694b6',
+            self.contract_type,
+            self.filter_parameters,
+            self.filter_type,
+            self.decimals,
+            self.block_epoch
+        )
+        tf.status = 'SKIP'
+
+        mocker.patch.object(blockchain_sync, 'get_latest_block_number', lambda: 5000)
+        ranges = []
+        mocker.patch.object(blockchain_sync, 'process_chunk', lambda filter, floor, ceiling: ranges.append((filter.id, floor, ceiling)))
+        blockchain_sync_constants.BLOCKS_PER_REQUEST=5000
+        blockchain_sync.synchronize_third_party_transactions()
+        assert ranges == []
+        assert tf.max_block == 5000
+
+    def test_disabled(self, mocker, blockchain_sync, processor, persistence_module: SQLPersistenceInterface):
+        # Create filters for this function to consume
+        tf = blockchain_sync.add_transaction_filter(
+            '0x000090c5a236130E5D51260A2A5Bfde834C694b6',
+            self.contract_type,
+            self.filter_parameters,
+            self.filter_type,
+            self.decimals,
+            self.block_epoch
+        )
+        tf.status = 'DISABLED'
+        # We want to make sure that latest block number is being NOT being fetched!
+        # Disabled filters should make zero calls
+        def this_shouldnt_be_called():
+            assert 1==2
+        mocker.patch.object(blockchain_sync, 'get_latest_block_number', this_shouldnt_be_called)
+
+        ranges = []
+        mocker.patch.object(blockchain_sync, 'process_chunk', lambda filter, floor, ceiling: ranges.append((filter.id, floor, ceiling)))
+        blockchain_sync_constants.BLOCKS_PER_REQUEST=5000
+        blockchain_sync.synchronize_third_party_transactions()
+        assert ranges == []
+        assert tf.max_block == 1
 
     def test_handle_event(self, mocker, blockchain_sync, processor, persistence_module: SQLPersistenceInterface):
         # Create dummy objects for this functions to consume (handle_event only uses decimals)
@@ -266,59 +303,15 @@ class TestModels:
         )
         db_session.add(fail_tx)
 
-        success_synchronized_block = SynchronizedBlock(
-            block_number = 1,
-            status = 'SUCCESS',
-            is_synchronized = False,
-            synchronization_filter_id = tf1,
-            decimals = 18
-        )
-        db_session.add(success_synchronized_block)
-
-        fail_synchronized_block = SynchronizedBlock(
-            block_number = 2,
-            status = 'FAILED',
-            is_synchronized = False,
-            synchronization_filter_id = tf1,
-            decimals = 18
-        )
-        db_session.add(fail_synchronized_block)
-
-        fail_synchronized_block2 = SynchronizedBlock(
-            block_number = 3,
-            status = 'FAILED',
-            is_synchronized = False,
-            synchronization_filter_id = tf1,
-            decimals = 18
-        )
-        db_session.add(fail_synchronized_block2)
-        
-        fail_synchronized_block3 = SynchronizedBlock(
-            block_number = 1,
-            status = 'FAILED',
-            is_synchronized = False,
-            synchronization_filter_id = tf2,
-            decimals = 18
-        )
-        db_session.add(fail_synchronized_block3)
-
         expected_resp = {
             'unsynchronized_transaction_count': {'0x468F90c5a236130E5D51260A2A5Bfde834C694b6': 1}, 
             'synchronized_transaction_count': {'0x468F90c5a236130E5D51260A2A5Bfde834C694b6': 1}, 
-            'unsynchronized_block_count': {'0x000090c5a236130E5D51260A2A5Bfde834C694b6': 2, '0x000090c5a236130E5D51260A2A5Bfde844C694b6': 1}, 
-            'synchronized_block_count': {'0x000090c5a236130E5D51260A2A5Bfde834C694b6': 1}, 
-            'max_synchronized_blocks': {'0x000090c5a236130E5D51260A2A5Bfde834C694b6': 1, '0x000090c5a236130E5D51260A2A5Bfde844C694b6': 1}, 
             'last_time_synchronized': None
         }
         # Check base metrics
         resp = blockchain_sync.get_metrics()
         resp['last_time_synchronized'] = None
         assert resp == expected_resp
-
-        # Check failed blocks
-        failed_blocks = blockchain_sync.get_failed_block_fetches()
-        expected_resp = {'0x000090c5a236130E5D51260A2A5Bfde834C694b6': [2, 3], '0x000090c5a236130E5D51260A2A5Bfde844C694b6': [1]}
-        assert failed_blocks == expected_resp
 
         # Check failed callbacks
         failed_callbacks = blockchain_sync.get_failed_callbacks()

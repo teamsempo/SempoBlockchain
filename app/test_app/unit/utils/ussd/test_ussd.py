@@ -17,7 +17,7 @@ from server.utils.ussd.ussd import menu_display_text_in_lang, create_or_update_s
 def test_menu_display_text_in_lang(test_client, init_database, user_factory, expected):
     user = user_factory() if user_factory else None
 
-    menu = UssdMenu(display_key="ussd.kenya.exit_invalid_request")
+    menu = UssdMenu(display_key="ussd.sempo.exit_invalid_request")
     result = menu_display_text_in_lang(menu, user)
     assert result == expected
 

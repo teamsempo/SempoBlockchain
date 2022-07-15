@@ -8,8 +8,11 @@ from server.models.user import User
 from server.utils.credit_transfer import make_withdrawal_transfer
 from server.utils.transfer_enums import TransferModeEnum, TransferStatusEnum, TransferTypeEnum
 from server.utils.credit_transfer import cents_to_dollars, dollars_to_cents
+from server.utils.internationalization import i18n_for
+from server.utils.phone import send_message
 from server.utils.auth import requires_auth
 from server import db
+import config
 
 import json
 import csv
@@ -92,6 +95,7 @@ class VendorPayoutAPI(MethodView):
             if relist_existing:
                 withdrawals = (CreditTransfer.query
                                .filter(CreditTransfer.sender_transfer_account_id == v.id)
+                               .filter(CreditTransfer.transfer_type == TransferTypeEnum.WITHDRAWAL)
                                .filter(CreditTransfer.transfer_status == TransferStatusEnum.PENDING).all())
             else:
                 withdrawals = []
@@ -147,7 +151,8 @@ class ProcessVendorPayout(MethodView):
         if request.files:
             flask_file = request.files['file']
             stream = codecs.iterdecode(flask_file.stream, 'utf-8')
-            reader = csv.DictReader(stream)
+            data = [line for line in stream] # Load file into memory to prevent preemptive closing
+            reader = csv.DictReader(data)
         else:
             post_data = request.get_json()
             if not post_data:
@@ -187,6 +192,15 @@ class ProcessVendorPayout(MethodView):
                 if line['Payment Has Been Made'].upper() == 'TRUE' and line['Bank Payment Date']:
                     transfer.add_approver_and_resolve_as_completed()
                     message = 'Transfer Success'
+                    if transfer.sender_user.phone and config.PAYOUT_SMS:
+                        message = i18n_for(
+                            transfer.sender_user,
+                            "general_sms.payout_message",
+                            first_name=transfer.sender_user.first_name,
+                            amount=transfer.rounded_transfer_amount,
+                            token=transfer.token.symbol
+                        )
+                        send_message(transfer.sender_user.phone, message)
                 elif line['Payment Has Been Made'] == 'FALSE':
                     transfer.resolve_as_rejected()
                     message = 'Transfer Rejected'

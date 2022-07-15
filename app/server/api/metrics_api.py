@@ -1,9 +1,4 @@
-# Copyright (C) Sempo Pty Ltd, Inc - All Rights Reserved
-# The code in this file is not included in the GPL license applied to this repository
-# Unauthorized copying of this file, via any medium is strictly prohibited
-
-from flask import Blueprint, request, make_response, jsonify, g
-import json
+from flask import Blueprint, request, make_response, jsonify
 
 from server.utils.metrics.metrics import calculate_transfer_stats
 from server.utils.metrics import metrics_const, metrics_cache
@@ -36,7 +31,7 @@ class CreditTransferStatsApi(MethodView):
             - token_id: (Default: None) If multi-org is being used, and the orgs have different tokens, this lets the user choose
                 which token's stats to present
         """
-        
+
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')
         encoded_filters = request.args.get('params')
@@ -139,7 +134,7 @@ class CacheApi(MethodView):
         Use this after you alter the past so the cache can rebuild itself 
         """
         count = metrics_cache.clear_metrics_cache()
-
+        metrics_cache.rebuild_metrics_cache()
         response_object = {
             'status' : 'success',
             'message': 'Cache erased',

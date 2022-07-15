@@ -22,6 +22,7 @@ interface DispatchProps {
 }
 
 interface StateProps {
+  login: ReduxState["login"];
   tokens: ReduxState["tokens"];
   organisations: ReduxState["organisations"];
   activeOrganisation: Organisation;
@@ -126,39 +127,56 @@ class OrganisationPage extends React.Component<IProps, IState> {
   }
 
   render() {
-    const { isNewOrg } = this.props;
+    const { isNewOrg, login } = this.props;
+    const disabled = login.adminTier !== "superadmin";
+
+    const orgCard = (
+      <Card
+        title={isNewOrg ? "New Project" : "Edit Project"}
+        bodyStyle={{ maxWidth: "400px" }}
+        bordered={!!isNewOrg}
+      >
+        {this.state.isoCountries ? (
+          <OrganisationForm
+            isNewOrg={isNewOrg}
+            activeOrganisation={this.props.activeOrganisation}
+            organisations={this.props.organisations}
+            tokens={this.props.tokens}
+            isoCountries={this.state.isoCountries || []}
+            timezones={this.state.timezones || []}
+            roles={this.state.roles || []}
+            onSubmit={(form: IOrganisation) =>
+              isNewOrg ? this.onNew(form) : this.onEdit(form)
+            }
+          />
+        ) : (
+          //@ts-ignore
+          <LoadingSpinner />
+        )}
+      </Card>
+    );
 
     return (
-      <Space direction="vertical" style={{ width: "100%" }} size="middle">
-        <Card
-          title={isNewOrg ? "New Project" : "Edit Project"}
-          bodyStyle={{ maxWidth: "400px" }}
-        >
-          {this.state.isoCountries ? (
-            <OrganisationForm
-              isNewOrg={isNewOrg}
-              activeOrganisation={this.props.activeOrganisation}
-              organisations={this.props.organisations}
-              tokens={this.props.tokens}
-              isoCountries={this.state.isoCountries || []}
-              timezones={this.state.timezones || []}
-              roles={this.state.roles || []}
-              onSubmit={(form: IOrganisation) =>
-                isNewOrg ? this.onNew(form) : this.onEdit(form)
-              }
-            />
-          ) : (
-            //@ts-ignore
-            <LoadingSpinner />
-          )}
-        </Card>
-      </Space>
+      <div
+        style={{
+          opacity: disabled ? 0.6 : 1
+        }}
+      >
+        {isNewOrg ? (
+          <Space direction="vertical" style={{ width: "100%" }} size="middle">
+            {orgCard}
+          </Space>
+        ) : (
+          orgCard
+        )}
+      </div>
     );
   }
 }
 
 const mapStateToProps = (state: any): StateProps => {
   return {
+    login: state.login,
     tokens: state.tokens,
     organisations: state.organisations,
     activeOrganisation: state.organisations.byId[state.login.organisationId]

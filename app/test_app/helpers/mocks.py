@@ -147,10 +147,6 @@ class MockBlockchainTasker(object):
         return MockBlockchainTasker._generic_task()
 
     @staticmethod
-    def get_failed_block_fetches(*args, **kwargs):
-        return MockBlockchainTasker._generic_task()
-
-    @staticmethod
     def get_failed_callbacks(*args, **kwargs):
         return MockBlockchainTasker._generic_task()
 

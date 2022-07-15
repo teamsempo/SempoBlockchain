@@ -1,7 +1,3 @@
-// Copyright (C) Sempo Pty Ltd, Inc - All Rights Reserved
-// The code in this file is not included in the GPL license applied to this repository
-// Unauthorized copying of this file, via any medium is strictly prohibited
-
 import React from "react";
 import { connect } from "react-redux";
 import styled from "styled-components";
@@ -9,16 +5,17 @@ import { Card, Typography, Space } from "antd";
 import { LinkOutlined } from "@ant-design/icons";
 import { HorizontalBar } from "react-chartjs-2";
 import { formatMoney, getActiveToken } from "../../utils";
+import { TooltipWrapper } from "./TooltipWrapper";
 
 import MasterWalletManagementModal from "./MasterWalletManagementModal";
 import { browserHistory } from "../../createStore";
 
 const { Text } = Typography;
 
-const mapStateToProps = state => {
+const mapStateToProps = (state) => {
   return {
     creditTransferStats: state.metrics.metricsState,
-    activeToken: getActiveToken(state)
+    activeToken: getActiveToken(state),
   };
 };
 
@@ -26,7 +23,7 @@ class MasterWalletCard extends React.Component {
   constructor() {
     super();
     this.state = {
-      modalVisible: false
+      modalVisible: false,
     };
   }
 
@@ -63,20 +60,20 @@ class MasterWalletCard extends React.Component {
       animation: false,
       maintainAspectRatio: false,
       legend: {
-        display: false
+        display: false,
       },
       tooltips: {
         enabled: false,
         mode: "nearest",
         backgroundColor: "rgba(87, 97, 113, 0.9)",
-        cornerRadius: 1
+        cornerRadius: 1,
       },
 
       scales: {
         xAxes: [
           {
             gridLines: {
-              display: false
+              display: false,
             },
             ticks: {
               beginAtZero: true,
@@ -84,27 +81,27 @@ class MasterWalletCard extends React.Component {
               max:
                 Math.abs(masterWalletBalance) +
                 amountInCirculation +
-                amountWithdrawn
+                amountWithdrawn,
             },
             stacked: true,
             display: false,
-            offset: false
-          }
+            offset: false,
+          },
         ],
         yAxes: [
           {
             gridLines: {
-              display: false
+              display: false,
             },
             ticks: {
               beginAtZero: true,
-              min: 0
+              min: 0,
             },
             stacked: true,
-            display: false
-          }
-        ]
-      }
+            display: false,
+          },
+        ],
+      },
     };
 
     let data;
@@ -116,21 +113,21 @@ class MasterWalletCard extends React.Component {
             barPercentage: 1,
             label: `Current Balance`,
             backgroundColor: ["#A7D6D7"],
-            data: [masterWalletBalance]
+            data: [masterWalletBalance],
           },
           {
             barPercentage: 1,
             label: `Amount in Circulation`,
             backgroundColor: ["#EDCBA2"],
-            data: [amountInCirculation]
+            data: [amountInCirculation],
           },
           {
             barPercentage: 1,
             label: `Amount Withdrawn`,
             backgroundColor: ["#AF6FC1"],
-            data: [amountWithdrawn]
-          }
-        ]
+            data: [amountWithdrawn],
+          },
+        ],
       };
     } else {
       data = {
@@ -139,21 +136,21 @@ class MasterWalletCard extends React.Component {
             barPercentage: 1,
             label: `Current Balance`,
             backgroundColor: ["#d76665"],
-            data: [-masterWalletBalance]
+            data: [-masterWalletBalance],
           },
           {
             barPercentage: 1,
             label: `Amount in Circulation`,
             backgroundColor: ["#EDCBA2"],
-            data: [amountInCirculation]
+            data: [amountInCirculation],
           },
           {
             barPercentage: 1,
             label: `Amount Withdrawn`,
             backgroundColor: ["#AF6FC1"],
-            data: [amountWithdrawn]
-          }
-        ]
+            data: [amountWithdrawn],
+          },
+        ],
       };
     }
 
@@ -203,10 +200,14 @@ class MasterWalletCard extends React.Component {
                 type="secondary"
                 strong={true}
                 style={{
-                  color: masterWalletBalance > 0 ? "#A7D6D7" : "#d76665"
+                  color: masterWalletBalance > 0 ? "#A7D6D7" : "#d76665",
                 }}
               >
-                Current Balance
+                <TooltipWrapper
+                  label={"Current Balance"}
+                  prompt={"Master Wallet Balance"}
+                  style={{ color: "#EDCBA2" }}
+                />
               </Text>
             </Wrapper>
             <Wrapper>
@@ -220,7 +221,13 @@ class MasterWalletCard extends React.Component {
                 )}
               </Text>
               <Text type="secondary" strong={true} style={{ color: "#EDCBA2" }}>
-                In Circulation
+                <TooltipWrapper
+                  label={"In Circulation"}
+                  prompt={
+                    "Amount in circulation, including pending transactions"
+                  }
+                  style={{ color: "#EDCBA2" }}
+                />
               </Text>
             </Wrapper>
             <Wrapper>
@@ -228,7 +235,11 @@ class MasterWalletCard extends React.Component {
                 {formatMoney(amountWithdrawn, 0, undefined, undefined, symbol)}
               </Text>
               <Text type="secondary" strong={true} style={{ color: "#AF6FC1" }}>
-                Withdrawn
+                <TooltipWrapper
+                  label={"Withdrawn"}
+                  prompt={"Amount Withdrawn"}
+                  style={{ color: "#AF6FC1" }}
+                />
               </Text>
             </Wrapper>
           </div>
@@ -241,10 +252,7 @@ class MasterWalletCard extends React.Component {
   }
 }
 
-export default connect(
-  mapStateToProps,
-  null
-)(MasterWalletCard);
+export default connect(mapStateToProps, null)(MasterWalletCard);
 
 const Wrapper = styled.div`
   display: flex;

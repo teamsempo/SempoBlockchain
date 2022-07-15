@@ -19,9 +19,9 @@ from server.utils.transfer_enums import TransferSubTypeEnum, TransferModeEnum
 from server.models.utils import paginate_query
 from server.utils.executor import status_checkable_executor_job, add_after_request_checkable_executor_job
 from server.utils.access_control import AccessControl
+from server.utils.metrics.metrics_cache import clear_metrics_cache, rebuild_metrics_cache
 
 disbursement_blueprint = Blueprint('disbursement', __name__)
-
 
 @status_checkable_executor_job
 def make_transfers(disbursement_id, auto_resolve=False):
@@ -30,50 +30,59 @@ def make_transfers(disbursement_id, auto_resolve=False):
     from server.models.transfer_account import TransferAccount
     from server.models.disbursement import Disbursement
     disbursement = db.session.query(Disbursement).filter(Disbursement.id == disbursement_id).first()
+    disbursement.mark_processing()
+    db.session.commit()
     for idx, ta in enumerate(disbursement.transfer_accounts):
-        user = ta.primary_user
-        if disbursement.transfer_type == 'DISBURSEMENT':
-            transfer = make_payment_transfer(
-                disbursement.disbursement_amount,
-                send_user=g.user,
-                receive_user=db.session.query(User).filter(User.id == user.id).first(),
-                send_transfer_account=send_transfer_account,
-                receive_transfer_account=db.session.query(TransferAccount).filter(TransferAccount.id == ta.id).first(),
-                transfer_subtype=TransferSubTypeEnum.DISBURSEMENT,
-                transfer_mode=TransferModeEnum.WEB,
-                automatically_resolve_complete=False,
-            )
-        if disbursement.transfer_type == 'RECLAMATION':
-            transfer = make_payment_transfer(
-                disbursement.disbursement_amount,
-                send_user=db.session.query(User).filter(User.id == user.id).first(),
-                send_transfer_account=db.session.query(TransferAccount).filter(TransferAccount.id == ta.id).first(),
-                transfer_subtype=TransferSubTypeEnum.RECLAMATION,
-                transfer_mode=TransferModeEnum.WEB,
-                require_recipient_approved=False,
-                automatically_resolve_complete=False,
-            )
-        if disbursement.transfer_type == 'BALANCE':
-            transfer = make_target_balance_transfer(
+        try:
+            user = ta.primary_user
+            if disbursement.transfer_type == 'DISBURSEMENT':
+                transfer = make_payment_transfer(
                     disbursement.disbursement_amount,
-                    db.session.query(User).filter(User.id == user.id).first(),
-                    automatically_resolve_complete=False,
+                    send_user=g.user,
+                    receive_user=db.session.query(User).filter(User.id == user.id).first(),
+                    send_transfer_account=send_transfer_account,
+                    receive_transfer_account=db.session.query(TransferAccount).filter(TransferAccount.id == ta.id).first(),
+                    transfer_subtype=TransferSubTypeEnum.DISBURSEMENT,
                     transfer_mode=TransferModeEnum.WEB,
+                    automatically_resolve_complete=False,
                 )
+            if disbursement.transfer_type == 'RECLAMATION':
+                transfer = make_payment_transfer(
+                    disbursement.disbursement_amount,
+                    send_user=db.session.query(User).filter(User.id == user.id).first(),
+                    send_transfer_account=db.session.query(TransferAccount).filter(TransferAccount.id == ta.id).first(),
+                    transfer_subtype=TransferSubTypeEnum.RECLAMATION,
+                    transfer_mode=TransferModeEnum.WEB,
+                    require_recipient_approved=False,
+                    automatically_resolve_complete=False,
+                )
+            if disbursement.transfer_type == 'BALANCE':
+                transfer = make_target_balance_transfer(
+                        disbursement.disbursement_amount,
+                        db.session.query(User).filter(User.id == user.id).first(),
+                        automatically_resolve_complete=False,
+                        transfer_mode=TransferModeEnum.WEB,
+                    )
 
-        disbursement.credit_transfers.append(transfer)
-        if auto_resolve and disbursement.state == 'APPROVED':
-            transfer.approvers = disbursement.approvers
-            transfer.add_approver_and_resolve_as_completed()
+            disbursement.credit_transfers.append(transfer)
+            if auto_resolve and disbursement.state == 'APPROVED':
+                transfer.approvers = disbursement.approvers
+                transfer.add_approver_and_resolve_as_completed()
+        except Exception as e:
+            disbursement.errors = disbursement.errors + [str(ta) +': ' + str(e)]
 
         db.session.commit()
         percent_complete = ((idx + 1) / len(disbursement.transfer_accounts)) * 100
+
         yield {
             'message': 'success' if percent_complete == 100 else 'pending',
             'percent_complete': math.floor(percent_complete),
             'data': {'credit_transfers': credit_transfers_schema.dump(disbursement.credit_transfers).data}
         }
-
+    disbursement.mark_complete()
+    db.session.commit()
+    clear_metrics_cache()
+    rebuild_metrics_cache()
 class MakeDisbursementAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def get(self):
@@ -200,6 +209,7 @@ class DisbursementAPI(MethodView):
                 .options(joinedload(Disbursement.credit_transfers))\
                 .first()
             disbursement.notes = notes
+            
             if not disbursement:
                 return { 'message': f'Disbursement with ID \'{disbursement_id}\' not found' }, 400
 

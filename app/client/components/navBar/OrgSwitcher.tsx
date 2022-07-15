@@ -1,7 +1,3 @@
-// Copyright (C) Sempo Pty Ltd, Inc - All Rights Reserved
-// The code in this file is not included in the GPL license applied to this repository
-// Unauthorized copying of this file, via any medium is strictly prohibited
-
 import * as React from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { NavLink } from "react-router-dom";
@@ -172,7 +168,7 @@ const OrgSwitcher: React.FunctionComponent<Props> = props => {
         </NavLink>
       </Menu.Item>
       <Menu.Item key="invite" disabled={isMultiOrg || false}>
-        <NavLink to="/settings/invite">
+        <NavLink to="/settings/admins/invite">
           <UserAddOutlined translate={""} /> Invite User
         </NavLink>
       </Menu.Item>

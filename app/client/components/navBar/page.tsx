@@ -14,6 +14,7 @@ import LoadingSpinner from "../loadingSpinner";
 import { LoginState } from "../../reducers/auth/loginReducer";
 import { ReduxState } from "../../reducers/rootReducer";
 import { browserHistory } from "../../createStore";
+import { SettingsSubMenu } from "../pages/settings/SettingsSubMenu";
 
 const { Content, Header, Footer } = Layout;
 
@@ -46,7 +47,7 @@ declare global {
   }
 }
 
-const Page: React.FunctionComponent<OuterProps> = props => {
+const Page: React.FunctionComponent<OuterProps> = (props) => {
   const {
     isMultiOrg = false,
     footer = true,
@@ -58,12 +59,17 @@ const Page: React.FunctionComponent<OuterProps> = props => {
     location,
     title,
     isMobile = false,
-    component: Component = React.Component
+    component: Component = React.Component,
   } = props;
 
   const [collapsed, setCollapsed] = React.useState(false);
   const [routes, setRoutes] = React.useState<Route[] | undefined>();
   const [prevPath, setPrevPath] = React.useState("");
+
+  const isSettings =
+    location.pathname.includes("/settings") &&
+    title !== "Not Found" &&
+    title !== "New Project";
 
   const login: LoginState = useSelector((state: ReduxState) => state.login);
   const { organisationIds } = login;
@@ -110,7 +116,7 @@ const Page: React.FunctionComponent<OuterProps> = props => {
             const id = location.pathname.split("/").pop();
             return {
               path: location.pathname,
-              breadcrumbName: title + " " + id
+              breadcrumbName: title + " " + id,
             };
           } else {
             return { path: route, breadcrumbName: toTitleCase(route) };
@@ -160,7 +166,7 @@ const Page: React.FunctionComponent<OuterProps> = props => {
                     width: "100%",
                     backgroundColor: "rgba(0,0,0,.45)",
                     position: "fixed",
-                    zIndex: 1
+                    zIndex: 1,
                   }
               : undefined
           }
@@ -197,11 +203,17 @@ const Page: React.FunctionComponent<OuterProps> = props => {
                 </CenterLoadingSideBarActive>
               }
             >
-              <Component {...props} />
+              {isSettings ? (
+                <SettingsSubMenu activeMenu={location.pathname}>
+                  <Component {...props} />
+                </SettingsSubMenu>
+              ) : (
+                <Component {...props} />
+              )}
             </React.Suspense>
           </Content>
           {footer ? (
-            <Footer style={{ textAlign: "center" }}>Sempo ©2020</Footer>
+            <Footer style={{ textAlign: "center" }}>Sempo ©2017-2022</Footer>
           ) : null}
         </Layout>
       </Layout>

@@ -134,11 +134,6 @@ def register_blueprints(app):
         g.executor_jobs: ExecutorJobList = []
         g.is_after_request = False
 
-        if request.url.startswith('http://') and '.withsempo.com' in request.url:
-            url = request.url.replace('http://', 'https://', 1)
-            code = 301
-            return redirect(url, code=code)
-
     @app.after_request
     def after_request(response):
         from server.utils import pusher_utils
@@ -189,7 +184,6 @@ def register_blueprints(app):
     from server.api.transfer_card_api import transfer_cards_blueprint
     from server.api.organisation_api import organisation_blueprint
     from server.api.token_api import token_blueprint
-    from server.api.search_api import search_blueprint
     from server.api.slack_api import slack_blueprint
     from server.api.poli_payments_api import poli_payments_blueprint
     from server.api.ussd_api import ussd_blueprint
@@ -227,7 +221,6 @@ def register_blueprints(app):
     app.register_blueprint(transfer_cards_blueprint, url_prefix=versioned_url)
     app.register_blueprint(organisation_blueprint, url_prefix=versioned_url)
     app.register_blueprint(token_blueprint, url_prefix=versioned_url)
-    app.register_blueprint(search_blueprint, url_prefix=versioned_url)
     app.register_blueprint(slack_blueprint, url_prefix=versioned_url)
     app.register_blueprint(poli_payments_blueprint, url_prefix=versioned_url)
     app.register_blueprint(ussd_blueprint, url_prefix=versioned_url)
@@ -284,6 +277,9 @@ class AppQuery(BaseQuery):
 
 db = SQLAlchemy(
     query_class=AppQuery,
+    engine_options={
+        'pool_pre_ping': True
+    },
     session_options={
         "expire_on_commit": False,
         "enable_baked_queries": False
@@ -352,7 +348,7 @@ if config.VERIFY_THIRD_PARTY_SYNC:
         from server.utils.credit_transfer import check_recent_transaction_sync_status
         interval_time = config.THIRD_PARTY_SYNC_ERROR_DETECTION_INTERVAL
         time_to_error = config.THIRD_PARTY_SYNC_ERROR_DETECTION_GRACE_PERIOD
-        scheduler = BackgroundScheduler()
+        scheduler = BackgroundScheduler({'apscheduler.timezone': 'UTC'})
         scheduler.add_job(func=check_recent_transaction_sync_status, trigger="interval", seconds=interval_time, args=[interval_time, time_to_error])
         scheduler.start()
         # Shut down the scheduler when exiting the app

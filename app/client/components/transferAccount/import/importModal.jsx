@@ -22,7 +22,7 @@ const data = [
   },
   {
     title: "Connect Kobo Toolbox or Commcare",
-    to: "/settings",
+    to: "/settings/integrations",
     icon: <NodeIndexOutlined style={style} />
   }
 ];

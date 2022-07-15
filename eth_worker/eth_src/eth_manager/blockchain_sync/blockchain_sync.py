@@ -22,7 +22,7 @@ class BlockchainSyncer(object):
             'sender_blockchain_address': transaction.sender_address,
             'recipient_blockchain_address': transaction.recipient_address,
             'blockchain_transaction_hash': transaction.hash,
-            'transfer_amount': int(transaction.amount),
+            'transfer_amount': int(transaction.amount or 0),
             'contract_address': transaction.contract_address
         }
         r = requests.post(config.APP_HOST + '/api/v1/credit_transfer/internal/',
@@ -41,6 +41,15 @@ class BlockchainSyncer(object):
         # then trigger process_all_chunks, which will consume those jobs from redis
         total_blocks_retrieved = 0
         for f in filters:
+            # Skip getting data for filters whose status is DISABLED
+            if f.status == sync_const.DISABLED:
+                continue
+            # Skip over blocks when status is SKIP. This is so work can be done on the blockchain
+            # and not be tracked in the app (for balance reconciliations)
+            if f.status == sync_const.SKIP:
+                latest_block = self.get_latest_block_number()
+                self.persistence.set_filter_max_block(f.id, latest_block)
+                continue
             # Make sure a filter is only being executed once at a time
             have_lock = False
             lock = self.red.lock(f'third-party-sync-lock-{f.id}', timeout=sync_const.LOCK_TIMEOUT)
@@ -122,7 +131,6 @@ class BlockchainSyncer(object):
         # Creates DB objects for every block to monitor status
         config.logg.info(f'Fetching block range {start_block} to {end_block} for contract {contract_address}')
 
-        self.persistence.add_block_range(start_block, end_block, filter_id)
         erc20_contract = self.w3.eth.contract(
             address = Web3.toChecksumAddress(contract_address),
             abi = erc20_abi.abi
@@ -135,12 +143,8 @@ class BlockchainSyncer(object):
             )
             for event in events:
                 yield event
-            # Once a batch of chunks is completed, we can mark them completed
-            self.persistence.set_block_range_status(start_block, end_block, 'SUCCESS', filter_id)
-
         except:
             # Setting block status as a range since individual blocks can't fail at this stage (as we are getting a range of blocks)
-            self.persistence.set_block_range_status(start_block, end_block, 'FAILED', filter_id)
             raise Exception(f'Failed fetching block range {start_block} to {end_block} for contract {contract_address}')
 
     # Adds transaction filter to database if it doesn't already exist
@@ -167,9 +171,6 @@ class BlockchainSyncer(object):
 
     def get_metrics(self):
         return self.persistence.get_transaction_sync_metrics()
-
-    def get_failed_block_fetches(self):
-        return self.persistence.get_failed_block_fetches()
 
     def get_failed_callbacks(self):
         return self.persistence.get_failed_callbacks()

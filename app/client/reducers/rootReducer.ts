@@ -1,5 +1,4 @@
 import { AnyAction, combineReducers, Reducer } from "redux";
-import { FormStateMap, reducer as FormReducer } from "redux-form";
 
 import {
   activate,
@@ -44,9 +43,6 @@ import {
 } from "./bulkTransfer/types";
 
 import { CreateMasterWalletWithdrawal } from "./masterWallet/types";
-
-//might be because of older version of react-redux that have to force like this...
-const form = <Reducer<FormStateMap, AnyAction>>FormReducer;
 
 interface SempoObjects extends RegistrationMapping {
   bulkTransfers: Registration<CreateBulkTransferBody, ModifyBulkTransferBody>;
@@ -95,7 +91,6 @@ const appReducer = combineReducers({
   transferUsages: TransferUsageReducer,
   organisations: OrganisationReducer,
   allowedFilters,
-  form,
   transferCard,
   tokens,
   ...baseReducers

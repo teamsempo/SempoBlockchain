@@ -11,7 +11,7 @@ export enum SpreadsheetActionTypes {
 
   LOAD_DATASET_LIST_REQUEST = "LOAD_DATASET_LIST_REQUEST",
   LOAD_DATASET_LIST_SUCCESS = "LOAD_DATASET_LIST_SUCCESS",
-  LOAD_DATASET_LIST_FAILURE = "LOAD_DATASET_LIST_FAILURE"
+  LOAD_DATASET_LIST_FAILURE = "LOAD_DATASET_LIST_FAILURE",
 }
 
 export interface SaveDatasetSuccessPayload {
@@ -25,7 +25,6 @@ export interface SaveDatasetPayload {
     data: object;
     headerPositions: object;
     customAttributes: object;
-    isVendor: boolean;
     saveName: string;
   };
 }

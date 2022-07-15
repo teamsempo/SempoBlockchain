@@ -4,7 +4,7 @@ import {
   all,
   cancelled,
   takeEvery,
-  select
+  select,
 } from "redux-saga/effects";
 import { normalize } from "normalizr";
 import { message } from "antd";
@@ -18,12 +18,12 @@ import {
   removeOrgIds,
   removeTFAToken,
   parseQuery,
-  getOrgIds
+  getOrgIds,
 } from "../utils";
 import {
   adminUserSchema,
   inviteUserSchema,
-  organisationSchema
+  organisationSchema,
 } from "../schemas";
 
 import {
@@ -38,7 +38,8 @@ import {
   updateUserAPI,
   inviteUserAPI,
   deleteInviteAPI,
-  ValidateTFAAPI
+  adminResetPasswordAPI,
+  ValidateTFAAPI,
 } from "../api/authAPI";
 
 import { authenticatePusher } from "../api/pusherAPI";
@@ -67,7 +68,9 @@ import {
   TokenData,
   OrganisationLoginData,
   AdminData,
-  InviteByIDs
+  InviteByIDs,
+  AdminResetPasswordActionTypes,
+  AdminResetPasswordPayload,
 } from "../reducers/auth/types";
 
 import {
@@ -82,7 +85,8 @@ import {
   EditAdminUserAction,
   DeleteInviteAction,
   InviteUserAction,
-  ValidateTfaAction
+  ValidateTfaAction,
+  AdminResetPasswordAction,
 } from "../reducers/auth/actions";
 
 import { browserHistory } from "../createStore";
@@ -205,7 +209,7 @@ function createLoginSuccessObject(token: TokenData) {
     intercomHash: token.web_intercom_hash,
     webApiVersion: token.web_api_version,
     organisationId: token.active_organisation_id,
-    organisationIds: token.organisation_ids
+    organisationIds: token.organisation_ids,
   };
 }
 
@@ -232,7 +236,7 @@ function* requestToken(
         LoginAction.loginPartial({
           error: token_response.message,
           tfaURL: token_response.tfa_url,
-          tfaFailure: true
+          tfaFailure: true,
         })
       );
 
@@ -244,15 +248,17 @@ function* requestToken(
         LoginAction.loginPartial({
           error: token_response.message,
           tfaURL: null,
-          tfaFailure: true
+          tfaFailure: true,
         })
       );
       return token_response;
     } else {
       yield put(LoginAction.loginFailure(token_response.message));
+      message.error(token_response.message);
     }
   } catch (error) {
     yield put(LoginAction.loginFailure(error.statusText));
+    message.error(error.statusText);
   } finally {
     if (yield cancelled()) {
       // ... put special cancellation handling code here
@@ -341,7 +347,7 @@ function* register(
         LoginAction.loginPartial({
           error: registered_account.message,
           tfaURL: registered_account.tfa_url,
-          tfaFailure: true
+          tfaFailure: true,
         })
       );
     } else if (registered_account.tfa_failure) {
@@ -351,16 +357,18 @@ function* register(
         LoginAction.loginPartial({
           error: registered_account.message,
           tfaURL: null,
-          tfaFailure: true
+          tfaFailure: true,
         })
       );
       return registered_account;
     } else {
       yield put(RegisterAction.registerFailure(registered_account.message));
       yield put(LoginAction.loginFailure(registered_account.message));
+      message.error(registered_account.message);
     }
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
+    message.error(error.message);
 
     yield put(RegisterAction.registerFailure(error.message));
   }
@@ -393,7 +401,7 @@ function* activate(
         LoginAction.loginPartial({
           error: activated_account.message,
           tfaURL: activated_account.tfa_url,
-          tfaFailure: true
+          tfaFailure: true,
         })
       );
     } else if (activated_account.tfa_failure) {
@@ -403,7 +411,7 @@ function* activate(
         LoginAction.loginPartial({
           error: activated_account.message,
           tfaURL: null,
-          tfaFailure: true
+          tfaFailure: true,
         })
       );
       return activated_account;
@@ -437,6 +445,7 @@ function* resetEmailRequest(
     yield put(
       ResetPasswordEmailAction.passwordResetEmailFailure(error.statusText)
     );
+    message.error(error.statusText);
   }
 }
 
@@ -454,11 +463,13 @@ function* resetPassword(
   >
 ) {
   try {
-    yield call(ResetPasswordAPI, action.payload);
+    const result = yield call(ResetPasswordAPI, action.payload);
     yield put(ResetPasswordAction.resetPasswordSuccess());
     yield put(LoginAction.logout());
+    message.success(result.message);
   } catch (error) {
     yield put(ResetPasswordAction.resetPasswordFailure(error.statusText));
+    message.error(error.statusText);
   }
 }
 
@@ -558,7 +569,7 @@ function* inviteUserRequest(
     const result = yield call(inviteUserAPI, action.payload);
     yield put(InviteUserAction.inviteUserSuccess());
     message.success(result.message);
-    browserHistory.push("/settings");
+    browserHistory.push("/settings/admins");
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
     message.error(error.message);
@@ -568,6 +579,32 @@ function* inviteUserRequest(
 
 function* watchInviteUserRequest() {
   yield takeEvery(InviteUserActionTypes.INVITE_USER_REQUEST, inviteUserRequest);
+}
+
+function* adminResetPasswordRequest(
+  action: ActionWithPayload<
+    AdminResetPasswordActionTypes.ADMIN_RESET_PASSWORD_REQUEST,
+    AdminResetPasswordPayload
+  >
+) {
+  try {
+    const result = yield call(adminResetPasswordAPI, action.payload);
+    yield put(AdminResetPasswordAction.adminResetPasswordSuccess());
+    message.success(result.message);
+  } catch (fetch_error) {
+    const error = yield call(handleError, fetch_error);
+    message.error(error.message);
+    yield put(
+      AdminResetPasswordAction.adminResetPasswordFailure(error.message)
+    );
+  }
+}
+
+function* watchAdminResetPasswordRequest() {
+  yield takeEvery(
+    AdminResetPasswordActionTypes.ADMIN_RESET_PASSWORD_REQUEST,
+    adminResetPasswordRequest
+  );
 }
 
 function* validateTFA(
@@ -590,7 +627,7 @@ function* validateTFA(
     return validateTFAresponse;
   } catch (error) {
     const response = yield call(handleError, error);
-
+    message.error(response.message);
     yield put(ValidateTfaAction.validateTFAFailure(response.message));
   }
 }
@@ -613,6 +650,7 @@ export default function* authSagas() {
     watchUpdateUserRequest(),
     watchInviteUserRequest(),
     watchDeleteInviteRequest(),
-    watchValidateTFA()
+    watchValidateTFA(),
+    watchAdminResetPasswordRequest(),
   ]);
 }

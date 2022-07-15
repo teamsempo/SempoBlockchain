@@ -48,19 +48,22 @@ def no_expire():
     yield
     s.expire_on_commit = True
 
-
 @event.listens_for(AppQuery, "before_compile", retval=True)
 def filter_by_org(query):
     """A query compilation rule that will add limiting criteria for every
     subclass of OrgBase"""
-    show_deleted = query._execution_options.get("show_deleted", False)
+    org_check = query._execution_options.get("org_check", False)
+    show_deleted = getattr(g, "show_deleted", False) or query._execution_options.get("show_deleted", False)
     show_all = getattr(g, "show_all", False) or query._execution_options.get("show_all", False)
     # We want to support multiple active organizations, but only for select GET requets.
     # This is done through a multi_org flag, very similar to the show_all flag
     multi_org = getattr(g, "multi_org", False) or query._execution_options.get("multi_org", False)
     if show_all and show_deleted:
         return query
-
+    if org_check:
+        return query
+    has_many_orgs = db.session.query(server.models.organisation.Organisation.id).execution_options(org_check=True).count() > 1
+    
     for ent in query.column_descriptions:
         entity = ent['entity']
         if entity is None:
@@ -78,7 +81,6 @@ def filter_by_org(query):
 
             # if the subclass OrgBase exists, then filter by organisations - else, return default query
             if issubclass(mapper.class_, ManyOrgBase) or issubclass(mapper.class_, OneOrgBase):
-
                 try:
                     # member_organisations = getattr(g, "member_organisations", [])
                     active_organisation = getattr(g, "active_organisation", None)
@@ -91,20 +93,20 @@ def filter_by_org(query):
                         if not multi_org:
                             raise Exception('Multiple organizations not supported for this operation')
                         query_organisations = g.query_organisations
-
-                    if issubclass(mapper.class_, ManyOrgBase):
-                        # filters many-to-many
-                        query = query.enable_assertions(False).filter(or_(
-                            ent['entity'].organisations.any(
-                                server.models.organisation.Organisation.id.in_(query_organisations)),
-                            ent['entity'].is_public == True,
-                        ))
-                    else:
-                        query = query.enable_assertions(False).filter(or_(
-                            ent['entity'].organisation_id == active_organisation_id,
-                            ent['entity'].organisation_id.in_(query_organisations),
-                            ent['entity'].is_public == True,
-                        ))
+                    if has_many_orgs:
+                        if issubclass(mapper.class_, ManyOrgBase):
+                            # filters many-to-many
+                            query = query.enable_assertions(False).filter(or_(
+                                ent['entity'].is_public == True,
+                                ent['entity'].organisations.any(
+                                    server.models.organisation.Organisation.id.in_(query_organisations)),
+                            ))
+                        else:
+                            query = query.enable_assertions(False).filter(or_(
+                                ent['entity'].is_public == True,
+                                ent['entity'].organisation_id == active_organisation_id,
+                                ent['entity'].organisation_id.in_(query_organisations),
+                            ))
 
                 except AttributeError:
                     raise
@@ -241,13 +243,11 @@ class OneOrgBase(object):
     Forces all database queries on associated objects to provide an organisation ID or specify show_all=True flag
     """
 
-    is_public = db.Column(db.Boolean, default=False)
+    is_public = db.Column(db.Boolean, default=False, index=True)
 
     @declared_attr
     def organisation_id(cls):
         return db.Column('organisation_id', db.ForeignKey('organisation.id'))
-
-
 class ManyOrgBase(object):
     """
     Mixin that automatically associates object(s) to organisation(s) many-to-many.
@@ -255,21 +255,20 @@ class ManyOrgBase(object):
     Forces all database queries on associated objects to provide an organisation ID or specify show_all=True flag
     """
 
-    is_public = db.Column(db.Boolean, default=False)
+    is_public = db.Column(db.Boolean, default=False, index=True)
 
     @declared_attr
     def organisations(cls):
-
         # pluralisation
         name = cls.__tablename__.lower()
         plural = name + 's'
         if name[-1] in ['s', 'sh', 'ch', 'x']:
             # exceptions to this rule...
             plural = name + 'es'
-
         return db.relationship("Organisation",
                                secondary=organisation_association_table,
-                               back_populates=plural)
+                               back_populates=plural,
+                               lazy='joined')
 
 
 def paginate_query(query, sort_attribute=None, sort_desc=True, ignore_last_fetched=False):

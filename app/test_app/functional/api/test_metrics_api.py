@@ -11,21 +11,16 @@ import os
 from datetime import datetime, timedelta
 from dateutil.parser import isoparse
 
-@freeze_time("2020-02-15 13:30:00")
+zero_time = datetime(2019, 1, 15)
 @pytest.fixture(scope='module')
 def generate_timeseries_metrics(create_organisation):
-    # Truncates date for timezone comparison to work any time of day you run the tests!
-    # Adds 5 minutes to account for the small time difference between data generation and metric generation
-    def truncate_date(date):
-        return date.replace(hour=0, minute=5, second=0, microsecond=0)
-
     # Generates metrics over timeline
     # User1 and User2 made today
     user1 = create_transfer_account_user(first_name='Ricky',
                                     phone="+19025551234",
                                     organisation=create_organisation,
                                     roles=[('BENEFICIARY', 'beneficiary')])
-    user1.created = truncate_date(user1.created)
+    user1.created = zero_time
     user1.default_transfer_account.is_approved = True
     user1.default_transfer_account._make_initial_disbursement(100, True)
     user1._location = 'Sunnyvale'
@@ -39,7 +34,7 @@ def generate_timeseries_metrics(create_organisation):
     user2 = create_transfer_account_user(first_name='Bubbles',
                                     phone="+19025551235",
                                     organisation=create_organisation)
-    user2.created = truncate_date(user2.created)
+    user2.created = zero_time
     user2.default_transfer_account.is_approved = True
     user2.default_transfer_account._make_initial_disbursement(200, True)
     user2._location = 'Sunnyvale'
@@ -57,7 +52,7 @@ def generate_timeseries_metrics(create_organisation):
                                     organisation=create_organisation)
     user3.default_transfer_account.is_approved = True
     disburse = user3.default_transfer_account._make_initial_disbursement(210, True)
-    user3.created = truncate_date(user3.created)
+    user3.created = zero_time
     user3.created = user3.created - timedelta(days=1) + timedelta(hours=6)
     disburse.created = user3.created - timedelta(days=1) + timedelta(hours=3)
     user3._location = 'Dartmouth'
@@ -72,7 +67,7 @@ def generate_timeseries_metrics(create_organisation):
     user4 = create_transfer_account_user(first_name='Randy',
                                     phone="+19025511230",
                                     organisation=create_organisation)
-    user4.created = truncate_date(user4.created)
+    user4.created = zero_time
     user4.default_transfer_account.is_approved = True
     disburse = user4.default_transfer_account._make_initial_disbursement(201, True)
     user4.created = user4.created - timedelta(days=4) + timedelta(hours = 23)
@@ -89,7 +84,7 @@ def generate_timeseries_metrics(create_organisation):
     user5 = create_transfer_account_user(first_name='Cory',
                                     phone="+19011531230",
                                     organisation=create_organisation)
-    user5.created = truncate_date(user5.created)
+    user5.created = zero_time
     user5.default_transfer_account.is_approved = True
     disburse = user5.default_transfer_account._make_initial_disbursement(202, True)
     user5.created = user5.created - timedelta(days=10) + timedelta(hours = 2)
@@ -106,7 +101,7 @@ def generate_timeseries_metrics(create_organisation):
     user6 = create_transfer_account_user(first_name='Trevor',
                                     phone="+19025111230",
                                     organisation=create_organisation)
-    user6.created = truncate_date(user6.created)
+    user6.created = zero_time
     user6.default_transfer_account.is_approved = True
     disburse = user6.default_transfer_account._make_initial_disbursement(204, True)
     attribute_dict = {'custom_attributes': {}}
@@ -120,9 +115,9 @@ def generate_timeseries_metrics(create_organisation):
     tu1 = TransferUsage.find_or_create("Pepperoni")
     tu2 = TransferUsage.find_or_create("Jalepeno Chips")
     tu3 = TransferUsage.find_or_create("Shopping Carts")
-    tu1.created = tu1.created - timedelta(days=15) + timedelta(hours = 22)
-    tu2.created = tu1.created - timedelta(days=15) + timedelta(hours = 2)
-    tu3.created = tu1.created - timedelta(days=15) + timedelta(hours = 1)
+    tu1.created = zero_time - timedelta(days=15) + timedelta(hours = 22)
+    tu2.created = zero_time - timedelta(days=15) + timedelta(hours = 2)
+    tu3.created = zero_time - timedelta(days=15) + timedelta(hours = 1)
 
     p1 = make_payment_transfer(100,
         create_organisation.token,
@@ -132,7 +127,7 @@ def generate_timeseries_metrics(create_organisation):
         receive_transfer_account=user2.default_transfer_account,
         transfer_use=str(int(tu1.id))
     )
-    p1.created = truncate_date(p1.created) + timedelta(hours = 3)
+    p1.created = zero_time + timedelta(hours = 3)
 
     p2 = make_payment_transfer(25,
         create_organisation.token,
@@ -142,7 +137,7 @@ def generate_timeseries_metrics(create_organisation):
         receive_transfer_account=user4.default_transfer_account,
         transfer_use=str(int(tu1.id))
     )
-    p2.created = truncate_date(p2.created)
+    p2.created = zero_time
     p2.created = p2.created - timedelta(days=1) + timedelta(hours = 7)
 
     p3 = make_payment_transfer(5,
@@ -153,7 +148,7 @@ def generate_timeseries_metrics(create_organisation):
         receive_transfer_account=user2.default_transfer_account,
         transfer_use=str(int(tu2.id))
     )
-    p3.created = truncate_date(p3.created)
+    p3.created = zero_time
     p3.created = p3.created - timedelta(days=1) + timedelta(hours = 22)
 
 
@@ -165,7 +160,7 @@ def generate_timeseries_metrics(create_organisation):
         receive_transfer_account=user6.default_transfer_account,
         transfer_use=str(int(tu3.id))
     )
-    p4.created = truncate_date(p4.created)
+    p4.created = zero_time
     p4.created = p4.created - timedelta(days=4) + timedelta(hours = 1)
 
     p5 = make_payment_transfer(20,
@@ -176,7 +171,7 @@ def generate_timeseries_metrics(create_organisation):
         receive_transfer_account=user5.default_transfer_account,
         transfer_use=str(int(tu2.id))
     )
-    p5.created = truncate_date(p5.created)
+    p5.created = zero_time
     p5.created = p5.created - timedelta(days=6) + timedelta(hours = 23)
     db.session.commit()
 
@@ -320,8 +315,8 @@ def test_get_zero_metrics(test_client, complete_admin_auth_token, external_reser
         assert response.json == base_participant
 
 @pytest.mark.parametrize("metric_type, params, status_code, requested_metric, group_by, output_file, timezone", [
-    ("all", None, 200, None, 'sender,account_type', 'all_by_account_type.json', 'UTC'),
     ("all", None, 200, None, 'colour,sender', 'all_by_sender_colour.json', 'UTC'),
+    ("all", None, 200, None, 'sender,account_type', 'all_by_account_type.json', 'UTC'),
     ("all", None, 200, None, 'colour,recipient', 'all_by_recipient_colour.json', 'UTC'),
     ("all", None, 200, None ,'sender,location', 'all_by_sender_location.json', 'UTC'),
     ("all", None, 200, None ,'recipient,location', 'all_by_recipient_location.json', 'UTC'),
@@ -343,6 +338,7 @@ def test_get_zero_metrics(test_client, complete_admin_auth_token, external_reser
     ("all", None, 200, None ,'sender,location', 'all_by_location_halifax.json', 'America/Halifax'),
     ("all", None, 200, None, 'ungrouped', 'all_ungrouped_halifax.json', 'America/Halifax'),
 ])
+@freeze_time(zero_time + timedelta(days=100))
 def test_get_summed_metrics(
         test_client, complete_admin_auth_token, external_reserve_token, create_organisation, generate_timeseries_metrics,
         metric_type, params, status_code, requested_metric, group_by, output_file, timezone
@@ -392,13 +388,14 @@ def test_get_summed_metrics(
     ("notarealmetrictype", 500, False),
     ("all", 200, True),
 ])
+@freeze_time(zero_time + timedelta(days=100))
 def test_get_metric_filters(test_client, complete_admin_auth_token, external_reserve_token,
                              metric_type, status_code, generate_timeseries_metrics, hide_sender):
     if hide_sender:
         db.session.query(CustomAttribute).first().group_visibility = MetricsVisibility.RECIPIENT
 
     db.session.commit()
-    # Tests getting list of availible metrics filters from the /api/v1/metrics/filters endpoint
+    # Tests getting list of available metrics filters from the /api/v1/metrics/filters endpoint
     response = test_client.get(
         f'/api/v1/metrics/filters/?metric_type={metric_type}',
         headers=dict(
@@ -423,6 +420,7 @@ def test_get_metric_filters(test_client, complete_admin_auth_token, external_res
         else:
             assert 'colour,sender' not in response.json['data']['groups']
 
+@freeze_time(zero_time + timedelta(days=100))
 def test_clear_metrics_cache(test_client, complete_admin_auth_token):
     def clear_metrics():
         return test_client.post(
@@ -446,7 +444,7 @@ def test_clear_metrics_cache(test_client, complete_admin_auth_token):
     response = clear_metrics()
 
     # Make sure that 4 metrics are removed from the cache
-    assert response.json['data']['removed_entries'] == 4
+    assert response.json['data']['removed_entries'] == 44
     
     # And check that they're well and truly gone from the cache!
     assert not red.get('2_metrics_fake_metric1') 

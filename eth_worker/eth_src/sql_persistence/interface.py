@@ -12,7 +12,6 @@ from sql_persistence.models import (
     BlockchainTransaction,
     BlockchainTask,
     BlockchainWallet,
-    SynchronizedBlock,
     SynchronizationFilter
 )
 
@@ -551,35 +550,16 @@ class SQLPersistenceInterface(object):
             .group_by(BlockchainTransaction.contract_address)\
             .filter(BlockchainTransaction.is_synchronized_with_app == True)\
             .all()
-
-        unsynchronized_block_count = self.session.query(
-            SynchronizationFilter.contract_address, func.count(SynchronizedBlock.id))\
-            .group_by(SynchronizationFilter.contract_address)\
-            .filter(SynchronizedBlock.status != 'SUCCESS')\
-            .join(SynchronizationFilter)\
-            .all()
-
-        synchronized_block_count = self.session.query(
-            SynchronizationFilter.contract_address, func.count(SynchronizedBlock.id))\
-            .group_by(SynchronizationFilter.contract_address)\
-            .filter(SynchronizedBlock.status == 'SUCCESS')\
-            .join(SynchronizationFilter)\
-            .all()
-
-        max_synchronized_blocks = self.session.query(SynchronizationFilter.contract_address, SynchronizationFilter.max_block).all()
         
         last_time_synchronized = self.session.query(SynchronizationFilter.contract_address, SynchronizationFilter.updated).all()
 
         return {
             'unsynchronized_transaction_count': __query_tuple_list_to_dict__(unsynchronized_transaction_count),
             'synchronized_transaction_count': __query_tuple_list_to_dict__(synchronized_transaction_count),
-            'unsynchronized_block_count': __query_tuple_list_to_dict__(unsynchronized_block_count),
-            'synchronized_block_count': __query_tuple_list_to_dict__(synchronized_block_count),
-            'max_synchronized_blocks': __query_tuple_list_to_dict__(max_synchronized_blocks),
             'last_time_synchronized': __query_tuple_list_to_dict__(last_time_synchronized)
         }
         
-    # Utility function for get_failed_block_fetches and get_failed_callbacks
+    # Utility function for get_failed_callbacks
     def __aggregate_tuple_list__(self, response):
         result = {}
         for address, hash in response:
@@ -589,14 +569,6 @@ class SQLPersistenceInterface(object):
                 else:
                     result[address] = [hash]
         return result
-
-    def get_failed_block_fetches(self):
-        failed_block_fetches = self.session.query(
-            SynchronizationFilter.contract_address, SynchronizedBlock.block_number)\
-            .filter(SynchronizedBlock.status != 'SUCCESS')\
-            .join(SynchronizationFilter)\
-            .all()
-        return self.__aggregate_tuple_list__(failed_block_fetches)
 
     def get_failed_callbacks(self):
         failed_callbacks = self.session.query(
@@ -625,27 +597,6 @@ class SQLPersistenceInterface(object):
 
     def get_all_synchronization_filters(self):
         return self.session.query(SynchronizationFilter).all()
-
-    def add_block_range(self, start, end, filter_id):
-        for n in range(start, end + 1):
-            block = SynchronizedBlock(
-                block_number=n,
-                status='PENDING',
-                is_synchronized=False,
-                synchronization_filter_id=filter_id
-            )
-            self.session.add(block)
-        self.session.commit()
-
-    def set_block_range_status(self, start, end, status, filter_id):
-        blocks = self.session.query(SynchronizedBlock).filter(
-            SynchronizedBlock.block_number >= start,
-            SynchronizedBlock.block_number <= end,
-            SynchronizedBlock.synchronization_filter_id == filter_id
-        ).update({'status': status})
-
-        self.session.commit()
-
 
     def __init__(self, red, session, first_block_hash, PENDING_TRANSACTION_EXPIRY_SECONDS=config.CHAINS[chain]['PENDING_TRANSACTION_EXPIRY_SECONDS']):
         self.red = red

@@ -1,11 +1,11 @@
-import { put, takeEvery, call, all } from "redux-saga/effects";
+import { put, takeEvery, call, all, select } from "redux-saga/effects";
 import { normalize } from "normalizr";
 import { message } from "antd";
 
 import {
-  LoadCreditTransferActionTypes,
   ModifyCreditTransferActionTypes,
-  CreditTransferActionTypes
+  CreditTransferActionTypes,
+  LoadCreditTransferActionTypes
 } from "../reducers/creditTransfer/types";
 
 import {
@@ -15,7 +15,7 @@ import {
 } from "../reducers/creditTransfer/actions";
 
 import {
-  loadCreditTransferListAPI,
+  LoadCreditTransferListAPI,
   modifyTransferAPI,
   newTransferAPI
 } from "../api/creditTransferAPI";
@@ -25,6 +25,7 @@ import { UserListAction } from "../reducers/user/actions";
 import { MetricAction } from "../reducers/metric/actions";
 import { TransferAccountAction } from "../reducers/transferAccount/actions";
 import { TokenListAction } from "../reducers/token/actions";
+import { ReduxState } from "../reducers/rootReducer";
 
 interface CreditLoadApiResult {
   is_create: boolean;
@@ -41,8 +42,10 @@ function* updateStateFromCreditTransfer(result: CreditLoadApiResult) {
   } else {
     credit_transfer_list.push(result.data.credit_transfer);
   }
-
-  const normalizedData = normalize(credit_transfer_list, creditTransferSchema);
+  const normalizedData = normalize(
+    credit_transfer_list.reverse(),
+    creditTransferSchema
+  );
 
   const transfer_accounts = normalizedData.entities.transfer_accounts;
   if (transfer_accounts) {
@@ -61,7 +64,7 @@ function* updateStateFromCreditTransfer(result: CreditLoadApiResult) {
     yield put(UserListAction.deepUpdateUserList(users));
   }
 
-  if (result.is_create === true) {
+  if (result.is_create) {
     // a single transfer was just created!
     // we need to add the newly created credit_transfer id
     // to the associated transfer_account object credit_transfer array
@@ -70,7 +73,18 @@ function* updateStateFromCreditTransfer(result: CreditLoadApiResult) {
         credit_transfer_list
       )
     );
+    const getCreditTransfers = (state: ReduxState) =>
+      state.creditTransfers.byId;
+    const creditTransfers = yield select(getCreditTransfers);
+    const credit_transfers = normalizedData.entities.credit_transfers;
+    yield put(
+      LoadCreditTransferAction.updateCreditTransferListRequest({
+        ...creditTransfers,
+        ...credit_transfers
+      })
+    );
     message.success(result.message);
+    return;
   }
 
   if (result.bulk_responses) {
@@ -86,12 +100,9 @@ function* updateStateFromCreditTransfer(result: CreditLoadApiResult) {
     yield put(MetricAction.updateMetrics(metrics));
   }
   const credit_transfers = normalizedData.entities.credit_transfers;
-
-  if (credit_transfers) {
-    yield put(
-      CreditTransferAction.updateCreditTransferListRequest(credit_transfers)
-    );
-  }
+  yield put(
+    LoadCreditTransferAction.updateCreditTransferListRequest(credit_transfers)
+  );
 }
 
 interface CreditTransferListAPIResult {
@@ -99,38 +110,13 @@ interface CreditTransferListAPIResult {
   payload: any;
 }
 
-function* loadCreditTransferList({ payload }: CreditTransferListAPIResult) {
-  try {
-    const credit_load_result = yield call(loadCreditTransferListAPI, payload);
-
-    yield call(updateStateFromCreditTransfer, credit_load_result);
-
-    yield put(LoadCreditTransferAction.loadCreditTransferListSuccess());
-  } catch (fetch_error) {
-    const error = yield call(handleError, fetch_error);
-
-    yield put(LoadCreditTransferAction.loadCreditTransferListFailure(error));
-
-    message.error(error.message);
-  }
-}
-
-function* watchLoadCreditTransferList() {
-  yield takeEvery(
-    LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_REQUEST,
-    loadCreditTransferList
-  );
-}
-
 function* loadPusherCreditTransfer(pusher_data: any) {
   try {
     yield call(updateStateFromCreditTransfer, pusher_data);
-
-    yield put(LoadCreditTransferAction.loadCreditTransferListSuccess());
+    yield put(LoadCreditTransferAction.loadCreditTransferSuccess());
   } catch (fetch_error) {
     const error = yield call(handleError, fetch_error);
-
-    yield put(LoadCreditTransferAction.loadCreditTransferListFailure(error));
+    yield put(LoadCreditTransferAction.loadCreditTransferFailure(error));
   }
 }
 
@@ -200,6 +186,33 @@ function* watchCreateTransfer() {
   yield takeEvery(
     CreditTransferActionTypes.CREATE_TRANSFER_REQUEST,
     createTransfer
+  );
+}
+
+function* loadCreditTransferList({ payload }: CreditTransferListAPIResult) {
+  try {
+    const credit_load_result = yield call(LoadCreditTransferListAPI, payload);
+    yield call(updateStateFromCreditTransfer, credit_load_result);
+    yield put(LoadCreditTransferAction.loadCreditTransferSuccess());
+    if (credit_load_result.items) {
+      yield put(
+        LoadCreditTransferAction.updateCreditTransferPagination(
+          credit_load_result.items
+        )
+      );
+    }
+  } catch (fetch_error) {
+    const error = yield call(handleError, fetch_error);
+    yield put(LoadCreditTransferAction.loadCreditTransferFailure(error));
+
+    message.error(error.message);
+  }
+}
+
+function* watchLoadCreditTransferList() {
+  yield takeEvery(
+    LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_REQUEST,
+    loadCreditTransferList
   );
 }
 

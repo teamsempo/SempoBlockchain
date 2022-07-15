@@ -1,7 +1,3 @@
-# Copyright (C) Sempo Pty Ltd, Inc - All Rights Reserved
-# The code in this file is not included in the GPL license applied to this repository
-# Unauthorized copying of this file, via any medium is strictly prohibited
-
 import enum
 from sqlalchemy.sql import text
 from sqlalchemy import or_, Column, String, Float
@@ -39,7 +35,6 @@ def get_custom_attribute_filters(distinct_sender_and_recipient = False):
     attribute_options = db.session.query(CustomAttribute)\
         .filter(CustomAttribute.filter_visibility != MetricsVisibility.HIDDEN)\
         .all()
-
     # Build those into filters objects
     filters = {}
     for ao in attribute_options:

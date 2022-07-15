@@ -15,7 +15,7 @@ from server.models.utils import ModelBase, credit_transfer_transfer_usage_associ
 class TransferUsage(ModelBase):
     __tablename__ = 'transfer_usage'
 
-    _name = db.Column(db.String, unique=True)
+    _name = db.Column(db.String, unique=True, index=True)
     is_cashout = db.Column(db.Boolean)
     _icon = db.Column(db.String)
     priority = db.Column(db.Integer)
@@ -63,6 +63,7 @@ class TransferUsage(ModelBase):
         if usage is None:
             usage = cls(name=name, default=default, **kwargs)
             db.session.add(usage)
+            db.session.flush()
         return usage
 
     def __repr__(self):

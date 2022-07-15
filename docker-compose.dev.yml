@@ -33,6 +33,3 @@ services:
       DEPLOYMENT_NAME: "LOCAL_DOCKER"
       CONTAINER_TYPE: "PROCESSOR"
       PYTHONUNBUFFERED: 0
-  pgbouncer:
-    environment:
-      DEPLOYMENT_NAME: "LOCAL_DOCKER"

@@ -1,10 +1,12 @@
 import React from "react";
+import { connect } from "react-redux";
+import { Card } from "antd";
 import styled from "styled-components";
 
-import CreditTransferList from "../creditTransfer/creditTransferList.jsx";
 import TransferAccountManager from "./transferAccountManager.jsx";
 import UserList from "../user/userList.jsx";
-import connect from "react-redux/es/connect/connect";
+
+import StandardTransferAccountList from "../creditTransfer/StandardCreditTransferList";
 
 const mapStateToProps = state => {
   return {
@@ -19,15 +21,8 @@ class SingleTransferAccountWrapper extends React.Component {
   }
 
   render() {
-    let creditTransferIds;
     const transferAccountId = this.props.transfer_account_id;
     const transferAccount = this.props.transferAccounts.byId[transferAccountId];
-
-    if (transferAccount.credit_receives || transferAccount.credit_sends) {
-      creditTransferIds = transferAccount.credit_receives.concat(
-        transferAccount.credit_sends
-      );
-    }
 
     return (
       <Wrapper>
@@ -37,11 +32,9 @@ class SingleTransferAccountWrapper extends React.Component {
         typeof transferAccount.users !== "undefined" ? (
           <UserList user_ids={transferAccount.users} />
         ) : null}
-
-        <CreditTransferList
-          credit_transfer_ids={creditTransferIds}
-          transfer_account_id={transferAccountId}
-        />
+        <Card title="Transfers" style={{ marginTop: "1em" }}>
+          <StandardTransferAccountList transferAccountId={transferAccountId} />
+        </Card>
       </Wrapper>
     );
   }

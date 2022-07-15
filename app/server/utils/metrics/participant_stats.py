@@ -1,15 +1,11 @@
-# Copyright (C) Sempo Pty Ltd, Inc - All Rights Reserved
-# The code in this file is not included in the GPL license applied to this repository
-# Unauthorized copying of this file, via any medium is strictly prohibited
-
 from sqlalchemy.sql import func
 from sqlalchemy.dialects.postgresql import JSONB
 
-from server import db, red, bt
+from server import db
 
 from server.models.credit_transfer import CreditTransfer
 from server.models.user import User
-from server.utils.metrics import filters, metrics_cache, metric, metric_group
+from server.utils.metrics import metrics_cache, metric, metric_group
 from server.utils.metrics.metrics_const import *
 
 
@@ -42,8 +38,9 @@ class ParticipantStats(metric_group.MetricGroup):
             object_model=User,
             #stock_filters=[filters.beneficiary_filters], # NOTE: Do we still want this filter?
             stock_filters=[],
-            timeseries_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
-            caching_combinatory_strategy=metrics_cache.QUERY_ALL,
+            query_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
+            aggregated_query_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
+            total_query_caching_combinatory_strategy=metrics_cache.TALLY,
             filterable_by=self.filterable_attributes,
             query_actions=[FORMAT_TIMESERIES],
             aggregated_query_actions=[FORMAT_AGGREGATE_METRICS],
@@ -70,8 +67,9 @@ class ParticipantStats(metric_group.MetricGroup):
             object_model=CreditTransfer,
             #stock_filters=[filters.beneficiary_filters], # NOTE: Do we still want this filter?
             stock_filters=[],
-            timeseries_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
-            caching_combinatory_strategy=metrics_cache.QUERY_ALL,
+            query_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
+            aggregated_query_caching_combinatory_strategy=metrics_cache.QUERY_ALL,
+            total_query_caching_combinatory_strategy=metrics_cache.QUERY_ALL,
             filterable_by=self.filterable_attributes,
             query_actions=[FORMAT_TIMESERIES],
             aggregated_query_actions=[FORMAT_AGGREGATE_METRICS],
@@ -95,8 +93,9 @@ class ParticipantStats(metric_group.MetricGroup):
             aggregated_query=aggregated_active_users_query,
             object_model=User,
             stock_filters=[],
-            timeseries_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
-            caching_combinatory_strategy=metrics_cache.QUERY_ALL,
+            query_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
+            aggregated_query_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
+            total_query_caching_combinatory_strategy=metrics_cache.TALLY,
             filterable_by=self.filterable_attributes,
             aggregated_query_actions=[FORMAT_AGGREGATE_METRICS],
             total_query_actions=[GET_FIRST],

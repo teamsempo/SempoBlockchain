@@ -22,6 +22,8 @@ kombu==4.6.11
 toastedmarshmallow==2.15.2.post1
 messagebird==1.5.0
 openpyxl==3.0.4
+PyExcelerate==0.10.0
+pdfrw==0.4
 pendulum==2.1.2
 phonenumbers==8.12.7
 psycopg2-binary==2.8.5
@@ -44,4 +46,6 @@ twilio==6.44.1
 uWSGI==2.0.19.1
 weasyprint==51
 web3==5.12.0
-
+jinja2<3.1.0
+itsdangerous==2.0.1
+werkzeug==0.16.1

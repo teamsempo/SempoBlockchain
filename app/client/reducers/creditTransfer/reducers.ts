@@ -2,19 +2,22 @@ import { combineReducers } from "redux";
 import { DEEEEEEP } from "../../utils";
 import {
   CreditTransferActionTypes,
-  LoadCreditTransferActionTypes,
-  ModifyCreditTransferActionTypes
+  ModifyCreditTransferActionTypes,
+  LoadCreditTransferActionTypes
 } from "./types";
 
 import {
   CreditTransferAction,
-  LoadCreditTransferAction,
-  ModifyCreditTransferAction
+  ModifyCreditTransferAction,
+  LoadCreditTransferAction
 } from "./actions";
 
 export const byId = (state = {}, action: CreditTransferAction) => {
   switch (action.type) {
     case CreditTransferActionTypes.UPDATE_CREDIT_TRANSFER_LIST:
+      if (!action.payload) {
+        return {};
+      }
       Object.keys(action.payload).map(id => {
         let transfer = action.payload[id];
         if (
@@ -28,7 +31,7 @@ export const byId = (state = {}, action: CreditTransferAction) => {
           }
         }
       });
-      return DEEEEEEP(state, action.payload);
+      return DEEEEEEP({}, action.payload);
     default:
       return state;
   }
@@ -46,7 +49,10 @@ const initialState: RequestingState = {
   error: null
 };
 
-const loadStatus = (state = initialState, action: LoadCreditTransferAction) => {
+const loadStatus = (
+  state = initialState,
+  action: LoadCreditTransferAction
+) => {
   switch (action.type) {
     case LoadCreditTransferActionTypes.LOAD_CREDIT_TRANSFER_LIST_REQUEST:
       return { ...state, isRequesting: true };
@@ -112,9 +118,30 @@ export const createStatus = (
   }
 };
 
+export interface Pagination {
+  items: number;
+}
+
+const initialPaginationState: Pagination = {
+  items: 0
+};
+
+const pagination = (
+  state = initialPaginationState,
+  action: LoadCreditTransferAction
+) => {
+  switch (action.type) {
+    case LoadCreditTransferActionTypes.UPDATE_CREDIT_TRANSFER_LIST_PAGINATION:
+      return { items: action.payload };
+    default:
+      return state;
+  }
+};
+
 export const creditTransfers = combineReducers({
   byId,
-  loadStatus,
   createStatus,
-  modifyStatus
+  modifyStatus,
+  loadStatus,
+  pagination
 });

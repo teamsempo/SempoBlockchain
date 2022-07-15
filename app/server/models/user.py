@@ -2,7 +2,6 @@ import json
 from typing import Union
 from sqlalchemy.ext.hybrid import hybrid_property, hybrid_method
 from sqlalchemy.dialects.postgresql import JSON, JSONB
-from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy import text, Table, cast, String
 from sqlalchemy.sql.functions import func
 from itsdangerous import TimedJSONWebSignatureSerializer, BadSignature, SignatureExpired
@@ -24,6 +23,8 @@ from server.utils.misc import encrypt_string, decrypt_string
 from server.utils.access_control import AccessControl
 from server.utils.phone import proccess_phone_number
 from server.utils.executor import add_after_request_executor_job
+from server.utils.audit_history import track_updates
+from server.utils.amazon_ses import send_reset_email
 
 from server.utils.transfer_account import (
     find_transfer_accounts_with_matching_token
@@ -70,6 +71,23 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         created using the POST user API or the bulk upload function
     """
     __tablename__ = 'user'
+    audit_history_columns = ['first_name',
+        'last_name',
+        'preferred_language',
+        'primary_blockchain_address',
+        'email',
+        '_phone',
+        '_public_serial_number',
+        'uuid',
+        'nfc_serial_number',
+        'default_currency',
+        '_location',
+        'is_activated',
+        'is_disabled',
+        'terms_accepted',
+        '_held_roles',
+        '_deleted'
+    ]
 
     # override ModelBase deleted to add an index
     created = db.Column(db.DateTime, default=datetime.datetime.utcnow, index=True)
@@ -175,7 +193,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
                                lazy='dynamic', foreign_keys='Feedback.user_id')
 
     custom_attributes = db.relationship("CustomAttributeUserStorage", backref='user',
-                                        lazy='joined', foreign_keys='CustomAttributeUserStorage.user_id')
+                                        lazy=True, foreign_keys='CustomAttributeUserStorage.user_id')
 
     exchanges = db.relationship("Exchange", backref="user")
 
@@ -326,7 +344,6 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
             self._held_roles.pop(role, None)
         else:
             self._held_roles[role] = tier
-            flag_modified(self, '_held_roles')
 
     @hybrid_property
     def has_admin_role(self):
@@ -553,8 +570,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
                     'verify_exp': current_app.config['VERIFY_JWT_EXPIRY']
                 }
             )
-
-            is_blacklisted_token = BlacklistToken.check_blacklist(auth_token)
+            is_blacklisted_token = BlacklistToken.check_blacklist(payload)
             if is_blacklisted_token:
                 return 'Token blacklisted. Please log in again.'
             else:
@@ -665,6 +681,11 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
         if organisation:
             self.add_user_to_organisation(organisation, is_admin=True)
 
+    def reset_password(self):
+        password_reset_token = self.encode_single_use_JWS('R')
+        self.save_password_reset_token(password_reset_token)
+        send_reset_email(password_reset_token, self.email)
+
     def add_user_to_organisation(self, organisation: Organisation, is_admin=False):
         if not self.default_organisation:
             self.default_organisation = organisation
@@ -681,11 +702,11 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
             self.transfer_accounts.append(organisation.org_level_transfer_account)
 
     def is_TFA_required(self):
-        for tier in current_app.config['TFA_REQUIRED_ROLES']:
-            if AccessControl.has_exact_role(self.roles, 'ADMIN', tier):
-                return True
-        else:
-            return False
+        if current_app.config['TFA_REQUIRED_ROLES']:
+            for tier in current_app.config['TFA_REQUIRED_ROLES']:
+                if AccessControl.has_exact_role(self.roles, 'ADMIN', tier):
+                    return True
+        return False
 
     def is_TFA_secret_set(self):
         return bool(self._TFA_secret)
@@ -693,6 +714,10 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
     def set_TFA_secret(self):
         secret = pyotp.random_base32()
         self._TFA_secret = encrypt_string(secret)
+
+    def reset_TFA(self):
+        self.TFA_enabled = False
+        self._TFA_secret = None
 
     def get_TFA_secret(self):
         return decrypt_string(self._TFA_secret)
@@ -778,3 +803,5 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
             return '<Vendor {} {}>'.format(self.id, self.phone)
         else:
             return '<User {} {}>'.format(self.id, self.phone)
+            
+track_updates(User)

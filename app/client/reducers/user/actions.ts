@@ -5,15 +5,18 @@ import {
   EditUserActionTypes,
   LoadUserActionTypes,
   ResetPinActionTypes,
+  LoadUserHistoryActionTypes,
   UserByIDs,
   LoadUserRequestPayload,
   CreateUserPayload,
   ResetPinPayload,
   DeleteUserPayload,
   EditUserPayload,
-  CreateUserSuccessPayload
+  CreateUserSuccessPayload,
+  LoadUserHistoryPayload
 } from "./types";
 import { createAction, ActionsUnion } from "../../reduxUtils";
+import { LoadTransferAccountHistoryActionTypes } from "../transferAccount/types";
 
 export const UserListAction = {
   replaceUserList: (users: UserByIDs) =>
@@ -72,3 +75,19 @@ export const ResetPinAction = {
     createAction(ResetPinActionTypes.RESET_PIN_FAILURE, error)
 };
 export type ResetPinAction = ActionsUnion<typeof ResetPinAction>;
+
+export const loadUserHistoryRequest = (payload: LoadUserHistoryPayload) =>
+  createAction(LoadUserHistoryActionTypes.LOAD_USER_HISTORY_REQUEST, payload);
+
+export const loadUserHistorySuccess = (result: LoadUserHistoryPayload) =>
+  createAction(LoadUserHistoryActionTypes.LOAD_USER_HISTORY_SUCCESS, result);
+
+export const loadUserHistoryFailure = (error: string) =>
+  createAction(LoadUserHistoryActionTypes.LOAD_USER_HISTORY_FAILURE, error);
+
+export const LoadUserHistoryAction = {
+  loadUserHistoryRequest,
+  loadUserHistorySuccess,
+  loadUserHistoryFailure
+};
+export type LoadUserHistoryAction = ActionsUnion<typeof LoadUserHistoryAction>;

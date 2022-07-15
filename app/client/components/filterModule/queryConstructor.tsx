@@ -10,7 +10,9 @@ import { AllowedMetricsObjects } from "../../reducers/metric/types";
 import { processFiltersForQuery } from "../../utils";
 import Filter from "./filter";
 import { LoadTransferAccountAction } from "../../reducers/transferAccount/actions";
+import { LoadCreditTransferAction } from "../../reducers/creditTransfer/actions";
 import { LoadTransferAccountListPayload } from "../../reducers/transferAccount/types";
+import { LoadCreditTransferPayload } from "../../reducers/creditTransfer/types";
 
 import { TooltipWrapper } from "../dashboard/TooltipWrapper";
 
@@ -26,6 +28,10 @@ interface DispatchProps {
     query,
     path
   }: LoadTransferAccountListPayload) => LoadTransferAccountAction;
+  loadCreditTransferList: ({
+    query,
+    path
+  }: LoadCreditTransferPayload) => LoadCreditTransferAction;
 }
 
 export interface Query {
@@ -40,9 +46,11 @@ interface Pagination {
 
 interface OuterProps {
   filterObject: AllowedMetricsObjects;
-  pagination?: Pagination
+  pagination?: Pagination;
+  transferAccountId?: string;
   onQueryChange?: (query: Query) => void;
   providedParams?: string;
+  queryType?: string;
   providedSearchString?: string;
   disabled?: boolean;
 }
@@ -77,6 +85,13 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => {
     }: LoadTransferAccountListPayload) =>
       dispatch(
         LoadTransferAccountAction.loadTransferAccountsRequest({ query, path })
+      ),
+    loadCreditTransferList: ({
+      query,
+      path
+    }: LoadTransferAccountListPayload) =>
+      dispatch(
+        LoadCreditTransferAction.loadCreditTransferRequest({ query, path })
       )
   };
 };
@@ -89,7 +104,6 @@ class QueryConstructor extends React.Component<Props, ComponentState> {
       encodedFilters: "",
       timeout: 0,
     };
-
     this.props.loadAllowedFilters(this.props.filterObject);
   }
 
@@ -145,11 +159,13 @@ class QueryConstructor extends React.Component<Props, ComponentState> {
 
   onSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (this.state.timeout) {
-       clearTimeout(this.state.timeout);
+      clearTimeout(this.state.timeout);
     }
-    this.setState({ searchString: e.target.value, timeout: setTimeout(() => {
-      this.handleQueryChange();
-    }, 300)})
+    this.setState({
+      searchString: e.target.value, timeout: setTimeout(() => {
+        this.handleQueryChange();
+      }, 300)
+    })
   };
 
   handleQueryChange = () => {
@@ -165,13 +181,26 @@ class QueryConstructor extends React.Component<Props, ComponentState> {
 
   loadData = () => {
     let pagination = this.props.pagination || {};
-    this.props.loadTransferAccountList({
-      query: {
-        params: this.state.encodedFilters,
-        search_string: this.state.searchString,
-        ...pagination
-      }
-    });
+    let transferAccountId = this.props.transferAccountId ? {transfer_account_ids: this.props.transferAccountId} : {}
+    if (this.props.queryType && this.props.queryType == 'credit_transfer') {
+      this.props.loadCreditTransferList({
+        query: {
+          params: this.state.encodedFilters,
+          search_string: this.state.searchString,
+          ...pagination,
+          ...transferAccountId
+        }
+      });
+    }
+    else {
+      this.props.loadTransferAccountList({
+        query: {
+          params: this.state.encodedFilters,
+          search_string: this.state.searchString,
+          ...pagination
+        }
+      });
+    }
   };
 
   render() {

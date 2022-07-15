@@ -14,9 +14,10 @@ from server import db, bt
 from server.models.utils import BlockchainTaskableBase, ManyOrgBase, credit_transfer_transfer_usage_association_table,\
     disbursement_credit_transfer_association_table, credit_transfer_approver_user_association_table
 from server.models.token import Token
+from server.models.user import User
 from server.models.transfer_account import TransferAccount
 from server.utils.access_control import AccessControl
-from server.utils.metrics.metrics_cache import clear_metrics_cache
+from server.utils.metrics.metrics_cache import clear_metrics_cache, rebuild_metrics_cache
 
 from server.exceptions import (
     TransferLimitError,
@@ -53,7 +54,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     _transfer_amount_wei = db.Column(db.Numeric(27), default=0)
 
     transfer_type       = db.Column(db.Enum(TransferTypeEnum), index=True)
-    transfer_subtype    = db.Column(db.Enum(TransferSubTypeEnum))
+    transfer_subtype    = db.Column(db.Enum(TransferSubTypeEnum), index=True)
     transfer_status     = db.Column(db.Enum(TransferStatusEnum), default=TransferStatusEnum.PENDING)
     transfer_mode       = db.Column(db.Enum(TransferModeEnum), index=True)
     transfer_use        = db.Column(JSON) # Deprecated
@@ -105,7 +106,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         "Disbursement",
         secondary=disbursement_credit_transfer_association_table,
         back_populates="credit_transfers",
-        uselist=False
+        uselist=False,
+        lazy=True
     )
 
     approvers = db.relationship(
@@ -115,8 +117,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     )
 
     def add_message(self, message):
-        dated_message = f"[{datetime.datetime.utcnow()}:: {message}]"
-        self.resolution_message = dated_message
+        self.resolution_message = message
 
     # TODO: Apply this to all transfer amounts/balances, work out the correct denominator size
     @hybrid_property
@@ -248,7 +249,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     def add_approver_and_resolve_as_completed(self, user=None):
         # Adds approver to transfer, resolves as complete if it can!
         if not user:
-            user = g.user
+            user = db.session.query(User).filter(User.id == g.user.id).first()
         if user not in self.approvers:
             self.approvers.append(user)
         if len(self.approvers) == 1:
@@ -314,7 +315,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
         if (datetime.datetime.utcnow() - self.created).seconds > 5:
             clear_metrics_cache()
-
+            rebuild_metrics_cache()
         if self.transfer_type == TransferTypeEnum.PAYMENT and self.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT:
             if self.recipient_user and self.recipient_user.transfer_card:
                 self.recipient_user.transfer_card.update_transfer_card()
@@ -406,7 +407,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                  transfer_mode: TransferModeEnum = None,
                  transfer_card=None,
                  is_ghost_transfer=False,
-                 require_sufficient_balance=True
+                 require_sufficient_balance=True,
+                 received_third_party_sync=False
                  ):
 
         if amount < 0:
@@ -456,7 +458,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         self.transfer_mode = transfer_mode
         self.transfer_metadata = transfer_metadata
         self.transfer_card = transfer_card
-
+        self.received_third_party_sync = received_third_party_sync
         if uuid is not None:
             self.uuid = uuid
 

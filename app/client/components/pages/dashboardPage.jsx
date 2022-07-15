@@ -1,7 +1,3 @@
-// Copyright (C) Sempo Pty Ltd, Inc - All Rights Reserved
-// The code in this file is not included in the GPL license applied to this repository
-// Unauthorized copying of this file, via any medium is strictly prohibited
-
 import React from "react";
 import { connect } from "react-redux";
 import { subscribe, unsubscribe } from "pusher-redux";
@@ -33,7 +29,7 @@ const mapDispatchToProps = dispatch => {
   return {
     loadCreditTransferList: query =>
       dispatch(
-        LoadCreditTransferAction.loadCreditTransferListRequest({ query })
+        LoadCreditTransferAction.loadCreditTransferRequest({ query })
       ),
     activateAccount: payload =>
       dispatch(ActivateAccountAction.activateAccountRequest(payload))
@@ -52,13 +48,9 @@ class DashboardPage extends React.Component {
 
   componentDidMount() {
     this.subscribe();
-
-    let transfer_type = "ALL";
-    let per_page = 50;
+    let per_page = 10;
     let page = 1;
     this.props.loadCreditTransferList({
-      get_stats: true,
-      transfer_type: transfer_type,
       per_page: per_page,
       page: page
     });

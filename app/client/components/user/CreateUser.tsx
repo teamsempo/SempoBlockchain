@@ -1,7 +1,7 @@
 import * as React from "react";
 import { connect } from "react-redux";
+import { Card, Button } from "antd";
 
-import { StyledButton, ModuleHeader } from "../styledElements";
 import * as styles from "./styles.module.css";
 import { LoadTransferUsagesAction } from "../../reducers/transferUsage/actions";
 import { TransferUsage } from "../../reducers/transferUsage/types";
@@ -11,8 +11,6 @@ import { LoadOrganisationAction } from "../../reducers/organisation/actions";
 import CreateUserForm, { ICreateUserUpdate } from "./CreateUserForm";
 import { CreateUserAction } from "../../reducers/user/actions";
 import { CreateUserPayload } from "../../reducers/user/types";
-
-import { toTitleCase } from "../../utils";
 
 interface DispatchProps {
   createUser: (payload: CreateUserPayload) => CreateUserAction;
@@ -28,14 +26,10 @@ interface StateProps {
   activeOrganisation?: Organisation;
 }
 
-interface OuterProps {
-  isVendor: boolean;
-}
-
 interface ComponentState {}
 
 type Form = ICreateUserUpdate;
-type Props = DispatchProps & StateProps & OuterProps;
+type Props = DispatchProps & StateProps;
 
 class CreateUserUpdated extends React.Component<Props, ComponentState> {
   constructor(props: Props) {
@@ -70,7 +64,11 @@ class CreateUserUpdated extends React.Component<Props, ComponentState> {
         bio: form.bio,
         gender: form.gender,
         public_serial_number: form.publicSerialNumber,
-        phone: form.publicSerialNumber ? undefined : form.phone,
+        phone: form.publicSerialNumber
+          ? undefined
+          : form.phone
+          ? "+" + form.phone
+          : undefined,
         initial_disbursement: (form.initialDisbursement || 0) * 100,
         require_transfer_card_exists:
           activeOrganisation && activeOrganisation.require_transfer_card,
@@ -80,8 +78,8 @@ class CreateUserUpdated extends React.Component<Props, ComponentState> {
         location: form.location,
         business_usage_name: businessUsage,
         referred_by: form.referredBy,
-        account_types: form.accountTypes
-      }
+        account_types: form.accountTypes,
+      },
     });
   }
 
@@ -91,47 +89,44 @@ class CreateUserUpdated extends React.Component<Props, ComponentState> {
     if (one_time_code !== null) {
       if (is_external_wallet === true) {
         return (
-          <div>
-            <ModuleHeader>
-              Successfully Created External Wallet Participant
-            </ModuleHeader>
-            <div style={{ padding: "0 1em 1em" }}>
-              <p>You can now send funds to the participant's wallet.</p>
+          <Card
+            title={"Successfully Created External Wallet Participant"}
+            bodyStyle={{ maxWidth: "400px" }}
+          >
+            <p>You can now send funds to the participant's wallet.</p>
 
-              <StyledButton onClick={() => this.resetCreateUser()}>
-                Add another participant
-              </StyledButton>
-            </div>
-          </div>
+            <Button onClick={() => this.resetCreateUser()} type="primary">
+              Add another participant
+            </Button>
+          </Card>
         );
       } else {
         return (
-          <div>
-            <ModuleHeader>One Time Code</ModuleHeader>
-            <div style={{ padding: "0 1em 1em" }}>
-              <p className={styles.code}>
-                {this.props.users.createStatus.one_time_code}
-              </p>
+          <Card title={"One Time Code"} bodyStyle={{ maxWidth: "400px" }}>
+            <p className={styles.code}>
+              {this.props.users.createStatus.one_time_code}
+            </p>
 
-              <p>
-                Show the participant their one time code now. They will be able
-                to instantly and securely log in via the android app.
-              </p>
+            <p>
+              Show the participant their one time code now. They will be able to
+              instantly and securely log in via the android app.
+            </p>
 
-              <StyledButton onClick={() => this.resetCreateUser()}>
-                Add another participant
-              </StyledButton>
-            </div>
-          </div>
+            <Button onClick={() => this.resetCreateUser()} type="primary">
+              Add another participant
+            </Button>
+          </Card>
         );
       }
     } else {
       return (
-        <CreateUserForm
-          users={this.props.users}
-          transferUsages={this.props.transferUsages}
-          onSubmit={(form: Form) => this.onCreateUser(form)}
-        />
+        <Card title={"Create Account"} bodyStyle={{ maxWidth: "400px" }}>
+          <CreateUserForm
+            users={this.props.users}
+            transferUsages={this.props.transferUsages}
+            onSubmit={(form: Form) => this.onCreateUser(form)}
+          />
+        </Card>
       );
     }
   }
@@ -143,7 +138,7 @@ const mapStateToProps = (state: ReduxState): StateProps => {
     users: state.users,
     transferUsages: state.transferUsages.transferUsages,
     //@ts-ignore
-    activeOrganisation: state.organisations.byId[state.login.organisationId]
+    activeOrganisation: state.organisations.byId[state.login.organisationId],
   };
 };
 
@@ -155,11 +150,8 @@ const mapDispatchToProps = (dispatch: any): DispatchProps => {
     loadTransferUsages: () =>
       dispatch(LoadTransferUsagesAction.loadTransferUsagesRequest({})),
     loadOrganisation: () =>
-      dispatch(LoadOrganisationAction.loadOrganisationRequest())
+      dispatch(LoadOrganisationAction.loadOrganisationRequest()),
   };
 };
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(CreateUserUpdated);
+export default connect(mapStateToProps, mapDispatchToProps)(CreateUserUpdated);

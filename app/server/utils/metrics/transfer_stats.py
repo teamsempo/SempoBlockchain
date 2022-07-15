@@ -1,17 +1,10 @@
-# Copyright (C) Sempo Pty Ltd, Inc - All Rights Reserved
-# The code in this file is not included in the GPL license applied to this repository
-# Unauthorized copying of this file, via any medium is strictly prohibited
-
 from sqlalchemy.sql import func
 
 from server.models.credit_transfer import CreditTransfer
-from server.models.transfer_account import TransferAccount
-from server.models.user import User
 from server.utils.metrics import filters, metrics_cache, metric, metric_group, group
 from server.utils.metrics.metrics_const import *
 
-from server import db, red, bt
-from sqlalchemy.dialects.postgresql import JSONB
+from server import db
 
 class TransferStats(metric_group.MetricGroup):
     def __init__(self, group_strategy, timeseries_unit = 'day', token=None, date_filter_attributes=None):
@@ -26,7 +19,7 @@ class TransferStats(metric_group.MetricGroup):
             query=total_amount_query,
             object_model=CreditTransfer,
             stock_filters=[filters.disbursement_filters],
-            caching_combinatory_strategy=metrics_cache.SUM,
+            query_caching_combinatory_strategy=metrics_cache.SUM,
             filterable_by=self.filterable_attributes,
             bypass_user_filters=True,
         ))
@@ -36,7 +29,7 @@ class TransferStats(metric_group.MetricGroup):
             query=total_amount_query,
             object_model=CreditTransfer,
             stock_filters=[filters.reclamation_filters],
-            caching_combinatory_strategy=metrics_cache.SUM,
+            query_caching_combinatory_strategy=metrics_cache.SUM,
             filterable_by=self.filterable_attributes,
             bypass_user_filters=True,
         ))
@@ -46,7 +39,7 @@ class TransferStats(metric_group.MetricGroup):
             query=total_amount_query,
             object_model=CreditTransfer,
             stock_filters=[filters.withdrawal_filters],
-            caching_combinatory_strategy=metrics_cache.SUM,
+            query_caching_combinatory_strategy=metrics_cache.SUM,
             filterable_by=self.filterable_attributes,
             bypass_user_filters=True,
         ))
@@ -69,8 +62,9 @@ class TransferStats(metric_group.MetricGroup):
             aggregated_query=aggregated_transaction_volume_query,
             total_query=total_transaction_volume_query,
             object_model=CreditTransfer,
-            timeseries_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
-            caching_combinatory_strategy=metrics_cache.QUERY_ALL,
+            query_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
+            aggregated_query_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
+            total_query_caching_combinatory_strategy=metrics_cache.TALLY,
             stock_filters=[filters.complete_transfer_filter],
             filterable_by=self.filterable_attributes,
             query_actions=[FORMAT_TIMESERIES],
@@ -88,8 +82,9 @@ class TransferStats(metric_group.MetricGroup):
             total_query=total_transaction_volume_query,
             object_model=CreditTransfer,
             stock_filters=[filters.standard_payment_filters],
-            timeseries_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
-            caching_combinatory_strategy=metrics_cache.QUERY_ALL,
+            query_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
+            aggregated_query_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
+            total_query_caching_combinatory_strategy=metrics_cache.TALLY,
             filterable_by=self.filterable_attributes,
             query_actions=[CALCULATE_TIMESERIES_PER_USER, FORMAT_TIMESERIES], # Add per user
             aggregated_query_actions=[CALCULATE_AGGREGATE_PER_USER, FORMAT_AGGREGATE_METRICS],
@@ -115,8 +110,9 @@ class TransferStats(metric_group.MetricGroup):
             total_query=total_transaction_count_query,
             object_model=CreditTransfer,
             stock_filters=[filters.standard_payment_filters],
-            timeseries_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
-            caching_combinatory_strategy=metrics_cache.QUERY_ALL,
+            query_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
+            aggregated_query_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
+            total_query_caching_combinatory_strategy=metrics_cache.TALLY,
             filterable_by=self.filterable_attributes,
             query_actions=[FORMAT_TIMESERIES],
             aggregated_query_actions=[FORMAT_AGGREGATE_METRICS],
@@ -132,8 +128,9 @@ class TransferStats(metric_group.MetricGroup):
             total_query=total_transaction_count_query,
             object_model=CreditTransfer,
             stock_filters=[filters.standard_payment_filters],
-            timeseries_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
-            caching_combinatory_strategy=metrics_cache.QUERY_ALL,
+            query_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
+            aggregated_query_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
+            total_query_caching_combinatory_strategy=metrics_cache.TALLY,
             filterable_by=self.filterable_attributes,
             query_actions=[CALCULATE_TIMESERIES_PER_USER, FORMAT_TIMESERIES], # Add per user
             aggregated_query_actions=[CALCULATE_AGGREGATE_PER_USER, FORMAT_AGGREGATE_METRICS],
@@ -159,8 +156,9 @@ class TransferStats(metric_group.MetricGroup):
             object_model=CreditTransfer,
             #stock_filters=[filters.beneficiary_filters], # NOTE: Do we want this filter?
             stock_filters=[],
-            timeseries_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
-            caching_combinatory_strategy=metrics_cache.QUERY_ALL,
+            query_caching_combinatory_strategy=metrics_cache.SUM_OBJECTS,
+            aggregated_query_caching_combinatory_strategy=metrics_cache.QUERY_ALL,
+            total_query_caching_combinatory_strategy=metrics_cache.QUERY_ALL,
             filterable_by=self.filterable_attributes,
             query_actions=[FORMAT_TIMESERIES],
             aggregated_query_actions=[FORMAT_AGGREGATE_METRICS],

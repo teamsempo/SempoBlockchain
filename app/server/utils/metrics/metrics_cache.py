@@ -1,25 +1,25 @@
-# Copyright (C) Sempo Pty Ltd, Inc - All Rights Reserved
-# The code in this file is not included in the GPL license applied to this repository
-# Unauthorized copying of this file, via any medium is strictly prohibited
-
-from datetime import datetime, timedelta
-
 from server import red, db
 from flask import g
-from decimal import Decimal
-import json
 import pickle
 import config
+import datetime
+from server.utils.executor import standard_executor_job
 
 SUM = 'SUM'
+TALLY = 'TALLY'
 SUM_OBJECTS ='SUM_OBJECTS'
 COUNT ='COUNT'
 FIRST_COUNT = 'FIRST_COUNT'
 QUERY_ALL = 'QUERY_ALL'
 
-valid_strategies = [SUM, COUNT, SUM_OBJECTS, FIRST_COUNT, QUERY_ALL]
+valid_strategies = [SUM, TALLY, COUNT, SUM_OBJECTS, FIRST_COUNT, QUERY_ALL]
 # Combinatory stategies which aren't cachable
 dumb_strategies = [FIRST_COUNT, QUERY_ALL]
+
+# Workaround for an incongruity between flask-sqlalchemy and sqlalchemy
+def dummy_function():
+    return True
+db.session._autoflush = dummy_function
 
 def _store_cache(key, value):
     pickled_object = pickle.dumps(value)
@@ -39,13 +39,30 @@ def _load_cache(key):
 def get_metrics_org_string(org_id):
     return str(org_id)+'_metrics_'
 
+def get_first_day(date_filter_attribute, enable_cache = True):
+    # We need to get the first day data exists for every table, in order to calculate percentage-changes
+    # This is a rather expensive operation, but the result is always the same so we can cache it! 
+    if enable_cache:
+        if g.get('query_organisations'):
+            ORG_STRING = get_metrics_org_string(g.query_organisations)
+        else:
+            ORG_STRING = get_metrics_org_string(g.active_organisation.id)
+        FIRST_DAY = f'{ORG_STRING}_FIRST_DAY_{str(date_filter_attribute)}'
+        result = _load_cache(FIRST_DAY)
+        if result:
+            return result
+    today = datetime.datetime.now().replace(minute=0, hour=0, second=0, microsecond=0)
+    first_day = db.session.query(db.func.min(date_filter_attribute)).scalar() or today
+    if first_day and enable_cache:
+        _store_cache(FIRST_DAY, first_day)
+    return first_day or today
 
-def execute_with_partial_history_cache(metric_name, query, object_model, strategy, enable_cache = True, group_by=None):
-    clear_metrics_cache()
+def execute_with_partial_history_cache(metric_name, query, object_model, strategy, enable_cache = True, group_by=None, query_name=''):
     # enable_cache pass-thru. This is so we don't cache data when filters are active.
     if strategy in dumb_strategies or not enable_cache:
         return _handle_combinatory_strategy(query, None, strategy)
-
+    if query_name:
+        metric_name = metric_name + '_' + query_name
     # Redis object names
     if g.get('query_organisations'):
         ORG_STRING = get_metrics_org_string(g.query_organisations)
@@ -54,7 +71,6 @@ def execute_with_partial_history_cache(metric_name, query, object_model, strateg
     CURRENT_MAX_ID = f'{ORG_STRING}_{object_model.__table__.name}_max_id'
     HIGHEST_ID_CACHED = f'{ORG_STRING}_{metric_name}_{group_by}_max_cached_id'
     CACHE_RESULT = f'{ORG_STRING}_{metric_name}_{group_by}'
-
     # Checks if provided combinatry strategy is valid
     if strategy not in valid_strategies:
         raise Exception(f'Invalid combinatory strategy {strategy} requested.')
@@ -63,7 +79,7 @@ def execute_with_partial_history_cache(metric_name, query, object_model, strateg
     # get it from the DB many times in the same request
     current_max_id = red.get(CURRENT_MAX_ID)
     if not current_max_id:
-        query_max = db.session.query(db.func.max(object_model.id)).first()
+        query_max = db.session.query(db.func.max(object_model.id)).with_session(db.session).first()
         try:
             current_max_id = query_max[0]
         except IndexError:
@@ -83,7 +99,6 @@ def execute_with_partial_history_cache(metric_name, query, object_model, strateg
 
     #Combines results
     result = _handle_combinatory_strategy(filtered_query, cache_result, strategy)
-
     # Updates the cache with new data
     _store_cache(CACHE_RESULT, result)
     red.set(HIGHEST_ID_CACHED, current_max_id, config.METRICS_CACHE_TIMEOUT)
@@ -102,14 +117,37 @@ def clear_metrics_cache():
         red.delete(key)
     return key_count
 
+def rebuild_metrics_cache():
+    CACHE_REBUILDING = 'CACHE_REBUILDING'
+    TRUE = 'TRUE'
+    @standard_executor_job
+    def _async_rebuild_metrics_cache():
+        red.set(CACHE_REBUILDING, TRUE, 3600)
+        from server.utils.metrics.metrics import calculate_transfer_stats
+        calculate_transfer_stats(None, None, None, 'credit_transfer', 'all', False, 'day', 'ungrouped', None)
+        calculate_transfer_stats(None, None, None, 'user', 'all', False, 'day', 'ungrouped', None)
+        red.delete(CACHE_REBUILDING)
+
+    if not g.get('is_rebuilding') and not red.get(CACHE_REBUILDING):
+        _async_rebuild_metrics_cache.submit()
+    # ensure we don't rebuild cache several times at the end of a single call
+    g.is_rebuilding = True
+
 def _handle_combinatory_strategy(query, cache_result, strategy):
     return strategy_functions[strategy](query, cache_result)
 
 def _sum_strategy(query, cache_result):
-    return float(query.first().total or 0) + (cache_result or 0)
+    return float(query.with_session(db.session).first().total or 0) + (cache_result or 0)
+
+
+def _tally_strategy(query, cache_result):
+    a = query.with_session(db.session).all()[0][0]
+    if not cache_result:
+        cache_result = [[0]]
+    return [[float(a or 0) + cache_result[0][0]]]
 
 def _count_strategy(query, cache_result):
-    return query.count() + (cache_result or 0)
+    return query.with_session(db.session).count() + (cache_result or 0)
 
 def _sum_list_of_objects(query, cache_result):
     combined_results = {}
@@ -120,7 +158,7 @@ def _sum_list_of_objects(query, cache_result):
             else:
                 combined_results[(r[1])] = r[0]
 
-    query_result = query.all()
+    query_result = query.with_session(db.session).all()
     for r in query_result:
         if len(r) == 3:
             if (r[1], r[2]) not in combined_results:
@@ -145,9 +183,9 @@ def _sum_list_of_objects(query, cache_result):
 
 # "Dumb" combinatory strategies which are uncachable
 def _first_count(query, cache_result):
-    return query.first().count
+    return query.with_session(db.session).first().count
 
 def _return_all(query, cache_result):
-    return query.all()
+    return query.with_session(db.session).all()
 
-strategy_functions = { SUM: _sum_strategy, COUNT: _count_strategy, SUM_OBJECTS: _sum_list_of_objects, FIRST_COUNT: _first_count, QUERY_ALL: _return_all }
+strategy_functions = { SUM: _sum_strategy, TALLY: _tally_strategy,  COUNT: _count_strategy, SUM_OBJECTS: _sum_list_of_objects, FIRST_COUNT: _first_count, QUERY_ALL: _return_all }
