@@ -5,12 +5,10 @@ from marshmallow import Schema, fields, post_dump
 import toastedmarshmallow
 import qrcode
 
-from server.models.custom_attribute import CustomAttribute
 from server.utils.amazon_s3 import get_file_url
 from server.models.user import User
 from server.models.exchange import Exchange
 from server.exceptions import SubexchangeNotFound
-
 
 def gen_qr(data):
     out = BytesIO()
