@@ -118,6 +118,7 @@ if IS_PRODUCTION is None:
     raise KeyError("IS_PRODUCTION key not found")
 
 PROGRAM_NAME        = config_parser['APP']['PROGRAM_NAME']
+KYC_ENABLED         = config_parser['APP'].getboolean('KYC_ENABLED', True)
 
 DISABLE_LIMITS = config_parser['APP'].getboolean('DISABLE_LIMITS', True)
 APP_HOST            = config_parser['APP']['APP_HOST']
