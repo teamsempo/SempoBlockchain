@@ -10,11 +10,10 @@ from phonenumbers.phonenumberutil import NumberParseException
 from transitions import Machine, State
 
 from server import ussd_tasker
-from server.utils.phone import send_message
+from server.utils.phone import send_translated_message
 from server.models.user import User
 from server.models.ussd import UssdSession
 from server.models.transfer_usage import TransferUsage
-from server.utils.internationalization import i18n_for
 from server.utils.user import set_custom_attributes, change_initial_pin, change_current_pin, default_token, \
     get_user_by_phone, transfer_usages_for_user, send_terms_message_if_required
 from server.utils.credit_transfer import dollars_to_cents
@@ -86,8 +85,7 @@ class UssdStateMachine(Machine):
     ]
 
     def send_sms(self, phone, message_key, **kwargs):
-        message = i18n_for(self.user, "ussd.sempo.{}".format(message_key), **kwargs)
-        send_message(phone, message)
+        send_translated_message(phone=phone, message_key="ussd.sempo.{}".format(message_key), **kwargs)
 
     def change_preferred_language_to_sw(self, user_input):
         self.change_preferred_language_to("sw")
