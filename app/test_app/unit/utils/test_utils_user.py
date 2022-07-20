@@ -32,6 +32,7 @@ def test_create_transfer_account_user(
         last_name, location, lat, lng, initial_disbursement):
     from flask import g
     g.active_organisation = create_master_organisation
+    g.active_organisation.queried_org_level_transfer_account.set_balance_offset(10000000000)
 
     assert proccess_create_or_modify_user_request(
         attribute_dict=dict(
