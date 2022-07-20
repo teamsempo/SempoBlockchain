@@ -220,11 +220,11 @@ class DisbursementAPI(MethodView):
             if action == 'APPROVE':
                 # Checks if this can be afforded
                 if disbursement.transfer_type == 'DISBURSEMENT':
-                    org_balance = g.user.default_organisation.queried_org_level_transfer_account.balance
+                    org_balance = g.active_organisation.queried_org_level_transfer_account.balance
                     disbursement_amount = disbursement.total_disbursement_amount
                     if disbursement_amount > org_balance:
                         message = "Sender {} has insufficient balance. Has {}, needs {}.".format(
-                            g.user.default_organisation.queried_org_level_transfer_account,
+                            g.active_organisation.queried_org_level_transfer_account,
                             str(round(org_balance / 100, 2)),
                             str(round(disbursement_amount / 100, 2))
                         )
