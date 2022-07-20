@@ -23,7 +23,6 @@ from server.models.credit_transfer import CreditTransfer
 from server.models.user import User
 from server.schemas import me_credit_transfer_schema
 from server.utils import user as UserUtils
-from server.utils import pusher_utils
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferModeEnum, BlockchainStatus
 from server.utils.user import create_transfer_account_if_required
 
