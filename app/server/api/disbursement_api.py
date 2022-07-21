@@ -83,6 +83,7 @@ def make_transfers(disbursement_id, auto_resolve=False):
     db.session.commit()
     clear_metrics_cache()
     rebuild_metrics_cache()
+
 class MakeDisbursementAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def get(self):
@@ -217,6 +218,18 @@ class DisbursementAPI(MethodView):
                 return { 'message': f'Disbursement with ID \'{disbursement_id}\' has already been set to {disbursement.state.lower()}!'}, 400
 
             if action == 'APPROVE':
+                # Checks if this can be afforded
+                if disbursement.transfer_type == 'DISBURSEMENT':
+                    org_balance = g.active_organisation.queried_org_level_transfer_account.balance
+                    disbursement_amount = disbursement.total_disbursement_amount
+                    if disbursement_amount > org_balance:
+                        message = "Sender {} has insufficient balance. Has {}, needs {}.".format(
+                            g.active_organisation.queried_org_level_transfer_account,
+                            str(round(org_balance / 100, 2)),
+                            str(round(disbursement_amount / 100, 2))
+                        )
+                        response_object = {'message': str(message)}
+                        return make_response(jsonify(response_object)), 400
                 disbursement.approve()
                 db.session.commit()
                 auto_resolve = False

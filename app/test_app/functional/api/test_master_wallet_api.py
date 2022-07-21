@@ -27,7 +27,6 @@ def test_create_bulk_credit_transfer(test_client, authed_sempo_admin_user, data,
     if response.status_code != 201:
         assert response.json == expected_response
     else:
-        print(response.json)
         assert response.json['data']['credit_transfer'][0]['recipient_transfer_account']['balance'] == 1234
         assert response.json['data']['credit_transfer'][0]['recipient_transfer_account']['blockchain_address'] == '0x4Cb79e45A25e7cD8004793e593dAC4212bE3c9E4'
         assert response.json['data']['credit_transfer'][0]['sender_transfer_account']['id'] == authed_sempo_admin_user.default_organisation.org_level_transfer_account.id
