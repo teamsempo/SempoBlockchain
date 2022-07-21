@@ -6,7 +6,7 @@ logging.basicConfig(level=env_loglevel)
 logg = logging.getLogger(__name__)
 
 
-VERSION = '2.1.15'  # Remember to bump this in every PR
+VERSION = '2.1.16'  # Remember to bump this in every PR
 
 logg.info('Loading configs at UTC {}'.format(datetime.datetime.utcnow()))
 
@@ -118,6 +118,7 @@ if IS_PRODUCTION is None:
     raise KeyError("IS_PRODUCTION key not found")
 
 PROGRAM_NAME        = config_parser['APP']['PROGRAM_NAME']
+KYC_ENABLED         = config_parser['APP'].getboolean('KYC_ENABLED', True)
 
 DISABLE_LIMITS = config_parser['APP'].getboolean('DISABLE_LIMITS', True)
 APP_HOST            = config_parser['APP']['APP_HOST']
