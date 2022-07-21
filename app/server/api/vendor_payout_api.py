@@ -8,13 +8,11 @@ from server.models.user import User
 from server.utils.credit_transfer import make_withdrawal_transfer
 from server.utils.transfer_enums import TransferModeEnum, TransferStatusEnum, TransferTypeEnum
 from server.utils.credit_transfer import cents_to_dollars, dollars_to_cents
-from server.utils.internationalization import i18n_for
-from server.utils.phone import send_message
+from server.utils.phone import send_translated_message
 from server.utils.auth import requires_auth
 from server import db
 import config
 
-import json
 import csv
 import io
 import codecs
@@ -193,14 +191,11 @@ class ProcessVendorPayout(MethodView):
                     transfer.add_approver_and_resolve_as_completed()
                     message = 'Transfer Success'
                     if transfer.sender_user.phone and config.PAYOUT_SMS:
-                        message = i18n_for(
-                            transfer.sender_user,
+                        message = send_translated_message(transfer.sender_user,
                             "general_sms.payout_message",
                             first_name=transfer.sender_user.first_name,
                             amount=transfer.rounded_transfer_amount,
-                            token=transfer.token.symbol
-                        )
-                        send_message(transfer.sender_user.phone, message)
+                            token=transfer.token.symbol)
                 elif line['Payment Has Been Made'] == 'FALSE':
                     transfer.resolve_as_rejected()
                     message = 'Transfer Rejected'

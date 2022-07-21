@@ -23,7 +23,6 @@ from server.models.credit_transfer import CreditTransfer
 from server.models.user import User
 from server.schemas import me_credit_transfer_schema
 from server.utils import user as UserUtils
-from server.utils import pusher_utils
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferModeEnum, BlockchainStatus
 from server.utils.user import create_transfer_account_if_required
 
@@ -223,11 +222,9 @@ def make_payment_transfer(
     :param transfer_card: the card that was used to make the payment
     :return:
     """
-
     if transfer_subtype is TransferSubTypeEnum.DISBURSEMENT:
         require_sender_approved = False
         require_recipient_approved = False
-        require_sufficient_balance = False
         # primary NGO wallet to disburse from
         send_transfer_account = send_transfer_account or receive_user.default_organisation.queried_org_level_transfer_account
 

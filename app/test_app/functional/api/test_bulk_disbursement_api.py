@@ -66,6 +66,7 @@ def test_disbursement(search_string, params, include_list, exclude_list, disburs
     check that the right disbursements are set up!
     Also checks GET '/api/v1/disbursement/{id}' for that disbursement, and activating it with POST!
     """
+    create_organisation.queried_org_level_transfer_account.set_balance_offset(10000000000)
     # Start the disbursement
     post_data = {
         "search_string": search_string,
