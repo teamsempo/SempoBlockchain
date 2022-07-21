@@ -112,7 +112,6 @@ class uploadedTable extends React.Component {
       customAttributes: this.state.customAttributeList,
       country: this.state.country,
       saveName: this.state.saveName,
-      isVendor: this.props.is_vendor,
     };
 
     this.props.saveDataset(dataset);

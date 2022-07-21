@@ -52,7 +52,7 @@
     }
   },
   "mandatory_filter": {},
-  "master_wallet_balance": -1517,
+  "master_wallet_balance": 9999998483.0,
   "total_population_cumulative": {
     "aggregate": {
       "ORGANISATION": 1,
