@@ -7,7 +7,6 @@ from bit import base58
 from flask import current_app, g
 from eth_utils import to_checksum_address
 import sentry_sdk
-import config
 
 from server import db
 from server.models.device_info import DeviceInfo
@@ -25,7 +24,7 @@ from server.schemas import user_schema
 from server.constants import DEFAULT_ATTRIBUTES, KOBO_META_ATTRIBUTES, ASSIGNABLE_TIERS
 from server.exceptions import PhoneVerificationError, TransferAccountNotFoundError
 from server import celery_app
-from server.utils.phone import send_message
+from server.utils.phone import send_message, send_translated_message
 from server.utils.phone import proccess_phone_number
 from server.utils.amazon_s3 import generate_new_filename, save_to_s3_from_url, LoadFileException
 from server.utils.internationalization import i18n_for
@@ -275,8 +274,7 @@ def save_device_info(device_info, user):
         device.model = device_info['model']
         device.width = device_info['width']
         device.height = device_info['height']
-        send_message(user.phone, f"Your Sempo account is being used to log in from {device.brand} {device.model}. If you don't recognize this login please contact us immediately")
-
+        send_translated_message(user, 'new_device', brand=device.brand, model=device.model)
         device.user = user
 
         db.session.add(device)
@@ -426,7 +424,7 @@ def proccess_create_or_modify_user_request(
     account_types = attribute_dict.get('account_types', [])
     if isinstance(account_types, str):
         account_types = account_types.split(',')
-
+        account_types = list(map(lambda t: t.strip(), account_types))
     referred_by = attribute_dict.get('referred_by')
 
     blockchain_address = attribute_dict.get('blockchain_address')
@@ -708,7 +706,11 @@ def send_onboarding_sms_messages(user):
         token=user.transfer_account.token.name
     )
 
-    send_message(user.phone, intro_message)
+    send_translated_message(user,
+        "general_sms.welcome.{}".format(organisation.custom_welcome_message_key or 'generic'),
+        first_name=user.first_name,
+        balance=rounded_dollars(user.transfer_account.balance),
+        token=user.transfer_account.token.name)
 
     send_terms_message_if_required(user)
 
@@ -716,8 +718,7 @@ def send_onboarding_sms_messages(user):
 def send_terms_message_if_required(user):
 
     if not user.seen_latest_terms:
-        terms_message = i18n_for(user, "general_sms.terms")
-        send_message(user.phone, terms_message)
+        send_translated_message(user, "general_sms.terms")
         user.seen_latest_terms = True
 
 
@@ -738,14 +739,10 @@ def send_onboarding_message(to_phone, first_name, amount, currency_name, one_tim
 
 def send_phone_verification_message(to_phone, one_time_code):
     if to_phone:
-        reciever_message = 'Your Sempo verification code is: {}'.format(one_time_code)
-        send_message(to_phone, reciever_message)
-
+        send_translated_message(phone=to_phone, message_key='verification_code', code=one_time_code)
 
 def send_sms(user, message_key):
-    message = i18n_for(user, "user.{}".format(message_key))
-    send_message(user.phone, message)
-
+    send_translated_message(user, "user.{}".format(message_key))
 
 def change_pin(user, new_pin):
     user.hash_pin(new_pin)

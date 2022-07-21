@@ -4,3 +4,8 @@ sw:
     custom: Habari %{first_name}, umesajiliwa kwa huduma ya test! Salio lako ni %{token} %{balance}.
   terms: Kwa kutumia hii huduma, umekubali sheria na masharti yafuatayo https://withsempo.com/legal/platform-terms.
   pin_reset: Bonyeza 1234 kubadilisha PIN yako
+  id_verify_fail: Kwa bahati mbaya, hatukuweza kuthibitisha utambulisho wako kwa hati ulizotoa. Tafadhali fungua programu ya Sempo ili kujaribu tena au uwasiliane na usaidizi wetu kwa wateja.
+  id_verify_authenticity_fail: Kwa bahati mbaya, hatukuweza kuthibitisha utambulisho wako kwa hati ulizotoa. Tafadhali wasiliana na usaidizi kwa wateja wa Sempo katika programu.
+  kyc_approved: Hooray! Utambulisho wako umethibitishwa na vikomo vya akaunti ya Sempo vimeondolewa.
+  new_device: Akaunti yako ya Sempo inatumiwa kuingia kutoka {brand} {model}. Ikiwa hutambui kuingia huku tafadhali wasiliana nasi mara moja
+  verification_code: Msimbo wako wa uthibitishaji wa Sempo ni {code}
