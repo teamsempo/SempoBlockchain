@@ -72,7 +72,10 @@ def test_create_me_credit_transfer_api(
         'my_transfer_account_id': create_transfer_account_user.transfer_account.id,
         'uuid': str(uuid4()),
         'created': "2022-08-17T14:48:00.000Z",
-        'inCache': True
+        'inCache': True,
+        'nfc_session_number': 5,
+        'amount_deducted': 100,
+        'amount_loaded': 150,
     }
     response = test_client.post(
         '/api/v1/me/credit_transfer/',
@@ -95,7 +98,11 @@ def test_create_me_credit_transfer_api(
     card_usage_object = credit_transfer.transfer_card_usage 
     assert card_usage_object.transfer_card.public_serial_number == '222222'
     assert card_usage_object.transfer_card.transfer_card_usages == [card_usage_object]
-    
+    assert card_usage_object.session_number == 5
+    assert card_usage_object.amount_deducted == 100
+    assert card_usage_object.amount_loaded == 150
+    assert card_usage_object.balance == 50
+
 def test_invalid_create_me_credit_transfer_api(
         test_client,
         create_transfer_account_user,

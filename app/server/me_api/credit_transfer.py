@@ -93,6 +93,10 @@ class MeCreditTransferAPI(MethodView):
         pin = post_data.get('pin')
 
         nfc_serial_number = post_data.get('nfc_id')
+        # In the future we can reject payloads with missing session numbers. For now, it's just a sentinel -1
+        nfc_session_number = post_data.get('nfc_session_number', -1) 
+        amount_loaded = post_data.get('amount_loaded', -1) 
+        amount_deducted = post_data.get('amount_deducted', -1) 
 
         user_id = post_data.get('user_id')
         public_identifier = post_data.get('public_identifier')
@@ -197,8 +201,11 @@ class MeCreditTransferAPI(MethodView):
             # if the transfer is failed/rejected for any reason. 
             transfer_card_usage = TransferCardUsage(
                 vendor_transfer_account=my_transfer_account,
-                transfer_card=transfer_card
-                )
+                transfer_card=transfer_card,
+                session_number=nfc_session_number,
+                amount_deducted = amount_deducted,
+                amount_loaded=amount_loaded
+            )
             db.session.add(transfer_card_usage)
             authorised = True
 
