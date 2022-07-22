@@ -16,6 +16,7 @@ from server.exceptions import (
 )
 from server.models.user import User
 from server.models.transfer_card import TransferCard
+from server.models.transfer_card_usage import TransferCardUsage
 from server.models.transfer_account import TransferAccount
 from server.models.credit_transfer import CreditTransfer
 from server.utils.transfer_enums import TransferModeEnum
@@ -107,6 +108,8 @@ class MeCreditTransferAPI(MethodView):
 
         transfer_card = None
         my_transfer_account = None
+        transfer_card_usage = None
+    
         authorised = False
         if transfer_account_id:
             counterparty_transfer_account = TransferAccount.query.get(transfer_account_id)
@@ -178,9 +181,8 @@ class MeCreditTransferAPI(MethodView):
             authorised = True
 
         elif nfc_serial_number:
-            # We treat NFC serials differently because they're automatically authorised under the current version
+            # We treat NFC serials differently because they're automatically authorized under the current version
             transfer_card = TransferCard.query.filter_by(nfc_serial_number=nfc_serial_number).first()
-
             if transfer_card:
                 counterparty_user = transfer_card.user
                 counterparty_transfer_account = transfer_card.transfer_account
@@ -191,9 +193,14 @@ class MeCreditTransferAPI(MethodView):
                     'feedback': True
                 }
                 return make_response(jsonify(response_object)), 404
-
+            # Add NFC usage object. This is created _before_ the transfer, because want to store usages even
+            # if the transfer is failed/rejected for any reason. 
+            transfer_card_usage = TransferCardUsage(
+                vendor_transfer_account=my_transfer_account,
+                transfer_card=transfer_card
+                )
+            db.session.add(transfer_card_usage)
             authorised = True
-
 
         else:
             try:
@@ -305,7 +312,8 @@ class MeCreditTransferAPI(MethodView):
                                              transfer_use=transfer_use,
                                              transfer_mode=transfer_mode,
                                              uuid=uuid,
-                                             transfer_card=transfer_card)
+                                             transfer_card=transfer_card,
+                                             transfer_card_usage=transfer_card_usage)
 
         except AccountNotApprovedError as e:
             db.session.commit()

@@ -408,7 +408,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                  transfer_card=None,
                  is_ghost_transfer=False,
                  require_sufficient_balance=True,
-                 received_third_party_sync=False
+                 received_third_party_sync=False,
+                 transfer_card_usage=None
                  ):
 
         if amount < 0:
@@ -458,6 +459,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         self.transfer_mode = transfer_mode
         self.transfer_metadata = transfer_metadata
         self.transfer_card = transfer_card
+        self.transfer_card_usage = transfer_card_usage
         self.received_third_party_sync = received_third_party_sync
         if uuid is not None:
             self.uuid = uuid
