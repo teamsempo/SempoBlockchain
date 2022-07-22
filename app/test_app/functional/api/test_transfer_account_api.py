@@ -21,6 +21,8 @@ import random
 ])
 def test_disbursement_conditions(test_client, authed_sempo_admin_user, tier, initial_disbursement, is_approved, transfer_status, transfer_account_approver_tier, account_approval_http_status, final_transfer_status, final_is_approved):
     authed_sempo_admin_user.set_held_role('ADMIN', tier)
+    authed_sempo_admin_user.default_organisation.queried_org_level_transfer_account.set_balance_offset(10000000000)
+
     auth = get_complete_auth_token(authed_sempo_admin_user)
     # Create user!
     payload = {

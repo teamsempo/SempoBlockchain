@@ -1,11 +1,11 @@
 import phonenumbers
 import enum
 import sentry_sdk
-from phonenumbers.phonenumberutil import NumberParseException
 
 from flask import current_app, g
 from server import twilio_client, messagebird_client, africastalking_client
 from server.utils.executor import standard_executor_job
+from server.utils.internationalization import i18n_for
 
 def proccess_phone_number(phone_number, region=None, ignore_region=False):
     """
@@ -88,6 +88,12 @@ def _send_at_message(to_phone, message):
             resp = africastalking_client.send(
                 message,
                 [to_phone])
+
+def send_translated_message(user=None, message_key=None, phone=None, **kwargs):
+    phone_number = phone or user.phone
+    message = i18n_for(user, message_key, **kwargs)
+    send_message(phone_number, message)
+    return message
 
 def send_message(to_phone, message):
     if to_phone:

@@ -86,7 +86,7 @@
     }
   },
   "mandatory_filter": {},
-  "master_wallet_balance": -1517,
+  "master_wallet_balance": 9999998483.0,
   "total_distributed": 1517,
   "total_reclaimed": 0,
   "total_withdrawn": 0,
