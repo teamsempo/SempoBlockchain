@@ -63,6 +63,7 @@ class TransferAccountManager extends React.Component {
       transfer_amount: "",
       showSpreadsheetData: true,
       balance: "",
+      last_known_card_balance: null,
       is_approved: "n/a",
       one_time_code: "",
       focused: false,
@@ -88,6 +89,7 @@ class TransferAccountManager extends React.Component {
     if (transferAccount) {
       this.setState({
         balance: transferAccount.balance,
+        last_known_card_balance: transferAccount.last_known_card_balance,
         is_approved: transferAccount.is_approved,
         notes: transferAccount.notes,
         created: transferAccount.created,
@@ -210,10 +212,21 @@ class TransferAccountManager extends React.Component {
       this.props.transferAccount.token &&
       this.props.tokens.byId[this.props.transferAccount.token] &&
       this.props.tokens.byId[this.props.transferAccount.token].symbol;
-    const displayAmount = (
+    const balanceDisplayAmount = (
       <p style={{ margin: 0, fontWeight: 100, fontSize: "16px" }}>
         {formatMoney(
           this.state.balance / 100,
+          undefined,
+          undefined,
+          undefined,
+          currency
+        )}
+      </p>
+    );
+    const cardBalanceDisplayAmount = (
+      <p style={{ margin: 0, fontWeight: 100, fontSize: "16px" }}>
+        {formatMoney(
+          this.state.last_known_card_balance / 100,
           undefined,
           undefined,
           undefined,
@@ -284,7 +297,9 @@ class TransferAccountManager extends React.Component {
               {accountTypeName}
             </Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="Balance">{displayAmount}</Descriptions.Item>
+          <Descriptions.Item label="Balance">
+            {balanceDisplayAmount}
+          </Descriptions.Item>
           <Descriptions.Item label="Created">
             <DateTime created={this.state.created} useRelativeTime={false} />
           </Descriptions.Item>
@@ -326,6 +341,13 @@ class TransferAccountManager extends React.Component {
               </Option>
             </Select>
           </Descriptions.Item>
+          {this.state.last_known_card_balance ? (
+            <Descriptions.Item label="Last Known Card Balance">
+              {cardBalanceDisplayAmount}
+            </Descriptions.Item>
+          ) : (
+            <div />
+          )}
         </Descriptions>
         <HistoryDrawer
           drawerVisible={this.state.viewHistory}
