@@ -337,16 +337,6 @@ workflows:
             - test-backend
             - test-worker
             - test-frontend
-      - deploy-ugx:
-          filters:
-            branches:
-              only:
-                - ugx
-          requires:
-            - build
-            - test-backend
-            - test-worker
-            - test-frontend
       - deploy-demo:
           filters:
             branches:
