@@ -466,7 +466,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
 
         if require_sufficient_balance and not self.check_sender_has_sufficient_balance():
             message = "Sender {} has insufficient balance. Has {}, needs {}.".format(
-                self.sender_transfer_account
+                self.sender_transfer_account,
                 str(round(self.sender_transfer_account.balance / 100, 2)),
                 str(round(self.transfer_amount / 100, 2))
             )
