@@ -316,9 +316,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         if (datetime.datetime.utcnow() - self.created).seconds > 5:
             clear_metrics_cache()
             rebuild_metrics_cache()
-        if self.transfer_type == TransferTypeEnum.PAYMENT and self.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT:
-            if self.recipient_user and self.recipient_user.transfer_card:
-                self.recipient_user.transfer_card.update_transfer_card()
+        if self.recipient_user and self.recipient_user.transfer_card:
+            self.recipient_user.transfer_card.update_transfer_card()
 
         if batch_uuid:
             self.batch_uuid = batch_uuid
@@ -468,8 +467,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         if require_sufficient_balance and not self.check_sender_has_sufficient_balance():
             message = "Sender {} has insufficient balance. Has {}, needs {}.".format(
                 self.sender_transfer_account,
-                str(round(self.sender_transfer_account.balance / 100, 2)),
-                str(round(self.transfer_amount / 100, 2))
+                self.sender_transfer_account.balance,
+                self.transfer_amount
             )
             self.resolve_as_rejected(message)
             raise InsufficientBalanceError(message)
