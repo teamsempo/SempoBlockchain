@@ -288,34 +288,6 @@ jobs:
           cluster: "slb-cluster"
           region: "ap-southeast-2"
 
-  deploy-vut:
-    working_directory: ~/project
-    docker:
-      - image: circleci/python:3.6-node
-    steps:
-      - deploy:
-          app-service: "app"
-          worker-service: "worker"
-          app-task: "vut-app"
-          worker-task: "vut-worker"
-          frontend-bucket: "sempo-vut-static"
-          cluster: "vut"
-          region: "ap-southeast-2"
-
-  deploy-ugx:
-    working_directory: ~/project
-    docker:
-      - image: circleci/python:3.6-node
-    steps:
-      - deploy:
-          app-service: "app"
-          worker-service: "worker"
-          app-task: "ugx-app"
-          worker-task: "ugx-worker"
-          frontend-bucket: "sempo-ugx-static"
-          cluster: "ugx"
-          region: "ap-southeast-2"
-
   deploy-demo:
     working_directory: ~/project
     docker:
@@ -360,26 +332,6 @@ workflows:
             branches:
               only:
                 - slb
-          requires:
-            - build
-            - test-backend
-            - test-worker
-            - test-frontend
-      - deploy-vut:
-          filters:
-            branches:
-              only:
-                - vut
-          requires:
-            - build
-            - test-backend
-            - test-worker
-            - test-frontend
-      - deploy-ugx:
-          filters:
-            branches:
-              only:
-                - ugx
           requires:
             - build
             - test-backend
