@@ -27,13 +27,14 @@ def push_admin_credit_transfer(transfers):
     # Build prepared list of transfers we want to send
     pusher_batch_payload = []
     for transfer in transfers:
-        for org in transfer.organisations:
-            pusher_transfer_payload = {}
-            pusher_transfer_payload['data'] = {}
-            pusher_transfer_payload['data']['credit_transfer'] = credit_transfer_schema.dump(transfer).data
-            pusher_transfer_payload['name'] = 'credit_transfer'
-            pusher_transfer_payload['channel'] = current_app.config['PUSHER_ENV_CHANNEL'] + '-' + str(org.id)
-            pusher_batch_payload.append(pusher_transfer_payload)
+        if hasattr(transfer, 'organisations'):
+            for org in transfer.organisations:
+                pusher_transfer_payload = {}
+                pusher_transfer_payload['data'] = {}
+                pusher_transfer_payload['data']['credit_transfer'] = credit_transfer_schema.dump(transfer).data
+                pusher_transfer_payload['name'] = 'credit_transfer'
+                pusher_transfer_payload['channel'] = current_app.config['PUSHER_ENV_CHANNEL'] + '-' + str(org.id)
+                pusher_batch_payload.append(pusher_transfer_payload)
 
     # Break the list of prepared transfers into MAX_BATCH_SIZE chunks and send each batch to the API
     for pusher_payload_chunk in misc.chunk_list(pusher_batch_payload, PUSHER_MAX_BATCH_SIZE):
