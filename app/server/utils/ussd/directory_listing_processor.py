@@ -2,8 +2,7 @@ from sqlalchemy import text
 from sqlalchemy.sql import func
 
 from server import db
-from server.utils.phone import send_message
-from server.utils.internationalization import i18n_for
+from server.utils.phone import send_translated_message
 from server.models.user import User
 from server.models.transfer_account import TransferAccount
 from server.models.transfer_usage import TransferUsage
@@ -29,9 +28,8 @@ class DirectoryListingProcessor(object):
 
     def send_sms(self, message_key, **kwargs):
         # if we use directory listing similarly for other countries later, can generalize country to init
-        message = i18n_for(self.recipient, "ussd.sempo.{}".format(message_key), **kwargs)
-        send_message(self.recipient.phone, message)
-
+        send_translated_message(self.recipient, "ussd.sempo.{}".format(message_key), **kwargs)
+        
     # get users to be appended to message for the directory listing matching recipient's search criteria.
     def get_directory_listing_users(self):
         token_id = default_token(self.recipient).id

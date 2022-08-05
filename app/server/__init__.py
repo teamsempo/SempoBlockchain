@@ -136,7 +136,6 @@ def register_blueprints(app):
 
     @app.after_request
     def after_request(response):
-        from server.utils import pusher_utils
         if response.status_code < 300 and response.status_code >= 200:
             db.session.commit()
 

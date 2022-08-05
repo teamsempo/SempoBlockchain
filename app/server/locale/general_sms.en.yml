@@ -5,3 +5,8 @@ en:
   terms: By using the service, you agree to the terms and conditions at https://withsempo.com/legal/platform-terms.
   pin_reset: Dial 1234 to change your PIN
   payout_message: Hello %{first_name}, a total of %{amount} %{token} has been deposited into your account.
+  id_verify_fail: Unfortunately, we couldn't verify your identity with the documents provided. Please open the Sempo app to retry or contact our customer support.
+  id_verify_authenticity_fail: Unfortunately, we couldn't verify your identity with the documents provided. Please contact Sempo customer support in the app.
+  kyc_approved: Hooray! Your identity has been successfully verified and Sempo account limits lifted.
+  new_device: Akaunti yako ya Sempo inatumiwa kuingia kutoka {device.brand} {device.model}. Ikiwa hutambui kuingia huku tafadhali wasiliana nasi mara moja
+  verification_code: Your Sempo verification code is {code}

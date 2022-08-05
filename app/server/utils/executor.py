@@ -132,12 +132,14 @@ def bulk_process_transactions(transactions):
     # This is very ugly, but required to get a thread-local CreditTransfer/Exchange instance
     from server.models.credit_transfer import CreditTransfer
     from server.models.exchange import Exchange
+    from server.utils import pusher_utils
     for transaction, queue in transactions:
         if isinstance(transaction, CreditTransfer):
             transaction = db.session.query(CreditTransfer).filter(CreditTransfer.id == transaction.id).first()
         else:
             transaction = db.session.query(Exchange).filter(Exchange.id == transaction.id).first()
         transaction.send_blockchain_payload_to_worker(queue=queue)
+    pusher_utils.push_admin_credit_transfer([txn[0] for txn in transactions])
 
 def prepare_transactions_async_job():
     add_after_request_executor_job(bulk_process_transactions, args=[g.pending_transactions])
