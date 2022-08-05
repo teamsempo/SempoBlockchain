@@ -5,8 +5,6 @@ from sqlalchemy.orm import backref
 
 from server import db
 from server.models.utils import ModelBase
-from server.models.transfer_card import TransferCard
-from server.models.credit_transfer import CreditTransfer
 
 class TransferCardState(ModelBase):
     __tablename__ = 'transfer_card_state'
@@ -21,3 +19,11 @@ class TransferCardState(ModelBase):
     # Credit transfer
     credit_transfer_id       = db.Column(db.Integer, db.ForeignKey("credit_transfer.id"), index=True)
     credit_transfer          = db.relationship('CreditTransfer', foreign_keys=[credit_transfer_id], backref=backref('transfer_card_state', uselist=False), lazy='select')
+
+    session_number = db.Column(db.Integer, default=-1, index=True)
+    amount_loaded = db.Column(db.Integer, default=-1)
+    amount_deducted = db.Column(db.Integer, default=-1)
+
+    @hybrid_property
+    def balance(self):
+        return self.amount_loaded - self.amount_deducted
