@@ -341,7 +341,7 @@ class TransferAccountManager extends React.Component {
               </Option>
             </Select>
           </Descriptions.Item>
-          {this.state.last_known_card_balance ? (
+          {Number.isInteger(this.state.last_known_card_balance) ? (
             <Descriptions.Item label="Last Known Card Balance">
               {cardBalanceDisplayAmount}
             </Descriptions.Item>
