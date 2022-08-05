@@ -293,7 +293,7 @@ class MeCreditTransferAPI(MethodView):
             receive_user = g.user
             receive_transfer_account = my_transfer_account
 
-        if transfer_amount == 0 or transfer_amount > send_transfer_account.balance:
+        if not transfer_card and (transfer_amount == 0 or transfer_amount > send_transfer_account.balance):
 
             db.session.commit()
 
@@ -313,7 +313,8 @@ class MeCreditTransferAPI(MethodView):
                                              transfer_mode=transfer_mode,
                                              uuid=uuid,
                                              transfer_card=transfer_card,
-                                             transfer_card_state=transfer_card_state)
+                                             transfer_card_state=transfer_card_state,
+                                             require_sufficient_balance=False)
 
         except AccountNotApprovedError as e:
             db.session.commit()

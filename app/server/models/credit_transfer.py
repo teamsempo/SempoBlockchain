@@ -316,9 +316,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         if (datetime.datetime.utcnow() - self.created).seconds > 5:
             clear_metrics_cache()
             rebuild_metrics_cache()
-        if self.transfer_type == TransferTypeEnum.PAYMENT and self.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT:
-            if self.recipient_user and self.recipient_user.transfer_card:
-                self.recipient_user.transfer_card.update_transfer_card()
+        if self.recipient_user and self.recipient_user.transfer_card:
+            self.recipient_user.transfer_card.update_transfer_card()
 
         if batch_uuid:
             self.batch_uuid = batch_uuid
