@@ -16,7 +16,7 @@ from server.exceptions import (
 )
 from server.models.user import User
 from server.models.transfer_card import TransferCard
-from server.models.transfer_card_usage import TransferCardUsage
+from server.models.transfer_card_state import TransferCardState
 from server.models.transfer_account import TransferAccount
 from server.models.credit_transfer import CreditTransfer
 from server.utils.transfer_enums import TransferModeEnum
@@ -108,7 +108,7 @@ class MeCreditTransferAPI(MethodView):
 
         transfer_card = None
         my_transfer_account = None
-        transfer_card_usage = None
+        transfer_card_state = None
     
         authorised = False
         if transfer_account_id:
@@ -195,11 +195,11 @@ class MeCreditTransferAPI(MethodView):
                 return make_response(jsonify(response_object)), 404
             # Add NFC usage object. This is created _before_ the transfer, because want to store usages even
             # if the transfer is failed/rejected for any reason. 
-            transfer_card_usage = TransferCardUsage(
+            transfer_card_state = TransferCardState(
                 vendor_transfer_account=my_transfer_account,
                 transfer_card=transfer_card
                 )
-            db.session.add(transfer_card_usage)
+            db.session.add(transfer_card_state)
             authorised = True
 
         else:
@@ -313,7 +313,7 @@ class MeCreditTransferAPI(MethodView):
                                              transfer_mode=transfer_mode,
                                              uuid=uuid,
                                              transfer_card=transfer_card,
-                                             transfer_card_usage=transfer_card_usage)
+                                             transfer_card_state=transfer_card_state)
 
         except AccountNotApprovedError as e:
             db.session.commit()

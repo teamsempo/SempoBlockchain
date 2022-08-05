@@ -92,9 +92,9 @@ def test_create_me_credit_transfer_api(
     assert credit_transfer.sender_transfer_account_id == create_transfer_account_user_2.default_transfer_account.id
     
     # Make sure the transfer card usage was stored and all the joins work correctly  
-    card_usage_object = credit_transfer.transfer_card_usage 
+    card_usage_object = credit_transfer.transfer_card_state 
     assert card_usage_object.transfer_card.public_serial_number == '222222'
-    assert card_usage_object.transfer_card.transfer_card_usages == [card_usage_object]
+    assert card_usage_object.transfer_card.transfer_card_states == [card_usage_object]
     
 def test_invalid_create_me_credit_transfer_api(
         test_client,
