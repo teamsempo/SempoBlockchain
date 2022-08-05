@@ -47,6 +47,7 @@ def mock_async_set_user_gps_from_location(mocker):
 def test_create_user(test_client, authed_sempo_admin_user, init_database, create_transfer_account_user,
                      mock_async_set_user_gps_from_location, user_phone_accessor, phone, use_card,
                      business_usage_name, referred_by, gps_location, initial_disbursement, tier, status_code):
+    authed_sempo_admin_user.default_organisation.queried_org_level_transfer_account.set_balance_offset(10000000000)
 
     if tier:
         authed_sempo_admin_user.set_held_role('ADMIN', tier)

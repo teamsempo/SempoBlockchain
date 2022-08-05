@@ -343,6 +343,7 @@ def test_force_third_party_transaction_sync():
 def test_create_bulk_credit_transfer(test_client, authed_sempo_admin_user, create_transfer_account_user,
                                 create_credit_transfer, is_bulk, invert_recipient_list, transfer_amount, 
                                 transfer_type, status_code):
+
     from server.utils.user import create_transfer_account_user
     from flask import g
 
@@ -350,6 +351,7 @@ def test_create_bulk_credit_transfer(test_client, authed_sempo_admin_user, creat
     authed_sempo_admin_user.set_held_role('ADMIN', 'superadmin')
     auth = get_complete_auth_token(authed_sempo_admin_user)
     g.active_organisation = authed_sempo_admin_user.default_organisation
+    authed_sempo_admin_user.default_organisation.queried_org_level_transfer_account.set_balance_offset(10000000000)
     # Create 15 users to test against
     users = []
     user_ids = []
