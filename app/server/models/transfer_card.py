@@ -1,10 +1,12 @@
 from flask import current_app
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.sql import func
+from sqlalchemy import desc
 
 from server import db
 from server.models.utils import ModelBase
 import server.models.credit_transfer
+from server.models.transfer_card_usage import TransferCardUsage
 from server.utils.transfer_enums import TransferTypeEnum, TransferStatusEnum, TransferSubTypeEnum
 from server.utils.audit_history import manually_add_history_entry
 from server.exceptions import NoTransferCardError
@@ -33,6 +35,8 @@ class TransferCard(ModelBase):
         lazy='dynamic',
         foreign_keys='CreditTransfer.sender_transfer_card_id'
     )
+
+    last_usages = db.relationship(TransferCardUsage, order_by=desc(TransferCardUsage.session_number), lazy='dynamic')
 
     def disable(self):
         # disabling cards is permanent, hence no setter to enable a disabled card
