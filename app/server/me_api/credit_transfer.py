@@ -206,7 +206,7 @@ class MeCreditTransferAPI(MethodView):
                 amount_deducted = amount_deducted,
                 amount_loaded=amount_loaded
             )
-            db.session.add(transfer_card_usage)
+            db.session.add(transfer_card_state)
             authorised = True
 
         else:
@@ -311,7 +311,7 @@ class MeCreditTransferAPI(MethodView):
             return make_response(jsonify(response_object)), 400
 
         try:
-            if transfer_card_usage: transfer_card_usage.vendor_transfer_account = my_transfer_account
+            if transfer_card_state: transfer_card_state.vendor_transfer_account = my_transfer_account
             transfer = make_payment_transfer(transfer_amount=transfer_amount,
                                              send_user=send_user,
                                              send_transfer_account=send_transfer_account,
