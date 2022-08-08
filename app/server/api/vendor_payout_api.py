@@ -28,9 +28,11 @@ class VendorPayoutAPI(MethodView):
         post_data = request.get_json()
         account_ids = []
         relist_existing = True
+        round_payout_amounts = False
         if post_data:
             account_ids = post_data.get('accounts', [])
             relist_existing = post_data.get('relist_existing', True)
+            round_payout_amounts = post_data.get('round_payout_amounts', False)
 
         payout_withdrawal_limit = g.active_organisation._minimum_vendor_payout_withdrawal_wei or 0
 
@@ -99,7 +101,11 @@ class VendorPayoutAPI(MethodView):
                 withdrawals = []
 
             withdrawal_amount = Decimal(v._balance_wei or 0) / Decimal(1e16)
-
+            # Clever trick from SO 
+            # https://stackoverflow.com/questions/51928970/converting-last-n-digits-of-a-number-to-zero
+            if round_payout_amounts : 
+                    m = 10 ** max(0, len(str(withdrawal_amount)) - v.token.display_decimals)
+                    withdrawal_amount = withdrawal_amount // m * m
             if withdrawal_amount > 0 and (v._balance_wei or 0) >= payout_withdrawal_limit:
                 transfer = make_withdrawal_transfer(
                     withdrawal_amount,
