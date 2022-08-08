@@ -291,6 +291,7 @@ class TransferAccountSchema(SchemaBase):
     # balance                 = fields.Int()
 
     balance                 = fields.Function(lambda obj: int(obj.balance))
+    last_known_card_balance = fields.Int()
 
     primary_user_id         = fields.Int()
 

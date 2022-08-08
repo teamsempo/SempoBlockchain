@@ -275,6 +275,11 @@ class TransferAccount(OneOrgBase, ModelBase, SoftDelete):
         # return sorted(users, key=lambda user: user.created)[0]
 
     @hybrid_property
+    def last_known_card_balance(self):
+        usage = self.transfer_card.last_usages.first()
+        return usage.balance if usage else None
+
+    @hybrid_property
     def primary_user_id(self):
         return self.primary_user.id
 
