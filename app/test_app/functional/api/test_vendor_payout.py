@@ -32,14 +32,20 @@ def test_get_vendor_payout_with_withdrawal_limit(test_client, authed_sempo_admin
     )
     assert len(user.transfer_account.credit_sends) == 0
 
-def test_get_vendor_payout(test_client, authed_sempo_admin_user, create_transfer_account_user):
+@pytest.mark.parametrize("balance, rounding_flag, expected_balance, expected_transfer, transfer_id", [
+    (1000, False, '10', '10', '1'),
+    (2110, False, '21.1', '11.1', '2'),
+    (3210, True, '32.1', '11', '3'),
+])
+def test_get_vendor_payout(test_client, authed_sempo_admin_user, create_transfer_account_user, balance, rounding_flag,
+    expected_balance, expected_transfer, transfer_id):
     auth = get_complete_auth_token(authed_sempo_admin_user)
     user = create_transfer_account_user
     user.transfer_account.is_vendor = True
     user.set_held_role('VENDOR', 'supervendor')
     user.transfer_account.approve_and_disburse()
     user.transfer_account.organisation = authed_sempo_admin_user.organisations[0]
-    user.transfer_account.set_balance_offset(1000)
+    user.transfer_account.set_balance_offset(balance)
     user.is_phone_verified = True
     kyc = KycApplication(type='INDIVIDUAL')
     user.kyc_applications = [kyc]
@@ -54,17 +60,15 @@ def test_get_vendor_payout(test_client, authed_sempo_admin_user, create_transfer
             Authorization=auth,
             Accept='application/json',
         ),
-        data=json.dumps(dict({}))
+        json={'round_payout_amounts': rounding_flag}
     )
     resp = response.data.decode('ascii')
-
     f = StringIO(resp)
     reader = csv.reader(f)
     formatted_results = list(reader)
-    formatted_results[1][9] = 'SOME DATE'
-    formatted_results[1][10] = 'SOME DATE'
-    assert formatted_results == [
-        [
+    formatted_results[-1][9] = 'SOME DATE'
+    formatted_results[-1][10] = 'SOME DATE'
+    assert formatted_results[0] == [
             'Vendor Account ID',
             'Phone',
             'ContactName', 
@@ -80,24 +84,25 @@ def test_get_vendor_payout(test_client, authed_sempo_admin_user, create_transfer
             'UnitAmount', 
             'Payment Has Been Made', 
             'Bank Payment Date'
-        ], [
+        ]
+    assert formatted_results[-1]== [
             '4',
             user.phone,
             'Transfer User',
             '0',
-            '10', 
+            expected_balance, 
             '0', 
             'True', 
             'False', 
             'True', 
             'SOME DATE', 
             'SOME DATE', 
-            '1', 
-            '10', 
+            transfer_id, 
+            expected_transfer, 
             '', 
             ''
         ]
-    ]    
+       
     transfer = user.transfer_account.credit_sends[0]
     assert transfer.transfer_type == TransferTypeEnum.WITHDRAWAL
     assert transfer.sender_transfer_account == user.transfer_account
