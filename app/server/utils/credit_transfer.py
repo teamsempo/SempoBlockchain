@@ -197,7 +197,8 @@ def make_payment_transfer(
         queue='high-priority',
         batch_uuid=None,
         transfer_type=TransferTypeEnum.PAYMENT,
-        transfer_card=None
+        transfer_card=None,
+        transfer_card_state=None
 ):
     """
     This is used for internal transfers between Sempo wallets.
@@ -220,6 +221,7 @@ def make_payment_transfer(
     :param batch_uuid:
     :param transfer_type: the type of transfer
     :param transfer_card: the card that was used to make the payment
+    :param transfer_card_state: the object associated with the transfer card usage
     :return:
     """
     if transfer_subtype is TransferSubTypeEnum.DISBURSEMENT:
@@ -248,7 +250,8 @@ def make_payment_transfer(
                               transfer_mode=transfer_mode,
                               transfer_card=transfer_card,
                               is_ghost_transfer=is_ghost_transfer,
-                              require_sufficient_balance=require_sufficient_balance)
+                              require_sufficient_balance=require_sufficient_balance,
+                              transfer_card_state=transfer_card_state)
 
     make_cashout_incentive_transaction = False
 
