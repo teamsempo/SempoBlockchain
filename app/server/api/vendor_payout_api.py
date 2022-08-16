@@ -17,6 +17,7 @@ import csv
 import io
 import codecs
 from decimal import Decimal
+from math import floor
 from datetime import datetime, timedelta
 
 vendor_payout = Blueprint('vendor_payout', __name__)
@@ -101,11 +102,8 @@ class VendorPayoutAPI(MethodView):
                 withdrawals = []
 
             withdrawal_amount = Decimal(v._balance_wei or 0) / Decimal(1e16)
-            # Clever trick from SO 
-            # https://stackoverflow.com/questions/51928970/converting-last-n-digits-of-a-number-to-zero
             if round_payout_amounts : 
-                    m = 10 ** max(0, len(str(withdrawal_amount)) - v.token.display_decimals)
-                    withdrawal_amount = withdrawal_amount // m * m
+                withdrawal_amount = floor(Decimal(withdrawal_amount) / (10 ** v.token.display_decimals)) * (10 ** v.token.display_decimals)
             if withdrawal_amount > 0 and (v._balance_wei or 0) >= payout_withdrawal_limit:
                 transfer = make_withdrawal_transfer(
                     withdrawal_amount,
