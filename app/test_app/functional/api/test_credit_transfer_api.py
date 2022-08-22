@@ -162,7 +162,6 @@ def test_get_credit_transfer(test_client, complete_admin_auth_token, create_cred
         ))
 
     assert response.status_code == status_code
-    db.session.commit()
 
     if not credit_transfer_selector_func(create_credit_transfer):
         assert isinstance(response.json['data']['credit_transfers'], list)
