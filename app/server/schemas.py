@@ -232,6 +232,7 @@ class CreditTransferSchema(BlockchainTaskableSchemaBase):
             return None
 
         return authorising_user.email
+    approvers = fields.Nested(UserSchema, attribute='approvers', many=True, only=("id", "email"))
 
 
 class ExchangeContractSchema(SchemaBase):
@@ -252,8 +253,8 @@ class ExchangeSchema(BlockchainTaskableSchemaBase):
     from_token          = fields.Nested(TokenSchema)
     to_token            = fields.Nested(TokenSchema)
 
-    from_transfer       = fields.Nested(CreditTransferSchema)
-    to_transfer         = fields.Nested(CreditTransferSchema)
+    from_transfer       = fields.Nested(CreditTransferSchema, exclude=("approvers",))
+    to_transfer         = fields.Nested(CreditTransferSchema, exclude=("approvers",))
 
 class MiniTaSchema(SchemaBase):
     is_approved = fields.Boolean()
@@ -275,8 +276,8 @@ class MiniTaSchema(SchemaBase):
 
     # users = fields.Nested(UserSchema, attribute='users', many=True, exclude=('transfer_account',))
 
-    credit_sends = fields.Nested(CreditTransferSchema, many=True)
-    credit_receives = fields.Nested(CreditTransferSchema, many=True)
+    credit_sends = fields.Nested(CreditTransferSchema, exclude=("approvers",), many=True)
+    credit_receives = fields.Nested(CreditTransferSchema, exclude=("approvers",), many=True)
 
     # token = fields.Nested(TokenSchema)
     #
@@ -332,8 +333,8 @@ class TransferAccountSchema(SchemaBase):
             'transfer_accounts',
             'transfer_accounts'))
 
-    credit_sends            = fields.Nested(CreditTransferSchema, many=True)
-    credit_receives         = fields.Nested(CreditTransferSchema, many=True)
+    credit_sends            = fields.Nested(CreditTransferSchema, exclude=("approvers",), many=True)
+    credit_receives         = fields.Nested(CreditTransferSchema, exclude=("approvers",), many=True)
 
     token                   = fields.Nested(TokenSchema, only=('id', 'symbol'))
 
@@ -536,15 +537,16 @@ view_transfer_account_schema = TransferAccountSchema(
 view_transfer_accounts_schema = TransferAccountSchema(many=True, exclude=("credit_sends", "credit_receives", "users"))
 
 credit_transfer_schema = CreditTransferSchema()
-credit_transfers_schema = CreditTransferSchema(many=True)
+# Don't show approvers for multiple, saves an expensive join that doesn't need to be there
+credit_transfers_schema = CreditTransferSchema(many=True, exclude=("approvers",)) 
 
 synchronization_filter_schema = SynchronizationFilterSchema()
 
 view_credit_transfer_schema = CreditTransferSchema(exclude=(
-"sender_user", "recipient_user", "lat", "lng", "attached_images" "authorising_user_email"))
+"sender_user", "recipient_user", "lat", "lng", "attached_images" "authorising_user_email", "approvers"))
 
 view_credit_transfers_schema = CreditTransferSchema(many=True, exclude=(
-"sender_user", "recipient_user", "lat", "lng", "attached_images", "authorising_user_email", "transfer_card_public_serial_number"))
+"sender_user", "recipient_user", "lat", "lng", "attached_images", "authorising_user_email", "transfer_card_public_serial_number", "approvers"))
 
 
 transfer_cards_schema = TransferCardSchema(many=True, exclude=("id", "created"))
@@ -587,12 +589,14 @@ exchange_contracts_schema = ExchangeContractSchema(many=True)
 me_transfer_accounts_schema = TransferAccountSchema(many=True,
                                                     exclude=("credit_sends",
                                                              "credit_receives",
-                                                             "users"))
+                                                            "approvers",
+                                                             "users",))
 
 me_credit_transfer_schema = CreditTransferSchema(exclude=("sender_transfer_account",
                                                           "recipient_transfer_account",
                                                           "sender_user",
                                                           "recipient_user",
+                                                          "approvers",
                                                           ),
                                                  context={'filter_rejected': True})
 
@@ -600,6 +604,7 @@ me_credit_transfers_schema = CreditTransferSchema(many=True, exclude=("sender_tr
                                                                       "recipient_transfer_account",
                                                                       "sender_user",
                                                                       "recipient_user",
+                                                                      "approvers",
                                                                       ),
                                                   context={'filter_rejected': True})
 
