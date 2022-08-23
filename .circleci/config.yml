@@ -353,7 +353,7 @@ workflows:
             branches:
               only:
                 - master
-                - deprecate-executor
+                - patch-executor-when-pusher-used
           requires:
             - build
             - test-backend
