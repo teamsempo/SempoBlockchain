@@ -342,7 +342,6 @@ workflows:
             branches:
               only:
                 - demo
-                - ci-deploy-different-branches
           requires:
             - build
             - test-backend
@@ -354,6 +353,7 @@ workflows:
             branches:
               only:
                 - master
+                - deprecate-executor
           requires:
             - build
             - test-backend

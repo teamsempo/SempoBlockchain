@@ -15,15 +15,15 @@ def test_transfer_card_radius(test_client, init_database, complete_admin_auth_to
                                         'nfc_serial_number': nfc_serial_number
                                     }),
                                     content_type='application/json', follow_redirects=True)
-    create_card(123456, 'ABCD1234F')
-    create_card(111111, 'AAAA1111A')
-    create_card(222222, 'BBBBB111B')
-    create_card(333333, 'CCCCC222C')
-    create_card(444444, 'DDDDD333D')
-    create_card(555555, 'AAAAVVVVV')
-    create_card(666666, 'AAAAVVVVZ')
-    create_card(777777, 'RAAAVVVVZ')
-    create_card(888888, 'SAAAVVVVZ')
+    create_card(123456, 'AB:CD:12:34F')
+    create_card(111111, 'AA:AA:11:11A')
+    create_card(222222, 'BB:BB:B1:11B')
+    create_card(333333, 'CC:CC:C2:22C')
+    create_card(444444, 'DD:DD:D3:33D')
+    create_card(555555, 'AA:AA:VV:VVV')
+    create_card(666666, 'AA:AA:VV:VVZ')
+    create_card(777777, 'RA:AA:VV:VVZ')
+    create_card(888888, 'SA:AA:VV:VVZ')
 
     # Create users
     user1 = create_transfer_account_user(first_name='Arthur',
@@ -178,7 +178,7 @@ def test_transfer_card_api(test_client, init_database, complete_admin_auth_token
                                 headers=dict(Authorization=complete_admin_auth_token, Accept='application/json'),
                                 data=json.dumps({
                                     'public_serial_number': 111119,
-                                    'nfc_serial_number': '9AAA1111A'
+                                    'nfc_serial_number': '9A:AA:11:11A'
                                 }),
                                 content_type='application/json', follow_redirects=True)
 
@@ -189,7 +189,7 @@ def test_transfer_card_api(test_client, init_database, complete_admin_auth_token
                                 headers=dict(Authorization=complete_admin_auth_token, Accept='application/json'),
                                 data=json.dumps({
                                     'public_serial_number': '111119',
-                                    'nfc_serial_number': '9AAA1111A'
+                                    'nfc_serial_number': '9A:AA:11:11A'
                                 }),
                                 content_type='application/json', follow_redirects=True)
 
@@ -200,7 +200,7 @@ def test_transfer_card_api(test_client, init_database, complete_admin_auth_token
                                 headers=dict(Authorization=complete_admin_auth_token, Accept='application/json'),
                                 data=json.dumps({
                                     'public_serial_number': '22222',
-                                    'nfc_serial_number': 'abcd1234F'
+                                    'nfc_serial_number': 'ab:cd:12:34F'
                                 }),
                                 content_type='application/json', follow_redirects=True)
 

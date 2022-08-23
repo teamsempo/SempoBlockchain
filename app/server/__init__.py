@@ -1,7 +1,8 @@
 from typing import Callable, Union
 from flask import Flask, request, redirect, render_template, make_response, jsonify, g
-from flask_executor import Executor
 import json
+from flask_executor import Executor
+
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy, BaseQuery
 from flask_basicauth import BasicAuth
@@ -23,11 +24,10 @@ import i18n
 from eth_utils import to_checksum_address
 import sys
 import os
-from web3 import Web3, HTTPProvider
 import atexit
 from apscheduler.schedulers.background import BackgroundScheduler
 
-from server.sempo_types import ExecutorJobList
+from server.sempo_types import DeferredJobList
 
 # try:
 #     import uwsgi
@@ -61,7 +61,6 @@ def create_app(skip_create_filters = False):
 
     app.config.from_object('config')
     app.config['BASEDIR'] = os.path.abspath(os.path.dirname(__file__))
-    app.config['EXECUTOR_PROPAGATE_EXCEPTIONS'] = True
     # app.config["SQLALCHEMY_ECHO"] = True
 
     # ensure the instance folder exists
@@ -131,36 +130,41 @@ def register_blueprints(app):
     def before_request():
         # Celery task list. Tasks are added here so that they can be completed after db commit
         g.pending_transactions = []
-        g.executor_jobs: ExecutorJobList = []
+        g.deferred_jobs: DeferredJobList = []
         g.is_after_request = False
 
     @app.after_request
     def after_request(response):
+        def _prepare_and_execute_deferred_tasks():
+            g.is_after_request = True
+            if g.deferred_jobs:
+                for job, args, kwargs in g.deferred_jobs:
+                    job.submit(*args, **kwargs)
+            from server.utils.executor import after_deferred_jobs
+            after_deferred_jobs()
+
         if response.status_code < 300 and response.status_code >= 200:
             db.session.commit()
-
-        # Async tasks are synchronous in pytest, so no need to nuke
-        if not config.IS_TEST:
-            # Detaches all existing db objects from the old session
-            db.session.expunge_all()
-            # Closes and tosses out the old session and engine
-            db.session.close()
-            db.engine.dispose()
-
-        g.is_after_request = True
-        if g.executor_jobs:
-            from flask.globals import _request_ctx_stack
-            for job, args, kwargs in g.executor_jobs:
-                top = _request_ctx_stack.top
-                reqctx = top.copy()
-                reqctx.request.environ = reqctx.request.environ.copy()
-                with reqctx:
-                    job.submit(*args, **kwargs)
+        if config.IS_TEST:
+            _prepare_and_execute_deferred_tasks()
         else:
-            from server.utils.executor import prepare_transactions_async_job
-            prepare_transactions_async_job()
-
+            from flask.globals import _app_ctx_stack
+            appctx = _app_ctx_stack.top
+            @response.call_on_close
+            def on_close():
+                with appctx:
+                    from server.models.organisation import Organisation
+                    from server.models.user import User
+                    if g and g.get('active_organisation'):
+                        g.active_organisation = db.session.query(Organisation).filter(Organisation.id == g.active_organisation.id).first() 
+                        db.session.merge(g.active_organisation)
+                        db.session.merge(g.active_organisation.token)
+                    if g and g.get('user'):
+                        g.user = db.session.query(User).filter(User.id == g.user.id).first() 
+                        db.session.merge(g.user)
+                    _prepare_and_execute_deferred_tasks()
         return response
+
 
     from .views.index import index_view
     from server.api.auth_api import auth_blueprint
