@@ -96,6 +96,6 @@ def bulk_process_transactions():
             transaction = db.session.query(Exchange).filter(Exchange.id == transaction.id).first()
         transaction.send_blockchain_payload_to_worker(queue=queue)
         pusher_transactions.append(transaction)
-        g.pending_transactions = []
+    g.pending_transactions = []
     if not current_app.config['IS_TEST']:
         pusher_utils.push_admin_credit_transfer([txn for txn in pusher_transactions])
