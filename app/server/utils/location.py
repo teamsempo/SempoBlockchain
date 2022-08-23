@@ -4,7 +4,7 @@ import json
 from sentry_sdk import capture_message
 
 from config import logg
-from server import db, executor
+from server import db
 from server.utils.executor import standard_executor_job
 from server.models.user import User
 from server import red

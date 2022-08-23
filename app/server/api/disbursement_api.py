@@ -1,7 +1,7 @@
 from decimal import Decimal
 import math
 
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, load_only
 from flask import Blueprint, request, make_response, jsonify, g, current_app
 from flask.views import MethodView
 from sqlalchemy import desc, asc
@@ -29,7 +29,9 @@ def make_transfers(disbursement_id, auto_resolve=False):
     from server.models.user import User
     from server.models.transfer_account import TransferAccount
     from server.models.disbursement import Disbursement
-    disbursement = db.session.query(Disbursement).filter(Disbursement.id == disbursement_id).first()
+    disbursement = db.session.query(Disbursement).filter(Disbursement.id == disbursement_id)\
+        .options(joinedload(Disbursement.transfer_accounts))\
+        .first()
     disbursement.mark_processing()
     db.session.commit()
     for idx, ta in enumerate(disbursement.transfer_accounts):
@@ -77,7 +79,6 @@ def make_transfers(disbursement_id, auto_resolve=False):
         yield {
             'message': 'success' if percent_complete == 100 else 'pending',
             'percent_complete': math.floor(percent_complete),
-            'data': {'credit_transfers': credit_transfers_schema.dump(disbursement.credit_transfers).data}
         }
     disbursement.mark_complete()
     db.session.commit()
@@ -139,20 +140,16 @@ class MakeDisbursementAPI(MethodView):
             disbursement_amount = disbursement_amount,
             transfer_type = transfer_type
         )
-
         if include_accounts:
-            transfer_accounts = db.session.query(TransferAccount).filter(TransferAccount.id.in_(include_accounts)).all()
+            transfer_accounts = db.session.query(TransferAccount).filter(TransferAccount.id.in_(include_accounts)).options(load_only("id")).all()
         else:
-            search_query = generate_search_query(search_string, filters, order, sort_by_arg, include_user=True)
+            search_query = generate_search_query(search_string, filters, order, sort_by_arg, include_user=False)
             search_query = search_query.filter(TransferAccount.id.notin_(exclude_accounts))
-            results = search_query.all()
-            transfer_accounts = [r[0] for r in results] # Get TransferAccount (TransferAccount, searchRank, User)
-        d.transfer_accounts.extend(transfer_accounts)
-
-        db.session.flush()
-
+            transfer_accounts = search_query.options(load_only("id")).all()
+        d.transfer_accounts = transfer_accounts
+        db.session.add(d)
+        db.session.commit()
         disbursement = disbursement_schema.dump(d).data
-
         response_object = {
             'data': {
                 'status': 'success',
@@ -165,18 +162,6 @@ class MakeDisbursementAPI(MethodView):
 class DisbursementAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def get(self, disbursement_id):
-        accounts = db.session.query(TransferAccount)\
-            .filter(TransferAccount.disbursements.any(id=disbursement_id))\
-            .options(joinedload(TransferAccount.disbursements))
-        accounts, total_items, total_pages, new_last_fetched = paginate_query(accounts)
-        if accounts is None:
-            response_object = {
-                'message': 'No transfer accounts',
-            }
-
-            return make_response(jsonify(response_object)), 400
-
-        transfer_accounts = transfer_accounts_schema.dump(accounts).data
         d = db.session.query(Disbursement).filter_by(id=disbursement_id).first()
         disbursement = disbursement_schema.dump(d).data
 
@@ -184,7 +169,6 @@ class DisbursementAPI(MethodView):
             'status': 'success',
             'message': 'Successfully Loaded.',
             'data': {
-                'transfer_accounts': transfer_accounts,
                 'disbursement': disbursement
             }
         }
@@ -207,7 +191,6 @@ class DisbursementAPI(MethodView):
         with red.lock(name=f'Disbursemnt{disbursement_id}', timeout=10, blocking_timeout=20):
 
             disbursement = Disbursement.query.filter(Disbursement.id == disbursement_id)\
-                .options(joinedload(Disbursement.credit_transfers))\
                 .first()
             disbursement.notes = notes
             
