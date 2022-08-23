@@ -60,6 +60,10 @@ class SingleCreditTransfer extends React.Component {
       const transferStatus = creditTransfer.transfer_status;
       const transferMode = creditTransfer.transfer_mode;
       const resolutionMessage = creditTransfer.resolution_message;
+      const approvers = creditTransfer.approvers || [];
+      const approversText = approvers
+        .map((approver) => approver.email)
+        .join(", ");
 
       const createDate = moment
         .utc(creditTransfer.created)
@@ -153,6 +157,9 @@ class SingleCreditTransfer extends React.Component {
             </Descriptions.Item>
             <Descriptions.Item label={"Transfer Uses"}>
               {transferUsages}
+            </Descriptions.Item>
+            <Descriptions.Item label={"Approvers"}>
+              {approversText}
             </Descriptions.Item>
           </Descriptions>
 

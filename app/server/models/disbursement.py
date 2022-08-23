@@ -46,7 +46,6 @@ class Disbursement(ModelBase, OneOrgBase):
     transfer_accounts = db.relationship(
         "TransferAccount",
         secondary=disbursement_transfer_account_association_table,
-        back_populates="disbursements",
         lazy=True)
 
     credit_transfers = db.relationship(
