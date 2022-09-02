@@ -54,6 +54,8 @@ export interface byIdState {
 
 export type IdListState = (number | string)[];
 
+export type paginationState = any;
+
 // The Generics here correspond to the Body sent during either Create or Modify requests.
 export interface Registration<CB extends Body = Body, MB extends Body = CB> {
   name: string;

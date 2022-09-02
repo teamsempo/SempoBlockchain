@@ -3,13 +3,15 @@ import {
   APILifecycleActionTypesInterface,
   byIdState,
   IdListState,
+  paginationState,
   Registration,
-  RequestingState
+  RequestingState,
 } from "./types";
 import {
   deepUpdateObjectsActionType,
   replaceIdListActionType,
-  replaceUpdateObjectsActionType
+  replacePaginationActionType,
+  replaceUpdateObjectsActionType,
 } from "./actions";
 
 export const lifecycleReducerFactory = (
@@ -19,7 +21,7 @@ export const lifecycleReducerFactory = (
   const initialLoaderState = {
     isRequesting: false,
     success: false,
-    error: null
+    error: null,
   };
   return (
     state: RequestingState | undefined = initialLoaderState,
@@ -37,7 +39,7 @@ export const lifecycleReducerFactory = (
           ...state,
           isRequesting: false,
           success: false,
-          error: action.error
+          error: action.error,
         };
 
       default:
@@ -72,6 +74,19 @@ export const idListReducerFactory = (
         return (state = action.idList);
       default:
         return state;
+    }
+  };
+};
+
+export const paginationReducerFactory = (
+  reg: Registration
+): ((state: paginationState | undefined, action: any) => paginationState) => {
+  return (state: paginationState | any, action: any): paginationState => {
+    switch (action.type) {
+      case replacePaginationActionType(reg.name):
+        return (state = action.pagination);
+      default:
+        return state || {};
     }
   };
 };

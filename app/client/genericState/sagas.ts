@@ -13,7 +13,7 @@ import {
   EndpointedRegistrationMapping,
   LoadRequestAction,
   ModifyRequestAction,
-  Result
+  Result,
 } from "./types";
 import { handleError } from "../utils";
 import {
@@ -21,7 +21,8 @@ import {
   deepUpdateObjectsActionType,
   loadActionTypes,
   modifyActionTypes,
-  replaceIdListActionType
+  replaceIdListActionType,
+  replacePaginationActionType,
 } from "./actions";
 
 export const sagaFactory = (
@@ -33,7 +34,7 @@ export const sagaFactory = (
     if (normalized) {
       yield put({
         type: replaceIdListActionType(reg.name),
-        idList: normalized.result
+        idList: normalized.result,
       });
     }
   }
@@ -45,7 +46,6 @@ export const sagaFactory = (
   function* modifyRequest(action: ModifyRequestAction) {
     yield apiRequest(genericPutAPI, modifyActionTypes, action);
   }
-
   function* apiRequest(
     apiHandler: (req: ApiRequest) => Result,
     actionType: APILifecycleActionTypesInterface,
@@ -68,8 +68,14 @@ export const sagaFactory = (
         normalizedData = normalize(dataList, reg.schema);
 
         id = normalizedData.result.length === 1 && normalizedData.result[0];
+        if (result && result.items && result.pages) {
+          yield put({
+            type: replacePaginationActionType(reg.name),
+            pagination: { pages: result.pages, items: result.items },
+          });
+        }
 
-        yield* Object.keys(registrations).map(key => {
+        yield* Object.keys(registrations).map((key) => {
           let r = registrations[key];
           let plural = r.pluralData || `${r.endpoint}s`;
           let objects = normalizedData.entities[plural];
@@ -81,7 +87,7 @@ export const sagaFactory = (
 
       yield put({
         type: actionType.success(reg.name),
-        id: id
+        id: id,
       });
 
       return normalizedData;

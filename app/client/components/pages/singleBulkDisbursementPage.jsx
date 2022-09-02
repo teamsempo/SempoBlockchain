@@ -10,6 +10,7 @@ import organizationWrapper from "../organizationWrapper.jsx";
 import { apiActions } from "../../genericState";
 import { sempoObjects } from "../../reducers/rootReducer";
 import { formatMoney, getActiveToken, toCurrency } from "../../utils";
+import CreditTransferList from "../creditTransfer/CreditTransferList";
 import QueryConstructor from "../filterModule/queryConstructor";
 import TransferAccountList from "../transferAccount/TransferAccountList";
 const { TextArea } = Input;
@@ -22,8 +23,13 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    loadBulkDisbursement: (path) =>
-      dispatch(apiActions.load(sempoObjects.bulkTransfers, path)),
+    loadBulkDisbursement: (path, page, per_page) =>
+      dispatch(
+        apiActions.load(sempoObjects.bulkTransfers, path, {
+          per_page: per_page,
+          page: page,
+        })
+      ),
     modifyBulkDisbursement: (path, body) =>
       dispatch(apiActions.modify(sempoObjects.bulkTransfers, path, body)),
   };
@@ -48,11 +54,20 @@ class SingleBulkDisbursementPage extends React.Component {
       page,
       per_page,
     });
+    this.props.loadBulkDisbursement(
+      this.props.match.params.bulkId,
+      page,
+      per_page
+    );
   };
 
   componentDidMount() {
     let bulkId = this.props.match.params.bulkId;
-    this.props.loadBulkDisbursement(bulkId);
+    this.props.loadBulkDisbursement(
+      bulkId,
+      this.state.page,
+      this.state.per_page
+    );
   }
 
   onComplete() {
@@ -75,7 +90,7 @@ class SingleBulkDisbursementPage extends React.Component {
     let bulkId = this.props.match.params.bulkId;
 
     let bulkItem = this.props.bulkTransfers.byId[bulkId];
-
+    let pagination = this.props.bulkTransfers.pagination;
     let totalAmount;
     if (bulkItem && bulkItem.total_disbursement_amount) {
       totalAmount = formatMoney(
@@ -106,6 +121,8 @@ class SingleBulkDisbursementPage extends React.Component {
     let approvers = (bulkItem && bulkItem.approvers) || [];
     let label = bulkItem && bulkItem.label;
     let notes = bulkItem && bulkItem.notes;
+    let items = pagination && pagination.items;
+    let creditTransferList = (bulkItem && bulkItem.credit_transfers) || [];
     const approversList = approvers.map((approver, index, approversList) => {
       const spacer = index + 1 == approversList.length ? "" : ", ";
       const approvalTime = approvalTimes[index]
@@ -157,6 +174,12 @@ class SingleBulkDisbursementPage extends React.Component {
       completion_tag = <Tag color="#e2a963">Unknown</Tag>;
     }
 
+    var byId = {};
+    creditTransferList.forEach((transfer) => {
+      byId[transfer.id] = transfer;
+    });
+    creditTransferList["byId"] = byId;
+    creditTransferList["loadStatus"] = { isRequesting: false };
     return (
       <WrapperDiv>
         <PageWrapper>
@@ -262,33 +285,12 @@ class SingleBulkDisbursementPage extends React.Component {
 
             {info}
           </Card>
-          <Card
-            title="Included Accounts (not editable)"
-            style={{ margin: "10px" }}
-          >
-            <QueryConstructor
-              onQueryChange={(query) => {}}
-              filterObject="user"
-              providedParams={bulkItem && bulkItem.search_filter_params}
-              providedSearchString={bulkItem && bulkItem.search_string}
-              pagination={{
-                page: this.state.page,
-                per_page: this.state.per_page,
-              }}
-              disabled={true}
-            />
-            <TransferAccountList
-              orderedTransferAccounts={this.props.transferAccounts.IdList}
-              disabled={true}
-              actionButtons={[]}
-              dataButtons={[]}
-              noneSelectedbuttons={[]}
-              onSelectChange={(s, u, a) => {}}
-              providedSelectedRowKeys={bulkItem && bulkItem.include_accounts}
-              providedUnselectedRowKeys={bulkItem && bulkItem.exclude_accounts}
+          <Card title="Included Transfers" style={{ margin: "10px" }}>
+            <CreditTransferList
+              creditTransfers={creditTransferList}
               paginationOptions={{
                 currentPage: this.state.page,
-                items: this.props.transferAccounts.pagination.items,
+                items: items,
                 onChange: (page, perPage) =>
                   this.onPaginateChange(page, perPage),
               }}

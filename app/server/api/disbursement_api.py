@@ -30,7 +30,6 @@ def make_transfers(disbursement_id, auto_resolve=False):
     from server.models.transfer_account import TransferAccount
     from server.models.disbursement import Disbursement
     disbursement = db.session.query(Disbursement).filter(Disbursement.id == disbursement_id)\
-        .options(joinedload(Disbursement.transfer_accounts))\
         .first()
     disbursement.mark_processing()
     db.session.commit()
@@ -74,8 +73,7 @@ def make_transfers(disbursement_id, auto_resolve=False):
             disbursement.errors = disbursement.errors + [str(ta) +': ' + str(e)]
 
         db.session.commit()
-        percent_complete = ((idx + 1) / len(disbursement.transfer_accounts)) * 100
-
+        percent_complete = ((idx + 1) / disbursement.recipient_count) * 100
         yield {
             'message': 'success' if percent_complete == 100 else 'pending',
             'percent_complete': math.floor(percent_complete),
@@ -163,11 +161,17 @@ class DisbursementAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def get(self, disbursement_id):
         d = db.session.query(Disbursement).filter_by(id=disbursement_id).first()
+        credit_transfers, _, _, _ = paginate_query(d.credit_transfers)
+        transfer_accounts, total_items, total_pages, last_fetched = paginate_query(d.transfer_accounts)
         disbursement = disbursement_schema.dump(d).data
-
+        disbursement['credit_transfers'] = credit_transfers_schema.dump(credit_transfers)[0]
+        disbursement['transfer_accounts'] = transfer_accounts_schema.dump(transfer_accounts)[0]
         response_object = {
             'status': 'success',
             'message': 'Successfully Loaded.',
+            'items': total_items,
+            'pages': total_pages,
+            'last_fetched': last_fetched,
             'data': {
                 'disbursement': disbursement
             }
