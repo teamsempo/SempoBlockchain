@@ -12,7 +12,8 @@ import { sempoObjects } from "../../reducers/rootReducer";
 import { formatMoney, getActiveToken, toCurrency } from "../../utils";
 import CreditTransferList from "../creditTransfer/CreditTransferList";
 import QueryConstructor from "../filterModule/queryConstructor";
-import TransferAccountList from "../transferAccount/TransferAccountList";
+import { DisconnectedTransferAccountList } from "../transferAccount/TransferAccountList";
+
 const { TextArea } = Input;
 
 const mapStateToProps = (state) => ({
@@ -123,6 +124,7 @@ class SingleBulkDisbursementPage extends React.Component {
     let notes = bulkItem && bulkItem.notes;
     let items = pagination && pagination.items;
     let creditTransferList = (bulkItem && bulkItem.credit_transfers) || [];
+    let transferAccountList = (bulkItem && bulkItem.transfer_accounts) || [];
     const approversList = approvers.map((approver, index, approversList) => {
       const spacer = index + 1 == approversList.length ? "" : ", ";
       const approvalTime = approvalTimes[index]
@@ -174,12 +176,67 @@ class SingleBulkDisbursementPage extends React.Component {
       completion_tag = <Tag color="#e2a963">Unknown</Tag>;
     }
 
-    var byId = {};
+    var creditTransfersById = {};
     creditTransferList.forEach((transfer) => {
-      byId[transfer.id] = transfer;
+      creditTransfersById[transfer.id] = transfer;
     });
-    creditTransferList["byId"] = byId;
+    creditTransferList["byId"] = creditTransfersById;
     creditTransferList["loadStatus"] = { isRequesting: false };
+
+    var transferAccountsById = {};
+    transferAccountList.forEach((transfer) => {
+      transferAccountsById[transfer.id] = transfer;
+    });
+    var IdList = [];
+    transferAccountList.forEach((transferAccount) => {
+      IdList.push(transferAccount.id);
+    });
+    transferAccountList["byId"] = transferAccountsById;
+    transferAccountList["loadStatus"] = { isRequesting: false };
+    transferAccountList["IdList"] = IdList;
+
+    var users = [];
+    transferAccountList.forEach((transferAccount) => {
+      users = users.concat(transferAccount.users);
+    });
+    var usersByID = {};
+    users.forEach((transfer) => {
+      usersByID[transfer.id] = transfer;
+    });
+    users["byId"] = usersByID;
+    users["loadStatus"] = { isRequesting: false };
+
+    let displayList =
+      completion_status === "COMPLETE" ? (
+        <Card title="Included Transfers" style={{ margin: "10px" }}>
+          <CreditTransferList
+            creditTransfers={creditTransferList}
+            paginationOptions={{
+              currentPage: this.state.page,
+              items: items,
+              onChange: (page, perPage) => this.onPaginateChange(page, perPage),
+            }}
+          />
+        </Card>
+      ) : (
+        <Card title="Included Accounts" style={{ margin: "10px" }}>
+          <DisconnectedTransferAccountList
+            params={this.state.params}
+            searchString={this.state.searchString}
+            orderedTransferAccounts={transferAccountList.IdList}
+            users={users}
+            transferAccounts={transferAccountList}
+            actionButtons={[]}
+            dataButtons={[]}
+            paginationOptions={{
+              currentPage: this.state.page,
+              items: items,
+              onChange: (page, perPage) => this.onPaginateChange(page, perPage),
+            }}
+          />
+        </Card>
+      );
+
     return (
       <WrapperDiv>
         <PageWrapper>
@@ -285,17 +342,7 @@ class SingleBulkDisbursementPage extends React.Component {
 
             {info}
           </Card>
-          <Card title="Included Transfers" style={{ margin: "10px" }}>
-            <CreditTransferList
-              creditTransfers={creditTransferList}
-              paginationOptions={{
-                currentPage: this.state.page,
-                items: items,
-                onChange: (page, perPage) =>
-                  this.onPaginateChange(page, perPage),
-              }}
-            />
-          </Card>
+          {displayList}
         </PageWrapper>
       </WrapperDiv>
     );
