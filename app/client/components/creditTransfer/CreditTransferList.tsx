@@ -16,6 +16,9 @@ interface StateProps {
   tokens: any;
 }
 
+interface PartialStateProps {
+  tokens: any;
+}
 export interface OnPaginateChange {
   (page: number, pageSize: number | undefined): void;
 }
@@ -50,7 +53,7 @@ export interface TransferAccount {
   blockchain_status_colour: string;
 }
 
-type Props = StateProps & OuterProps;
+type Props = StateProps | (PartialStateProps & OuterProps);
 
 const columns: ColumnsType<TransferAccount> = [
   {
@@ -193,6 +196,12 @@ const mapStateToProps = (state: ReduxState): StateProps => {
   };
 };
 
+const mapPartialStateToProps = (state: ReduxState): PartialStateProps => {
+  return {
+    tokens: state.tokens,
+  };
+};
+
 class CreditTransferList extends React.Component<Props> {
   constructor(props: Props) {
     super(props);
@@ -214,16 +223,17 @@ class CreditTransferList extends React.Component<Props> {
   render() {
     const {} = this.state;
     const { creditTransfers, users } = this.props;
-
     let data: any[] = Object.values(creditTransfers.byId)
       .map((transfer: any) => {
         let sender_name;
         let recipient_name;
         const recipient_user =
-          transfer.recipient_user && users.byId[transfer.recipient_user];
+          transfer.recipient_user &&
+          users.byId[transfer.recipient_user.id || transfer.recipient_user];
 
         const sender_user =
-          transfer.sender_user && users.byId[transfer.sender_user];
+          transfer.sender_user &&
+          users.byId[transfer.sender_user.id || transfer.sender_user];
 
         let email = transfer.authorising_user_email;
 
@@ -338,4 +348,7 @@ class CreditTransferList extends React.Component<Props> {
   }
 }
 
+export var DisconnectedCreditTransferList = connect(mapPartialStateToProps)(
+  CreditTransferList
+);
 export default connect(mapStateToProps)(CreditTransferList);

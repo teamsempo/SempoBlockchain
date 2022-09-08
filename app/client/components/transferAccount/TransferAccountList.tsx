@@ -492,7 +492,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
   }
 }
 
-export var DisconnectedTransferAccountList = connect(mapPartialStateToProps)(
+export const DisconnectedTransferAccountList = connect(mapPartialStateToProps)(
   TransferAccountList
 );
 export default connect(mapStateToProps)(TransferAccountList);

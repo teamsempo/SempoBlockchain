@@ -10,8 +10,7 @@ import organizationWrapper from "../organizationWrapper.jsx";
 import { apiActions } from "../../genericState";
 import { sempoObjects } from "../../reducers/rootReducer";
 import { formatMoney, getActiveToken, toCurrency } from "../../utils";
-import CreditTransferList from "../creditTransfer/CreditTransferList";
-import QueryConstructor from "../filterModule/queryConstructor";
+import { DisconnectedCreditTransferList } from "../creditTransfer/CreditTransferList";
 import { DisconnectedTransferAccountList } from "../transferAccount/TransferAccountList";
 
 const { TextArea } = Input;
@@ -209,8 +208,9 @@ class SingleBulkDisbursementPage extends React.Component {
     let displayList =
       completion_status === "COMPLETE" ? (
         <Card title="Included Transfers" style={{ margin: "10px" }}>
-          <CreditTransferList
+          <DisconnectedCreditTransferList
             creditTransfers={creditTransferList}
+            users={users}
             paginationOptions={{
               currentPage: this.state.page,
               items: items,
