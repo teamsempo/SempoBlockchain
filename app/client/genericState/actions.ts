@@ -31,6 +31,8 @@ export const replaceIdListActionType: ActionGenerator = (name) =>
   `REPLACE_${name.toUpperCase()}_ID_LIST`;
 export const replacePaginationActionType: ActionGenerator = (name) =>
   `REPLACE_${name.toUpperCase()}_PAGINATION`;
+export const replaceAsyncIdActionType: ActionGenerator = (name) =>
+  `REPLACE_${name.toUpperCase()}_ASYNC_PROGRESS`;
 
 // These functions are designed to be called directly from inside a dispatch,
 // and they will return an appropriately shaped action for the given Rest API... action? (load, create, modify)

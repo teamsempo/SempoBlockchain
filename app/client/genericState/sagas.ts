@@ -23,6 +23,7 @@ import {
   modifyActionTypes,
   replaceIdListActionType,
   replacePaginationActionType,
+  replaceAsyncIdActionType,
 } from "./actions";
 
 export const sagaFactory = (
@@ -74,7 +75,12 @@ export const sagaFactory = (
             pagination: { pages: result.pages, items: result.items },
           });
         }
-
+        if (result && result.task_uuid) {
+          yield put({
+            type: replaceAsyncIdActionType(reg.name),
+            asyncId: result.task_uuid,
+          });
+        }
         yield* Object.keys(registrations).map((key) => {
           let r = registrations[key];
           let plural = r.pluralData || `${r.endpoint}s`;

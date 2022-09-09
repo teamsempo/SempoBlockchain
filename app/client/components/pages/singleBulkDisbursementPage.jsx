@@ -88,9 +88,9 @@ class SingleBulkDisbursementPage extends React.Component {
 
   render() {
     let bulkId = this.props.match.params.bulkId;
-
     let bulkItem = this.props.bulkTransfers.byId[bulkId];
     let pagination = this.props.bulkTransfers.pagination;
+    let asyncId = this.props.bulkTransfers.asyncId;
     let totalAmount;
     if (bulkItem && bulkItem.total_disbursement_amount) {
       totalAmount = formatMoney(

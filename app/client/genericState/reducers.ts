@@ -4,6 +4,7 @@ import {
   byIdState,
   IdListState,
   paginationState,
+  asyncIdState,
   Registration,
   RequestingState,
 } from "./types";
@@ -12,6 +13,7 @@ import {
   replaceIdListActionType,
   replacePaginationActionType,
   replaceUpdateObjectsActionType,
+  replaceAsyncIdActionType,
 } from "./actions";
 
 export const lifecycleReducerFactory = (
@@ -85,6 +87,20 @@ export const paginationReducerFactory = (
     switch (action.type) {
       case replacePaginationActionType(reg.name):
         return (state = action.pagination);
+      default:
+        return state || {};
+    }
+  };
+};
+
+export const asyncIdReducerFactory = (
+  reg: Registration
+): ((state: asyncIdState | undefined, action: any) => asyncIdState) => {
+  return (state: asyncIdState | any, action: any): asyncIdState => {
+    switch (action.type) {
+      case replaceAsyncIdActionType(reg.name): {
+        return (state = action.asyncId);
+      }
       default:
         return state || {};
     }
