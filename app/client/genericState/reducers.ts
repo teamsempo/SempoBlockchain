@@ -102,7 +102,7 @@ export const asyncIdReducerFactory = (
         return (state = action.asyncId);
       }
       default:
-        return state || {};
+        return state || "";
     }
   };
 };

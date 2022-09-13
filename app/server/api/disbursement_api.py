@@ -25,6 +25,11 @@ disbursement_blueprint = Blueprint('disbursement', __name__)
 
 @status_checkable_executor_job
 def make_transfers(disbursement_id, auto_resolve=False):
+    yield {
+        'message': 'Processing Bulk Disbursement',
+        'percent_complete': 0,
+    }
+
     send_transfer_account = g.user.default_organisation.queried_org_level_transfer_account
     from server.models.user import User
     from server.models.transfer_account import TransferAccount
@@ -74,8 +79,9 @@ def make_transfers(disbursement_id, auto_resolve=False):
 
         db.session.commit()
         percent_complete = ((idx + 1) / disbursement.recipient_count) * 100
+        message = f'Creating transfer {idx+1} of {disbursement.recipient_count}'
         yield {
-            'message': 'success' if percent_complete == 100 else 'pending',
+            'message': 'Success' if percent_complete == 100 else message,
             'percent_complete': math.floor(percent_complete),
         }
     disbursement.mark_complete()

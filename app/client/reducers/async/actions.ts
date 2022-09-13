@@ -1,23 +1,22 @@
 import {
-  LoadMetricsActionType,
-  MetricsActionType,
-  Metrics,
-  LoadMetricsPayload,
+  LoadAsyncActionType,
+  LoadAsyncPayload,
+  AsyncActionType,
 } from "./types";
 import { ActionsUnion, createAction } from "../../reduxUtils";
 
-export const MetricAction = {
-  updateMetrics: (metrics: Metrics) =>
-    createAction(MetricsActionType.UPDATE_METRICS, metrics),
+export const AsyncAction = {
+  updateAsync: (asyncData: any) =>
+    createAction(AsyncActionType.UPDATE_ASYNC, asyncData),
+  clearAsync: () => createAction(AsyncActionType.UPDATE_ASYNC, {}),
 };
-export type MetricAction = ActionsUnion<typeof MetricAction>;
+export type AsyncAction = ActionsUnion<typeof AsyncAction>;
 
-export const LoadMetricAction = {
-  loadMetricRequest: (payload: LoadMetricsPayload) =>
-    createAction(LoadMetricsActionType.LOAD_METRICS_REQUEST, payload),
-  loadMetricSuccess: () =>
-    createAction(LoadMetricsActionType.LOAD_METRICS_SUCCESS),
-  loadMetricFailure: (error: string) =>
-    createAction(LoadMetricsActionType.LOAD_METRICS_FAILURE, error),
+export const LoadAsyncAction = {
+  loadAsyncRequest: (payload: LoadAsyncPayload) =>
+    createAction(LoadAsyncActionType.LOAD_ASYNC_REQUEST, payload),
+  loadASyncSuccess: () => createAction(LoadAsyncActionType.LOAD_ASYNC_SUCCESS),
+  loadAsyncFailure: (error: string) =>
+    createAction(LoadAsyncActionType.LOAD_ASYNC_FAILURE, error),
 };
-export type LoadMetricAction = ActionsUnion<typeof LoadMetricAction>;
+export type LoadAsyncAction = ActionsUnion<typeof LoadAsyncAction>;

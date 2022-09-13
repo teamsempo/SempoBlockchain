@@ -65,7 +65,7 @@ export const createReducers = <R extends RegistrationMapping>(
           modifyStatus: lifecycleReducerFactory(modifyActionTypes, reg),
           idList: idListReducerFactory(reg),
           pagination: paginationReducerFactory(reg),
-          asnycId: asyncIdReducerFactory(reg),
+          asyncId: asyncIdReducerFactory(reg),
         },
       };
     }

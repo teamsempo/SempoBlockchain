@@ -1,13 +1,12 @@
 import { combineReducers } from "redux";
 
-import { LoadMetricAction, MetricAction } from "./actions";
-import { MetricsActionType, LoadMetricsActionType, Metrics } from "./types";
+import { LoadAsyncAction, AsyncAction } from "./actions";
+import { AsyncActionType, LoadAsyncActionType, AsyncData } from "./types";
 
-const metricsState = (state: Metrics[] = [] || {}, action: MetricAction) => {
+const asyncState = (state: AsyncData[] = [] || {}, action: AsyncAction) => {
   switch (action.type) {
-    case MetricsActionType.UPDATE_METRICS:
-      //Shallow merge so that aggregates don't compound
-      return { ...state, ...action.payload };
+    case AsyncActionType.UPDATE_ASYNC:
+      return { ...action.payload };
     default:
       return state;
   }
@@ -25,20 +24,20 @@ const initialState: RequestingState = {
   error: null,
 };
 
-const loadStatus = (state = initialState, action: LoadMetricAction) => {
+const loadStatus = (state = initialState, action: LoadAsyncAction) => {
   switch (action.type) {
-    case LoadMetricsActionType.LOAD_METRICS_REQUEST:
+    case LoadAsyncActionType.LOAD_ASYNC_REQUEST:
       return { ...state, isRequesting: true };
-    case LoadMetricsActionType.LOAD_METRICS_SUCCESS:
+    case LoadAsyncActionType.LOAD_ASYNC_SUCCESS:
       return { ...state, isRequesting: false, success: true };
-    case LoadMetricsActionType.LOAD_METRICS_FAILURE:
+    case LoadAsyncActionType.LOAD_ASYNC_FAILURE:
       return { ...state, isRequesting: false, error: action.error };
     default:
       return state;
   }
 };
 
-export const metrics = combineReducers({
-  metricsState,
+export const AsyncReducer = combineReducers({
+  asyncState,
   loadStatus,
 });
