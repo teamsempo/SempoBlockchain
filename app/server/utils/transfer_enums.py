@@ -7,6 +7,7 @@ class TransferTypeEnum(enum.Enum):
     WITHDRAWAL  = "WITHDRAWAL"
     EXCHANGE    = "EXCHANGE"
     FEE         = "FEE"
+    MINT        = "MINT"
 
 
 class TransferSubTypeEnum(enum.Enum):

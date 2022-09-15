@@ -77,7 +77,7 @@ class Filters(object):
                 'name': "Transfer Type",
                 'table': CreditTransfer.__tablename__,
                 'type': TransferFilterEnum.DISCRETE,
-                'values': ['PAYMENT', 'DEPOSIT', 'WITHDRAWAL', 'EXCHANGE', 'FEE', 'DISBURSEMENT', 'RECLAMATION', 'AGENT_IN', 'AGENT_OUT', 'INCENTIVE']
+                'values': ['PAYMENT', 'DEPOSIT', 'WITHDRAWAL', 'EXCHANGE', 'FEE', 'DISBURSEMENT', 'RECLAMATION', 'AGENT_IN', 'AGENT_OUT', 'INCENTIVE', 'MINT']
             },
         }
 

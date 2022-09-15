@@ -539,12 +539,15 @@ class InternalCreditTransferAPI(MethodView):
             else:
                 send_transfer_account = create_transfer_account_if_required(sender_blockchain_address, token, TransferAccountType.EXTERNAL)
                 receive_transfer_account = create_transfer_account_if_required(recipient_blockchain_address, token, TransferAccountType.EXTERNAL)
+                transfer_type = TransferTypeEnum.PAYMENT
+                if sender_blockchain_address == '0x0000000000000000000000000000000000000000':
+                    transfer_type = TransferTypeEnum.MINT
                 transfer = CreditTransfer(
                     transfer_amount,
                     token=token,
                     sender_transfer_account=send_transfer_account,
                     recipient_transfer_account=receive_transfer_account,
-                    transfer_type=TransferTypeEnum.PAYMENT,
+                    transfer_type=transfer_type,
                     sender_user=maybe_sender_user,
                     recipient_user=maybe_recipient_user,
                     require_sufficient_balance=False,
