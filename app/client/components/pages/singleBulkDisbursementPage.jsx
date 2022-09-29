@@ -80,6 +80,10 @@ class SingleBulkDisbursementPage extends React.Component {
     );
   }
 
+  toggleAsyncHide = (e) => {
+    this.setState({ isCompleting: !this.state.isCompleting });
+  };
+
   onComplete() {
     let bulkId = this.props.match.params.bulkId;
     this.props.modifyBulkDisbursement(bulkId, {
@@ -154,6 +158,7 @@ class SingleBulkDisbursementPage extends React.Component {
           asyncId={asyncId}
           isModalVisible={showAsyncModal}
           onComplete={(e) => this.onAsyncComplete()}
+          toggleAsyncHide={(e) => this.toggleAsyncHide()}
         />
       );
     }
@@ -201,9 +206,17 @@ class SingleBulkDisbursementPage extends React.Component {
     if (completion_status === "COMPLETE") {
       completion_tag = <Tag color="#9bdf56">Complete</Tag>;
     } else if (completion_status === "PROCESSING") {
-      completion_tag = <Tag color="#d48806">Processing</Tag>;
+      completion_tag = (
+        <Tag color="#d48806" onClick={this.toggleAsyncHide}>
+          Processing
+        </Tag>
+      );
     } else if (completion_status === "PENDING") {
-      completion_tag = <Tag color="#e2a963">Pending</Tag>;
+      completion_tag = (
+        <Tag onClick={this.toggleAsyncHide} color="#e2a963">
+          Pending
+        </Tag>
+      );
     } else {
       completion_tag = <Tag color="#e2a963">Unknown</Tag>;
     }

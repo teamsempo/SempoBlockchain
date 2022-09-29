@@ -48,7 +48,7 @@ class AsyncModal extends React.Component {
         title={this.props.title}
         visible={this.props.isModalVisible && percentComplete != 100}
         footer={null}
-        onCancel={this.onCancel}
+        onCancel={this.props.toggleAsyncHide}
         closable={false}
         centered={true}
         width={200}
@@ -59,7 +59,12 @@ class AsyncModal extends React.Component {
           flexDirection: "column",
         }}
       >
-        <Progress alignItems="center" type="circle" percent={percentComplete} />
+        <Progress
+          alignItems="center"
+          type="circle"
+          percent={percentComplete}
+          strokeColor={"#30a4a6"}
+        />
         <br />
         <h3 alignItems="center">{message}</h3>
       </Modal>
