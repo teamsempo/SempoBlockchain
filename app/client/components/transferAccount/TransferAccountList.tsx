@@ -346,6 +346,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
       transferAccounts,
       users,
       tokens,
+      disableCheckboxes,
     } = this.props;
 
     let data: TransferAccount[] = orderedTransferAccounts
@@ -441,7 +442,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
           <div
             style={{ display: "flex", alignItems: "center", minHeight: "25px" }}
           >
-            {actionButtonElems}
+            {}
           </div>
           <div
             style={{
@@ -450,7 +451,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
               minHeight: "25px",
             }}
           >
-            {dataButtonsElems}
+            {}
           </div>
         </div>
         <Space direction="vertical">
@@ -466,7 +467,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
             loading={transferAccounts.loadStatus.isRequesting}
             columns={columns}
             dataSource={data}
-            rowSelection={rowSelection}
+            rowSelection={disableCheckboxes ? undefined : rowSelection}
             style={{ marginLeft: "10px", marginRight: "10px" }}
             pagination={this.props.paginationOptions ? false : undefined}
           />

@@ -228,6 +228,7 @@ class SingleBulkDisbursementPage extends React.Component {
             transferAccounts={transferAccountList}
             actionButtons={[]}
             dataButtons={[]}
+            disableCheckboxes={true}
             paginationOptions={{
               currentPage: this.state.page,
               items: items,
