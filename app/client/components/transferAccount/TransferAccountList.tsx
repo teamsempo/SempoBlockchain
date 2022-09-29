@@ -442,7 +442,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
           <div
             style={{ display: "flex", alignItems: "center", minHeight: "25px" }}
           >
-            {}
+            {actionButtonElems}
           </div>
           <div
             style={{
@@ -451,7 +451,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
               minHeight: "25px",
             }}
           >
-            {}
+            {dataButtonsElems}
           </div>
         </div>
         <Space direction="vertical">
