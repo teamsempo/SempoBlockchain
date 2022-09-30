@@ -2,6 +2,7 @@ from flask import Blueprint, request, send_file, make_response, jsonify
 from flask.views import MethodView
 from flask import g
 
+from server.models.disbursement import Disbursement
 from server.models.transfer_account import TransferAccount, TransferAccountType
 from server.models.credit_transfer import CreditTransfer
 from server.models.user import User
@@ -92,6 +93,7 @@ class VendorPayoutAPI(MethodView):
             'Payment Has Been Made',
             'Bank Payment Date',
         ])
+        all_transfers = []
         for v in vendors:
             if relist_existing:
                 withdrawals = (CreditTransfer.query
@@ -118,7 +120,7 @@ class VendorPayoutAPI(MethodView):
                 db.session.flush()
 
                 withdrawals.append(transfer)
-
+                all_transfers.append(transfer)
             for w in withdrawals:
                 writer.writerow([
                     v.id,
@@ -139,6 +141,16 @@ class VendorPayoutAPI(MethodView):
                 ])
 
 
+        d = Disbursement(
+            creator_user = g.user,
+            label = f'Vendor Withdrawal - {datetime.today().strftime("%Y-%m-%d")}',
+            transfer_type = 'WITHDRAWAL',
+        )
+        d.credit_transfers = all_transfers
+        d.transfer_accounts = [ct.sender_transfer_account for ct in d.credit_transfers]
+        total_amount = sum(ct.transfer_amount for ct in d.credit_transfers)
+        d.disbursement_amount = total_amount
+        db.session.add(d)
         # Encode the CSV such that it can be sent as a file
         bytes_output = io.BytesIO()
         bytes_output.write(output.getvalue().encode('utf-8'))

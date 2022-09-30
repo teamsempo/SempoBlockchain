@@ -192,6 +192,14 @@ class DisbursementAPI(MethodView):
 
             disbursement = Disbursement.query.filter(Disbursement.id == disbursement_id)\
                 .first()
+
+            if disbursement.transfer_type == 'WITHDRAWAL':
+                return {
+                    'status': 'fail',
+                    'message': 'Withdrawals are only mutable through withdrawal API',
+
+                }, 400
+
             disbursement.notes = notes
             
             if not disbursement:
