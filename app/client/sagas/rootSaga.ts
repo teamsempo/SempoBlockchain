@@ -12,6 +12,7 @@ import wyreSaga from "./wyreSaga";
 import transferUsageSagas from "./transferUsageSagas";
 import organisationSagas from "./organisationSagas";
 import metricSaga from "./metricSaga";
+import asyncSaga from "./asyncSaga";
 import allowedFilterSaga from "./allowedFilterSaga";
 import transferCardSagas from "./transferCardSagas";
 import tokenSagas from "./tokenSaga";
@@ -38,6 +39,7 @@ export default function* rootSaga() {
     tokenSagas(),
     bulkTransferSagas(),
     masterWalletSagas(),
-    generatedSagas()
+    generatedSagas(),
+    asyncSaga(),
   ]);
 }

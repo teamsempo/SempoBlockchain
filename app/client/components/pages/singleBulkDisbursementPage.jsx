@@ -12,7 +12,7 @@ import { sempoObjects } from "../../reducers/rootReducer";
 import { formatMoney, getActiveToken, toCurrency } from "../../utils";
 import { DisconnectedCreditTransferList } from "../creditTransfer/CreditTransferList";
 import { DisconnectedTransferAccountList } from "../transferAccount/TransferAccountList";
-
+import AsyncModal from "../AsyncModal";
 const { TextArea } = Input;
 
 const mapStateToProps = (state) => ({
@@ -45,6 +45,7 @@ class SingleBulkDisbursementPage extends React.Component {
     this.state = {
       page: 1,
       per_page: 10,
+      isCompleting: false,
     };
   }
 
@@ -70,11 +71,27 @@ class SingleBulkDisbursementPage extends React.Component {
     );
   }
 
+  onAsyncComplete() {
+    let bulkId = this.props.match.params.bulkId;
+    this.props.loadBulkDisbursement(
+      bulkId,
+      this.state.page,
+      this.state.per_page
+    );
+  }
+
+  toggleAsyncHide = (e) => {
+    this.setState({ isCompleting: !this.state.isCompleting });
+  };
+
   onComplete() {
     let bulkId = this.props.match.params.bulkId;
     this.props.modifyBulkDisbursement(bulkId, {
       action: "APPROVE",
       notes: this.state.notes,
+    });
+    this.setState({
+      isCompleting: true,
     });
   }
 
@@ -88,9 +105,11 @@ class SingleBulkDisbursementPage extends React.Component {
 
   render() {
     let bulkId = this.props.match.params.bulkId;
-
     let bulkItem = this.props.bulkTransfers.byId[bulkId];
+    let bulkTransferRequesting =
+      this.props.bulkTransfers.loadStatus.isRequesting;
     let pagination = this.props.bulkTransfers.pagination;
+    let asyncId = this.props.bulkTransfers.asyncId;
     let totalAmount;
     if (bulkItem && bulkItem.total_disbursement_amount) {
       totalAmount = formatMoney(
@@ -124,6 +143,25 @@ class SingleBulkDisbursementPage extends React.Component {
     let items = pagination && pagination.items;
     let creditTransferList = (bulkItem && bulkItem.credit_transfers) || [];
     let transferAccountList = (bulkItem && bulkItem.transfer_accounts) || [];
+    let showAsyncModal =
+      completion_status === "PENDING" &&
+      asyncId &&
+      this.state.isCompleting &&
+      !bulkTransferRequesting
+        ? true
+        : false;
+    let asyncModal = null;
+    if (showAsyncModal) {
+      asyncModal = (
+        <AsyncModal
+          title={"Processing Bulk Disbursement"}
+          asyncId={asyncId}
+          isModalVisible={showAsyncModal}
+          onComplete={(e) => this.onAsyncComplete()}
+          toggleAsyncHide={(e) => this.toggleAsyncHide()}
+        />
+      );
+    }
     const approversList = approvers.map((approver, index, approversList) => {
       const spacer = index + 1 == approversList.length ? "" : ", ";
       const approvalTime = approvalTimes[index]
@@ -168,9 +206,17 @@ class SingleBulkDisbursementPage extends React.Component {
     if (completion_status === "COMPLETE") {
       completion_tag = <Tag color="#9bdf56">Complete</Tag>;
     } else if (completion_status === "PROCESSING") {
-      completion_tag = <Tag color="#d48806">Processing</Tag>;
+      completion_tag = (
+        <Tag color="#d48806" onClick={this.toggleAsyncHide}>
+          Processing
+        </Tag>
+      );
     } else if (completion_status === "PENDING") {
-      completion_tag = <Tag color="#e2a963">Pending</Tag>;
+      completion_tag = (
+        <Tag onClick={this.toggleAsyncHide} color="#e2a963">
+          Pending
+        </Tag>
+      );
     } else {
       completion_tag = <Tag color="#e2a963">Unknown</Tag>;
     }
@@ -241,6 +287,7 @@ class SingleBulkDisbursementPage extends React.Component {
     return (
       <WrapperDiv>
         <PageWrapper>
+          {asyncModal}
           <Card
             title={label || `Bulk Transfer ${bulkId}`}
             style={{ margin: "10px" }}

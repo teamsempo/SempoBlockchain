@@ -10,6 +10,7 @@ import {
   idListReducerFactory,
   lifecycleReducerFactory,
   paginationReducerFactory,
+  asyncIdReducerFactory,
 } from "./reducers";
 import {
   EndpointedRegistration,
@@ -64,6 +65,7 @@ export const createReducers = <R extends RegistrationMapping>(
           modifyStatus: lifecycleReducerFactory(modifyActionTypes, reg),
           idList: idListReducerFactory(reg),
           pagination: paginationReducerFactory(reg),
+          asyncId: asyncIdReducerFactory(reg),
         },
       };
     }
