@@ -76,6 +76,15 @@ class SingleBulkDisbursementPage extends React.Component {
 
     let bulkItem = this.props.bulkTransfers.byId[bulkId];
 
+    let status = bulkItem && bulkItem.state;
+    let completion_status = bulkItem && bulkItem.completion_status;
+    let transferType = bulkItem && bulkItem.transfer_type;
+    let creatorUser = bulkItem && bulkItem.creator_user;
+    let approvalTimes = (bulkItem && bulkItem.approval_times) || [];
+    let approvers = (bulkItem && bulkItem.approvers) || [];
+    let label = bulkItem && bulkItem.label;
+    let notes = bulkItem && bulkItem.notes;
+
     let totalAmount;
     if (bulkItem && bulkItem.total_disbursement_amount) {
       totalAmount = formatMoney(
@@ -98,14 +107,16 @@ class SingleBulkDisbursementPage extends React.Component {
       );
     }
 
-    let status = bulkItem && bulkItem.state;
-    let completion_status = bulkItem && bulkItem.completion_status;
-    let transferType = bulkItem && bulkItem.transfer_type;
-    let creatorUser = bulkItem && bulkItem.creator_user;
-    let approvalTimes = (bulkItem && bulkItem.approval_times) || [];
-    let approvers = (bulkItem && bulkItem.approvers) || [];
-    let label = bulkItem && bulkItem.label;
-    let notes = bulkItem && bulkItem.notes;
+    // Withdrawals are a special case, since everyone gets paid different amounts
+    if (
+      bulkItem &&
+      bulkItem.disbursement_amount &&
+      transferType == "WITHDRAWAL"
+    ) {
+      totalAmount = individualAmount;
+      individualAmount = 0;
+    }
+
     const approversList = approvers.map((approver, index, approversList) => {
       const spacer = index + 1 == approversList.length ? "" : ", ";
       const approvalTime = approvalTimes[index]
@@ -210,7 +221,10 @@ class SingleBulkDisbursementPage extends React.Component {
             </p>
             <p>
               {" "}
-              <b>Amount per recipeint:</b> {individualAmount || ""}{" "}
+              <b hidden={transferType == "WITHDRAWAL"}>
+                Amount per recipient:
+              </b>{" "}
+              {individualAmount || ""}{" "}
             </p>
             <p>
               {" "}
@@ -247,6 +261,7 @@ class SingleBulkDisbursementPage extends React.Component {
                 onClick={() => this.onReject()}
                 disabled={status == "APPROVED" || status == "REJECTED"}
                 loading={this.props.bulkTransfers.modifyStatus.isRequesting}
+                hidden={transferType == "WITHDRAWAL"}
               >
                 Reject
               </Button>
@@ -255,6 +270,7 @@ class SingleBulkDisbursementPage extends React.Component {
                 onClick={() => this.onComplete()}
                 disabled={status == "APPROVED" || status == "REJECTED"}
                 loading={this.props.bulkTransfers.modifyStatus.isRequesting}
+                hidden={transferType == "WITHDRAWAL"}
               >
                 Approve
               </Button>
