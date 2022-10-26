@@ -111,15 +111,6 @@ class SingleBulkDisbursementPage extends React.Component {
     let pagination = this.props.bulkTransfers.pagination;
     let asyncId = this.props.bulkTransfers.asyncId;
 
-    let status = bulkItem && bulkItem.state;
-    let completion_status = bulkItem && bulkItem.completion_status;
-    let transferType = bulkItem && bulkItem.transfer_type;
-    let creatorUser = bulkItem && bulkItem.creator_user;
-    let approvalTimes = (bulkItem && bulkItem.approval_times) || [];
-    let approvers = (bulkItem && bulkItem.approvers) || [];
-    let label = bulkItem && bulkItem.label;
-    let notes = bulkItem && bulkItem.notes;
-
     let totalAmount;
     if (bulkItem && bulkItem.total_disbursement_amount) {
       totalAmount = formatMoney(
