@@ -366,6 +366,7 @@ def test_get_summed_metrics(
     print('THIS IS FINDABLE!!!!')
     print('THIS IS FINDABLE!!!!')
     print('THIS IS FINDABLE!!!!')
+    print(complete_admin_auth_token)
     print(response)
     print(print(response.json))
     assert response.status_code == status_code
