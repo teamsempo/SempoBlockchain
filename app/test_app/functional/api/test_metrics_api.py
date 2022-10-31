@@ -360,6 +360,14 @@ def test_get_summed_metrics(
     create_organisation.timezone = timezone
     db.session.commit()
     response = get_metrics(metric_type)
+    print('THIS IS FINDABLE!!!!')
+    print('THIS IS FINDABLE!!!!')
+    print('THIS IS FINDABLE!!!!')
+    print('THIS IS FINDABLE!!!!')
+    print('THIS IS FINDABLE!!!!')
+    print('THIS IS FINDABLE!!!!')
+    print(response)
+    print(print(response.json))
     assert response.status_code == status_code
     if response.json:
         returned_stats = response.json['data']['transfer_stats']
