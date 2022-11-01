@@ -628,8 +628,10 @@ class ResetPasswordAPI(MethodView):
         elif auth_header and auth_header != 'null' and old_password:
             split_header = auth_header.split("|")
             auth_token = split_header[0]
+            print('auth_tokenauth_tokenauth_tokenauth_tokenauth_token')
             print('auth_token')
             print(auth_token)
+            print(split_header)
             resp = User.decode_auth_token(auth_token)
             print('resp')
             print(resp)
