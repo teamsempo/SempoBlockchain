@@ -1,5 +1,6 @@
 from decimal import Decimal
 import math
+import datetime 
 
 from sqlalchemy.orm import joinedload, load_only
 from flask import Blueprint, request, make_response, jsonify, g, current_app
@@ -88,16 +89,17 @@ def make_transfers(disbursement_id, auto_resolve=False):
 class MakeDisbursementAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def get(self):
-        disbursements = db.session.query(Disbursement).order_by(Disbursement.id.desc()).all()
-
+        disbursements = db.session.query(Disbursement).order_by(Disbursement.id.desc())
+        disbursements, total_items, total_pages, new_last_fetched = paginate_query(disbursements)
         response_object = {
-            'status': 'success',
             'message': 'Successfully Loaded.',
-            'data': {
-                'disbursements': disbursements_schema.dump(disbursements).data
-            }
+            'items': total_items,
+            'pages': total_pages,
+            'last_fetched': new_last_fetched,
+            'query_time': datetime.datetime.utcnow().strftime("%m/%d/%Y, %H:%M:%S"),
+            'data': {'disbursements': disbursements_schema.dump(disbursements).data}
         }
-        return make_response(jsonify(response_object)), 200
+        return make_response(jsonify(response_object), 200)
 
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self):
@@ -192,6 +194,14 @@ class DisbursementAPI(MethodView):
 
             disbursement = Disbursement.query.filter(Disbursement.id == disbursement_id)\
                 .first()
+
+            if disbursement.transfer_type == 'WITHDRAWAL':
+                return {
+                    'status': 'fail',
+                    'message': 'Withdrawals are only mutable through withdrawal API',
+
+                }, 400
+
             disbursement.notes = notes
             
             if not disbursement:
