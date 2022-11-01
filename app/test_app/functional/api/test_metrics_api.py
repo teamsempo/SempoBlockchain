@@ -10,6 +10,7 @@ import json
 import os
 from datetime import datetime, timedelta
 from dateutil.parser import isoparse
+from server.utils.auth import get_complete_auth_token
 
 zero_time = datetime(2020, 1, 15)
 @pytest.fixture(scope='module')
@@ -287,13 +288,13 @@ base_transfer = {'data':
     ("notarealmetrictype", 500, 2),
 ])
 def test_get_zero_metrics(test_client, complete_admin_auth_token, external_reserve_token, create_organisation,
-                             metric_type, status_code, display_decimals):
+                             metric_type, status_code, display_decimals, authed_sempo_admin_user):
     create_organisation.token.display_decimals = display_decimals
     def get_metrics(metric_type):
         return test_client.get(
             f'/api/v1/metrics/?metric_type={metric_type}&disable_cache=True&org={create_organisation.id}&group_by=recipient,account_type',
             headers=dict(
-                Authorization=complete_admin_auth_token,
+                Authorization=get_complete_auth_token(authed_sempo_admin_user),
                 Accept='application/json'
             ),
         )
@@ -342,7 +343,7 @@ def test_get_zero_metrics(test_client, complete_admin_auth_token, external_reser
 @freeze_time(zero_time + timedelta(days=100))
 def test_get_summed_metrics(
         test_client, complete_admin_auth_token, external_reserve_token, create_organisation, generate_timeseries_metrics,
-        metric_type, params, status_code, requested_metric, group_by, output_file, timezone
+        metric_type, params, status_code, requested_metric, group_by, output_file, timezone, authed_sempo_admin_user
 ):
     def ts_sort(ts):
         return sorted(ts, key=lambda item: isoparse(item['date']))
@@ -353,7 +354,7 @@ def test_get_summed_metrics(
         return test_client.get(
             f'/api/v1/metrics/?metric_type={metric_type}{p}&disable_cache=True&org={create_organisation.id}&group_by={group_by}{rm}',
             headers=dict(
-                Authorization=complete_admin_auth_token,
+                Authorization=get_complete_auth_token(authed_sempo_admin_user),
                 Accept='application/json'
             ),
         )
@@ -398,7 +399,7 @@ def test_get_summed_metrics(
     ("all", 200, True),
 ])
 @freeze_time(zero_time + timedelta(days=100))
-def test_get_metric_filters(test_client, complete_admin_auth_token, external_reserve_token,
+def test_get_metric_filters(test_client, complete_admin_auth_token, external_reserve_token, authed_sempo_admin_user,
                              metric_type, status_code, generate_timeseries_metrics, hide_sender):
     if hide_sender:
         db.session.query(CustomAttribute).first().group_visibility = MetricsVisibility.RECIPIENT
@@ -408,7 +409,7 @@ def test_get_metric_filters(test_client, complete_admin_auth_token, external_res
     response = test_client.get(
         f'/api/v1/metrics/filters/?metric_type={metric_type}',
         headers=dict(
-            Authorization=complete_admin_auth_token,
+            Authorization=get_complete_auth_token(authed_sempo_admin_user),
             Accept='application/json'
         ),
     )
@@ -430,12 +431,12 @@ def test_get_metric_filters(test_client, complete_admin_auth_token, external_res
             assert 'colour,sender' not in response.json['data']['groups']
 
 @freeze_time(zero_time + timedelta(days=100))
-def test_clear_metrics_cache(test_client, complete_admin_auth_token):
+def test_clear_metrics_cache(test_client, complete_admin_auth_token, authed_sempo_admin_user):
     def clear_metrics():
         return test_client.post(
             f'/api/v1/metrics/clear_cache/',
             headers=dict(
-                Authorization=complete_admin_auth_token,
+                Authorization=get_complete_auth_token(authed_sempo_admin_user),
                 Accept='application/json'
             ),
         )
