@@ -11,7 +11,7 @@ import os
 from datetime import datetime, timedelta
 from dateutil.parser import isoparse
 
-zero_time = datetime(2019, 1, 15)
+zero_time = datetime(2020, 1, 15)
 @pytest.fixture(scope='module')
 def generate_timeseries_metrics(create_organisation):
     # Generates metrics over timeline
@@ -339,7 +339,7 @@ def test_get_zero_metrics(test_client, complete_admin_auth_token, external_reser
     ("all", None, 200, None ,'sender,location', 'all_by_location_halifax.json', 'America/Halifax'),
     ("all", None, 200, None, 'ungrouped', 'all_ungrouped_halifax.json', 'America/Halifax'),
 ])
-@freeze_time(zero_time + timedelta(days=1))
+@freeze_time(zero_time + timedelta(days=100))
 def test_get_summed_metrics(
         test_client, complete_admin_auth_token, external_reserve_token, create_organisation, generate_timeseries_metrics,
         metric_type, params, status_code, requested_metric, group_by, output_file, timezone
@@ -397,7 +397,7 @@ def test_get_summed_metrics(
     ("notarealmetrictype", 500, False),
     ("all", 200, True),
 ])
-@freeze_time(zero_time + timedelta(days=1))
+@freeze_time(zero_time + timedelta(days=100))
 def test_get_metric_filters(test_client, complete_admin_auth_token, external_reserve_token,
                              metric_type, status_code, generate_timeseries_metrics, hide_sender):
     if hide_sender:
@@ -429,7 +429,7 @@ def test_get_metric_filters(test_client, complete_admin_auth_token, external_res
         else:
             assert 'colour,sender' not in response.json['data']['groups']
 
-@freeze_time(zero_time + timedelta(days=1))
+@freeze_time(zero_time + timedelta(days=100))
 def test_clear_metrics_cache(test_client, complete_admin_auth_token):
     def clear_metrics():
         return test_client.post(
