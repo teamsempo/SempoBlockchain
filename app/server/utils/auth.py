@@ -22,7 +22,7 @@ from server.schemas import organisation_schema, organisations_schema
 
 def get_complete_auth_token(user):
     auth_token = user.encode_auth_token().decode()
-    tfa_token = user.encode_TFA_token(9999).decode()
+    tfa_token = user.encode_TFA_token(99999).decode()
     return auth_token + '|' + tfa_token
 
 def show_all(f):
