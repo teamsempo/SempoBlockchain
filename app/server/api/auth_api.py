@@ -628,9 +628,7 @@ class ResetPasswordAPI(MethodView):
         elif auth_header and auth_header != 'null' and old_password:
             split_header = auth_header.split("|")
             auth_token = split_header[0]
-
             resp = User.decode_auth_token(auth_token)
-
             if isinstance(resp, str):
                 response_object = {
                     'status': 'fail',
