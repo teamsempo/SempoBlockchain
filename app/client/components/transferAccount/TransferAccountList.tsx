@@ -45,13 +45,14 @@ interface OuterProps extends stringIndexable {
   params: string;
   searchString: string;
   orderedTransferAccounts: number[];
-  users: any;
   actionButtons: ActionButton[];
   dataButtons: DataButton[];
   onSelectChange?: OnSelectChange;
   paginationOptions?: Pagination;
   providedSelectedRowKeys?: React.Key[];
   providedUnselectedRowKeys?: React.Key[];
+  transferAccounts: any;
+  users: any;
 }
 
 interface ComponentState extends stringIndexable {
@@ -157,6 +158,15 @@ const mapStateToProps = (state: ReduxState): StateProps => {
     tokens: state.tokens,
     transferAccounts: state.transferAccounts,
     users: state.users,
+  };
+};
+
+// There are cases we don't want the transfer accounts in the global state
+// Like bulk disbursements, which returns it's own set of accounts.
+const mapPartialStateToProps = (state: ReduxState): StateProps => {
+  return {
+    login: state.login,
+    tokens: state.tokens,
   };
 };
 
@@ -336,7 +346,9 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
       transferAccounts,
       users,
       tokens,
+      disableCheckboxes,
     } = this.props;
+
     let data: TransferAccount[] = orderedTransferAccounts
       .filter(
         (accountId: number) => transferAccounts.byId[accountId] != undefined
@@ -455,7 +467,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
             loading={transferAccounts.loadStatus.isRequesting}
             columns={columns}
             dataSource={data}
-            rowSelection={rowSelection}
+            rowSelection={disableCheckboxes ? undefined : rowSelection}
             style={{ marginLeft: "10px", marginRight: "10px" }}
             pagination={this.props.paginationOptions ? false : undefined}
           />
@@ -481,4 +493,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
   }
 }
 
+export const DisconnectedTransferAccountList = connect(mapPartialStateToProps)(
+  TransferAccountList
+);
 export default connect(mapStateToProps)(TransferAccountList);

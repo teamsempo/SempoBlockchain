@@ -126,7 +126,7 @@ export const generateFormattedURLPath = (url, query, path) => {
   let query_string = generateQueryString(query);
   if (url === null || typeof url === "undefined") {
     return console.log("URL cannot be null");
-  } else if (query) {
+  } else if (query && !path) {
     urlPath = `/api/v${version}${url}${query_string}`;
   } else if (path) {
     urlPath = `/api/v${version}${url}${path}/${query_string}`;
