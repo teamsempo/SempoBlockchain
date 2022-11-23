@@ -1,20 +1,22 @@
 import {
   createActionTypes,
   loadActionTypes,
-  modifyActionTypes
+  modifyActionTypes,
 } from "./actions";
 import { sagaFactory } from "./sagas";
 import { combineReducers, ReducersMapObject } from "redux";
 import {
   byIdReducerFactory,
   idListReducerFactory,
-  lifecycleReducerFactory
+  lifecycleReducerFactory,
+  paginationReducerFactory,
+  asyncIdReducerFactory,
 } from "./reducers";
 import {
   EndpointedRegistration,
   RegistrationMapping,
   Registration,
-  EndpointedRegistrationMapping
+  EndpointedRegistrationMapping,
 } from "./types";
 
 export { apiActions } from "./actions";
@@ -22,7 +24,7 @@ export {
   Registration,
   LoadRequestAction,
   CreateRequestAction,
-  ModifyRequestAction
+  ModifyRequestAction,
 } from "./types";
 export { Body } from "../api/client/types";
 
@@ -47,11 +49,11 @@ export const createReducers = <R extends RegistrationMapping>(
 ): ReducersMapObject<R> => {
   const base: ReducersMapObject = {};
 
-  Object.keys(registrations).map(key => {
+  Object.keys(registrations).map((key) => {
     let reg = { ...registrations[key], name: key };
 
     let reducers = {
-      byId: byIdReducerFactory(reg)
+      byId: byIdReducerFactory(reg),
     };
 
     if (hasEndpoint(reg)) {
@@ -61,8 +63,10 @@ export const createReducers = <R extends RegistrationMapping>(
           loadStatus: lifecycleReducerFactory(loadActionTypes, reg),
           createStatus: lifecycleReducerFactory(createActionTypes, reg),
           modifyStatus: lifecycleReducerFactory(modifyActionTypes, reg),
-          idList: idListReducerFactory(reg)
-        }
+          idList: idListReducerFactory(reg),
+          pagination: paginationReducerFactory(reg),
+          asyncId: asyncIdReducerFactory(reg),
+        },
       };
     }
 
@@ -85,14 +89,14 @@ export const createSagas = (registrations: RegistrationMapping) => {
 
   //First ensure all registrations have a name and filter out all non-endpointed registrations
   //Done in that order rather than using .filter for type safety
-  Object.keys(registrations).map(key => {
+  Object.keys(registrations).map((key) => {
     let reg = { ...registrations[key], name: key };
     if (hasEndpoint(reg)) {
       endpointedRegistrations[key] = reg;
     }
   });
 
-  Object.keys(endpointedRegistrations).map(key => {
+  Object.keys(endpointedRegistrations).map((key) => {
     sagaList.push(
       sagaFactory(endpointedRegistrations[key], endpointedRegistrations)()
     );

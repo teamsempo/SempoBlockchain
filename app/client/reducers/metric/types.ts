@@ -1,5 +1,3 @@
-import { inferredPredicate } from "../../../node_modules/@types/babel__traverse/node_modules/@babel/types/lib";
-
 export type AllowedMetricsObjects = "user" | "credit_transfer";
 
 export interface LoadAllowedFiltersPayload {
@@ -12,13 +10,13 @@ interface LoadAllowedFiltersQuery {
 }
 
 export enum MetricsActionType {
-  UPDATE_METRICS = "UPDATE_METRICS"
+  UPDATE_METRICS = "UPDATE_METRICS",
 }
 
 export enum LoadMetricsActionType {
   LOAD_METRICS_REQUEST = "LOAD_METRICS_REQUEST",
   LOAD_METRICS_SUCCESS = "LOAD_METRICS_SUCCESS",
-  LOAD_METRICS_FAILURE = "LOAD_METRICS_FAILURE"
+  LOAD_METRICS_FAILURE = "LOAD_METRICS_FAILURE",
 }
 
 export interface LoadMetricsPayload {
