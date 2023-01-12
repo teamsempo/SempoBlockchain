@@ -6,15 +6,16 @@ import {
   register,
   requestResetEmailState,
   resetPasswordState,
-  validateTFA
+  validateTFA,
 } from "./auth/reducers";
 import { login } from "./auth/loginReducer";
 import {
   datasetList,
   datasetSave,
-  spreadsheetUpload
+  spreadsheetUpload,
 } from "./spreadsheet/reducers";
 import { ExportReducer } from "./export/reducers";
+import { AsyncReducer } from "./async/reducers";
 import { creditTransfers } from "./creditTransfer/reducers";
 import { transferAccounts } from "./transferAccount/reducers";
 import { users } from "./user/reducers";
@@ -33,13 +34,13 @@ import {
   createReducers,
   createSagas,
   Registration,
-  Body
+  Body,
 } from "../genericState";
 import { RegistrationMapping } from "../genericState/types";
 
 import {
   CreateBulkTransferBody,
-  ModifyBulkTransferBody
+  ModifyBulkTransferBody,
 } from "./bulkTransfer/types";
 
 import { CreateMasterWalletWithdrawal } from "./masterWallet/types";
@@ -53,13 +54,13 @@ export const sempoObjects: SempoObjects = {
   bulkTransfers: {
     name: "bulkTransfers",
     endpoint: "disbursement",
-    schema: bulkTransferSchema
+    schema: bulkTransferSchema,
   },
   masterWallet: {
     name: "masterWallet",
     endpoint: "master_wallet",
-    schema: masterWalletSchema
-  }
+    schema: masterWalletSchema,
+  },
 };
 
 let baseReducers = createReducers(sempoObjects);
@@ -81,6 +82,7 @@ const appReducer = combineReducers({
   datasetSave,
   datasetList,
   export: ExportReducer,
+  async: AsyncReducer,
   transferAccounts,
   users,
   creditTransfers,
@@ -93,7 +95,7 @@ const appReducer = combineReducers({
   allowedFilters,
   transferCard,
   tokens,
-  ...baseReducers
+  ...baseReducers,
 });
 
 const rootReducer = (state: any, action: any) => {

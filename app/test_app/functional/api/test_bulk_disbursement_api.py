@@ -143,7 +143,7 @@ def test_disbursement(search_string, params, include_list, exclude_list, disburs
                         follow_redirects=True)
         task_uuid = phase_two_response.json['task_uuid']
         async_result = json.loads(get_job_result(1, task_uuid))
-        assert async_result['message'] == 'success'
+        assert async_result['message'] == 'Success'
         assert async_result['percent_complete'] == 100
 
         assert len(transfers) == expected_recipient_count

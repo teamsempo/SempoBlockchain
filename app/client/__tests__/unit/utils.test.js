@@ -7,7 +7,7 @@ describe("test formatMoney", () => {
     [-200, undefined, undefined, undefined, "AUD", "-200.00 AUD"],
     [undefined, undefined, undefined, undefined, "AUD", "0.00 AUD"],
     [2, 1, undefined, undefined, "USD", "2.0 USD"],
-    [999999, 4, ".", ",", "R", "999,999.0000 R"]
+    [999999, 4, ".", ",", "R", "999,999.0000 R"],
   ])(
     ".formatMoney(%i, %i, %s, %s, %s) == %s",
     (amount, decimalCount, decimal, thousands, currency, expected) => {
@@ -22,7 +22,7 @@ describe("test URL functions", () => {
   test("test parseQuery", () => {
     expect(utils.parseQuery("?is_deleted=true&foo=bar")).toStrictEqual({
       foo: "bar",
-      is_deleted: "true"
+      is_deleted: "true",
     });
   });
 
@@ -33,13 +33,13 @@ describe("test URL functions", () => {
         { is_deleted: true, foo: "bar" },
         1
       )
-    ).toBe("/api/v1/user/?is_deleted=true&foo=bar");
+    ).toBe("/api/v1/user/1/?is_deleted=true&foo=bar");
   });
 
   test("test generateFormattedURL", () => {
     expect(
       utils.generateFormattedURL("/user/", { is_deleted: true, foo: "bar" }, 1)
-    ).toBe("http://localhost/api/v1/user/?is_deleted=true&foo=bar");
+    ).toBe("http://localhost/api/v1/user/1/?is_deleted=true&foo=bar");
   });
 });
 
@@ -124,9 +124,9 @@ test("get_zero_filled_values", () => {
     { date: "2020-07-03T00:00:00", value: 11 },
     {
       date: "2020-07-05T00:00:00",
-      value: 1
+      value: 1,
     },
-    { date: "2020-07-08T00:00:00", value: 1 }
+    { date: "2020-07-08T00:00:00", value: 1 },
   ];
   const date_values = [
     "2020-07-03T00:00:00",
@@ -134,9 +134,9 @@ test("get_zero_filled_values", () => {
     "2020-07-05T00:00:00",
     "2020-07-06T00:00:00",
     "2020-07-07T00:00:00",
-    "2020-07-08T00:00:00"
+    "2020-07-08T00:00:00",
   ];
-  const date_array = date_values.map(date => new Date(date));
+  const date_array = date_values.map((date) => new Date(date));
   expect(
     utils.get_zero_filled_values("value", value_array, date_array)
   ).toStrictEqual([11, 0, 1, 0, 0, 1]);
