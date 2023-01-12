@@ -1,7 +1,5 @@
 import { combineReducers } from "redux";
 
-import { DEEEEEEP } from "../../utils";
-
 import { LoadMetricAction, MetricAction } from "./actions";
 import { MetricsActionType, LoadMetricsActionType, Metrics } from "./types";
 
@@ -24,7 +22,7 @@ interface RequestingState {
 const initialState: RequestingState = {
   isRequesting: false,
   success: false,
-  error: null
+  error: null,
 };
 
 const loadStatus = (state = initialState, action: LoadMetricAction) => {
@@ -42,5 +40,5 @@ const loadStatus = (state = initialState, action: LoadMetricAction) => {
 
 export const metrics = combineReducers({
   metricsState,
-  loadStatus
+  loadStatus,
 });
