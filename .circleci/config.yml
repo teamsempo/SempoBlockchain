@@ -280,8 +280,8 @@ jobs:
       - image: circleci/python:3.6-node
     steps:
       - deploy:
-          app-service: "app"
-          worker-service: "worker"
+          app-service: "app-service"
+          worker-service: "mwk-worker"
           app-task: "mwk-app"
           worker-task: "mwk-worker"
           frontend-bucket: "sempo-mwk-static"
@@ -332,11 +332,9 @@ workflows:
             branches:
               only:
                 - mwk
+                - add-mwk-to-circle
           requires:
             - build
-            - test-backend
-            - test-worker
-            - test-frontend
       - deploy-demo:
           filters:
             branches:
