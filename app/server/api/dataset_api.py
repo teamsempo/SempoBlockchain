@@ -57,10 +57,9 @@ class SpreadsheetUploadAPI(MethodView):
         for i, row in enumerate(rows):
             row_dict = {}
             for j, cell in enumerate(row):
-                row_dict[j] = accessor(cell)
-
+                if accessor(cell) != None:
+                    row_dict[j] = accessor(cell)
             data_dict[i] = row_dict
-
         column_firstrows = {v: k for k, v in data_dict[0].items()}
 
         reponse_object = {
@@ -68,6 +67,7 @@ class SpreadsheetUploadAPI(MethodView):
             'column_firstrows': column_firstrows,
             'requested_attributes':  SPREADSHEET_UPLOAD_REQUESTED_ATTRIBUTES
         }
+
         return make_response(jsonify(reponse_object)), 200
 
 @status_checkable_executor_job
