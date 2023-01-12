@@ -312,6 +312,7 @@ class StandardTransferAccountList extends React.Component<
     const isViewer = !(
       this.props.adminTier === "superadmin" ||
       this.props.adminTier === "sempoadmin" ||
+      this.props.adminTier === "subadmin" ||
       this.props.adminTier === "admin"
     );
 
