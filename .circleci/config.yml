@@ -332,9 +332,11 @@ workflows:
             branches:
               only:
                 - mwk
-                - add-mwk-to-circle
           requires:
             - build
+            - test-backend
+            - test-worker
+            - test-frontend
       - deploy-demo:
           filters:
             branches:
