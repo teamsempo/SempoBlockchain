@@ -4,7 +4,7 @@ bcrypt==3.1.7
 bit==0.6.2
 blinker==1.4
 boto3==1.14.29
-celery==4.4.6
+celery==5.2.2
 certifi==2020.6.20
 CairoSVG==2.5.1
 ecdsa==0.15
@@ -18,7 +18,6 @@ Flask-RESTful==0.3.6
 Flask-Script==2.0.6
 Flask-SQLAlchemy==2.4.4
 freezegun==1.1.0
-kombu==4.6.11
 toastedmarshmallow==2.15.2.post1
 messagebird==1.5.0
 openpyxl==3.0.4
