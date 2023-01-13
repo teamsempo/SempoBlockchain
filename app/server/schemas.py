@@ -5,12 +5,10 @@ from marshmallow import Schema, fields, post_dump
 import toastedmarshmallow
 import qrcode
 
-from server.models.custom_attribute import CustomAttribute
 from server.utils.amazon_s3 import get_file_url
 from server.models.user import User
 from server.models.exchange import Exchange
 from server.exceptions import SubexchangeNotFound
-
 
 def gen_qr(data):
     out = BytesIO()
@@ -47,6 +45,11 @@ class BlockchainTaskableSchemaBase(SchemaBase):
 
     blockchain_task_uuid  = fields.Str(dump_only=True)
     blockchain_status   = fields.Function(lambda obj: obj.blockchain_status.name)
+
+class TransferUsageSchema(Schema):
+    id                  = fields.Int(dump_only=True)
+    name                = fields.Str()
+    default             = fields.Boolean()
 
 class UserSchema(SchemaBase):
 
@@ -143,7 +146,7 @@ class TokenSchema(SchemaBase):
     address             = fields.Str()
     symbol              = fields.Str()
     name                = fields.Str()
-
+    display_decimals    = fields.Int()
     def get_exchange_rates(self, obj):
         rates = {}
         for to_token in self.context.get('exchange_pairs', []):
@@ -178,14 +181,20 @@ class CreditTransferSchema(BlockchainTaskableSchemaBase):
         elif ['transfer_status'] == 'REJECTED':
             return None
 
-    resolved                = fields.DateTime(attribute='resolved_date')
-    transfer_amount         = fields.Function(lambda obj: int(obj.transfer_amount))
-    transfer_type           = fields.Function(lambda obj: obj.transfer_type.value)
-    transfer_subtype        = fields.Function(lambda obj: obj.transfer_subtype.value)
-    transfer_mode           = fields.Function(lambda obj: obj.transfer_mode.value)
-    transfer_status         = fields.Function(lambda obj: obj.transfer_status.value)
+    resolved                           = fields.DateTime(attribute='resolved_date')
+    transfer_amount                    = fields.Function(lambda obj: int(obj.transfer_amount))
+    transfer_type                      = fields.Function(lambda obj: obj.transfer_type.value)
+    transfer_subtype                   = fields.Function(lambda obj: obj.transfer_subtype.value)
+    transfer_mode                      = fields.Function(lambda obj: obj.transfer_mode.value)
+    transfer_status                    = fields.Function(lambda obj: obj.transfer_status.value)
+    transfer_card_public_serial_number = fields.Function(lambda obj: obj.transfer_card.public_serial_number if obj.transfer_card else None)
 
-    transfer_use            = fields.Function(lambda obj: obj.transfer_use)
+    transfer_uses            = fields.Nested(
+        TransferUsageSchema,
+        attribute='transfer_usages',
+        many=True,
+        only=('name')
+    )
 
     transfer_metadata = fields.Function(lambda obj: obj.transfer_metadata)
     token = fields.Nested(TokenSchema, only=('id', 'symbol'))
@@ -202,6 +211,8 @@ class CreditTransferSchema(BlockchainTaskableSchemaBase):
                                                only=("id", "balance", "token", "blockchain_address", "is_vendor"))
 
     sender_transfer_card_id = fields.Int()
+
+    resolution_message = fields.Str()
 
     from_exchange_to_transfer_id = fields.Function(lambda obj: obj.from_exchange.to_transfer.id)
 
@@ -221,6 +232,7 @@ class CreditTransferSchema(BlockchainTaskableSchemaBase):
             return None
 
         return authorising_user.email
+    approvers = fields.Nested(UserSchema, attribute='approvers', many=True, only=("id", "email"))
 
 
 class ExchangeContractSchema(SchemaBase):
@@ -241,8 +253,8 @@ class ExchangeSchema(BlockchainTaskableSchemaBase):
     from_token          = fields.Nested(TokenSchema)
     to_token            = fields.Nested(TokenSchema)
 
-    from_transfer       = fields.Nested(CreditTransferSchema)
-    to_transfer         = fields.Nested(CreditTransferSchema)
+    from_transfer       = fields.Nested(CreditTransferSchema, exclude=("approvers",))
+    to_transfer         = fields.Nested(CreditTransferSchema, exclude=("approvers",))
 
 class MiniTaSchema(SchemaBase):
     is_approved = fields.Boolean()
@@ -264,8 +276,8 @@ class MiniTaSchema(SchemaBase):
 
     # users = fields.Nested(UserSchema, attribute='users', many=True, exclude=('transfer_account',))
 
-    credit_sends = fields.Nested(CreditTransferSchema, many=True)
-    credit_receives = fields.Nested(CreditTransferSchema, many=True)
+    credit_sends = fields.Nested(CreditTransferSchema, exclude=("approvers",), many=True)
+    credit_receives = fields.Nested(CreditTransferSchema, exclude=("approvers",), many=True)
 
     # token = fields.Nested(TokenSchema)
     #
@@ -280,12 +292,13 @@ class TransferAccountSchema(SchemaBase):
     # balance                 = fields.Int()
 
     balance                 = fields.Function(lambda obj: int(obj.balance))
+    last_known_card_balance = fields.Int()
 
     primary_user_id         = fields.Int()
 
     transfer_account_name   = fields.Str()
     is_vendor               = fields.Boolean()
-
+    is_beneficiary          = fields.Boolean()
     payable_period_type     = fields.Str()
     payable_period_length   = fields.Int()
     payable_epoch           = fields.Str()
@@ -320,8 +333,8 @@ class TransferAccountSchema(SchemaBase):
             'transfer_accounts',
             'transfer_accounts'))
 
-    credit_sends            = fields.Nested(CreditTransferSchema, many=True)
-    credit_receives         = fields.Nested(CreditTransferSchema, many=True)
+    credit_sends            = fields.Nested(CreditTransferSchema, exclude=("approvers",), many=True)
+    credit_receives         = fields.Nested(CreditTransferSchema, exclude=("approvers",), many=True)
 
     token                   = fields.Nested(TokenSchema, only=('id', 'symbol'))
 
@@ -439,13 +452,6 @@ class OrganisationSchema(SchemaBase):
     #users               = fields.Nested('server.schemas.UserSchema', many=True)
     #transfer_accounts   = fields.Nested('server.schemas.TransferAccountSchema', many=True)
     #credit_transfers    = fields.Nested('server.schemas.CreditTransferSchema', many=True)
-
-
-class TransferUsageSchema(Schema):
-    id                  = fields.Int(dump_only=True)
-    name                = fields.Str()
-    default             = fields.Boolean()
-
 class SynchronizationFilterSchema(Schema):
     id                          = fields.Int(dump_only=True)
     contract_address            = fields.Str()
@@ -472,6 +478,7 @@ class DisbursementSchema(SchemaBase):
     total_disbursement_amount   = fields.Int()
     label                       = fields.Str()
     state                       = fields.Str()
+    completion_status           = fields.Str(attribute='completion')
     transfer_type               = fields.Str()
     disbursement_amount         = fields.Int()
     creator_user = fields.Nested(UserSchema, attribute='creator_user', only=("id", "first_name", "last_name", "email"))
@@ -523,22 +530,24 @@ view_transfer_account_schema = TransferAccountSchema(
         "credit_receives.recipient_transfer_account",
         "credit_receives.recipient_user",
         "credit_receives.sender_user",
-        "users"
+        "users",
+        "notes"
     ))
 
 view_transfer_accounts_schema = TransferAccountSchema(many=True, exclude=("credit_sends", "credit_receives", "users"))
 
 credit_transfer_schema = CreditTransferSchema()
-credit_transfers_schema = CreditTransferSchema(many=True)
+# Don't show approvers for multiple, saves an expensive join that doesn't need to be there
+credit_transfers_schema = CreditTransferSchema(many=True, exclude=("approvers",)) 
 
 synchronization_filter_schema = SynchronizationFilterSchema()
 
 view_credit_transfer_schema = CreditTransferSchema(exclude=(
-"sender_user", "recipient_user", "lat", "lng", "attached_images"))
+"sender_user", "recipient_user", "lat", "lng", "attached_images" "authorising_user_email", "approvers"))
+
 view_credit_transfers_schema = CreditTransferSchema(many=True, exclude=(
-"sender_user", "recipient_user", "lat", "lng", "attached_images"))
-view_credit_transfer_schema = CreditTransferSchema(exclude=(
-"sender_user", "recipient_user", "lat", "lng", "attached_images"))
+"sender_user", "recipient_user", "lat", "lng", "attached_images", "authorising_user_email", "transfer_card_public_serial_number", "approvers"))
+
 
 transfer_cards_schema = TransferCardSchema(many=True, exclude=("id", "created"))
 transfer_card_schema = TransferCardSchema(exclude=("id", "created"))
@@ -580,12 +589,14 @@ exchange_contracts_schema = ExchangeContractSchema(many=True)
 me_transfer_accounts_schema = TransferAccountSchema(many=True,
                                                     exclude=("credit_sends",
                                                              "credit_receives",
-                                                             "users"))
+                                                            "approvers",
+                                                             "users",))
 
 me_credit_transfer_schema = CreditTransferSchema(exclude=("sender_transfer_account",
                                                           "recipient_transfer_account",
                                                           "sender_user",
                                                           "recipient_user",
+                                                          "approvers",
                                                           ),
                                                  context={'filter_rejected': True})
 
@@ -593,6 +604,7 @@ me_credit_transfers_schema = CreditTransferSchema(many=True, exclude=("sender_tr
                                                                       "recipient_transfer_account",
                                                                       "sender_user",
                                                                       "recipient_user",
+                                                                      "approvers",
                                                                       ),
                                                   context={'filter_rejected': True})
 

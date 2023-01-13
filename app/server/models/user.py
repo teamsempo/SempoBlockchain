@@ -193,7 +193,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
                                lazy='dynamic', foreign_keys='Feedback.user_id')
 
     custom_attributes = db.relationship("CustomAttributeUserStorage", backref='user',
-                                        lazy='joined', foreign_keys='CustomAttributeUserStorage.user_id')
+                                        lazy=True, foreign_keys='CustomAttributeUserStorage.user_id')
 
     exchanges = db.relationship("Exchange", backref="user")
 
@@ -570,8 +570,7 @@ class User(ManyOrgBase, ModelBase, SoftDelete):
                     'verify_exp': current_app.config['VERIFY_JWT_EXPIRY']
                 }
             )
-
-            is_blacklisted_token = BlacklistToken.check_blacklist(auth_token)
+            is_blacklisted_token = BlacklistToken.check_blacklist(payload)
             if is_blacklisted_token:
                 return 'Token blacklisted. Please log in again.'
             else:

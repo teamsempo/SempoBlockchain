@@ -106,7 +106,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         "Disbursement",
         secondary=disbursement_credit_transfer_association_table,
         back_populates="credit_transfers",
-        uselist=False
+        uselist=False,
+        lazy=True
     )
 
     approvers = db.relationship(
@@ -116,8 +117,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
     )
 
     def add_message(self, message):
-        dated_message = f"[{datetime.datetime.utcnow()}:: {message}]"
-        self.resolution_message = dated_message
+        self.resolution_message = message
 
     # TODO: Apply this to all transfer amounts/balances, work out the correct denominator size
     @hybrid_property
@@ -316,9 +316,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         if (datetime.datetime.utcnow() - self.created).seconds > 5:
             clear_metrics_cache()
             rebuild_metrics_cache()
-        if self.transfer_type == TransferTypeEnum.PAYMENT and self.transfer_subtype == TransferSubTypeEnum.DISBURSEMENT:
-            if self.recipient_user and self.recipient_user.transfer_card:
-                self.recipient_user.transfer_card.update_transfer_card()
+        if self.recipient_user and self.recipient_user.transfer_card:
+            self.recipient_user.transfer_card.update_transfer_card()
 
         if batch_uuid:
             self.batch_uuid = batch_uuid
@@ -408,7 +407,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
                  transfer_card=None,
                  is_ghost_transfer=False,
                  require_sufficient_balance=True,
-                 received_third_party_sync=False
+                 received_third_party_sync=False,
+                 transfer_card_state=None
                  ):
 
         if amount < 0:
@@ -458,6 +458,7 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         self.transfer_mode = transfer_mode
         self.transfer_metadata = transfer_metadata
         self.transfer_card = transfer_card
+        self.transfer_card_state = transfer_card_state
         self.received_third_party_sync = received_third_party_sync
         if uuid is not None:
             self.uuid = uuid
@@ -468,8 +469,8 @@ class CreditTransfer(ManyOrgBase, BlockchainTaskableBase):
         if require_sufficient_balance and not self.check_sender_has_sufficient_balance():
             message = "Sender {} has insufficient balance. Has {}, needs {}.".format(
                 self.sender_transfer_account,
-                self.sender_transfer_account.balance,
-                self.transfer_amount
+                str(round(self.sender_transfer_account.balance / 100, 2)),
+                str(round(self.transfer_amount / 100, 2))
             )
             self.resolve_as_rejected(message)
             raise InsufficientBalanceError(message)

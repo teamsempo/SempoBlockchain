@@ -5,7 +5,7 @@ import {
   ShopOutlined,
   UserOutlined,
   UsergroupAddOutlined,
-  UserSwitchOutlined
+  UserSwitchOutlined,
 } from "@ant-design/icons";
 
 import NewTransferManager from "../management/newTransferManager.jsx";
@@ -14,7 +14,7 @@ import DateTime from "../dateTime.tsx";
 
 import {
   EditTransferAccountAction,
-  LoadTransferAccountHistoryAction
+  LoadTransferAccountHistoryAction,
 } from "../../reducers/transferAccount/actions";
 import { formatMoney } from "../../utils";
 import { TransferAccountTypes } from "./types";
@@ -32,22 +32,22 @@ const mapStateToProps = (state, ownProps) => {
     users: state.users,
     tokens: state.tokens,
     transferAccount:
-      state.transferAccounts.byId[parseInt(ownProps.transfer_account_id)]
+      state.transferAccounts.byId[parseInt(ownProps.transfer_account_id)],
   };
 };
 
-const mapDispatchToProps = dispatch => {
+const mapDispatchToProps = (dispatch) => {
   return {
     editTransferAccountRequest: (body, path) =>
       dispatch(
         EditTransferAccountAction.editTransferAccountRequest({ body, path })
       ),
-    loadTransferAccountHistoryAction: path =>
+    loadTransferAccountHistoryAction: (path) =>
       dispatch(
         LoadTransferAccountHistoryAction.loadTransferAccountHistoryRequest({
-          path
+          path,
         })
-      )
+      ),
   };
 };
 
@@ -63,13 +63,14 @@ class TransferAccountManager extends React.Component {
       transfer_amount: "",
       showSpreadsheetData: true,
       balance: "",
+      last_known_card_balance: null,
       is_approved: "n/a",
       one_time_code: "",
       focused: false,
       payable_epoch: null,
       payable_period_type: "n/a",
       payable_period_length: 1,
-      is_vendor: null
+      is_vendor: null,
     };
     this.handleStatus = this.handleStatus.bind(this);
     this.handleChange = this.handleChange.bind(this);
@@ -88,6 +89,7 @@ class TransferAccountManager extends React.Component {
     if (transferAccount) {
       this.setState({
         balance: transferAccount.balance,
+        last_known_card_balance: transferAccount.last_known_card_balance,
         is_approved: transferAccount.is_approved,
         notes: transferAccount.notes,
         created: transferAccount.created,
@@ -97,7 +99,7 @@ class TransferAccountManager extends React.Component {
         is_vendor: transferAccount.is_vendor,
         is_beneficiary: transferAccount.is_beneficiary,
         is_tokenagent: transferAccount.is_tokenagent,
-        is_groupaccount: transferAccount.is_groupaccount
+        is_groupaccount: transferAccount.is_groupaccount,
       });
     }
 
@@ -106,7 +108,7 @@ class TransferAccountManager extends React.Component {
         is_vendor: primaryUser.is_vendor,
         is_beneficiary: primaryUser.is_beneficiary,
         is_tokenagent: primaryUser.is_tokenagent,
-        is_groupaccount: primaryUser.is_groupaccount
+        is_groupaccount: primaryUser.is_groupaccount,
       });
     }
   }
@@ -143,22 +145,23 @@ class TransferAccountManager extends React.Component {
         ? null
         : this.state.payable_period_type;
 
-    const single_transfer_account_id = this.props.transfer_account_id.toString();
-
-    this.props.editTransferAccountRequest(
-      {
-        balance,
-        approve,
-        notes,
-        phone,
-        nfc_card_id,
-        qr_code,
-        payable_epoch,
-        payable_period_length,
-        payable_period_type
-      },
-      single_transfer_account_id
-    );
+    const single_transfer_account_id =
+      this.props.transfer_account_id.toString();
+    window.confirm("Are you sure you wish to save changes?") &&
+      this.props.editTransferAccountRequest(
+        {
+          balance,
+          approve,
+          notes,
+          phone,
+          nfc_card_id,
+          qr_code,
+          payable_epoch,
+          payable_period_length,
+          payable_period_type,
+        },
+        single_transfer_account_id
+      );
   }
 
   handleChange(evt) {
@@ -170,8 +173,8 @@ class TransferAccountManager extends React.Component {
   }
 
   onViewHistory() {
-    this.setState(prevState => ({
-      viewHistory: !prevState.viewHistory
+    this.setState((prevState) => ({
+      viewHistory: !prevState.viewHistory,
     }));
     if (!this.state.viewHistory) {
       this.props.loadTransferAccountHistoryAction(
@@ -181,18 +184,14 @@ class TransferAccountManager extends React.Component {
   }
 
   onNewTransfer() {
-    this.setState(prevState => ({
-      newTransfer: !prevState.newTransfer
+    this.setState((prevState) => ({
+      newTransfer: !prevState.newTransfer,
     }));
   }
 
   render() {
-    const {
-      is_beneficiary,
-      is_vendor,
-      is_groupaccount,
-      is_tokenagent
-    } = this.state;
+    const { is_beneficiary, is_vendor, is_groupaccount, is_tokenagent } =
+      this.state;
     let accountTypeName;
     let icon;
     let color;
@@ -213,10 +212,21 @@ class TransferAccountManager extends React.Component {
       this.props.transferAccount.token &&
       this.props.tokens.byId[this.props.transferAccount.token] &&
       this.props.tokens.byId[this.props.transferAccount.token].symbol;
-    const displayAmount = (
+    const balanceDisplayAmount = (
       <p style={{ margin: 0, fontWeight: 100, fontSize: "16px" }}>
         {formatMoney(
           this.state.balance / 100,
+          undefined,
+          undefined,
+          undefined,
+          currency
+        )}
+      </p>
+    );
+    const cardBalanceDisplayAmount = (
+      <p style={{ margin: 0, fontWeight: 100, fontSize: "16px" }}>
+        {formatMoney(
+          this.state.last_known_card_balance / 100,
           undefined,
           undefined,
           undefined,
@@ -287,7 +297,9 @@ class TransferAccountManager extends React.Component {
               {accountTypeName}
             </Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="Balance">{displayAmount}</Descriptions.Item>
+          <Descriptions.Item label="Balance">
+            {balanceDisplayAmount}
+          </Descriptions.Item>
           <Descriptions.Item label="Created">
             <DateTime created={this.state.created} useRelativeTime={false} />
           </Descriptions.Item>
@@ -329,6 +341,13 @@ class TransferAccountManager extends React.Component {
               </Option>
             </Select>
           </Descriptions.Item>
+          {Number.isInteger(this.state.last_known_card_balance) ? (
+            <Descriptions.Item label="Last Known Card Balance">
+              {cardBalanceDisplayAmount}
+            </Descriptions.Item>
+          ) : (
+            <div />
+          )}
         </Descriptions>
         <HistoryDrawer
           drawerVisible={this.state.viewHistory}

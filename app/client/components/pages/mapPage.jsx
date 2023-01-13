@@ -8,9 +8,9 @@ import NoDataMessage from "../NoDataMessage";
 
 const HeatMap = lazy(() => import("../heatmap/heatmap.jsx"));
 
-const mapStateToProps = state => {
+const mapStateToProps = (state) => {
   return {
-    metricsLoadStatus: state.metrics.loadStatus
+    metricsLoadStatus: state.metrics.loadStatus,
   };
 };
 
@@ -23,7 +23,9 @@ class MapPage extends React.Component {
     return (
       <WrapperDiv>
         <PageWrapper>
-          {this.props.metricsLoadStatus.success ? (
+          {this.props.metricsLoadStatus.success ||
+          (!this.props.metricsLoadStatus.success &&
+            !this.props.metricsLoadStatus.isRequesting) ? (
             <div>
               <Card
                 style={{
@@ -31,7 +33,7 @@ class MapPage extends React.Component {
                   top: 0,
                   zIndex: 1,
                   margin: "1em",
-                  maxWidth: "calc(100vw - 2em)"
+                  maxWidth: "calc(100vw - 2em)",
                 }}
               >
                 <FilterModule

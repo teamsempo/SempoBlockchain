@@ -54,7 +54,8 @@ class Organisation(ModelBase):
     users               = db.relationship(
         "User",
         secondary=organisation_association_table,
-        back_populates="organisations")
+        back_populates="organisations",
+        lazy=True)
 
     token_id            = db.Column(db.Integer, db.ForeignKey('token.id'))
 
@@ -141,7 +142,8 @@ class Organisation(ModelBase):
 
     credit_transfers    = db.relationship("CreditTransfer",
                                           secondary=organisation_association_table,
-                                          back_populates="organisations")
+                                          back_populates="organisations",
+                                          lazy=True)
 
     transfer_accounts   = db.relationship('TransferAccount',
                                           backref='organisation',

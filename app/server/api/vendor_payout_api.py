@@ -2,23 +2,23 @@ from flask import Blueprint, request, send_file, make_response, jsonify
 from flask.views import MethodView
 from flask import g
 
+from server.models.disbursement import Disbursement
 from server.models.transfer_account import TransferAccount, TransferAccountType
 from server.models.credit_transfer import CreditTransfer
 from server.models.user import User
 from server.utils.credit_transfer import make_withdrawal_transfer
 from server.utils.transfer_enums import TransferModeEnum, TransferStatusEnum, TransferTypeEnum
 from server.utils.credit_transfer import cents_to_dollars, dollars_to_cents
-from server.utils.internationalization import i18n_for
-from server.utils.phone import send_message
+from server.utils.phone import send_translated_message
 from server.utils.auth import requires_auth
 from server import db
 import config
 
-import json
 import csv
 import io
 import codecs
 from decimal import Decimal
+from math import floor
 from datetime import datetime, timedelta
 
 vendor_payout = Blueprint('vendor_payout', __name__)
@@ -30,9 +30,11 @@ class VendorPayoutAPI(MethodView):
         post_data = request.get_json()
         account_ids = []
         relist_existing = True
+        round_payout_amounts = False
         if post_data:
             account_ids = post_data.get('accounts', [])
             relist_existing = post_data.get('relist_existing', True)
+            round_payout_amounts = post_data.get('round_payout_amounts', False)
 
         payout_withdrawal_limit = g.active_organisation._minimum_vendor_payout_withdrawal_wei or 0
 
@@ -91,16 +93,19 @@ class VendorPayoutAPI(MethodView):
             'Payment Has Been Made',
             'Bank Payment Date',
         ])
+        all_transfers = []
         for v in vendors:
             if relist_existing:
                 withdrawals = (CreditTransfer.query
                                .filter(CreditTransfer.sender_transfer_account_id == v.id)
+                               .filter(CreditTransfer.transfer_type == TransferTypeEnum.WITHDRAWAL)
                                .filter(CreditTransfer.transfer_status == TransferStatusEnum.PENDING).all())
             else:
                 withdrawals = []
 
             withdrawal_amount = Decimal(v._balance_wei or 0) / Decimal(1e16)
-
+            if round_payout_amounts : 
+                withdrawal_amount = floor(Decimal(withdrawal_amount) / (10 ** v.token.display_decimals)) * (10 ** v.token.display_decimals)
             if withdrawal_amount > 0 and (v._balance_wei or 0) >= payout_withdrawal_limit:
                 transfer = make_withdrawal_transfer(
                     withdrawal_amount,
@@ -115,7 +120,7 @@ class VendorPayoutAPI(MethodView):
                 db.session.flush()
 
                 withdrawals.append(transfer)
-
+                all_transfers.append(transfer)
             for w in withdrawals:
                 writer.writerow([
                     v.id,
@@ -136,6 +141,16 @@ class VendorPayoutAPI(MethodView):
                 ])
 
 
+        d = Disbursement(
+            creator_user = g.user,
+            label = f'Vendor Withdrawal - {datetime.today().strftime("%Y-%m-%d")}',
+            transfer_type = 'WITHDRAWAL',
+        )
+        d.credit_transfers = all_transfers
+        d.transfer_accounts = [ct.sender_transfer_account for ct in d.credit_transfers]
+        total_amount = sum(ct.transfer_amount for ct in d.credit_transfers)
+        d.disbursement_amount = total_amount
+        db.session.add(d)
         # Encode the CSV such that it can be sent as a file
         bytes_output = io.BytesIO()
         bytes_output.write(output.getvalue().encode('utf-8'))
@@ -192,14 +207,11 @@ class ProcessVendorPayout(MethodView):
                     transfer.add_approver_and_resolve_as_completed()
                     message = 'Transfer Success'
                     if transfer.sender_user.phone and config.PAYOUT_SMS:
-                        message = i18n_for(
-                            transfer.sender_user,
+                        message = send_translated_message(transfer.sender_user,
                             "general_sms.payout_message",
                             first_name=transfer.sender_user.first_name,
                             amount=transfer.rounded_transfer_amount,
-                            token=transfer.token.symbol
-                        )
-                        send_message(transfer.sender_user.phone, message)
+                            token=transfer.token.symbol)
                 elif line['Payment Has Been Made'] == 'FALSE':
                     transfer.resolve_as_rejected()
                     message = 'Transfer Rejected'

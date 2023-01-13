@@ -1,5 +1,6 @@
 from sqlalchemy.sql.expression import func
 
+from flask import g
 from server import db
 from server.utils.metrics.filters import apply_filters
 from server.models.transfer_account import TransferAccount
@@ -7,7 +8,8 @@ from server.models.credit_transfer import CreditTransfer
 from server.models.user import User
 from functools import reduce
 from sqlalchemy.orm import lazyload, aliased
-from sqlalchemy import or_
+from sqlalchemy import or_, desc
+from server.utils.access_control import AccessControl
 
 class SearchableColumn:
     def __init__(self, name, column, rank=1):
@@ -30,6 +32,13 @@ def generate_search_query(search_string, filters, order, sort_by_arg, include_us
     :param order - Which order in which to display results. Use sqlalchemy.asc or sqlalchemy.desc
     :param sort_by_arg: Boolean. True returns original phone
     """
+    # Only admins who can see PII are allowed to search, to combat the ability to 
+    # reverse engineer identity through a multitude of searches
+    if not AccessControl.has_sufficient_tier(g.user.roles, 'ADMIN', 'admin'):
+        search_string = ''
+        filters = {}
+        order = desc
+        sort_by = 'rank'
     sender = aliased(User)
     recipient = aliased(User)
     sort_types_to_database_types = {

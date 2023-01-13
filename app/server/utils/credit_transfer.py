@@ -23,7 +23,6 @@ from server.models.credit_transfer import CreditTransfer
 from server.models.user import User
 from server.schemas import me_credit_transfer_schema
 from server.utils import user as UserUtils
-from server.utils import pusher_utils
 from server.utils.transfer_enums import TransferTypeEnum, TransferSubTypeEnum, TransferModeEnum, BlockchainStatus
 from server.utils.user import create_transfer_account_if_required
 
@@ -198,7 +197,8 @@ def make_payment_transfer(
         queue='high-priority',
         batch_uuid=None,
         transfer_type=TransferTypeEnum.PAYMENT,
-        transfer_card=None
+        transfer_card=None,
+        transfer_card_state=None
 ):
     """
     This is used for internal transfers between Sempo wallets.
@@ -221,13 +221,12 @@ def make_payment_transfer(
     :param batch_uuid:
     :param transfer_type: the type of transfer
     :param transfer_card: the card that was used to make the payment
+    :param transfer_card_state: the object associated with the transfer card usage
     :return:
     """
-
     if transfer_subtype is TransferSubTypeEnum.DISBURSEMENT:
         require_sender_approved = False
         require_recipient_approved = False
-        require_sufficient_balance = False
         # primary NGO wallet to disburse from
         send_transfer_account = send_transfer_account or receive_user.default_organisation.queried_org_level_transfer_account
 
@@ -251,7 +250,8 @@ def make_payment_transfer(
                               transfer_mode=transfer_mode,
                               transfer_card=transfer_card,
                               is_ghost_transfer=is_ghost_transfer,
-                              require_sufficient_balance=require_sufficient_balance)
+                              require_sufficient_balance=require_sufficient_balance,
+                              transfer_card_state=transfer_card_state)
 
     make_cashout_incentive_transaction = False
 

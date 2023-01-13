@@ -28,15 +28,12 @@ export interface OnSelectChange {
 }
 
 export interface OnPaginateChange {
-  (
-    page: number,
-    pageSize: number | undefined
-  ): void;
+  (page: number, pageSize: number | undefined): void;
 }
 
 export interface Pagination {
-  currentPage: number,
-  items: number,
+  currentPage: number;
+  items: number;
   onChange: OnPaginateChange;
 }
 
@@ -48,13 +45,14 @@ interface OuterProps extends stringIndexable {
   params: string;
   searchString: string;
   orderedTransferAccounts: number[];
-  users: any;
   actionButtons: ActionButton[];
   dataButtons: DataButton[];
   onSelectChange?: OnSelectChange;
   paginationOptions?: Pagination;
   providedSelectedRowKeys?: React.Key[];
   providedUnselectedRowKeys?: React.Key[];
+  transferAccounts: any;
+  users: any;
 }
 
 interface ComponentState extends stringIndexable {
@@ -97,12 +95,12 @@ const columns: ColumnsType<TransferAccount> = [
         style={{
           textDecoration: "underline",
           color: "#000000a6",
-          fontWeight: 400
+          fontWeight: 400,
         }}
       >
         {record.first_name} {record.last_name}
       </Link>
-    )
+    ),
   },
   {
     title: "Role",
@@ -119,12 +117,14 @@ const columns: ColumnsType<TransferAccount> = [
           {beneficiaryTag}
         </>
       );
-    }
+    },
   },
   {
     title: "Created",
     key: "created",
-    render: (text: any, record: any) => <DateTime created={record.created} useRelativeTime={false} />
+    render: (text: any, record: any) => (
+      <DateTime created={record.created} useRelativeTime={false} />
+    ),
   },
   {
     title: "Balance",
@@ -138,7 +138,7 @@ const columns: ColumnsType<TransferAccount> = [
         record.token_symbol
       );
       return <p style={{ margin: 0 }}>{money}</p>;
-    }
+    },
   },
   {
     title: "Status",
@@ -148,15 +148,25 @@ const columns: ColumnsType<TransferAccount> = [
         <Tag color="#9bdf56">Approved</Tag>
       ) : (
         <Tag color="#ff715b">Not Approved</Tag>
-      )
-  }
+      ),
+  },
 ];
 
 const mapStateToProps = (state: ReduxState): StateProps => {
   return {
+    login: state.login,
     tokens: state.tokens,
     transferAccounts: state.transferAccounts,
-    users: state.users
+    users: state.users,
+  };
+};
+
+// There are cases we don't want the transfer accounts in the global state
+// Like bulk disbursements, which returns it's own set of accounts.
+const mapPartialStateToProps = (state: ReduxState): StateProps => {
+  return {
+    login: state.login,
+    tokens: state.tokens,
   };
 };
 
@@ -176,34 +186,71 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
   }
 
   componentDidMount() {
-    let unselectedKeys = this.props.providedUnselectedRowKeys || this.state.unselectedRowKeys;
-    let selectedKeys = this.props.providedSelectedRowKeys || this.state.selectedRowKeys;
+    let unselectedKeys =
+      this.props.providedUnselectedRowKeys || this.state.unselectedRowKeys;
+    let selectedKeys =
+      this.props.providedSelectedRowKeys || this.state.selectedRowKeys;
     if (unselectedKeys.length > 0) {
       selectedKeys = this.props.orderedTransferAccounts.filter(
-          (accountId: number) => (
-            this.props.transferAccounts.byId[accountId] != undefined && !unselectedKeys.includes(accountId)
-          )
+        (accountId: number) =>
+          this.props.transferAccounts.byId[accountId] != undefined &&
+          !unselectedKeys.includes(accountId)
       );
     }
 
     this.setState({
-      selectedRowKeys:  selectedKeys,
+      selectedRowKeys: selectedKeys,
       unselectedRowKeys: unselectedKeys,
       params: this.props.params,
-      searchString: this.props.searchString
-    })
+      searchString: this.props.searchString,
+    });
   }
 
   componentDidUpdate(prevProps: Props) {
-    if (this.props.transferAccounts.IdList !== prevProps.transferAccounts.IdList) {
-      if (this.state.allSelected && !this.state.loadedPages.includes(this.props.paginationOptions?.currentPage)) {
-        this.setState({loadedPages: [...this.state.loadedPages, this.props.paginationOptions?.currentPage]})
-        this.setState({allLoadedRows: [...new Set([...this.state.allLoadedRows, ...this.props.orderedTransferAccounts])]})
-        this.setState({selectedRowKeys: [...new Set([...this.state.selectedRowKeys, ...this.props.transferAccounts.IdList])]})
+    if (
+      this.props.transferAccounts.IdList !== prevProps.transferAccounts.IdList
+    ) {
+      if (
+        this.state.allSelected &&
+        !this.state.loadedPages.includes(
+          this.props.paginationOptions?.currentPage
+        )
+      ) {
+        this.setState({
+          loadedPages: [
+            ...this.state.loadedPages,
+            this.props.paginationOptions?.currentPage,
+          ],
+        });
+        this.setState({
+          allLoadedRows: [
+            ...new Set([
+              ...this.state.allLoadedRows,
+              ...this.props.orderedTransferAccounts,
+            ]),
+          ],
+        });
+        this.setState({
+          selectedRowKeys: [
+            ...new Set([
+              ...this.state.selectedRowKeys,
+              ...this.props.transferAccounts.IdList,
+            ]),
+          ],
+        });
       }
     }
-    if (this.props.params !== prevProps.params || this.props.searchString !== prevProps.searchString) {
-      this.setState({allSelected: false, selectedRowKeys: [], unselectedRowKeys: [], loadedPages: [1], allLoadedRows: []})
+    if (
+      this.props.params !== prevProps.params ||
+      this.props.searchString !== prevProps.searchString
+    ) {
+      this.setState({
+        allSelected: false,
+        selectedRowKeys: [],
+        unselectedRowKeys: [],
+        loadedPages: [1],
+        allLoadedRows: [],
+      });
     }
   }
 
@@ -212,16 +259,21 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
     selectedRows: TransferAccount[]
   ) => {
     if (this.props.disabled) {
-      return
+      return;
     }
-    const allLoadedRows = [...new Set([...this.state.allLoadedRows, ...this.props.orderedTransferAccounts])]
+    const allLoadedRows = [
+      ...new Set([
+        ...this.state.allLoadedRows,
+        ...this.props.orderedTransferAccounts,
+      ]),
+    ];
     let unselectedRowKeys: React.Key[] = [];
 
     if (this.state.allSelected) {
       // We only define the unselected rows when the "select all" box has been flagged as true (ie a "default selected" state),
       // because unselected rows isn't specific enough when you start from a "default unselected" state
       let selectedSet = new Set(selectedRowKeys);
-      unselectedRowKeys = allLoadedRows.filter(row => !selectedSet.has(row));
+      unselectedRowKeys = allLoadedRows.filter((row) => !selectedSet.has(row));
     }
 
     this.setState(
@@ -232,7 +284,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
 
   toggleSelectAll = (keys: React.Key[], data: TransferAccount[]) => {
     if (this.props.disabled) {
-      return
+      return;
     }
 
     if (keys.length === data.length) {
@@ -242,7 +294,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
           allLoadedRows: [],
           selectedRowKeys: [],
           unselectedRowKeys: [],
-          allSelected: false
+          allSelected: false,
         },
         this.onSelectChangeCallback
       );
@@ -251,9 +303,9 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
         {
           loadedPages: [1],
           allLoadedRows: [],
-          selectedRowKeys: data.map(r => r.key),
+          selectedRowKeys: data.map((r) => r.key),
           unselectedRowKeys: [],
-          allSelected: true
+          allSelected: true,
         },
         this.onSelectChangeCallback
       );
@@ -267,11 +319,11 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
         allLoadedRows: [],
         selectedRowKeys: [],
         unselectedRowKeys: [],
-        allSelected: false
+        allSelected: false,
       },
       this.onSelectChangeCallback
     );
-  }
+  };
 
   onSelectChangeCallback() {
     if (this.props.onSelectChange) {
@@ -293,7 +345,8 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
       orderedTransferAccounts,
       transferAccounts,
       users,
-      tokens
+      tokens,
+      disableCheckboxes,
     } = this.props;
 
     let data: TransferAccount[] = orderedTransferAccounts
@@ -304,25 +357,36 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
         let transferAccount = transferAccounts.byId[accountId];
         let user = users.byId[transferAccount.primary_user_id];
         let token_symbol = tokens.byId[transferAccount.token]?.symbol;
-
+        if (user == undefined) {
+          user = {
+            first_name: transferAccount.blockchain_address,
+            last_name: "",
+            is_vendor: transferAccount.is_vendor,
+            is_beneficiary: transferAccount.is_beneficiary,
+          };
+        }
         return {
           key: accountId,
-          first_name: user.first_name,
-          last_name: user.last_name,
+          first_name: user.first_name || "",
+          last_name: user.last_name || "",
           is_vendor: user.is_vendor,
           is_beneficiary: user.is_beneficiary,
           created: transferAccount.created,
           balance: transferAccount.balance,
           is_approved: transferAccount.is_approved,
-          token_symbol: token_symbol
+          token_symbol: token_symbol,
         };
       });
 
     const headerCheckbox = (
       <Checkbox
         checked={selectedRowKeys.length > 0}
-        indeterminate={allSelected ? unselectedRowKeys.length > 0 : selectedRowKeys.length > 0}
-        onChange={e => this.toggleSelectAll(selectedRowKeys, data)}
+        indeterminate={
+          allSelected
+            ? unselectedRowKeys.length > 0
+            : selectedRowKeys.length > 0
+        }
+        onChange={(e) => this.toggleSelectAll(selectedRowKeys, data)}
       />
     );
 
@@ -348,29 +412,31 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
       </Button>
     ));
 
-    let dataButtonsElems = dataButtons.map(
-      (button: DataButton) => (
-        <Button
-          key={button.label}
-          onClick={() => button.onClick()}
-          loading={button.loading || false}
-          type="default"
-          style={{ minWidth: "150px", margin: "10px" }}
-        >
-          {button.label}
-        </Button>
-      )
-    );
+    let dataButtonsElems = dataButtons.map((button: DataButton) => (
+      <Button
+        key={button.label}
+        onClick={() => button.onClick()}
+        loading={button.loading || false}
+        type="default"
+        style={{ minWidth: "150px", margin: "10px" }}
+      >
+        {button.label}
+      </Button>
+    ));
 
     const hasSelected = selectedRowKeys.length > 0;
-    const numberSelected = this.props.paginationOptions?.items ? allSelected ? this.props.paginationOptions?.items - unselectedRowKeys.length : selectedRowKeys.length : selectedRowKeys.length
+    const numberSelected = this.props.paginationOptions?.items
+      ? allSelected
+        ? this.props.paginationOptions?.items - unselectedRowKeys.length
+        : selectedRowKeys.length
+      : selectedRowKeys.length;
     return (
-      <div style={{opacity: this.props.disabled? 0.6 : 1}}>
+      <div style={{ opacity: this.props.disabled ? 0.6 : 1 }}>
         <div
           style={{
             display: "flex",
             justifyContent: "space-between",
-            flexWrap: "wrap"
+            flexWrap: "wrap",
           }}
         >
           <div
@@ -382,7 +448,7 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
             style={{
               display: "flex",
               alignItems: "flex-end",
-              minHeight: "25px"
+              minHeight: "25px",
             }}
           >
             {dataButtonsElems}
@@ -390,33 +456,44 @@ class TransferAccountList extends React.Component<Props, ComponentState> {
         </div>
         <Space direction="vertical">
           {hasSelected ? (
-            <Alert message={`${numberSelected} Selected`} style={{ marginLeft: "10px", marginRight: "10px" }} closeText="Clear" onClose={this.toggleUnselect}/>
+            <Alert
+              message={`${numberSelected} Selected`}
+              style={{ marginLeft: "10px", marginRight: "10px" }}
+              closeText="Clear"
+              onClose={this.toggleUnselect}
+            />
           ) : null}
           <Table
             loading={transferAccounts.loadStatus.isRequesting}
             columns={columns}
             dataSource={data}
-            rowSelection={rowSelection}
+            rowSelection={disableCheckboxes ? undefined : rowSelection}
             style={{ marginLeft: "10px", marginRight: "10px" }}
-            pagination={this.props.paginationOptions? false: undefined}
+            pagination={this.props.paginationOptions ? false : undefined}
           />
-          { this.props.paginationOptions?
+          {this.props.paginationOptions ? (
             <Pagination
-              style={{display: 'flex', justifyContent: 'flex-end'}}
+              style={{ display: "flex", justifyContent: "flex-end" }}
               current={this.props.paginationOptions.currentPage}
               showSizeChanger
               defaultCurrent={1}
               defaultPageSize={10}
               total={this.props.paginationOptions.items}
               onChange={this.props.paginationOptions.onChange}
-              showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
+              showTotal={(total, range) =>
+                `${range[0]}-${range[1]} of ${total} items`
+              }
             />
-            : <></>
-          }
+          ) : (
+            <></>
+          )}
         </Space>
       </div>
     );
   }
 }
 
+export const DisconnectedTransferAccountList = connect(mapPartialStateToProps)(
+  TransferAccountList
+);
 export default connect(mapStateToProps)(TransferAccountList);

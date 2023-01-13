@@ -5,7 +5,7 @@ import {
   CreateRequestAction,
   LoadRequestAction,
   ModifyRequestAction,
-  Registration
+  Registration,
 } from "./types";
 
 class APILifeCycleActionType implements APILifecycleActionTypesInterface {
@@ -23,39 +23,43 @@ export const loadActionTypes = new APILifeCycleActionType("LOAD");
 export const createActionTypes = new APILifeCycleActionType("CREATE");
 export const modifyActionTypes = new APILifeCycleActionType("MODIFY");
 
-export const deepUpdateObjectsActionType: ActionGenerator = name =>
+export const deepUpdateObjectsActionType: ActionGenerator = (name) =>
   `DEEP_UPDATE_${name.toUpperCase()}`;
-export const replaceUpdateObjectsActionType: ActionGenerator = name =>
+export const replaceUpdateObjectsActionType: ActionGenerator = (name) =>
   `REPLACE_UPDATE_${name.toUpperCase()}`;
-export const replaceIdListActionType: ActionGenerator = name =>
+export const replaceIdListActionType: ActionGenerator = (name) =>
   `REPLACE_${name.toUpperCase()}_ID_LIST`;
+export const replacePaginationActionType: ActionGenerator = (name) =>
+  `REPLACE_${name.toUpperCase()}_PAGINATION`;
+export const replaceAsyncIdActionType: ActionGenerator = (name) =>
+  `REPLACE_${name.toUpperCase()}_ASYNC_PROGRESS`;
 
 // These functions are designed to be called directly from inside a dispatch,
 // and they will return an appropriately shaped action for the given Rest API... action? (load, create, modify)
 export const apiActions = {
-  load: function<CB, MB>(
+  load: function <CB, MB>(
     reg: Registration<CB, MB>,
     path?: number,
     query?: Query
   ): LoadRequestAction {
     return {
       type: loadActionTypes.request(reg.name),
-      payload: { path, query }
+      payload: { path, query },
     };
   },
 
-  create: function<CB, MB>(
+  create: function <CB, MB>(
     reg: Registration<CB, MB>,
     body?: CB,
     query?: Query
   ): CreateRequestAction {
     return {
       type: createActionTypes.request(reg.name),
-      payload: { query, body }
+      payload: { query, body },
     };
   },
 
-  modify: function<CB, MB>(
+  modify: function <CB, MB>(
     reg: Registration<CB, MB>,
     path: number,
     body?: MB,
@@ -63,7 +67,7 @@ export const apiActions = {
   ): ModifyRequestAction {
     return {
       type: modifyActionTypes.request(reg.name),
-      payload: { path, query, body }
+      payload: { path, query, body },
     };
-  }
+  },
 };

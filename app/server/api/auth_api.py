@@ -19,6 +19,7 @@ from server.utils.amazon_ses import send_reset_email, send_activation_email, sen
 from server.utils.misc import decrypt_string, attach_host
 from server.utils.multi_chain import get_chain
 from sqlalchemy.sql import func
+from sqlalchemy.orm.attributes import flag_modified
 
 import random
 
@@ -495,7 +496,7 @@ class LogoutAPI(MethodView):
             resp = User.decode_auth_token(auth_token)
             if not isinstance(resp, str):
                 # mark the token as blacklisted
-                blacklist_token = BlacklistToken(token=auth_token)
+                blacklist_token = BlacklistToken(token=auth_token, user_id=resp['id'])
                 try:
                     # insert the token
                     db.session.add(blacklist_token)
@@ -627,9 +628,7 @@ class ResetPasswordAPI(MethodView):
         elif auth_header and auth_header != 'null' and old_password:
             split_header = auth_header.split("|")
             auth_token = split_header[0]
-
             resp = User.decode_auth_token(auth_token)
-
             if isinstance(resp, str):
                 response_object = {
                     'status': 'fail',
@@ -875,7 +874,7 @@ class PermissionsAPI(MethodView):
 
             if admin_tier:
                 user.set_held_role('ADMIN',admin_tier)
-
+                flag_modified(user, '_held_roles')
             if deactivated is not None:
                 user.is_disabled = deactivated
 

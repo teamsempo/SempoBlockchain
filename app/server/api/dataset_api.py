@@ -57,10 +57,9 @@ class SpreadsheetUploadAPI(MethodView):
         for i, row in enumerate(rows):
             row_dict = {}
             for j, cell in enumerate(row):
-                row_dict[j] = accessor(cell)
-
+                if accessor(cell) != None:
+                    row_dict[j] = accessor(cell)
             data_dict[i] = row_dict
-
         column_firstrows = {v: k for k, v in data_dict[0].items()}
 
         reponse_object = {
@@ -68,17 +67,21 @@ class SpreadsheetUploadAPI(MethodView):
             'column_firstrows': column_firstrows,
             'requested_attributes':  SPREADSHEET_UPLOAD_REQUESTED_ATTRIBUTES
         }
+
         return make_response(jsonify(reponse_object)), 200
 
 @status_checkable_executor_job
-def execute_dataset_import(dataset, header_positions, is_vendor, custom_attributes):
+def execute_dataset_import(dataset, header_positions, custom_attributes):
     diagnostics = []
     for idx, datarow in enumerate(dataset):
         attribute_dict = { 'custom_attributes': {} }
         contains_anything = False
+        percent_complete = ((idx+1)/len(dataset))*100
         for key, header_label in header_positions.items():
             attribute = datarow.get(key)
-            if attribute and (header_label in custom_attributes):
+            if header_label.strip() == "account_types":
+                attribute_dict[header_label] = attribute
+            elif attribute and (header_label in custom_attributes):
                 attribute_dict['custom_attributes'][header_label] = attribute
             elif attribute:
                 contains_anything = True
@@ -94,7 +97,6 @@ def execute_dataset_import(dataset, header_positions, is_vendor, custom_attribut
                 db.session.commit()
             else:
                 db.session.flush()
-            percent_complete = ((idx+1)/len(dataset))*100
 
             yield {
                 'message': 'success' if percent_complete == 100 else 'pending',
@@ -113,7 +115,6 @@ class DatasetAPI(MethodView):
     def post(self):
         # get the post data
         post_data = request.get_json()
-        is_vendor = post_data.get('isVendor', False)
         header_positions = post_data.get('headerPositions')
         dataset = post_data.get('data')
         custom_attributes = post_data.get('customAttributes', [])
@@ -121,7 +122,6 @@ class DatasetAPI(MethodView):
         task_uuid = add_after_request_checkable_executor_job(execute_dataset_import, kwargs={ 
             'dataset': dataset, 
             'header_positions': header_positions, 
-            'is_vendor':is_vendor, 
             'custom_attributes': custom_attributes 
         })
 
