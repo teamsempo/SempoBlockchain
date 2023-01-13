@@ -3,11 +3,30 @@
   "active_group_by": "sender,account_type",
   "active_users": {
     "aggregate": {
+      "ORGANISATION": 1,
       "USER": 4,
       "percent_change": -100,
       "total": 6
     },
     "timeseries": {
+      "ORGANISATION": [
+        {
+          "date": "2018-12-26T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2019-01-08T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2019-01-13T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2022-07-14T00:00:00",
+          "value": 1
+        }
+      ],
       "USER": [
         {
           "date": "2019-01-09T00:00:00",
@@ -34,11 +53,30 @@
   },
   "all_payments_volume": {
     "aggregate": {
+      "ORGANISATION": 1517,
       "USER": 145,
       "percent_change": -100,
       "total": 1477
     },
     "timeseries": {
+      "ORGANISATION": [
+        {
+          "date": "2018-12-26T00:00:00",
+          "value": 202
+        },
+        {
+          "date": "2019-01-08T00:00:00",
+          "value": 201
+        },
+        {
+          "date": "2019-01-13T00:00:00",
+          "value": 210
+        },
+        {
+          "date": "2022-07-14T00:00:00",
+          "value": 904
+        }
+      ],
       "USER": [
         {
           "date": "2019-01-09T00:00:00",
@@ -97,13 +135,14 @@
     }
   },
   "mandatory_filter": {},
-  "master_wallet_balance": -1517,
+  "master_wallet_balance": 9999998483,
   "total_distributed": 1517,
   "total_population_cumulative": {
     "aggregate": {
+      "ORGANISATION": 1,
       "USER": 4,
       "percent_change": -100,
-      "total": 35
+      "total": 42
     },
     "timeseries": {
       "USER": [
@@ -632,7 +671,7 @@
     "aggregate": {
       "USER": 5,
       "percent_change": -100,
-      "total": 35
+      "total": 42
     },
     "timeseries": {
       "USER": [
@@ -657,11 +696,30 @@
   },
   "users_who_made_purchase": {
     "aggregate": {
+      "ORGANISATION": 1,
       "USER": 4,
       "percent_change": -100,
       "total": 6
     },
     "timeseries": {
+      "ORGANISATION": [
+        {
+          "date": "2018-12-26T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2019-01-08T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2019-01-13T00:00:00",
+          "value": 1
+        },
+        {
+          "date": "2022-07-14T00:00:00",
+          "value": 1
+        }
+      ],
       "USER": [
         {
           "date": "2019-01-09T00:00:00",

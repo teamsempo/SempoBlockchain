@@ -31,13 +31,13 @@ def update_or_create_menu(name, description, parent_id=None):
     if instance:
         instance.name = name
         instance.description = description
-        instance.display_key = "ussd.kenya.{}".format(name)
+        instance.display_key = "ussd.sempo.{}".format(name)
         instance.parent_id = parent_id
     else:
         instance = UssdMenu(
             name=name,
             description=description,
-            display_key="ussd.kenya.{}".format(name),
+            display_key="ussd.sempo.{}".format(name),
             parent_id=parent_id
         )
         db.session.add(instance)
@@ -47,7 +47,7 @@ def update_or_create_menu(name, description, parent_id=None):
 
 
 def create_ussd_menus():
-    print_section_title('Creating Sarafu Network USSD Menu')
+    print_section_title('Creating Network USSD Menu')
     print('Creating Initial Language Selection menu')
 
     initial_lang_setup_menu = update_or_create_menu(
@@ -264,7 +264,7 @@ def create_ussd_menus():
     )
     update_or_create_menu(
         name='exit_not_registered',
-        description='The phone is not registered on Sarafu or has been deactivated.',
+        description='The phone is not registered or has been deactivated.',
     )
     update_or_create_menu(
         name='exit_invalid_exchange_amount',
@@ -390,9 +390,14 @@ def create_float_transfer_account(app):
                 token=t,
                 is_approved=True
             )
+            float_transfer_account.organisation = Organisation.master_organisation()
             db.session.add(float_transfer_account)
             db.session.flush()
             t.float_account = float_transfer_account
+        else:
+            print('Patching float account')
+            if not t.float_account.organisation:
+                t.float_account.organisation = Organisation.master_organisation()
         t.float_account.is_public = True
         db.session.commit()
     print_section_conclusion('Done Creating/Updating Float Wallet')

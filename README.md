@@ -47,11 +47,12 @@ brew install cairo && brew install pango
 
 Download and install python 3.8 and its respective pip and virtualenv. Then:
 
-from devtools directory:
+from root directory:
 
 ```
 python3 -m venv venv
 source venv/bin/activate
+cd devtools
 ./install_python_requirements.sh
 ```
 
@@ -200,7 +201,7 @@ For more commands, see Alembic documentation: https://alembic.sqlalchemy.org/en/
 
 **For main app:**
 
-First, setup your database `sempo_blockchain_local`, using the username and password from the local config file.
+First, setup your database `sempo_app`, using the username and password from the local config file.
 
 Next, to update your database to the latest migration file:
 

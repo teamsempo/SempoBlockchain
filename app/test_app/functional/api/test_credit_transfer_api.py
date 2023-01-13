@@ -152,6 +152,8 @@ def test_get_credit_transfer(test_client, complete_admin_auth_token, create_cred
         url = f"/api/v1/credit_transfer/{credit_transfer_selector_func(create_credit_transfer)}/"
     else:
         url = '/api/v1/credit_transfer/'
+    create_credit_transfer.add_approver_and_resolve_as_completed()
+
     response = test_client.get(
         url,
         headers=dict(
@@ -163,7 +165,15 @@ def test_get_credit_transfer(test_client, complete_admin_auth_token, create_cred
 
     if not credit_transfer_selector_func(create_credit_transfer):
         assert isinstance(response.json['data']['credit_transfers'], list)
-
+    else:
+        if status_code == 404:
+            assert response.json['message'] == 'Credit transfer not found'
+        else:
+            assert response.json['data']['credit_transfer']['authorising_user_email'] == 'tristan@withsempo.com'
+            assert response.json['data']['credit_transfer']['recipient_user']['first_name'] == 'Transfer'
+            assert response.json['data']['credit_transfer']['approvers'][0]['email'] == 'tristan@withsempo.com'
+            assert response.json['message'] == 'Successfully Loaded.'
+            
 
 def test_credit_transfer_internal_callback(mocker, test_client, authed_sempo_admin_user, create_organisation, new_credit_transfer):
     # For this, we want to test 5 permutations of third-party transactions to add:
@@ -343,6 +353,7 @@ def test_force_third_party_transaction_sync():
 def test_create_bulk_credit_transfer(test_client, authed_sempo_admin_user, create_transfer_account_user,
                                 create_credit_transfer, is_bulk, invert_recipient_list, transfer_amount, 
                                 transfer_type, status_code):
+
     from server.utils.user import create_transfer_account_user
     from flask import g
 
@@ -350,6 +361,7 @@ def test_create_bulk_credit_transfer(test_client, authed_sempo_admin_user, creat
     authed_sempo_admin_user.set_held_role('ADMIN', 'superadmin')
     auth = get_complete_auth_token(authed_sempo_admin_user)
     g.active_organisation = authed_sempo_admin_user.default_organisation
+    authed_sempo_admin_user.default_organisation.queried_org_level_transfer_account.set_balance_offset(10000000000)
     # Create 15 users to test against
     users = []
     user_ids = []

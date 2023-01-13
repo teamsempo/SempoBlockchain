@@ -16,6 +16,7 @@ from server.exceptions import (
 )
 from server.models.user import User
 from server.models.transfer_card import TransferCard
+from server.models.transfer_card_state import TransferCardState
 from server.models.transfer_account import TransferAccount
 from server.models.credit_transfer import CreditTransfer
 from server.utils.transfer_enums import TransferModeEnum
@@ -92,6 +93,10 @@ class MeCreditTransferAPI(MethodView):
         pin = post_data.get('pin')
 
         nfc_serial_number = post_data.get('nfc_id')
+        # In the future we can reject payloads with missing session numbers. For now, it's just a sentinel -1
+        nfc_session_number = post_data.get('nfc_session_number', -1) 
+        amount_loaded = post_data.get('amount_loaded', -1) 
+        amount_deducted = post_data.get('amount_deducted', -1) 
 
         user_id = post_data.get('user_id')
         public_identifier = post_data.get('public_identifier')
@@ -107,6 +112,8 @@ class MeCreditTransferAPI(MethodView):
 
         transfer_card = None
         my_transfer_account = None
+        transfer_card_state = None
+    
         authorised = False
         if transfer_account_id:
             counterparty_transfer_account = TransferAccount.query.get(transfer_account_id)
@@ -178,9 +185,8 @@ class MeCreditTransferAPI(MethodView):
             authorised = True
 
         elif nfc_serial_number:
-            # We treat NFC serials differently because they're automatically authorised under the current version
+            # We treat NFC serials differently because they're automatically authorized under the current version
             transfer_card = TransferCard.query.filter_by(nfc_serial_number=nfc_serial_number).first()
-
             if transfer_card:
                 counterparty_user = transfer_card.user
                 counterparty_transfer_account = transfer_card.transfer_account
@@ -191,9 +197,17 @@ class MeCreditTransferAPI(MethodView):
                     'feedback': True
                 }
                 return make_response(jsonify(response_object)), 404
-
+            # Add NFC usage object. This is created _before_ the transfer, because want to store usages even
+            # if the transfer is failed/rejected for any reason. 
+            transfer_card_state = TransferCardState(
+                vendor_transfer_account=my_transfer_account,
+                transfer_card=transfer_card,
+                session_number=nfc_session_number,
+                amount_deducted = amount_deducted,
+                amount_loaded=amount_loaded
+            )
+            db.session.add(transfer_card_state)
             authorised = True
-
 
         else:
             try:
@@ -286,7 +300,7 @@ class MeCreditTransferAPI(MethodView):
             receive_user = g.user
             receive_transfer_account = my_transfer_account
 
-        if transfer_amount == 0 or transfer_amount > send_transfer_account.balance:
+        if not transfer_card and (transfer_amount == 0 or transfer_amount > send_transfer_account.balance):
 
             db.session.commit()
 
@@ -297,6 +311,7 @@ class MeCreditTransferAPI(MethodView):
             return make_response(jsonify(response_object)), 400
 
         try:
+            if transfer_card_state: transfer_card_state.vendor_transfer_account = my_transfer_account
             transfer = make_payment_transfer(transfer_amount=transfer_amount,
                                              send_user=send_user,
                                              send_transfer_account=send_transfer_account,
@@ -305,7 +320,9 @@ class MeCreditTransferAPI(MethodView):
                                              transfer_use=transfer_use,
                                              transfer_mode=transfer_mode,
                                              uuid=uuid,
-                                             transfer_card=transfer_card)
+                                             transfer_card=transfer_card,
+                                             transfer_card_state=transfer_card_state,
+                                             require_sufficient_balance=False)
 
         except AccountNotApprovedError as e:
             db.session.commit()

@@ -13,6 +13,7 @@ from cryptography.fernet import Fernet
 
 from server.models.organisation import Organisation
 from server.utils.auth import get_complete_auth_token
+from server.models.user import User
 from server.constants import ACCESS_ROLES
 from flask import current_app
 from server import db
@@ -207,7 +208,7 @@ def test_logout_api(test_client, authed_sempo_admin_user):
                                headers=dict(Authorization=auth_token, Accept='application/json'),
                                content_type='application/json', follow_redirects=True)
     assert response.status_code == 200
-    assert BlacklistToken.check_blacklist(auth_token) is True
+    assert BlacklistToken.check_blacklist(User.decode_auth_token(auth_token)) is True
 
 
 @pytest.mark.parametrize("email,status_code", [
@@ -393,7 +394,7 @@ def test_logout_api(test_client, authed_sempo_admin_user):
                                headers=dict(Authorization=auth_token, Accept='application/json'),
                                content_type='application/json', follow_redirects=True)
     assert response.status_code == 200
-    assert BlacklistToken.check_blacklist(auth_token) is True
+    assert User.decode_auth_token(auth_token) == "Token blacklisted. Please log in again."
 
     # This is here to stop tokens having the same timestamp dying
     sleep(1)

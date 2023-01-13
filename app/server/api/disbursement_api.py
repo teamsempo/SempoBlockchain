@@ -1,7 +1,8 @@
 from decimal import Decimal
 import math
+import datetime 
 
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, load_only
 from flask import Blueprint, request, make_response, jsonify, g, current_app
 from flask.views import MethodView
 from sqlalchemy import desc, asc
@@ -23,14 +24,21 @@ from server.utils.metrics.metrics_cache import clear_metrics_cache, rebuild_metr
 
 disbursement_blueprint = Blueprint('disbursement', __name__)
 
-
 @status_checkable_executor_job
 def make_transfers(disbursement_id, auto_resolve=False):
+    yield {
+        'message': 'Processing Bulk Disbursement',
+        'percent_complete': 0,
+    }
+
     send_transfer_account = g.user.default_organisation.queried_org_level_transfer_account
     from server.models.user import User
     from server.models.transfer_account import TransferAccount
     from server.models.disbursement import Disbursement
-    disbursement = db.session.query(Disbursement).filter(Disbursement.id == disbursement_id).first()
+    disbursement = db.session.query(Disbursement).filter(Disbursement.id == disbursement_id)\
+        .first()
+    disbursement.mark_processing()
+    db.session.commit()
     for idx, ta in enumerate(disbursement.transfer_accounts):
         try:
             user = ta.primary_user
@@ -71,28 +79,31 @@ def make_transfers(disbursement_id, auto_resolve=False):
             disbursement.errors = disbursement.errors + [str(ta) +': ' + str(e)]
 
         db.session.commit()
-        percent_complete = ((idx + 1) / len(disbursement.transfer_accounts)) * 100
-
+        percent_complete = ((idx + 1) / disbursement.recipient_count) * 100
+        message = f'Creating transfer {idx+1} of {disbursement.recipient_count}'
         yield {
-            'message': 'success' if percent_complete == 100 else 'pending',
+            'message': 'Success' if percent_complete == 100 else message,
             'percent_complete': math.floor(percent_complete),
-            'data': {'credit_transfers': credit_transfers_schema.dump(disbursement.credit_transfers).data}
         }
+    disbursement.mark_complete()
+    db.session.commit()
     clear_metrics_cache()
     rebuild_metrics_cache()
+
 class MakeDisbursementAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def get(self):
-        disbursements = db.session.query(Disbursement).order_by(Disbursement.id.desc()).all()
-
+        disbursements = db.session.query(Disbursement).order_by(Disbursement.id.desc())
+        disbursements, total_items, total_pages, new_last_fetched = paginate_query(disbursements)
         response_object = {
-            'status': 'success',
             'message': 'Successfully Loaded.',
-            'data': {
-                'disbursements': disbursements_schema.dump(disbursements).data
-            }
+            'items': total_items,
+            'pages': total_pages,
+            'last_fetched': new_last_fetched,
+            'query_time': datetime.datetime.utcnow().strftime("%m/%d/%Y, %H:%M:%S"),
+            'data': {'disbursements': disbursements_schema.dump(disbursements).data}
         }
-        return make_response(jsonify(response_object)), 200
+        return make_response(jsonify(response_object), 200)
 
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def post(self):
@@ -135,20 +146,16 @@ class MakeDisbursementAPI(MethodView):
             disbursement_amount = disbursement_amount,
             transfer_type = transfer_type
         )
-
         if include_accounts:
-            transfer_accounts = db.session.query(TransferAccount).filter(TransferAccount.id.in_(include_accounts)).all()
+            transfer_accounts = db.session.query(TransferAccount).filter(TransferAccount.id.in_(include_accounts)).options(load_only("id")).all()
         else:
-            search_query = generate_search_query(search_string, filters, order, sort_by_arg, include_user=True)
+            search_query = generate_search_query(search_string, filters, order, sort_by_arg, include_user=False)
             search_query = search_query.filter(TransferAccount.id.notin_(exclude_accounts))
-            results = search_query.all()
-            transfer_accounts = [r[0] for r in results] # Get TransferAccount (TransferAccount, searchRank, User)
-        d.transfer_accounts.extend(transfer_accounts)
-
-        db.session.flush()
-
+            transfer_accounts = search_query.options(load_only("id")).all()
+        d.transfer_accounts = transfer_accounts
+        db.session.add(d)
+        db.session.commit()
         disbursement = disbursement_schema.dump(d).data
-
         response_object = {
             'data': {
                 'status': 'success',
@@ -161,26 +168,19 @@ class MakeDisbursementAPI(MethodView):
 class DisbursementAPI(MethodView):
     @requires_auth(allowed_roles={'ADMIN': 'admin'})
     def get(self, disbursement_id):
-        accounts = db.session.query(TransferAccount)\
-            .filter(TransferAccount.disbursements.any(id=disbursement_id))\
-            .options(joinedload(TransferAccount.disbursements))
-        accounts, total_items, total_pages, new_last_fetched = paginate_query(accounts)
-        if accounts is None:
-            response_object = {
-                'message': 'No transfer accounts',
-            }
-
-            return make_response(jsonify(response_object)), 400
-
-        transfer_accounts = transfer_accounts_schema.dump(accounts).data
         d = db.session.query(Disbursement).filter_by(id=disbursement_id).first()
+        credit_transfers, _, _, _ = paginate_query(d.credit_transfers)
+        transfer_accounts, total_items, total_pages, last_fetched = paginate_query(d.transfer_accounts)
         disbursement = disbursement_schema.dump(d).data
-
+        disbursement['credit_transfers'] = credit_transfers_schema.dump(credit_transfers)[0]
+        disbursement['transfer_accounts'] = transfer_accounts_schema.dump(transfer_accounts)[0]
         response_object = {
             'status': 'success',
             'message': 'Successfully Loaded.',
+            'items': total_items,
+            'pages': total_pages,
+            'last_fetched': last_fetched,
             'data': {
-                'transfer_accounts': transfer_accounts,
                 'disbursement': disbursement
             }
         }
@@ -203,9 +203,17 @@ class DisbursementAPI(MethodView):
         with red.lock(name=f'Disbursemnt{disbursement_id}', timeout=10, blocking_timeout=20):
 
             disbursement = Disbursement.query.filter(Disbursement.id == disbursement_id)\
-                .options(joinedload(Disbursement.credit_transfers))\
                 .first()
+
+            if disbursement.transfer_type == 'WITHDRAWAL':
+                return {
+                    'status': 'fail',
+                    'message': 'Withdrawals are only mutable through withdrawal API',
+
+                }, 400
+
             disbursement.notes = notes
+            
             if not disbursement:
                 return { 'message': f'Disbursement with ID \'{disbursement_id}\' not found' }, 400
 
@@ -213,6 +221,18 @@ class DisbursementAPI(MethodView):
                 return { 'message': f'Disbursement with ID \'{disbursement_id}\' has already been set to {disbursement.state.lower()}!'}, 400
 
             if action == 'APPROVE':
+                # Checks if this can be afforded
+                if disbursement.transfer_type == 'DISBURSEMENT':
+                    org_balance = g.active_organisation.queried_org_level_transfer_account.balance
+                    disbursement_amount = disbursement.total_disbursement_amount
+                    if disbursement_amount > org_balance:
+                        message = "Sender {} has insufficient balance. Has {}, needs {}.".format(
+                            g.active_organisation.queried_org_level_transfer_account,
+                            str(round(org_balance / 100, 2)),
+                            str(round(disbursement_amount / 100, 2))
+                        )
+                        response_object = {'message': str(message)}
+                        return make_response(jsonify(response_object)), 400
                 disbursement.approve()
                 db.session.commit()
                 auto_resolve = False

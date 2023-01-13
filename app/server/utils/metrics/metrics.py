@@ -129,14 +129,19 @@ def calculate_transfer_stats(
         db.session.close()
         return metric.metric_name, result
 
-
-    futures = []
-    for metric in metrics_list:
-        futures.append(executor.submit(calculate_metric, metric))
+    # After request, do things synchronously since time doesn't matter much
     data = {}
-    for future in futures:
-        metric_name, result = future.result()
-        data[metric_name] = result
+    if g.get('is_after_request'):
+        for metric in metrics_list:
+            metric_name, result = calculate_metric(metric)
+            data[metric_name] = result
+    else:
+        futures = []
+        for metric in metrics_list:
+            futures.append(executor.submit(calculate_metric, metric))
+        for future in futures:
+            metric_name, result = future.result()
+            data[metric_name] = result
 
     data['mandatory_filter'] = mandatory_filter
 

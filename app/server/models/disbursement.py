@@ -18,6 +18,10 @@ ALLOWED_STATE_TRANSITIONS = {
     PARTIAL: [APPROVED, REJECTED, PARTIAL]
 }
 
+PROCESSING = 'PROCESSING'
+COMPLETE = 'COMPLETE'
+
+COMPLETION_STATES = [PENDING, PROCESSING, COMPLETE]
 class Disbursement(ModelBase, OneOrgBase):
     __tablename__ = 'disbursement'
 
@@ -30,26 +34,30 @@ class Disbursement(ModelBase, OneOrgBase):
     search_filter_params = db.Column(db.String)
     include_accounts = db.Column(db.ARRAY(db.Integer))
     exclude_accounts = db.Column(db.ARRAY(db.Integer))
-    state = db.Column(db.String)
+    state = db.Column(db.String) # Approval state
+    completion = db.Column(db.String(), default=PENDING) # State of actual transfers. PENDING->PROCESSING->COMPLETE
     transfer_type = db.Column(db.String)
     _disbursement_amount_wei = db.Column(db.Numeric(27), default=0)
 
     creator_user = db.relationship('User',
-                                    primaryjoin='User.id == Disbursement.creator_user_id')
+                                    primaryjoin='User.id == Disbursement.creator_user_id',
+                                    lazy=True)
 
     transfer_accounts = db.relationship(
         "TransferAccount",
         secondary=disbursement_transfer_account_association_table,
-        back_populates="disbursements")
+        lazy='dynamic')
 
     credit_transfers = db.relationship(
         "CreditTransfer",
         secondary=disbursement_credit_transfer_association_table,
-        back_populates="disbursement")
+        back_populates="disbursement",
+        lazy='dynamic')
 
     approvers = db.relationship(
         "User",
         secondary=disbursement_approver_user_association_table,
+        lazy=True
     )
     approval_times = db.Column(db.ARRAY(db.DateTime), default=[])
     
@@ -120,6 +128,15 @@ class Disbursement(ModelBase, OneOrgBase):
     def reject(self):
         self.add_approver()             
         self._transition_state(REJECTED)
+
+    def mark_processing(self):
+        if self.completion != COMPLETE:
+            self.completion = PROCESSING
+        else:
+            raise Exception('Cannot complete same disbursement more than once')
+
+    def mark_complete(self):
+        self.completion = COMPLETE
 
     def __init__(self, *args, **kwargs):
         self.organisation_id = g.active_organisation.id

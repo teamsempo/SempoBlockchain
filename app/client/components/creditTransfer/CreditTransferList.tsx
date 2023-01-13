@@ -16,6 +16,9 @@ interface StateProps {
   tokens: any;
 }
 
+interface PartialStateProps {
+  tokens: any;
+}
 export interface OnPaginateChange {
   (page: number, pageSize: number | undefined): void;
 }
@@ -50,7 +53,7 @@ export interface TransferAccount {
   blockchain_status_colour: string;
 }
 
-type Props = StateProps & OuterProps;
+type Props = StateProps | (PartialStateProps & OuterProps);
 
 const columns: ColumnsType<TransferAccount> = [
   {
@@ -66,37 +69,37 @@ const columns: ColumnsType<TransferAccount> = [
             { path: "accounts/", breadcrumbName: "Accounts" },
             {
               path: `accounts/${transferAccountID}`,
-              breadcrumbName: `Transfer Account ${transferAccountID}`
+              breadcrumbName: `Transfer Account ${transferAccountID}`,
             },
             {
               path: `transfers/${record.id}`,
-              breadcrumbName: `Transfer ${record.id}`
-            }
+              breadcrumbName: `Transfer ${record.id}`,
+            },
           ]
         : undefined;
       return (
         <Link
           to={{
             pathname: "/transfers/" + record.id,
-            state: { customRoutes }
+            state: { customRoutes },
           }}
           style={{
             textDecoration: "underline",
             color: "#000000a6",
-            fontWeight: 400
+            fontWeight: 400,
           }}
         >
           {record.id}
         </Link>
       );
-    }
+    },
   },
   {
     title: "Created",
     key: "created",
     render: (text: any, record: any) => (
       <DateTime created={record.created} useRelativeTime={false} />
-    )
+    ),
   },
   {
     title: "Amount",
@@ -110,7 +113,7 @@ const columns: ColumnsType<TransferAccount> = [
         record.token_symbol
       );
       return <p style={{ margin: 0 }}>{money}</p>;
-    }
+    },
   },
   {
     title: "Sender",
@@ -128,13 +131,13 @@ const columns: ColumnsType<TransferAccount> = [
           style={{
             textDecoration: isDisbursement ? "" : "underline",
             color: "#000000a6",
-            fontWeight: 400
+            fontWeight: 400,
           }}
         >
           {record.sender_name}
         </Link>
       );
-    }
+    },
   },
   {
     title: "Recipient",
@@ -152,19 +155,19 @@ const columns: ColumnsType<TransferAccount> = [
           style={{
             textDecoration: isReclamation ? "" : "underline",
             color: "#000000a6",
-            fontWeight: 400
+            fontWeight: 400,
           }}
         >
           {record.recipient_name}
         </Link>
       );
-    }
+    },
   },
   {
     title: "Type",
     key: "transfer_type",
     ellipsis: true,
-    render: (text: any, record: any) => <>{record.transfer_type}</>
+    render: (text: any, record: any) => <>{record.transfer_type}</>,
   },
   {
     title: "Approval",
@@ -172,7 +175,7 @@ const columns: ColumnsType<TransferAccount> = [
     ellipsis: true,
     render: (text: any, record: any) => (
       <Tag color={record.transfer_status_colour}>{record.transfer_status}</Tag>
-    )
+    ),
   },
   {
     title: "Blockchain",
@@ -182,14 +185,20 @@ const columns: ColumnsType<TransferAccount> = [
       <Tag color={record.blockchain_status_colour}>
         {record.blockchain_status}
       </Tag>
-    )
-  }
+    ),
+  },
 ];
 
 const mapStateToProps = (state: ReduxState): StateProps => {
   return {
     tokens: state.tokens,
-    users: state.users
+    users: state.users,
+  };
+};
+
+const mapPartialStateToProps = (state: ReduxState): PartialStateProps => {
+  return {
+    tokens: state.tokens,
   };
 };
 
@@ -200,30 +209,31 @@ class CreditTransferList extends React.Component<Props> {
     this.state = {
       loadedPages: [1],
       params: "",
-      searchString: ""
+      searchString: "",
     };
   }
 
   componentDidMount() {
     this.setState({
       params: this.props.params,
-      searchString: this.props.searchString
+      searchString: this.props.searchString,
     });
   }
 
   render() {
     const {} = this.state;
     const { creditTransfers, users } = this.props;
-
     let data: any[] = Object.values(creditTransfers.byId)
       .map((transfer: any) => {
         let sender_name;
         let recipient_name;
         const recipient_user =
-          transfer.recipient_user && users.byId[transfer.recipient_user];
+          transfer.recipient_user &&
+          users.byId[transfer.recipient_user.id || transfer.recipient_user];
 
         const sender_user =
-          transfer.sender_user && users.byId[transfer.sender_user];
+          transfer.sender_user &&
+          users.byId[transfer.sender_user.id || transfer.sender_user];
 
         let email = transfer.authorising_user_email;
 
@@ -231,7 +241,7 @@ class CreditTransferList extends React.Component<Props> {
           ? (sender_user.first_name === null ? "" : sender_user.first_name) +
             " " +
             (sender_user.last_name === null ? "" : sender_user.last_name)
-          : "";
+          : "Transfer Account " + transfer.sender_transfer_account_id;
 
         recipient_name = recipient_user
           ? (recipient_user.first_name === null
@@ -239,12 +249,12 @@ class CreditTransferList extends React.Component<Props> {
               : recipient_user.first_name) +
             " " +
             (recipient_user.last_name === null ? "" : recipient_user.last_name)
-          : "";
+          : "Transfer Account " + transfer.recipient_transfer_account_id;
 
         if (transfer.transfer_type === "DISBURSEMENT") {
-          sender_name = email;
+          sender_name = email || "Administrator";
         } else if (transfer.transfer_type === "RECLAMATION") {
-          recipient_name = email;
+          recipient_name = email || "Administrator";
         }
 
         if (transfer.transfer_status === "COMPLETE") {
@@ -284,7 +294,7 @@ class CreditTransferList extends React.Component<Props> {
           recipient_name: recipient_name,
           sender_name: sender_name,
           sender_transfer_account_id: transfer.sender_transfer_account_id,
-          recipient_transfer_account_id: transfer.recipient_transfer_account_id
+          recipient_transfer_account_id: transfer.recipient_transfer_account_id,
         };
       })
       .reverse();
@@ -294,7 +304,7 @@ class CreditTransferList extends React.Component<Props> {
           style={{
             display: "flex",
             justifyContent: "space-between",
-            flexWrap: "wrap"
+            flexWrap: "wrap",
           }}
         >
           <div
@@ -304,7 +314,7 @@ class CreditTransferList extends React.Component<Props> {
             style={{
               display: "flex",
               alignItems: "flex-end",
-              minHeight: "25px"
+              minHeight: "25px",
             }}
           ></div>
         </div>
@@ -338,4 +348,7 @@ class CreditTransferList extends React.Component<Props> {
   }
 }
 
+export var DisconnectedCreditTransferList = connect(mapPartialStateToProps)(
+  CreditTransferList
+);
 export default connect(mapStateToProps)(CreditTransferList);

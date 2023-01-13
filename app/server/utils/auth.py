@@ -1,6 +1,7 @@
 import time
 from functools import wraps, partial
 from flask import request, g, make_response, jsonify, current_app
+import datetime
 from server import db
 from server.constants import DENOMINATION_DICT
 from server.models.currency_conversion import CurrencyConversion
@@ -230,8 +231,7 @@ def requires_auth(f=None,
                     except NotImplementedError:
                         g.active_organisation = None
 
-                    proxies = request.headers.getlist("X-Forwarded-For")
-                    check_ip(proxies, user, num_proxy=1)
+                    check_ip(user)
 
                     # updates the validated user last seen timestamp
                     user.update_last_seen_ts()
@@ -309,21 +309,17 @@ def tfa_logic(user, tfa_token, ignore_tfa_requirement=False):
     return None
 
 
-def check_ip(proxies, user, num_proxy=0):
-    """
-    Proxies can be faked easily. Assumes there is a set number of proxies in production.
-    Todo: make this more robust
-    """
-    correct_ip_index = num_proxy + 1
-
-    if len(proxies) >= correct_ip_index:
-        real_ip_address = proxies[-correct_ip_index]  # get the correct referring client ip
-        if real_ip_address is not None and not IpAddress.check_user_ips(user, real_ip_address):
-            # IP exists in request and is not already saved
+def check_ip(user):
+    real_ip_address = request.remote_addr
+    if real_ip_address is not None:
+        address = IpAddress.check_user_ips(user, real_ip_address)
+        # IP exists in request and is not already saved
+        if not address:
             new_ip = IpAddress(ip=real_ip_address)
             new_ip.user = user
             db.session.add(new_ip)
-
+        else:
+            address.updated = datetime.datetime.utcnow()
 
 def verify_slack_requests(f=None):
     """
@@ -419,7 +415,7 @@ def create_user_response_object(user, auth_token, message):
         'forgiving_deduct': current_app.config['FORGIVING_DEDUCT'],
         'support_sig_validation': current_app.config['SUPPORT_SIG_VALIDATION'],
         'usd_to_satoshi_rate': usd_to_satoshi_rate,
-        'kyc_active': True,  # todo; kyc active function
+        'kyc_active': current_app.config['KYC_ENABLED'],
         'android_intercom_hash': create_intercom_secret(user_id=user.id, device_type='ANDROID'),
         'web_intercom_hash': create_intercom_secret(user_id=user.id, device_type='WEB'),
         'web_api_version': '1'

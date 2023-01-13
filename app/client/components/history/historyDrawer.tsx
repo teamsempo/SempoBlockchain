@@ -16,13 +16,16 @@ class HistoryDrawer extends React.Component<Props> {
   }
 
   render() {
-    const stringList = this.props.changes.map(change => {
+    const stringList = this.props.changes.map((change) => {
+      const email = change.change_by ? change.change_by.email : "Unknown";
+      const old_value = change.old_value ? change.old_value : "null";
+      const new_value = change.new_value ? change.new_value : "null";
+      const column_name = toTitleCase(replaceUnderscores(change.column_name));
+      const created = change.created;
       return {
-        item: `${toTitleCase(
-          replaceUnderscores(change.column_name)
-        )} changed from "${change.old_value}" to "${change.new_value}"`,
-        date: change.created,
-        email: change.change_by.email
+        item: `${column_name} changed from "${old_value}" to "${new_value}"`,
+        date: created,
+        email: email,
       };
     });
 

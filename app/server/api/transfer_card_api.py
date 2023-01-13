@@ -26,6 +26,7 @@ class TransferCardAPI(MethodView):
 
         if nfc_serial_number:
             #     We're looking for a single card
+            nfc_serial_number = nfc_serial_number.replace(':', '')
             card = (
                 TransferCard.query
                     .filter(TransferCard.transfer_account_id != None)
@@ -93,7 +94,7 @@ class TransferCardAPI(MethodView):
 
         # serial numbers are case insensitive
         public_serial_number = re.sub(r'[\t\n\r]', '', str(public_serial_number)).upper()
-        nfc_serial_number = nfc_serial_number.upper()
+        nfc_serial_number = nfc_serial_number.upper().replace(':', '')
 
         if TransferCard.query.filter_by(public_serial_number=public_serial_number).first():
             response_object = {
@@ -129,6 +130,7 @@ class TransferCardAPI(MethodView):
         disable = data.get('disable', False)
 
         if nfc_serial_number:
+            nfc_serial_number = nfc_serial_number.replace(':', '')
             transfer_card = TransferCard.query.filter_by(nfc_serial_number=nfc_serial_number).first()
         else:
             transfer_card = TransferCard.query.filter_by(public_serial_number=public_serial_number).first()

@@ -31,7 +31,7 @@ class CreditTransferStatsApi(MethodView):
             - token_id: (Default: None) If multi-org is being used, and the orgs have different tokens, this lets the user choose
                 which token's stats to present
         """
-        
+
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')
         encoded_filters = request.args.get('params')

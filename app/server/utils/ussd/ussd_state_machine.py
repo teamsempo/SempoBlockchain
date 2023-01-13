@@ -1,20 +1,19 @@
 """
-This file (kenya_ussd_state_machine.py) contains the KenyaUssdStateMachine responsible for managing the states of
-the ussd application as would apply to its use in kenya.
+This file (ussd_state_machine.py) contains the UssdStateMachine responsible for managing the states of
+the ussd application.
 It manages transitions between different states of the ussd system based on user input.
 The class contains methods responsible for validation of user input and processing user input to facilitate
-the services provided by the  ussd app.
+the services provided by the ussd app.
 """
 import re
 from phonenumbers.phonenumberutil import NumberParseException
 from transitions import Machine, State
 
 from server import ussd_tasker
-from server.utils.phone import send_message
+from server.utils.phone import send_translated_message
 from server.models.user import User
 from server.models.ussd import UssdSession
 from server.models.transfer_usage import TransferUsage
-from server.utils.internationalization import i18n_for
 from server.utils.user import set_custom_attributes, change_initial_pin, change_current_pin, default_token, \
     get_user_by_phone, transfer_usages_for_user, send_terms_message_if_required
 from server.utils.credit_transfer import dollars_to_cents
@@ -26,10 +25,10 @@ USSD_MAX_LENGTH = 164
 MIN_EXCHANGE_AMOUNT_CENTS = 40
 
 
-class KenyaUssdStateMachine(Machine):
+class UssdStateMachine(Machine):
 
     def __repr__(self):
-        return f"<KenyaUssdStateMachine: {self.state}>"
+        return f"<UssdStateMachine: {self.state}>"
 
     # define machine states
     states = [
@@ -86,8 +85,7 @@ class KenyaUssdStateMachine(Machine):
     ]
 
     def send_sms(self, phone, message_key, **kwargs):
-        message = i18n_for(self.user, "ussd.kenya.{}".format(message_key), **kwargs)
-        send_message(phone, message)
+        send_translated_message(phone=phone, message_key="ussd.sempo.{}".format(message_key), **kwargs)
 
     def change_preferred_language_to_sw(self, user_input):
         self.change_preferred_language_to("sw")
@@ -190,11 +188,11 @@ class KenyaUssdStateMachine(Machine):
             user.has_token_agent_role == should_be_agent
 
     def is_user(self, user_input):
-        user = get_user_by_phone(user_input, "KE")
+        user = get_user_by_phone(user_input)
         return self.is_valid_recipient(user, True, False)
 
     def is_token_agent(self, user_input):
-        user = get_user_by_phone(user_input, "KE")
+        user = get_user_by_phone(user_input)
         return self.is_valid_recipient(user, True, True)
 
     def save_recipient_phone(self, user_input):
@@ -225,7 +223,7 @@ class KenyaUssdStateMachine(Machine):
             self.session.set_data('usage_menu', current_menu_nr)
 
     def process_send_token_request(self, user_input):
-        user = get_user_by_phone(self.session.get_data('recipient_phone'), "KE")
+        user = get_user_by_phone(self.session.get_data('recipient_phone'))
         amount = float(self.session.get_data('transaction_amount'))
         reason_str = self.session.get_data('transaction_reason_i18n')
         reason_id = float(self.session.get_data('transaction_reason_id'))
@@ -261,7 +259,7 @@ class KenyaUssdStateMachine(Machine):
         ussd_tasker.fetch_user_exchange_rate(self.user)
 
     def is_valid_token_agent(self, user_input):
-        user = get_user_by_phone(user_input, "KE")
+        user = get_user_by_phone(user_input)
         return user is not None and user.has_token_agent_role
 
     def save_exchange_agent_phone(self, user_input):
@@ -302,7 +300,7 @@ class KenyaUssdStateMachine(Machine):
 
     def store_transfer_usage(self, user_input):
         usages = transfer_usages_for_user(self.user)
-        transfer_usage_map = list(map(KenyaUssdStateMachine.make_usage_mapping, usages))
+        transfer_usage_map = list(map(UssdStateMachine.make_usage_mapping, usages))
 
         self.session.set_data('transfer_usage_mapping', transfer_usage_map)
         self.session.set_data('usage_menu', 0)
