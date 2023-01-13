@@ -1,12 +1,12 @@
 alembic==1.4.2
 boto3==1.14.29
-celery==4.4.6
+celery==5.2.2
 celery-redbeat==1.0.0
 cryptography==3.4.4
 flower==0.9.3
 eventlet==0.31.0
 idna==2.10
-kombu==4.6.11
+kombu==5.2.3
 psycopg2-binary==2.8.5
 py-evm==0.3.0a18
 py-solc==3.2.0
