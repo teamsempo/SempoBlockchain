@@ -274,18 +274,18 @@ jobs:
           cluster: "zwe"
           region: "ap-southeast-2"
 
-  deploy-slb:
+  deploy-mwk:
     working_directory: ~/project
     docker:
       - image: circleci/python:3.6-node
     steps:
       - deploy:
-          app-service: "app"
-          worker-service: "worker"
-          app-task: "slb-app"
-          worker-task: "slb-worker"
-          frontend-bucket: "sempo-slb-static"
-          cluster: "slb-cluster"
+          app-service: "app-service"
+          worker-service: "mwk-worker"
+          app-task: "mwk-app"
+          worker-task: "mwk-worker"
+          frontend-bucket: "sempo-mwk-static"
+          cluster: "mwk"
           region: "ap-southeast-2"
 
   deploy-demo:
@@ -327,11 +327,12 @@ workflows:
             - test-backend
             - test-worker
             - test-frontend
-      - deploy-slb:
+      - deploy-mwk:
           filters:
             branches:
               only:
-                - slb
+                - mwk
+                - add-mwk-to-circle
           requires:
             - build
             - test-backend
@@ -353,7 +354,6 @@ workflows:
             branches:
               only:
                 - master
-                - patch-executor-when-pusher-used
           requires:
             - build
             - test-backend
