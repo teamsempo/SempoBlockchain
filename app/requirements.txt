@@ -6,7 +6,7 @@ blinker==1.4
 boto3==1.14.29
 celery==4.4.6
 certifi==2022.12.7
-CairoSVG==2.5.1
+CairoSVG==2.7.0
 ecdsa==0.15
 Flask==1.1.2
 Flask-BasicAuth==0.2.0
