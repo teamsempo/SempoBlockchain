@@ -33,7 +33,7 @@ python-i18n[YAML]==0.3.7
 py-evm==0.3.0a18
 qrcode[pil]==6.1
 raven==6.10.0
-sentry-sdk==0.19.2
+sentry-sdk==1.14.0
 sentry-sdk[flask]==0.19.2
 sentry-sdk[redis]==0.19.2
 sentry-sdk[sqlalchemy]==0.19.2
