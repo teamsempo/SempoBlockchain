@@ -16,7 +16,7 @@ const propTypes = {
   possibleFilters: PropTypes.array,
   onFiltersChanged: PropTypes.func,
   visible: PropTypes.bool,
-  label: PropTypes.string
+  label: PropTypes.string,
 };
 
 const defaultProps = {
@@ -25,7 +25,7 @@ const defaultProps = {
     console.log("Filters changed");
   },
   visible: true,
-  label: "Filter:"
+  label: "Filter:",
 };
 
 class Filter extends React.Component {
@@ -35,7 +35,7 @@ class Filter extends React.Component {
     this.state = {
       filters: [],
       selectorKeyBase: "",
-      ...this.baseRuleConstructionState
+      ...this.baseRuleConstructionState,
     };
   }
 
@@ -69,23 +69,23 @@ class Filter extends React.Component {
     discreteOptions: [],
     discreteSelected: [],
     GtLtThreshold: 0,
-    date: moment()
+    date: moment(),
   };
 
-  handleAttributeSelectorChange = attribute => {
+  handleAttributeSelectorChange = (attribute) => {
     let attributeProperties = this.props.possibleFilters[attribute];
 
     if (attributeProperties.type === USER_FILTER_TYPE.DATE_RANGE) {
       this.setState({
         attribute: attribute,
         filterType: USER_FILTER_TYPE.DATE_RANGE,
-        GtLtThreshold: 0
+        GtLtThreshold: 0,
       });
     } else if (attributeProperties.type === USER_FILTER_TYPE.INT_RANGE) {
       this.setState({
         attribute: attribute,
         filterType: USER_FILTER_TYPE.INT_RANGE,
-        GtLtThreshold: 0
+        GtLtThreshold: 0,
       });
     } else {
       this.setState({
@@ -93,7 +93,7 @@ class Filter extends React.Component {
         filterType: USER_FILTER_TYPE.DISCRETE,
         GtLtThreshold: 0,
         discreteSelected: [],
-        discreteOptions: attributeProperties.values
+        discreteOptions: attributeProperties.values,
       });
     }
   };
@@ -113,7 +113,7 @@ class Filter extends React.Component {
       return null;
     }
 
-    let subList = keys.map(key => {
+    let subList = keys.map((key) => {
       //Here we show the label without the group in the dropdown, but with the group once selected
       let label = replaceUnderscores(possibleFilters[key]["name"] || key);
       return (
@@ -137,12 +137,12 @@ class Filter extends React.Component {
 
     const [recipientKeys, senderAndOtherKeys] = this.partition(
       keys,
-      el => possibleFilters[el]["sender_or_recipient"] === "recipient"
+      (el) => possibleFilters[el]["sender_or_recipient"] === "recipient"
     );
 
     const [senderKeys, otherKeys] = this.partition(
       senderAndOtherKeys,
-      el => possibleFilters[el]["sender_or_recipient"] === "sender"
+      (el) => possibleFilters[el]["sender_or_recipient"] === "sender"
     );
 
     return (
@@ -168,7 +168,9 @@ class Filter extends React.Component {
     let { possibleFilters } = this.props;
     const keys =
       possibleFilters !== undefined && possibleFilters !== null
-        ? Object.keys(possibleFilters).filter(key => key !== "profile_picture")
+        ? Object.keys(possibleFilters).filter(
+            (key) => key !== "profile_picture"
+          )
         : [];
 
     return (
@@ -178,7 +180,7 @@ class Filter extends React.Component {
           display: "flex",
           flexDirection: "row",
           alignItems: "center",
-          flexFlow: "row wrap"
+          flexFlow: "row wrap",
         }}
       >
         {this.optionListGenerator(keys, possibleFilters)}
@@ -186,7 +188,7 @@ class Filter extends React.Component {
     );
   };
 
-  comparatorChange = value => {
+  comparatorChange = (value) => {
     this.setState({ comparator: value });
   };
 
@@ -228,21 +230,21 @@ class Filter extends React.Component {
     );
   };
 
-  handleDiscreteSelect = values => {
+  handleDiscreteSelect = (values) => {
     this.setState({
-      discreteSelected: values
+      discreteSelected: values,
     });
   };
 
   handleDateSelect = (date, dateString) => {
     this.setState({
-      date: date
+      date: date,
     });
   };
 
-  handleNumericSet = value => {
+  handleNumericSet = (value) => {
     this.setState({
-      GtLtThreshold: value
+      GtLtThreshold: value,
     });
   };
 
@@ -285,7 +287,7 @@ class Filter extends React.Component {
         onChange={this.handleDiscreteSelect}
       >
         {valueArray.length !== 0
-          ? valueArray.map(value => (
+          ? valueArray.map((value) => (
               <Option key={value}>{replaceUnderscores(value)}</Option>
             ))
           : null}
@@ -318,14 +320,14 @@ class Filter extends React.Component {
         id: id,
         attribute: this.state.attribute,
         type: USER_FILTER_TYPE.DISCRETE,
-        allowedValues: this.state.discreteSelected
+        allowedValues: this.state.discreteSelected,
       };
     } else if (this.state.filterType === USER_FILTER_TYPE.DATE_RANGE) {
       newFilter = {
         id: id,
         attribute: this.state.attribute,
         type: this.state.comparator,
-        threshold: this.state.date.format("YYYY-MM-DD")
+        threshold: this.state.date.format("YYYY-MM-DD"),
       };
     } else {
       let value = parseFloat(this.state.GtLtThreshold);
@@ -333,15 +335,15 @@ class Filter extends React.Component {
         id: id,
         attribute: this.state.attribute,
         type: this.state.comparator,
-        threshold: value
+        threshold: value,
       };
     }
 
     this.setState(
-      prevstate => ({
+      (prevstate) => ({
         filters: [...prevstate.filters, newFilter],
         selectorKeyBase: `${Math.random()}`,
-        ...this.baseRuleConstructionState
+        ...this.baseRuleConstructionState,
       }),
       () => {
         this.props.onFiltersChanged(this.state.filters);
@@ -365,14 +367,16 @@ class Filter extends React.Component {
     return addFilterBtn;
   };
 
-  removeFilter = id => {
+  removeFilter = (id) => {
     if (this.props.disabled) {
       return;
     }
 
     this.setState(
-      prevstate => ({
-        filters: prevstate.filters.filter(filter => filter.id !== parseInt(id))
+      (prevstate) => ({
+        filters: prevstate.filters.filter(
+          (filter) => filter.id !== parseInt(id)
+        ),
       }),
       () => {
         this.props.onFiltersChanged(this.state.filters);
@@ -389,13 +393,12 @@ class Filter extends React.Component {
             display: "flex",
             flexDirection: "row",
             alignItems: "center",
-            flexFlow: "row wrap"
+            flexFlow: "row wrap",
           }}
         >
           {filters.map((filter, index) => {
-            let attributeProperties = this.props.possibleFilters[
-              filter.attribute
-            ];
+            let attributeProperties =
+              this.props.possibleFilters[filter.attribute];
 
             let color =
               attributeProperties.table === "credit_transfer"
@@ -441,7 +444,7 @@ class Filter extends React.Component {
                 {filterVals}
                 <SVG
                   style={{
-                    cursor: this.props.disabled ? "not-allowed" : "pointer"
+                    cursor: this.props.disabled ? "not-allowed" : "pointer",
                   }}
                   src={
                     attributeProperties.table === "credit_transfer"
@@ -459,6 +462,11 @@ class Filter extends React.Component {
     return <div />;
   };
 
+  clearFilters = () => {
+    this.props.onFiltersChanged([]);
+    this.setState({ filters: [] });
+  };
+
   render() {
     return (
       <div style={{ display: "flex", flexDirection: "column" }}>
@@ -467,7 +475,7 @@ class Filter extends React.Component {
             display: this.props.disabled ? "none" : "flex",
             flexDirection: "row",
             alignItems: "center",
-            flexFlow: "row wrap"
+            flexFlow: "row wrap",
           }}
         >
           <PaddedInput>{this.attributeSelector()}</PaddedInput>
@@ -479,6 +487,13 @@ class Filter extends React.Component {
           <PaddedInput>{this.addFilterBtn()}</PaddedInput>
         </div>
         {this.activeFilterBubbles()}
+        <Button
+          type="primary"
+          onClick={this.clearFilters}
+          hidden={!this.state.filters.length > 0}
+        >
+          Clear Filters
+        </Button>
       </div>
     );
   }
